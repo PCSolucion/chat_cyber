@@ -1,0 +1,169 @@
+/**
+ * App - Bootstrapper de la Aplicación
+ * 
+ * Responsabilidades:
+ * - Asegurar la conexión con Twitch (Prioridad 1)
+ * - Inicializar el MessageProcessor (Lógica de Negocio)
+ * - Manejar el ciclo de vida de la página
+ * 
+ * @class App
+ */
+class App {
+    constructor() {
+        this.config = CONFIG;
+        console.log('🚀 Booting Twitch Chat Overlay...');
+
+        // 1. Instanciar Message Processor (Lógica de Negocio)
+        // Se envuelve en try-catch para que un error de lógica no impida la conexión
+        this.processor = null;
+        try {
+            this.processor = new MessageProcessor(this.config);
+            this.processor.init();
+        } catch (e) {
+            console.error('❌ FATAL: MessageProcessor failed to initialize. Utilities may be broken.', e);
+        }
+
+        // 2. Instanciar Twitch Service (Conexión)
+        // Se hace por separado para garantizar la conexión
+        this.twitchService = null;
+        try {
+            this.twitchService = new TwitchService(
+                this.config.TWITCH_CHANNEL,
+                (tags, msg) => this.onMessageReceived(tags, msg)
+            );
+        } catch (e) {
+            console.error('❌ FATAL: TwitchService creation failed.', e);
+        }
+    }
+
+    /**
+     * Inicialización asíncrona
+     */
+    async init() {
+        // Cargar datos del processor (Rankings, XP, etc)
+        if (this.processor) {
+            try {
+                const stats = await this.processor.loadAsyncData();
+                console.log('✅ App Logic Loaded:', stats);
+            } catch (e) {
+                console.error('⚠️ App Logic load warning:', e);
+            }
+        }
+
+        // Conectar a Twitch
+        if (this.twitchService) {
+            console.log('📡 Connecting to Twitch...');
+            try {
+                this.twitchService.connect();
+            } catch (e) {
+                console.error('❌ Connection failed:', e);
+            }
+        }
+
+        // Exponer herramientas de testing
+        this.exposeTestingFunctions();
+    }
+
+    /**
+     * Handler principal de mensajes
+     * Recibe del TwitchService y delega al Processor
+     */
+    onMessageReceived(tags, message) {
+        if (!this.processor) {
+            console.warn('⚠️ Message received but Processor is dead.');
+            return;
+        }
+
+        // Delegar al processor
+        this.processor.process(tags, message);
+    }
+
+    /**
+     * Herramientas de Testing para consola
+     */
+    /**
+     * Herramientas de Testing para consola
+     */
+    exposeTestingFunctions() {
+        window.simularMensaje = (usuario, mensaje) => {
+            console.log('🧪 Simulando:', usuario);
+            const tags = { 'display-name': usuario, emotes: {} };
+            this.onMessageReceived(tags, mensaje);
+        };
+
+        window.reloadRankings = async () => {
+            if (this.processor) await this.processor.loadAsyncData();
+        };
+
+        // Exponer helpers de XP si existen y están activos
+        if (this.processor && this.processor.getService('xp')) {
+            window.getXPStats = () => this.processor.getService('xp').getGlobalStats();
+
+            window.testLevelUp = (lvl) => {
+                const xpDisplay = this.processor.getManager('xpDisplay');
+                if (xpDisplay) {
+                    xpDisplay.showLevelUp({
+                        username: 'Test',
+                        newLevel: lvl,
+                        title: 'TEST RANK'
+                    });
+                }
+            };
+
+            // GESTIÓN DE DATOS XP
+            window.resetAllXP = async () => {
+                if (confirm('⚠️ PELIGRO: ¿ESTÁS SEGURO?\n\nEsto BORRARÁ PERMANENTEMENTE todos los niveles y XP de TODOS los usuarios.\nEsta acción no se puede deshacer.')) {
+                    console.log('☢️ Iniciando reseteo de XP...');
+                    await this.processor.getService('xp').resetAllData();
+                    alert('✅ Todos los datos de XP han sido eliminados.');
+                }
+            };
+
+            window.exportXPData = () => {
+                try {
+                    const data = this.processor.getService('xp').getAllDataJSON();
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `xp_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    console.log('💾 Datos XP Exportados');
+                } catch (e) {
+                    console.error('Error exportando:', e);
+                    alert('Error al exportar. Revisa la consola.');
+                }
+            };
+
+            // TEST STREAK HELPER
+            window.setTestStreak = (username, days) => {
+                const xpService = this.processor.getService('xp');
+                if (xpService) {
+                    const userData = xpService.getUserData(username);
+                    userData.streakDays = days; // Force update
+                    // IMPORTANT: Set date to today so it doesn't reset to 1 on next processing
+                    userData.lastStreakDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+                    // Save not strictly necessary for ephemeral test but good practice
+                    xpService.usersXP.set(username.toLowerCase(), userData);
+                    console.log(`🔥 Streak set for ${username}: ${days} days`);
+                }
+            };
+        }
+    }
+
+    async destroy() {
+        console.log('🛑 Shutting down...');
+        if (this.processor) await this.processor.destroy();
+        if (this.twitchService) this.twitchService.disconnect();
+    }
+}
+
+// Inicialización Global
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new App();
+    app.init();
+    window.addEventListener('beforeunload', () => app.destroy());
+});

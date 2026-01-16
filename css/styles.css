@@ -1,0 +1,1372 @@
+/* ===========================================
+   CYBERPUNK 2077 CHAT WIDGET - NETRUNNER EDITION
+   Authentic Cyberpunk 2077 HUD Style
+   =========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&family=Black+Ops+One&display=swap');
+@import url('user-images.css');
+
+
+
+:root {
+  /* Cyberpunk 2077 Authentic Colors */
+  --cyber-red: #ff003c;
+  --cyber-yellow: #DABD58;
+  --takeru-yellow: #fcee09;
+  /* New standard bright yellow */
+  --cyber-cyan: #00f6ff;
+  --cyber-magenta: #d900ff;
+  --cyber-blue: #05d5fa;
+  --cyber-hot-pink: #ff2a6d;
+
+  /* Backgrounds */
+  --bg-dark: #0a0a0f;
+  --bg-panel: rgba(10, 10, 18, 0.95);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text */
+  --text-bright: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.6);
+
+  /* Glow */
+  --glow-yellow: 0 0 10px var(--cyber-yellow), 0 0 30px rgba(218, 189, 88, 0.4);
+  --glow-cyan: 0 0 10px var(--cyber-cyan), 0 0 25px rgba(0, 246, 255, 0.3);
+  --glow-red: 0 0 10px var(--cyber-red), 0 0 25px rgba(255, 0, 60, 0.3);
+
+  /* VIP Colors */
+  --vip-gold: #ffd700;
+  --vip-glow: 0 0 10px #ffd700, 0 0 25px rgba(255, 215, 0, 0.5);
+
+  /* Dimensions - Tall and narrow */
+  --container-width: 340px;
+  --username-size: 1.4rem;
+  --message-size: 1.3rem;
+
+  /* Animation */
+  --transition-speed: 0.35s;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: transparent;
+  color: var(--text-bright);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ===========================================
+   CONTAINER - Tall cyberpunk panel
+   =========================================== */
+
+.container-wrapper {
+  perspective: 600px;
+  perspective-origin: left center;
+}
+
+.container {
+  width: var(--container-width);
+  background: var(--bg-panel);
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+
+  /* Altura mínima para evitar parpadeos */
+  min-height: 395px;
+
+  /* 3D HUD effect - Fully defined for interpolation */
+  transform: translateX(0) rotateY(5deg) scale(1);
+  transform-origin: left center;
+
+  /* Cyberpunk corner cuts - Bottom Right cut (subtle) */
+  clip-path: polygon(0 0,
+      100% 0,
+      100% calc(100% - 15px),
+      calc(100% - 15px) 100%,
+      0 100%);
+
+  /* Main border glow */
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 0, 0, 0.9),
+    0 0 2px var(--cyber-cyan);
+
+  /* Transitions - GLOBAL - Ensure these are always active */
+  transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 1;
+}
+
+/* Hidden state defines the 'out' position */
+.container.hidden {
+  opacity: 0 !important;
+  transform: translateX(-150px) rotateY(12deg) scale(0.9) !important;
+  pointer-events: none;
+}
+
+/* Top-right corner accent - disabled */
+.container::before {
+  display: none;
+}
+
+/* Vertical scan line - disabled */
+.container::after {
+  display: none;
+}
+
+
+
+/* ===========================================
+   DECORATIVE ELEMENTS
+   =========================================== */
+
+.border-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Left border accent - disabled */
+.border-glow::before {
+  display: none;
+}
+
+/* Bottom accent line */
+.border-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 25px;
+  right: 25px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cyber-cyan), transparent);
+}
+
+/* ===========================================
+   STATUS BAR - Cyber HUD style
+   =========================================== */
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Alineado a la izquierda */
+  gap: 10px;
+  /* Espacio entre punto y texto */
+  padding: 10px 15px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  transition: all 0.3s ease;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #666;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+  animation: statusPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+}
+
+.status-text {
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+/* RED STATUS VARIANT (Top 15 + Admin) */
+.container.status-red .status-bar {
+  background: linear-gradient(180deg, rgba(255, 0, 60, 0.15), transparent);
+  border-bottom: 1px solid var(--cyber-red);
+}
+
+.container.status-red .status-dot {
+  background: var(--cyber-red);
+  box-shadow: var(--glow-red);
+}
+
+.container.status-red .status-text {
+  color: var(--cyber-red);
+  text-shadow: var(--glow-red);
+}
+
+.status-divider {
+  display: none;
+}
+
+.status-code {
+  display: none;
+  /* Ocultar CHAT.STREAM */
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+/* ===========================================
+   HEADER - Username Display (PROMINENT)
+   =========================================== */
+
+.header {
+  padding: 15px 15px 12px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Decorative bracket */
+/* Decorative bracket - removed */
+/* .header::before {
+  content: '//';
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--cyber-cyan);
+  opacity: 0.6;
+} */
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  width: 100%;
+}
+
+/* Container for Image + Badge stacking */
+.user-identity-stack {
+  display: flex;
+  flex-direction: column;
+  /* Default: Vertical (for Top 1) */
+  align-items: center;
+  margin-left: auto;
+  /* Push to right */
+  margin-right: 10px;
+  gap: 2px;
+}
+
+/* Modifier: Horizontal layout for Admin (Legacy style: Badge then Image) */
+.user-identity-stack.horizontal-stack {
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 12px;
+  margin-left: 15px;
+  /* Pull closer to Name instead of pushing to right */
+}
+
+/* Force custom image to center in stack */
+.custom-user-img {
+  align-self: center;
+}
+
+/* Hexagon icon - hidden */
+.mission-icon {
+  display: none;
+}
+
+/* USERNAME - Big and Bold */
+.driver-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: var(--username-size);
+  color: var(--cyber-yellow);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow: var(--glow-yellow);
+  position: relative;
+
+  /* Glitch layers */
+  animation: usernameGlow 3s ease-in-out infinite;
+}
+
+@keyframes usernameGlow {
+
+  0%,
+  100% {
+    text-shadow: var(--glow-yellow);
+    color: var(--cyber-yellow);
+  }
+
+  50% {
+    text-shadow: 0 0 15px var(--cyber-yellow), 0 0 40px rgba(252, 238, 10, 0.5);
+  }
+
+  /* Occasional glitch */
+  92% {
+    color: var(--cyber-yellow);
+    transform: translateX(0);
+  }
+
+  93% {
+    color: var(--cyber-red);
+    transform: translateX(-2px);
+  }
+
+  94% {
+    color: var(--cyber-cyan);
+    transform: translateX(2px);
+  }
+
+  95% {
+    color: var(--cyber-yellow);
+    transform: translateX(0);
+  }
+}
+
+/* ===========================================
+   VIP USER STYLES
+   =========================================== */
+
+/* VIP Container border effect */
+/* VIP Container border effect - Reset to default */
+.container.vip-user {
+  /* Removed gold border/shadow */
+}
+
+/* VIP Username - Gold color with special glow */
+/* VIP Username - Inherit Default (Takeru Style) */
+.container.vip-user .driver-name {
+  color: #D5B956 !important;
+  text-shadow: 0 0 5px rgba(252, 238, 9, 0.7) !important;
+  animation: none !important;
+  filter: none !important;
+  /* Ensure no brightness filters apply */
+}
+
+
+
+
+
+
+/* ===========================================
+   USER BADGE STYLES (VIP/TOP/ADMIN)
+   =========================================== */
+
+.user-badge {
+  display: none;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
+
+  /* Corte angular sutil - solo esquina inferior derecha */
+  clip-path: polygon(0 0,
+      100% 0,
+      100% calc(100% - 4px),
+      calc(100% - 4px) 100%,
+      0 100%);
+}
+
+/* VIP Badge - Red (Matched to Admin, No Animation) */
+.user-badge.vip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cyber-red);
+  background: rgba(255, 0, 60, 0.15);
+  border: 1px solid rgba(255, 0, 60, 0.5);
+  box-shadow: 0 0 5px rgba(255, 0, 60, 0.2);
+  font-size: 11px;
+}
+
+.user-badge.vip::before {
+  content: '♛';
+  font-size: 10px;
+}
+
+/* TOP Badge - Red (Matched to Admin) */
+.user-badge.top-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cyber-red);
+  background: rgba(255, 0, 60, 0.2);
+  border: 1px solid var(--cyber-red);
+  box-shadow: 0 0 8px rgba(255, 0, 60, 0.3);
+  animation: topBadgePulse 3s ease-in-out infinite;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.user-badge.top-user::before {
+  content: '★';
+  font-size: 11px;
+}
+
+@keyframes topBadgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 0, 60, 0.3);
+    border-color: var(--cyber-red);
+  }
+
+  50% {
+    box-shadow: 0 0 12px rgba(255, 0, 60, 0.5);
+    border-color: rgba(255, 0, 60, 0.8);
+  }
+}
+
+/* TOP User container effects */
+/* TOP User container effects - Reset to Default */
+.container.top-user {
+  border-left: 3px solid var(--cyber-cyan);
+  /* Keep left border as Rank indicator? User said "name color" not border. */
+  /* Actually, user said "no se ven iguales... que un top 233". A normal user has NO left border color (or default). */
+  /* Let's keep the left border because that indicates Rank/Team, but maybe reset other things? */
+}
+
+.container.top-user .driver-name {
+  color: #fcee09;
+  text-shadow: 0 0 5px rgba(252, 238, 9, 0.7);
+}
+
+
+
+/* ADMIN Badge - Red/Magenta Shield */
+.user-badge.admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cyber-red);
+  background: rgba(255, 0, 60, 0.2);
+  border: 1px solid var(--cyber-red);
+  box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+  animation: adminBadgePulse 2s ease-in-out infinite;
+}
+
+.user-badge.admin::before {
+  content: '⚡';
+  font-size: 11px;
+}
+
+@keyframes adminBadgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+    border-color: var(--cyber-red);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.6);
+    border-color: var(--cyber-magenta);
+  }
+}
+
+/* ADMIN User container effects */
+.container.admin-user {
+  border-left: 3px solid var(--cyber-red);
+  box-shadow:
+    inset 0 0 50px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(255, 0, 60, 0.4);
+}
+
+/* Admin User Name Override - Keep Red */
+.container.admin-user .driver-name {
+  color: var(--cyber-red) !important;
+  text-shadow: var(--glow-red) !important;
+  animation: adminGlow 2s ease-in-out infinite;
+}
+
+@keyframes adminGlow {
+
+  0%,
+  100% {
+    text-shadow: var(--glow-red);
+  }
+
+  50% {
+    text-shadow: 0 0 15px var(--cyber-red), 0 0 35px rgba(255, 0, 60, 0.6), 0 0 50px rgba(217, 0, 255, 0.3);
+  }
+}
+
+.container.admin-user .mission-icon {
+  background: var(--cyber-red);
+  box-shadow: var(--glow-red);
+}
+
+.container.admin-user .status-bar {
+  background: linear-gradient(180deg, rgba(255, 0, 60, 0.1), transparent);
+  border-bottom: 1px solid rgba(255, 0, 60, 0.3);
+}
+
+.container.admin-user .status-text {
+  color: var(--cyber-red);
+  text-shadow: var(--glow-red);
+}
+
+/* ===========================================
+   RANKED USER STYLES (TOP 16+)
+   =========================================== */
+
+/* Ranked Badge - White/neutral style */
+.user-badge.ranked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-bright);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.05),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.user-badge.ranked::before {
+  content: '#';
+  font-size: 9px;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+}
+
+/* Ranked User container - subtle styling */
+.container.ranked-user {
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.container.ranked-user .driver-name {
+  color: var(--text-bright);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+  padding-left: 2px;
+  margin-top: 5px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(0, 246, 255, 0.5);
+  font-weight: 700;
+}
+
+/* CYBERPUNK ICONS (CSS SHAPES) */
+[id^="rank-icon"] {
+  display: none;
+  width: 14px;
+  height: 14px;
+  background-color: var(--cyber-cyan);
+  position: relative;
+}
+
+/* Icon Styles based on rank - ENHANCED */
+.icon-admin {
+  background-color: var(--cyber-red) !important;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  box-shadow: 0 0 5px var(--cyber-red);
+}
+
+.icon-admin::after {
+  content: '⚡';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -55%);
+  font-size: 8px;
+  color: #000;
+}
+
+/* Arasaka Icon (Image) */
+.icon-arasaka {
+  background-color: transparent !important;
+  background-image: url('../img/arasaka.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  clip-path: none !important;
+  box-shadow: none !important;
+  width: 18px !important;
+  /* Slightly larger for image */
+  height: 18px !important;
+  transform: translateY(-2px);
+  /* Adjust alignment */
+}
+
+.icon-skull {
+  background-color: var(--cyber-cyan) !important;
+  clip-path: polygon(20% 0, 80% 0, 100% 30%, 80% 100%, 20% 100%, 0 30%);
+}
+
+.icon-skull::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  background: #000;
+  clip-path: polygon(20% 0, 80% 0, 100% 30%, 80% 100%, 20% 100%, 0 30%);
+}
+
+.icon-corp {
+  background-color: #ffd700 !important;
+  clip-path: polygon(20% 100%, 20% 20%, 40% 20%, 40% 10%, 60% 10%, 60% 20%, 80% 20%, 80% 100%);
+}
+
+.icon-sword {
+  background-color: #ffd700 !important;
+  clip-path: polygon(10% 0, 0 10%, 40% 50%, 0 90%, 10% 100%, 50% 60%, 90% 100%, 100% 90%, 60% 50%, 100% 10%, 90% 0, 50% 40%);
+}
+
+.icon-eye {
+  border: 1px solid #ffd700;
+  border-radius: 50%;
+  background: transparent !important;
+}
+
+.icon-eye::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: #ffd700;
+  border-radius: 50%;
+}
+
+.icon-cross {
+  background-color: #ff003c !important;
+  clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%);
+}
+
+.icon-chip {
+  background-color: var(--cyber-cyan) !important;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 80% 100%, 80% 80%, 20% 80%, 20% 100%, 0% 100%, 0% 80%, 20% 80%, 20% 20%, 0% 20%);
+}
+
+.icon-oni {
+  background-color: var(--cyber-red) !important;
+  clip-path: polygon(20% 0, 80% 0, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0 40%);
+}
+
+.icon-med {
+  background-color: #ff003c !important;
+  clip-path: circle(50% at 50% 50%);
+}
+
+.icon-med::after {
+  content: '+';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  color: #000;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.icon-target {
+  border: 1px solid #ff003c;
+  border-radius: 50%;
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-target::before {
+  content: '';
+  width: 100%;
+  height: 1px;
+  background: #ff003c;
+  position: absolute;
+}
+
+.icon-target::after {
+  content: '';
+  height: 100%;
+  width: 1px;
+  background: #ff003c;
+  position: absolute;
+}
+
+.icon-gun {
+  background-color: #ffd700 !important;
+  clip-path: polygon(0 0, 70% 0, 100% 30%, 100% 60%, 70% 60%, 70% 100%, 30% 100%, 30% 30%, 0 30%);
+}
+
+/* Default Tech Icon */
+.icon-tech {
+  background-color: var(--text-dim) !important;
+  clip-path: polygon(0 0, 50% 0, 100% 50%, 50% 100%, 0 100%, 0 50%, 25% 25%);
+}
+
+/* Header right elements - hidden per user request */
+.header-right {
+  display: none;
+}
+
+.live-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--cyber-red);
+  letter-spacing: 2px;
+  padding: 2px 6px;
+  border: 1px solid var(--cyber-red);
+  background: rgba(255, 0, 60, 0.15);
+  box-shadow: var(--glow-red);
+  animation: liveFlicker 2s ease-in-out infinite;
+}
+
+@keyframes liveFlicker {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+
+  96% {
+    opacity: 1;
+  }
+
+  97% {
+    opacity: 0.3;
+  }
+
+  98% {
+    opacity: 1;
+  }
+}
+
+.header-deco {
+  display: flex;
+  gap: 3px;
+}
+
+.header-deco span {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--cyber-cyan);
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.header-deco span:nth-child(3) {
+  background: var(--cyber-cyan);
+  opacity: 1;
+  box-shadow: 0 0 8px var(--cyber-cyan);
+}
+
+/* ===========================================
+   DATA STREAM - Visual separator
+   =========================================== */
+
+.data-stream {
+  height: 20px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  gap: 8px;
+  border-top: 1px solid rgba(0, 246, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 246, 255, 0.1);
+}
+
+.data-stream::before {
+  content: 'MSG.INCOMING';
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: var(--cyber-cyan);
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+.stream-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cyber-cyan), transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.stream-line::after {
+  content: '';
+  position: absolute;
+  left: -30%;
+  top: -2px;
+  width: 30%;
+  height: 5px;
+  background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
+  animation: dataFlow 2s linear infinite;
+}
+
+@keyframes dataFlow {
+  0% {
+    left: -30%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+/* ===========================================
+   EQUALIZER - Cyber waveform
+   =========================================== */
+
+.equalizer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 15px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.bar {
+  width: 4px;
+  background: linear-gradient(180deg, var(--cyber-cyan), var(--cyber-blue));
+  border-radius: 2px;
+  height: 5px;
+  animation: cyberEQ 0.8s ease-in-out infinite;
+  box-shadow: 0 0 5px var(--cyber-cyan);
+}
+
+.bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.05s;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.bar:nth-child(5) {
+  animation-delay: 0.08s;
+}
+
+.bar:nth-child(6) {
+  animation-delay: 0.2s;
+}
+
+.bar:nth-child(7) {
+  animation-delay: 0.12s;
+}
+
+.bar:nth-child(8) {
+  animation-delay: 0.18s;
+}
+
+.bar:nth-child(9) {
+  animation-delay: 0.03s;
+}
+
+.bar:nth-child(10) {
+  animation-delay: 0.22s;
+}
+
+.bar:nth-child(11) {
+  animation-delay: 0.07s;
+}
+
+.bar:nth-child(12) {
+  animation-delay: 0.16s;
+}
+
+.bar:nth-child(13) {
+  animation-delay: 0.11s;
+}
+
+.bar:nth-child(14) {
+  animation-delay: 0.19s;
+}
+
+.bar:nth-child(15) {
+  animation-delay: 0.04s;
+}
+
+.bar:nth-child(16) {
+  animation-delay: 0.14s;
+}
+
+.bar:nth-child(17) {
+  animation-delay: 0.09s;
+}
+
+.bar:nth-child(18) {
+  animation-delay: 0.21s;
+}
+
+.bar:nth-child(19) {
+  animation-delay: 0.06s;
+}
+
+.bar:nth-child(20) {
+  animation-delay: 0.17s;
+}
+
+.bar:nth-child(n+21) {
+  display: none;
+}
+
+@keyframes cyberEQ {
+
+  0%,
+  100% {
+    height: 5px;
+    opacity: 0.4;
+  }
+
+  50% {
+    height: 25px;
+    opacity: 1;
+  }
+}
+
+/* ===========================================
+   MESSAGE - Main content area
+   =========================================== */
+
+.quote {
+  padding: 20px;
+  min-height: 100px;
+  max-height: 120px;
+  overflow: hidden;
+  font-size: var(--message-size);
+  color: var(--text-bright);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  position: relative;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+}
+
+/* Left accent - disabled */
+.quote::before {
+  display: none;
+}
+
+@keyframes gradientFlow {
+
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 0% 100%;
+  }
+}
+
+/* Quote marks decoration */
+.quote::after {
+  content: '"';
+  position: absolute;
+  right: 15px;
+  bottom: 5px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 60px;
+  color: var(--cyber-cyan);
+  opacity: 0.08;
+  line-height: 1;
+}
+
+.quote strong {
+  color: var(--cyber-yellow);
+  text-shadow: 0 0 10px rgba(252, 238, 10, 0.5);
+}
+
+/* ===========================================
+   FOOTER - Tech readout
+   =========================================== */
+
+.footer-tech {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(0, 246, 255, 0.15);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+}
+
+.tech-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tech-line.left .bracket {
+  color: var(--cyber-yellow);
+}
+
+.tech-line.left .tech-data {
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.tech-line.right {
+  color: var(--cyber-cyan);
+}
+
+.ping-indicator {
+  width: 5px;
+  height: 5px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00ff88;
+  animation: pingPulse 1s ease-in-out infinite;
+}
+
+@keyframes pingPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+}
+
+/* ===========================================
+   SCANLINES OVERLAY
+   =========================================== */
+
+.container>*:not(.border-glow):not(.container::before):not(.container::after) {
+  position: relative;
+}
+
+/* Global scanlines effect */
+@keyframes scanlines {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* ===========================================
+   EMOTES
+   =========================================== */
+
+.emote-img {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 3px;
+  height: 1.5em !important;
+  filter: drop-shadow(0 0 3px rgba(0, 246, 255, 0.3));
+}
+
+/* ===========================================
+   ANIMATIONS (Slide In/Out with Cyber Style)
+   =========================================== */
+
+/* Salida (hacia la izquierda) */
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  animation: slideOutLeft 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes slideOutLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0) rotateY(5deg);
+  }
+
+  40% {
+    opacity: 0.8;
+    filter: hue-rotate(90deg) brightness(1.5);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-100%) rotateY(10deg) skewX(-20deg);
+  }
+}
+
+/* Entrada (desde la izquierda) */
+.container:not(.hidden) {
+  animation: slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) rotateY(10deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotateY(5deg);
+  }
+}
+
+/* ===========================================
+   ALIVE BORDER ANIMATION (Top 15 / Admin)
+   =========================================== */
+
+@keyframes activeBorderPulse {
+  0% {
+    box-shadow: inset 0 0 2px rgba(255, 0, 60, 0.2);
+    border: 1px solid rgba(255, 0, 60, 0.3);
+  }
+
+  50% {
+    box-shadow: inset 0 0 8px rgba(255, 0, 60, 0.4);
+    border: 1px solid rgba(255, 0, 60, 0.6);
+  }
+
+  100% {
+    box-shadow: inset 0 0 2px rgba(255, 0, 60, 0.2);
+    border: 1px solid rgba(255, 0, 60, 0.3);
+  }
+}
+
+.container.status-red {
+  animation: activeBorderPulse 3s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Variante especial para TOP 1 (Cian/Azul) */
+@keyframes activeBorderPulseCyan {
+  0% {
+    box-shadow: inset 0 0 2px rgba(0, 246, 255, 0.2);
+    border: 1px solid rgba(0, 246, 255, 0.3);
+  }
+
+  50% {
+    box-shadow: inset 0 0 10px rgba(0, 246, 255, 0.4), inset 0 0 2px rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 246, 255, 0.8);
+  }
+
+  100% {
+    box-shadow: inset 0 0 2px rgba(0, 246, 255, 0.2);
+    border: 1px solid rgba(0, 246, 255, 0.3);
+  }
+}
+
+.container.top-user {
+  animation: activeBorderPulseCyan 1.5s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards !important;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+
+@media (max-width: 400px) {
+  :root {
+    --container-width: 300px;
+    --username-size: 1.2rem;
+    --message-size: 1.15rem;
+  }
+
+  .quote {
+    padding: 15px;
+    min-height: 80px;
+  }
+
+  .header {
+    padding: 12px;
+  }
+}
+
+/* ===========================================
+   DIGITAL RAIN / PARTICLES (Top 15 / Admin)
+   =========================================== */
+
+.particles-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  /* Oculto por defecto */
+  transition: opacity 0.5s;
+
+  /* Digital Noise Pattern - MEDIUM */
+  background-image:
+    radial-gradient(rgba(0, 246, 255, 0.3) 1px, transparent 1px),
+    radial-gradient(rgba(255, 0, 60, 0.25) 1px, transparent 1px);
+  background-size: 40px 40px, 60px 60px;
+  background-position: 0 0, 20px 20px;
+}
+
+.container.status-red .particles-bg {
+  opacity: 0.8;
+  animation: digitalRain 3.5s linear infinite;
+}
+
+@keyframes digitalRain {
+  0% {
+    background-position: 0 0, 20px 20px;
+  }
+
+  100% {
+    background-position: 0 40px, 20px 80px;
+  }
+
+  /* Movimiento vertical */
+}
+
+/* ===========================================
+   MENSAJE DISTINTO (Top 15 / Admin)
+   =========================================== */
+
+.container.status-red .quote {
+  /* Fuente original mantenida */
+  color: #fff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  /* Fondo ligeramente más oscuro para resaltar */
+  border-left: 2px solid var(--cyber-red);
+  /* Línea de acento extra */
+  padding-left: 20px;
+  /* Compensar borde */
+}
+
+/* Variante Cyan para Top 1 */
+.container.top-user .particles-bg {
+  background-image:
+    radial-gradient(rgba(0, 246, 255, 0.3) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.25) 1px, transparent 1px);
+}
+
+.container.top-user .quote {
+  border-left: 2px solid var(--cyber-cyan);
+  text-shadow: 0 0 8px var(--cyber-cyan);
+}
+
+/* ===========================================
+   DECRYPTION ANIMATION (INCOMING SIGNAL)
+   =========================================== */
+
+@keyframes decryptPulse {
+  0% {
+    opacity: 0.6;
+    color: var(--cyber-cyan);
+    text-shadow: 0 0 5px var(--cyber-cyan);
+  }
+
+  50% {
+    opacity: 1;
+    color: #fff;
+    text-shadow: 0 0 10px #fff;
+  }
+
+  100% {
+    opacity: 0.6;
+    color: var(--cyber-cyan);
+    text-shadow: 0 0 5px var(--cyber-cyan);
+  }
+}
+
+.decrypting {
+  animation: decryptPulse 0.1s steps(2) infinite !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cyber-cyan) !important;
+  border-right: 5px solid var(--cyber-cyan);
+  /* Cursor effect */
+  background: rgba(0, 246, 255, 0.1);
+}
+
+/* Hide equalizer during incoming transmission */
+.container:has(.decrypting) .equalizer {
+  opacity: 0;
+}
+
+/* FOOTER FIX - Ensure it sticks to bottom */
+.footer-tech {
+  margin-top: auto;
+  width: 100%;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 246, 255, 0.1);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+}
+
+.tech-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tech-data {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+.bracket {
+  color: var(--cyber-cyan);
+  opacity: 0.5;
+  font-size: 10px;
+}

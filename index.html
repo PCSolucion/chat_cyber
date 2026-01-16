@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Twitch Chat Overlay - Cyberpunk 2077</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/xp-system.css">
+</head>
+
+<body>
+  <div class="container-wrapper">
+    <div class="container" role="region" aria-label="Chat de Twitch">
+      <!-- Animated border glow -->
+      <div class="border-glow"></div>
+
+      <!-- Status bar top -->
+      <div class="status-bar">
+        <span class="status-dot"></span>
+        <span class="status-text">SYS.ONLINE</span>
+        <span class="status-divider">|</span>
+        <span class="status-code">CHAT.STREAM</span>
+      </div>
+
+      <!-- Header with username -->
+      <div class="header">
+        <div class="info-container">
+          <!-- XP System Display (Moved to Top) -->
+          <div class="xp-section" id="xp-section"
+            style="margin-top: -10px; margin-bottom: 8px; border-top: none; border-bottom: 1px solid rgba(255, 58, 58, 0.2);">
+            <!-- Level Up Notification -->
+            <div class="xp-levelup-inline" id="xp-levelup-inline">
+              <span class="levelup-star">★</span>
+              <span class="levelup-text">LEVEL UP</span>
+              <span class="levelup-chevrons">❯❯❯</span>
+              <span class="levelup-number" id="levelup-number">2</span>
+            </div>
+
+            <!-- XP Bar -->
+            <div class="xp-bar-inline" id="xp-bar-inline">
+              <div class="xp-level-container">
+                <span class="xp-level-label">LVL</span>
+                <span class="xp-level-value" id="xp-level">1</span>
+              </div>
+              <div class="xp-progress-container">
+                <div class="xp-progress-bar">
+                  <div class="xp-progress-ghost" id="xp-progress-ghost"></div>
+                  <div class="xp-progress-fill" id="xp-progress-fill"></div>
+                  <div class="xp-progress-glow"></div>
+                </div>
+                <div class="xp-progress-text">
+                  <span class="xp-current" id="xp-current">0</span>
+                  <span class="xp-divider">/</span>
+                  <span class="xp-next" id="xp-next">100</span>
+                  <span class="xp-suffix">XP</span>
+                </div>
+              </div>
+              <div class="xp-gain-container" id="xp-gain-container"></div>
+            </div>
+
+            <!-- XP Title -->
+            <div class="xp-title-inline" id="xp-title-inline">
+              <span class="xp-title-icon">◆</span>
+              <span class="xp-title-text" id="xp-title">CIVILIAN</span>
+              <span class="xp-streak" id="xp-streak" style="display: none;"></span>
+            </div>
+          </div>
+
+          <div class="title-row">
+            <span class="mission-icon">!</span>
+            <span class="driver-name" id="username" data-text="NETRUNNER">NETRUNNER</span>
+
+            <div class="user-identity-stack">
+              <!-- Custom User Image (Liiukiin/Top1) goes here -->
+              <div id="custom-user-image" class="custom-user-img" style="display: none;"></div>
+              <!-- Badge goes below logic (DOM insert order or Flex order) -->
+              <span class="user-badge" id="user-badge"></span>
+            </div>
+          </div>
+
+
+        </div>
+        <div class="header-right">
+          <div class="live-badge">LIVE</div>
+          <div class="header-deco">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data stream indicator -->
+      <div class="data-stream">
+        <div class="stream-line"></div>
+      </div>
+
+      <!-- Digital Particles BG (Top Users) -->
+      <div id="particles-bg" class="particles-bg"></div>
+
+      <!-- Equalizer / Audio visualizer -->
+      <div class="equalizer" aria-hidden="true">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+
+      <!-- Message display -->
+      <div class="quote" id="message" role="status" aria-live="polite">
+        "Conectando al stream de Night City..."
+      </div>
+
+      <!-- XP System Display (integrated in widget) -->
+
+
+      <!-- Footer tech info -->
+      <div class="footer-tech">
+        <div class="tech-line left">
+          <span class="bracket">[</span>
+          <span class="tech-data">STREAM.ID: NC-2077</span>
+          <span class="bracket">]</span>
+        </div>
+        <div class="tech-line right">
+          <span class="ping-indicator"></span>
+          <span class="tech-data">SYNC: 100%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Pruebas -->
+  <div id="test-panel" style="
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 280px;
+    background: rgba(10, 10, 18, 0.95);
+    border: 1px solid rgba(0, 246, 255, 0.3);
+    border-left: 3px solid #00f6ff;
+    padding: 15px;
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    z-index: 1000;
+  ">
+    <h3 style="margin: 0 0 15px; color: #00f6ff; font-size: 14px; letter-spacing: 2px;">🎮 PANEL DE PRUEBAS</h3>
+
+    <div style="margin-bottom: 15px;">
+      <label
+        style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #00f6ff; margin-bottom: 10px; cursor: pointer;">
+        <input type="checkbox"
+          onchange="window.KEEP_WIDGET_VISIBLE = this.checked; console.log('Keep Visible:', this.checked)"
+          style="cursor: pointer;">
+        MANTENER WIDGET VISIBLE
+      </label>
+
+      <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">MENSAJE:</label>
+      <input type="text" id="test-message" value="Este es un mensaje de prueba!" style="
+        width: 100%;
+        padding: 8px;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(0, 246, 255, 0.3);
+        color: #fff;
+        font-family: inherit;
+        font-size: 12px;
+      ">
+    </div>
+
+    <div style="font-size: 11px; color: #888; margin-bottom: 8px;">ADMIN & TOP 15:</div>
+
+    <div style="
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+      max-height: 300px; 
+      overflow-y: auto; 
+      padding-right: 5px;
+      margin-bottom: 15px;
+    ">
+      <!-- ADMIN -->
+      <button onclick="testUser('Liiukiin')"
+        style="padding: 6px 10px; background: rgba(255, 0, 60, 0.2); border: 1px solid #ff003c; color: #ff003c; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">⚡
+        ADMIN - Liiukiin</button>
+
+      <!-- TOP 1 -->
+      <button onclick="testUser('Takeru_xiii')"
+        style="padding: 6px 10px; background: rgba(0, 246, 255, 0.2); border: 1px solid #00f6ff; color: #00f6ff; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">★
+        TOP 1 - Takeru_xiii</button>
+
+      <!-- TOP 2-15 -->
+      <button onclick="testUser('James_193')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 2 - James_193</button>
+      <button onclick="testUser('Ractor09')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 3 - Ractor09</button>
+      <button onclick="testUser('Xroockk')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 4 - Xroockk</button>
+      <button onclick="testUser('X1lenz')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 5 - X1lenz</button>
+      <button onclick="testUser('C_h_a_n_d_a_l_f')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 6 - C_h_a_n_d_a_l_f</button>
+      <button onclick="testUser('Broxa24')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 7 - Broxa24</button>
+      <button onclick="testUser('Manguerazo')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 8 - Manguerazo</button>
+      <button onclick="testUser('Darkous666')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 9 - Darkous666</button>
+      <button onclick="testUser('Ccxsnop')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 10 - Ccxsnop</button>
+      <button onclick="testUser('Macusam')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 11 - Macusam</button>
+      <button onclick="testUser('Urimas82')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 12 - Urimas82</button>
+      <button onclick="testUser('Nanusso')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 13 - Nanusso</button>
+      <button onclick="testUser('Reichskanz')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 14 - Reichskanz</button>
+      <button onclick="testUser('Mambiitv')"
+        style="padding: 6px 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">♛
+        TOP 15 - Mambiitv</button>
+    </div>
+
+    <div style="font-size: 11px; color: #888; margin-bottom: 8px;">OTROS:</div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <button onclick="testUser('Ferminico')"
+        style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.4); color: #fff; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">#
+        TOP 241 - Ferminico</button>
+
+      <button onclick="testUser('UsuarioNuevo')"
+        style="padding: 6px 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #888; cursor: pointer; font-family: inherit; font-size: 10px; text-align: left;">Sin
+        ranking - UsuarioNuevo</button>
+    </div>
+
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0, 246, 255, 0.2);">
+      <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">USUARIO PERSONALIZADO:</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="custom-user" placeholder="Nombre..." style="
+          flex: 1;
+          padding: 8px;
+          background: rgba(0,0,0,0.5);
+          border: 1px solid rgba(0, 246, 255, 0.3);
+          color: #fff;
+          font-family: inherit;
+          font-size: 12px;
+        ">
+        <button onclick="testUser(document.getElementById('custom-user').value)" style="
+          padding: 8px 15px;
+          background: rgba(0, 246, 255, 0.2);
+          border: 1px solid #00f6ff;
+          color: #00f6ff;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 11px;
+        ">TEST</button>
+      </div>
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0, 246, 255, 0.2);">
+        <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">RACHAS (STREAK):</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="streak-days" placeholder="Días..." value="5" min="1" style="
+          flex: 1;
+          padding: 8px;
+          background: rgba(0,0,0,0.5);
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          color: #ffd700;
+          font-family: inherit;
+          font-size: 12px;
+        ">
+          <button onclick="testStreak(document.getElementById('streak-days').value)" style="
+          padding: 8px 15px;
+          background: rgba(255, 215, 0, 0.15);
+          border: 1px solid #ffd700;
+          color: #ffd700;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 11px;
+        ">SET & TEST</button>
+        </div>
+      </div>
+
+      <!-- DATA CONTROLS -->
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 58, 58, 0.3);">
+        <label style="display: block; font-size: 11px; color: #ff3a3a; margin-bottom: 8px;">DATA CONTROLS:</label>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="if(window.exportXPData) window.exportXPData()" style="
+            flex: 1;
+            padding: 6px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+          ">EXPORT LOCAL</button>
+          <button onclick="if(window.resetAllXP) window.resetAllXP()" style="
+            flex: 1;
+            padding: 6px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+          ">RESET ALL XP</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px; font-size: 9px; color: #555; text-align: center;">
+        Pulsa un botón para simular un mensaje
+      </div>
+    </div>
+
+    <script>
+      function testUser(username) {
+        const message = document.getElementById('test-message').value || 'Mensaje de prueba';
+        if (window.simularMensaje && username) {
+          window.simularMensaje(username, message);
+        } else {
+          console.log('Esperando a que cargue la app...');
+        }
+      }
+
+      function testStreak(days) {
+        if (!window.getXPStats) {
+          console.error("XP System not ready");
+          return;
+        }
+
+        // Hacky way to set streak for testing: directly modify service data if possible, 
+        // or just use a specific username that we know we can check.
+        // Since we don't have a direct "setStreak" method exposed to window, 
+        // we'll access the processor via a global reference if available, or just mock it by using the exposed `processor` in App if it was global.
+        // Easier: Use the window.simularMensaje but intercept the processor? No.
+
+        // Let's use the helper we defined in App.js: exposeTestingFunctions
+        // We will assume App instance or processor is reachable via some hack or just add a helper in App.js.
+        // But since I am editing index.html, I can't easily change App.js logic without another edit.
+        // Wait, app.js exposes `window.resetAllXP` which uses `this.processor.getService('xp')`.
+        // I can just add `window.setStreak = ...` to App.js or try to find where `processor` is.
+        // Actually, `App` instance isn't global.
+
+        // ALTERNATIVE: Just ask the user to wait while I add `setStreak` to `App.js`? 
+        // No, I can add it to `App.js` in the next tool call if needed. A better way for now without modifying App.js 
+        // is to cheat: `xpDisplayManager` reads from `xpInfo`.
+
+        // Let's modify App.js to expose `setStreak` is the cleanest way.
+        // For now, I will add the UI button here, and then I will update `App.js` to support it.
+
+        if (window.setTestStreak) {
+          window.setTestStreak('StreakTester', parseInt(days));
+          window.simularMensaje('StreakTester', `Testing streak: ${days} days!`);
+        } else {
+          console.log("Adding setTestStreak to App.js...");
+        }
+      }
+    </script>
+
+    <!-- Scripts externos -->
+    <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.13.7/runtime.min.js"></script>
+    <script src="libs/tmi.min.js"></script>
+
+    <!-- Configuración y datos estáticos -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+
+    <!-- Utilidades -->
+    <script src="js/utils/UIUtils.js"></script>
+
+    <!-- Servicios -->
+    <script src="js/services/DataService.js"></script>
+    <script src="js/services/AudioService.js"></script>
+    <script src="js/services/TwitchService.js"></script>
+    <script src="js/services/RankingSystem.js"></script>
+    <script src="js/services/GistStorageService.js"></script>
+    <script src="js/services/ExperienceService.js"></script>
+
+    <!-- Managers -->
+    <script src="js/managers/UIManager.js"></script>
+    <script src="js/managers/XPDisplayManager.js"></script>
+    <script src="js/managers/MessageProcessor.js"></script>
+
+    <!-- Aplicación principal -->
+    <script src="js/app.js"></script>
+
+    <!-- Fallback para navegadores sin JavaScript -->
+    <noscript>
+      <div style="text-align: center; padding: 20px; color: white;">
+        Este overlay requiere JavaScript para funcionar.
+      </div>
+    </noscript>
+</body>
+
+</html>

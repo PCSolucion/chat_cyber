@@ -1,0 +1,17 @@
+# Archivos de configuración con credenciales
+.env
+config.local.js
+
+# Dependencias
+node_modules/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp

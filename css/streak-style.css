@@ -1,0 +1,28 @@
+/* STREAK INDICATOR - Minimalist */
+.xp-streak {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    /* Tech font instead of Orbitron for data look */
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    /* Dimmed color */
+    letter-spacing: 1px;
+}
+
+.streak-days {
+    color: var(--cyber-cyan);
+}
+
+.streak-mult {
+    color: var(--xp-accent);
+    /* Gold/Yellow for multiplier */
+    opacity: 0.8;
+}
+
+/* No emoji, no animation */
+.xp-streak::before {
+    content: none;
+}
