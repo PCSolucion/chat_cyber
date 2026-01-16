@@ -1,0 +1,45 @@
+/* ===========================================
+   TRANSITIONS - Applied animations
+   =========================================== */
+
+/* ===========================================
+   HIDDEN STATE (Exit animation)
+   =========================================== */
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    animation: slideOutLeft 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* ===========================================
+   VISIBLE STATE (Entry animation)
+   =========================================== */
+
+.container:not(.hidden) {
+    animation: slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* ===========================================
+   STATUS RED ANIMATION (Top 15 / Admin)
+   =========================================== */
+
+.container.status-red {
+    animation: activeBorderPulse 3s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* ===========================================
+   TOP USER ANIMATION (Top 1 - Cyan)
+   =========================================== */
+
+.container.top-user {
+    animation: activeBorderPulseCyan 1.5s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards !important;
+}
+
+/* ===========================================
+   SCANLINES OVERLAY
+   =========================================== */
+
+.container>*:not(.border-glow):not(.container::before):not(.container::after) {
+    position: relative;
+}

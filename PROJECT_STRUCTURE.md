@@ -9,9 +9,35 @@ chat_twitch-main/
 ├── 📦 package.json                 # Configuración de npm
 ├── 📦 package-lock.json            # Lock de dependencias
 │
-├── 🎨 css/                         # Estilos CSS
-│   ├── styles.css                  # Estilos principales (Cyberpunk 2077)
-│   └── user-images.css             # Estilos de imágenes personalizadas
+├── 🎨 css/                         # Estilos CSS (MODULAR)
+│   ├── main.css                    # ⭐ Punto de entrada (importa todo)
+│   │
+│   ├── base/                       # Fundamentos
+│   │   ├── typography.css          # Fuentes Google
+│   │   ├── variables.css           # Variables CSS (colores, tamaños)
+│   │   └── reset.css               # Reset básico
+│   │
+│   ├── animations/                 # Animaciones
+│   │   ├── keyframes.css           # Todas las @keyframes
+│   │   └── transitions.css         # Transiciones aplicadas
+│   │
+│   ├── components/                 # Componentes UI
+│   │   ├── container.css           # Panel principal
+│   │   ├── status-bar.css          # Barra de estado
+│   │   ├── header.css              # Cabecera y username
+│   │   ├── badges.css              # Badges de usuario
+│   │   ├── rank-icons.css          # Iconos de ranking (CSS shapes)
+│   │   ├── user-roles.css          # Estilos por rol (VIP, ADMIN, TOP)
+│   │   ├── data-stream.css         # Separador visual
+│   │   ├── equalizer.css           # Waveform animado
+│   │   ├── message.css             # Área de mensaje/quote
+│   │   └── footer.css              # Footer técnico
+│   │
+│   ├── xp-system.css               # Sistema de XP
+│   ├── streak-style.css            # Estilos de racha
+│   ├── user-images.css             # Imágenes personalizadas
+│   ├── responsive.css              # Media queries
+│   └── styles.backup.css           # 📦 Backup del CSS anterior
 │
 ├── 🎮 js/                          # Lógica JavaScript (MODULAR)
 │   ├── 📄 config.js                # ⚙️  Configuración centralizada
@@ -22,25 +48,77 @@ chat_twitch-main/
 │   │   ├── DataService.js          # Gestión de datos (números, equipos)
 │   │   ├── AudioService.js         # Reproducción de audio
 │   │   ├── TwitchService.js        # Conexión con Twitch IRC
-│   │   └── RankingSystem.js        # Sistema de rankings y roles
+│   │   ├── RankingSystem.js        # Sistema de rankings y roles
+│   │   ├── GistStorageService.js   # Persistencia en Gist
+│   │   └── ExperienceService.js    # Sistema de XP
 │   │
 │   ├── 🎨 managers/                # Managers de alto nivel
-│   │   └── UIManager.js            # Gestión de interfaz de usuario
+│   │   ├── UIManager.js            # Gestión de interfaz de usuario
+│   │   ├── XPDisplayManager.js     # Visualización de XP
+│   │   └── MessageProcessor.js     # Procesador de mensajes
 │   │
 │   └── 🛠️ utils/                  # Utilidades compartidas
 │       └── UIUtils.js              # Funciones auxiliares de UI
 │
 ├── 🖼️ img/                        # Imágenes y recursos gráficos
-│   ├── arasaka.png                 # Logo Arasaka (ADMIN)
-│   ├── liiukiin.png                # Imagen personalizada Admin
-│   ├── top1.png                    # Imagen personalizada TOP 1
-│   └── ractor09.png                # Imagen personalizada Ractor09
+│   └── arasaka.png                 # Logo Arasaka (iconos de rank)
 │
 ├── 📚 libs/                        # Librerías externas
 │   └── tmi.min.js                  # Cliente de Twitch IRC
 │
-└── 🔊 cyberpunk-message.mp3        # Sonido de notificación
+└── 🔊 *.mp3                        # Sonidos de notificación
 ```
+
+---
+
+## Arquitectura CSS Modular
+
+### Beneficios de la Nueva Estructura
+```
+✅ Cambios aislados: Editar un componente NO afecta otros
+✅ Fácil localización: Cada archivo tiene UN propósito
+✅ IA-friendly: Contexto claro para asistentes de código
+✅ Mantenible: Archivos pequeños y enfocados
+✅ Depurable: Fácil identificar origen de estilos
+```
+
+### Mapa de Componentes CSS
+```
+┌─────────────────────────────────────────────────────────┐
+│                     main.css                             │
+│                   (importa todo)                         │
+└─────────────────────────────────────────────────────────┘
+                          │
+    ┌─────────────────────┼─────────────────────┐
+    │                     │                     │
+┌───▼───┐           ┌─────▼─────┐         ┌────▼────┐
+│ base/ │           │animations/│         │components│
+├───────┤           ├───────────┤         ├─────────┤
+│ fonts │           │ keyframes │         │container│
+│ vars  │           │transitions│         │status   │
+│ reset │           └───────────┘         │header   │
+└───────┘                                 │badges   │
+                                          │message  │
+                                          │footer   │
+                                          │ ...     │
+                                          └─────────┘
+```
+
+### Qué Archivo Editar
+
+| Quiero cambiar... | Archivo a editar |
+|-------------------|------------------|
+| Colores del tema | `base/variables.css` |
+| Fuentes | `base/typography.css` |
+| Container principal | `components/container.css` |
+| Nombre de usuario | `components/header.css` |
+| Badges (VIP, TOP, etc) | `components/badges.css` |
+| Iconos de ranking | `components/rank-icons.css` |
+| Estilos por rol | `components/user-roles.css` |
+| Área de mensaje | `components/message.css` |
+| Animaciones | `animations/keyframes.css` |
+| Sistema XP | `xp-system.css` |
+| Responsividad | `responsive.css` |
 
 ---
 

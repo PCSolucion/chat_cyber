@@ -1,0 +1,71 @@
+/* ===========================================
+   CYBERPUNK 2077 CHAT WIDGET - MAIN STYLESHEET
+   Netrunner Edition v2.0 - Modular Architecture
+   
+   Este archivo importa todos los componentes CSS
+   en el orden correcto. Edita los componentes
+   individuales, NO este archivo.
+   =========================================== */
+
+/* ===========================================
+   BASE - Fundamentos
+   =========================================== */
+@import url('base/typography.css');
+/* Fuentes Google */
+@import url('base/variables.css');
+/* Variables CSS */
+@import url('base/reset.css');
+/* Reset básico */
+
+/* ===========================================
+   ANIMATIONS - Keyframes y transiciones
+   =========================================== */
+@import url('animations/keyframes.css');
+/* @keyframes */
+@import url('animations/transitions.css');
+/* Aplicación de animaciones */
+
+/* ===========================================
+   COMPONENTS - Componentes UI
+   =========================================== */
+@import url('components/container.css');
+/* Panel principal */
+@import url('components/status-bar.css');
+/* Barra de estado */
+@import url('components/header.css');
+/* Cabecera y username */
+@import url('components/badges.css');
+/* Badges de usuario */
+@import url('components/rank-icons.css');
+/* Iconos de ranking */
+@import url('components/user-roles.css');
+/* Estilos por rol */
+@import url('components/data-stream.css');
+/* Separador visual */
+@import url('components/equalizer.css');
+/* Waveform animado */
+@import url('components/message.css');
+/* Área de mensaje */
+@import url('components/footer.css');
+/* Footer técnico */
+
+/* ===========================================
+   FEATURE-SPECIFIC CSS
+   =========================================== */
+@import url('user-images.css');
+/* Imágenes de usuario */
+@import url('xp-system.css');
+/* Sistema de XP */
+@import url('streak-style.css');
+/* Estilos de racha */
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+@import url('responsive.css');
+/* Media queries */
+
+/* ===========================================
+   FIN - No añadir estilos aquí
+   Edita los componentes individuales
+   =========================================== */

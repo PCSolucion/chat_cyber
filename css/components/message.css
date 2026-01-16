@@ -1,0 +1,72 @@
+/* ===========================================
+   MESSAGE - Main content area
+   =========================================== */
+
+.quote {
+    padding: 20px;
+    min-height: 100px;
+    max-height: 120px;
+    overflow: hidden;
+    font-size: var(--message-size);
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+    position: relative;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+}
+
+/* Left accent - disabled */
+.quote::before {
+    display: none;
+}
+
+/* Quote marks decoration */
+.quote::after {
+    content: '"';
+    position: absolute;
+    right: 15px;
+    bottom: 5px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 60px;
+    color: var(--cyber-cyan);
+    opacity: 0.08;
+    line-height: 1;
+}
+
+.quote strong {
+    color: var(--cyber-yellow);
+    text-shadow: 0 0 10px rgba(252, 238, 10, 0.5);
+}
+
+/* ===========================================
+   EMOTES
+   =========================================== */
+
+.emote-img {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 3px;
+    height: 1.5em !important;
+    filter: drop-shadow(0 0 3px rgba(0, 246, 255, 0.3));
+}
+
+/* ===========================================
+   DECRYPTION ANIMATION (INCOMING SIGNAL)
+   =========================================== */
+
+.decrypting {
+    animation: decryptPulse 0.1s steps(2) infinite !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyber-cyan) !important;
+    border-right: 5px solid var(--cyber-cyan);
+    background: rgba(0, 246, 255, 0.1);
+}
+
+/* Hide equalizer during incoming transmission */
+.container:has(.decrypting) .equalizer {
+    opacity: 0;
+}

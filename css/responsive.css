@@ -1,0 +1,21 @@
+/* ===========================================
+   RESPONSIVE STYLES
+   Media queries para diferentes tamaños
+   =========================================== */
+
+@media (max-width: 400px) {
+    :root {
+        --container-width: 300px;
+        --username-size: 1.2rem;
+        --message-size: 1.15rem;
+    }
+
+    .quote {
+        padding: 15px;
+        min-height: 80px;
+    }
+
+    .header {
+        padding: 12px;
+    }
+}

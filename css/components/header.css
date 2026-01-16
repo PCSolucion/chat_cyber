@@ -1,0 +1,127 @@
+/* ===========================================
+   HEADER - Username Display (PROMINENT)
+   =========================================== */
+
+.header {
+    padding: 15px 15px 12px;
+    position: relative;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 20px;
+    width: 100%;
+}
+
+/* Container for Image + Badge stacking */
+.user-identity-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 10px;
+    gap: 2px;
+}
+
+/* Modifier: Horizontal layout for Admin */
+.user-identity-stack.horizontal-stack {
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 12px;
+    margin-left: 15px;
+}
+
+/* Force custom image to center in stack */
+.custom-user-img {
+    align-self: center;
+}
+
+/* Hexagon icon - hidden */
+.mission-icon {
+    display: none;
+}
+
+/* ===========================================
+   USERNAME - Big and Bold
+   =========================================== */
+
+.driver-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: var(--username-size);
+    color: var(--cyber-yellow);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: var(--glow-yellow);
+    position: relative;
+    animation: usernameGlow 3s ease-in-out infinite;
+}
+
+/* ===========================================
+   HEADER DECORATIONS
+   =========================================== */
+
+.header-right {
+    display: none;
+}
+
+.live-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--cyber-red);
+    letter-spacing: 2px;
+    padding: 2px 6px;
+    border: 1px solid var(--cyber-red);
+    background: rgba(255, 0, 60, 0.15);
+    box-shadow: var(--glow-red);
+    animation: liveFlicker 2s ease-in-out infinite;
+}
+
+.header-deco {
+    display: flex;
+    gap: 3px;
+}
+
+.header-deco span {
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--cyber-cyan);
+    opacity: 0.3;
+    transition: all 0.3s ease;
+}
+
+.header-deco span:nth-child(3) {
+    background: var(--cyber-cyan);
+    opacity: 1;
+    box-shadow: 0 0 8px var(--cyber-cyan);
+}
+
+/* ===========================================
+   RADIO LABEL (Rank Title)
+   =========================================== */
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
+    padding-left: 2px;
+    margin-top: 5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(0, 246, 255, 0.5);
+    font-weight: 700;
+}

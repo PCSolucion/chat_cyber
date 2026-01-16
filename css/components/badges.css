@@ -1,0 +1,108 @@
+/* ===========================================
+   USER BADGE STYLES (VIP/TOP/ADMIN/RANKED)
+   =========================================== */
+
+.user-badge {
+    display: none;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    position: relative;
+
+    /* Corte angular sutil - solo esquina inferior derecha */
+    clip-path: polygon(0 0,
+            100% 0,
+            100% calc(100% - 4px),
+            calc(100% - 4px) 100%,
+            0 100%);
+}
+
+/* ===========================================
+   VIP Badge - Red (Matched to Admin, No Animation)
+   =========================================== */
+
+.user-badge.vip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--cyber-red);
+    background: rgba(255, 0, 60, 0.15);
+    border: 1px solid rgba(255, 0, 60, 0.5);
+    box-shadow: 0 0 5px rgba(255, 0, 60, 0.2);
+    font-size: 11px;
+}
+
+.user-badge.vip::before {
+    content: '♛';
+    font-size: 10px;
+}
+
+/* ===========================================
+   TOP Badge - Red (Matched to Admin)
+   =========================================== */
+
+.user-badge.top-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--cyber-red);
+    background: rgba(255, 0, 60, 0.2);
+    border: 1px solid var(--cyber-red);
+    box-shadow: 0 0 8px rgba(255, 0, 60, 0.3);
+    animation: topBadgePulse 3s ease-in-out infinite;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.user-badge.top-user::before {
+    content: '★';
+    font-size: 11px;
+}
+
+/* ===========================================
+   ADMIN Badge - Red/Magenta Shield
+   =========================================== */
+
+.user-badge.admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--cyber-red);
+    background: rgba(255, 0, 60, 0.2);
+    border: 1px solid var(--cyber-red);
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+    animation: adminBadgePulse 2s ease-in-out infinite;
+}
+
+.user-badge.admin::before {
+    content: '⚡';
+    font-size: 11px;
+}
+
+/* ===========================================
+   RANKED Badge - White/neutral (TOP 16+)
+   =========================================== */
+
+.user-badge.ranked {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-bright);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 0 8px rgba(255, 255, 255, 0.3),
+        inset 0 0 10px rgba(255, 255, 255, 0.05),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.user-badge.ranked::before {
+    content: '#';
+    font-size: 9px;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+}
