@@ -31,6 +31,7 @@ class GistStorageService {
         this.cache = null;
         this.cacheTimestamp = null;
         this.cacheTTL = 60000; // 1 minuto de cache
+        this.lastError = null; // Store last error for UI debugging
 
         // Control de rate limiting
         this.requestCount = 0;
@@ -56,6 +57,7 @@ class GistStorageService {
             console.log('✅ GistStorageService configurado correctamente');
         } else {
             console.warn('⚠️ GistStorageService: Faltan credenciales (gistId o token)');
+            this.lastError = 'Credenciales no configuradas (Revisa config.js)';
         }
     }
 
@@ -95,7 +97,10 @@ class GistStorageService {
      * @returns {Promise<Object|null>}
      */
     async loadXPData(forceRefresh = false) {
+        this.lastError = null;
+
         if (!this.checkConfiguration()) {
+            this.lastError = "Configuración faltante";
             return this.loadFromLocalStorage();
         }
 
@@ -119,7 +124,10 @@ class GistStorageService {
             this.updateRateLimitInfo(response);
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const statusText = response.statusText || 'Unknown Error';
+                const errorMsg = `GitHub API Error: ${response.status} ${statusText}`;
+                this.lastError = errorMsg;
+                throw new Error(errorMsg);
             }
 
             const gist = await response.json();
@@ -129,27 +137,31 @@ class GistStorageService {
 
             if (!file) {
                 console.warn(`⚠️ Archivo ${this.fileName} no encontrado en Gist, creando...`);
+                // Reset error if we are handling it
                 return this.createEmptyXPFile();
             }
 
             // Parsear contenido JSON
-            const data = JSON.parse(file.content);
+            try {
+                const data = JSON.parse(file.content);
+                // Actualizar cache
+                this.cache = data;
+                this.cacheTimestamp = Date.now();
+                // También guardar en localStorage como backup
+                this.saveToLocalStorage(data);
 
-            // Actualizar cache
-            this.cache = data;
-            this.cacheTimestamp = Date.now();
-
-            // También guardar en localStorage como backup
-            this.saveToLocalStorage(data);
-
-            if (this.config.DEBUG) {
-                console.log('✅ XP data cargado desde Gist');
+                if (this.config.DEBUG) {
+                    console.log('✅ XP data cargado desde Gist');
+                }
+                return data;
+            } catch (e) {
+                this.lastError = "Error parseando JSON del Gist";
+                throw e;
             }
-
-            return data;
 
         } catch (error) {
             console.error('❌ Error al cargar XP data desde Gist:', error);
+            if (!this.lastError) this.lastError = error.message;
 
             // Fallback a localStorage
             return this.loadFromLocalStorage();

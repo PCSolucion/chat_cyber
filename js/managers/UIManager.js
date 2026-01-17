@@ -48,6 +48,7 @@ class UIManager {
             message: document.getElementById('message'),
             container: document.querySelector('.container'),
             userBadge: document.getElementById('user-badge'),
+            adminIcon: document.getElementById('admin-icon'),
             // rankIcon: document.getElementById('rank-icon'), // Removed
             // rankText: document.getElementById('rank-text'), // Removed
             customUserImage: document.getElementById('custom-user-image'),
@@ -181,6 +182,47 @@ class UIManager {
             // Actualizar nombre de usuario
             this.dom.username.textContent = displayUsername;
             this.dom.username.setAttribute('data-text', displayUsername);
+
+            // Ajustar tamaño de fuente para nombres largos
+            if (displayUsername.length > 12) {
+                this.dom.username.classList.add('small-text');
+            } else {
+                this.dom.username.classList.remove('small-text');
+            }
+
+            // Gestionar icono de admin (Arasaka) o Rangos Especiales
+            if (this.dom.adminIcon) {
+                const isAdmin = username.toLowerCase() === (this.config.SPECIAL_USER?.username || 'liiukiin').toLowerCase();
+                const rankTitle = userRole.rankTitle ? userRole.rankTitle.title : '';
+
+                if (isAdmin) {
+                    this.dom.adminIcon.src = 'img/arasaka.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'CIVILIAN') {
+                    this.dom.adminIcon.src = 'img/civilian.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'STREET RAT') {
+                    this.dom.adminIcon.src = 'img/streetrat.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'MERCENARY') {
+                    this.dom.adminIcon.src = 'img/mercenary.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'SOLO') {
+                    this.dom.adminIcon.src = 'img/solo.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'NETRUNNER') {
+                    this.dom.adminIcon.src = 'img/netrunner.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'FIXER') {
+                    this.dom.adminIcon.src = 'img/fixer.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (rankTitle === 'CORPO') {
+                    this.dom.adminIcon.src = 'img/corpo.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else {
+                    this.dom.adminIcon.style.display = 'none';
+                }
+            }
 
             // Gestionar imagen personalizada
             this.updateCustomUserImage(displayUsername, userRole);

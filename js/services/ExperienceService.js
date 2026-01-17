@@ -114,7 +114,16 @@ class ExperienceService {
                 minTimeBetweenXP: 1000, // 1 segundo mínimo entre ganancias de XP
                 saveDebounceMs: 5000,   // Guardar cada 5 segundos máximo
                 maxXPPerMessage: 100    // Límite de XP por mensaje individual
-            }
+            },
+
+            // Multiplicadores de racha (días -> multiplicador)
+            streakMultipliers: [
+                { minDays: 20, multiplier: 3.0 },   // 20+ días = x3
+                { minDays: 10, multiplier: 2.0 },   // 10+ días = x2
+                { minDays: 5, multiplier: 1.5 },    // 5+ días = x1.5
+                { minDays: 3, multiplier: 1.2 },    // 3+ días = x1.2
+                { minDays: 0, multiplier: 1.0 }     // Default = x1
+            ]
         };
     }
 
@@ -169,7 +178,8 @@ class ExperienceService {
                         streakDays: userData.streakDays || 0,
                         lastStreakDate: userData.lastStreakDate || null,
                         totalMessages: userData.totalMessages || 0,
-                        achievements: userData.achievements || []
+                        achievements: userData.achievements || [],
+                        achievementStats: userData.achievementStats || {}
                     });
                 });
             }
@@ -255,6 +265,26 @@ class ExperienceService {
 
         // Obtener o crear datos del usuario
         let userData = this.getUserData(lowerUser);
+
+        // Verificar cooldown global de XP
+        const now = Date.now();
+        if (userData.lastActivity && (now - userData.lastActivity) < this.xpConfig.settings.minTimeBetweenXP) {
+            return {
+                username: lowerUser,
+                xpGained: 0,
+                xpBeforeMultiplier: 0,
+                xpSources: [],
+                totalXP: userData.xp,
+                level: userData.level,
+                previousLevel: userData.level,
+                leveledUp: false,
+                levelProgress: this.getLevelProgress(userData.xp, userData.level),
+                levelTitle: this.getLevelTitle(userData.level),
+                streakDays: userData.streakDays || 0,
+                streakMultiplier: this.getStreakMultiplier(userData.streakDays || 0)
+            };
+        }
+
         const previousLevel = userData.level;
 
         // Calcular XP ganado de cada fuente
@@ -307,8 +337,13 @@ class ExperienceService {
             xpSources.push({ source: 'STREAK_BONUS', xp: this.xpConfig.sources.STREAK_BONUS.xp });
         }
 
-        // Aplicar límite máximo por mensaje
-        totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage);
+        // 8. Calcular y aplicar multiplicador de racha
+        const streakMultiplier = this.getStreakMultiplier(streakResult.streakDays);
+        const xpBeforeMultiplier = totalXP;
+        totalXP = Math.floor(totalXP * streakMultiplier);
+
+        // Aplicar límite máximo por mensaje (después del multiplicador)
+        totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage * streakMultiplier);
 
         // Actualizar datos del usuario
         userData.xp += totalXP;
@@ -335,13 +370,16 @@ class ExperienceService {
         return {
             username: lowerUser,
             xpGained: totalXP,
+            xpBeforeMultiplier,
             xpSources,
             totalXP: userData.xp,
             level: newLevel,
             previousLevel,
             leveledUp,
             levelProgress: this.getLevelProgress(userData.xp, newLevel),
-            levelTitle: this.getLevelTitle(newLevel)
+            levelTitle: this.getLevelTitle(newLevel),
+            streakDays: userData.streakDays || 0,
+            streakMultiplier
         };
     }
 
@@ -361,7 +399,8 @@ class ExperienceService {
                 streakDays: 0,
                 lastStreakDate: null,
                 totalMessages: 0,
-                achievements: []
+                achievements: [],
+                achievementStats: {}
             });
         }
 
@@ -503,6 +542,23 @@ class ExperienceService {
     }
 
     /**
+     * Calcula el multiplicador de XP basado en los días de racha
+     * @param {number} streakDays - Días de racha consecutivos
+     * @returns {number} Multiplicador (1.0, 1.5, 2.0, 3.0)
+     */
+    getStreakMultiplier(streakDays) {
+        const multipliers = this.xpConfig.streakMultipliers;
+
+        for (const tier of multipliers) {
+            if (streakDays >= tier.minDays) {
+                return tier.multiplier;
+            }
+        }
+
+        return 1.0; // Default
+    }
+
+    /**
      * Obtiene la fecha actual en formato YYYY-MM-DD (Hora Local)
      * @returns {string}
      */
@@ -592,7 +648,8 @@ class ExperienceService {
             level: userData.level,
             title: this.getLevelTitle(userData.level),
             progress,
-            streakDays: userData.streakDays,
+            streakDays: userData.streakDays || 0,
+            streakMultiplier: this.getStreakMultiplier(userData.streakDays || 0),
             totalMessages: userData.totalMessages,
             achievements: userData.achievements
         };

@@ -19,7 +19,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 20px;
+    padding-left: 0;
+    /* Eliminado padding extra a la izquierda */
     width: 100%;
 }
 
@@ -28,8 +29,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: auto;
-    margin-right: 10px;
+    margin-left: 10px;
+    /* Cambiado de auto a 10px para pegar al nombre */
+    margin-right: auto;
+    /* Opcional: empujar el resto a la derecha */
     gap: 2px;
 }
 
@@ -51,6 +54,15 @@
     display: none;
 }
 
+.admin-icon {
+    display: none;
+    height: 35px;
+    width: auto;
+    margin-right: 5px;
+    filter: drop-shadow(0 0 5px rgba(255, 0, 60, 0.5));
+    object-fit: contain;
+}
+
 /* ===========================================
    USERNAME - Big and Bold
    =========================================== */
@@ -65,6 +77,15 @@
     text-shadow: var(--glow-yellow);
     position: relative;
     animation: usernameGlow 3s ease-in-out infinite;
+    white-space: nowrap;
+    /* Evitar saltos de línea */
+}
+
+/* Fuente más pequeña para nombres largos */
+.driver-name.small-text {
+    font-size: clamp(14px, 2.5em, 24px) !important;
+    /* Reducir tamaño dinámicamente */
+    letter-spacing: 2px;
 }
 
 /* ===========================================

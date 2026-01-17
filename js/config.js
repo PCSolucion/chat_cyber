@@ -56,8 +56,8 @@ const CONFIG = {
   // IMPORTANTE: Crea un Gist privado y obtén un Personal Access Token
   // con permisos de "gist" en https://github.com/settings/tokens
   // Reemplaza estos valores con tus propias credenciales
-  XP_GIST_ID: 'YOUR_GIST_ID_HERE', // ID del Gist
-  XP_GIST_TOKEN: 'YOUR_GITHUB_TOKEN_HERE', // Personal Access Token de GitHub
+  XP_GIST_ID: '16f750fb60b890aa9b06e53cc97cc49e', // ID del Gist restaurado
+  XP_GIST_TOKEN: 'YOUR_TOKEN_HERE', // Token actualizado
   XP_GIST_FILENAME: 'xp_data.json', // Nombre del archivo en el Gist
 
   // Sonido de Level Up (opcional)

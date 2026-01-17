@@ -13,10 +13,12 @@ class XPDisplayManager {
      * Constructor del manager de display de XP
      * @param {Object} config - Configuración global
      * @param {ExperienceService} experienceService - Servicio de XP
+     * @param {AchievementService} achievementService - Servicio de Logros
      */
-    constructor(config, experienceService) {
+    constructor(config, experienceService, achievementService) {
         this.config = config;
         this.experienceService = experienceService;
+        this.achievementService = achievementService;
 
         // Referencias DOM
         this.dom = {
@@ -28,8 +30,15 @@ class XPDisplayManager {
             xpTitle: null,
             xpGainContainer: null,
             levelUpInline: null,
-            levelUpNumber: null
+            levelUpNumber: null,
+            xpAchievements: null
         };
+
+        // Cache de total logros
+        this.totalAchievements = 0;
+        if (this.achievementService && this.achievementService.achievements) {
+            this.totalAchievements = Object.keys(this.achievementService.achievements).length;
+        }
 
         // Estado
         this.levelUpTimeout = null;
@@ -72,7 +81,8 @@ class XPDisplayManager {
             xpTitle: document.getElementById('xp-title'),
             xpGainContainer: document.getElementById('xp-gain-container'),
             levelUpInline: document.getElementById('xp-levelup-inline'),
-            levelUpNumber: document.getElementById('levelup-number')
+            levelUpNumber: document.getElementById('levelup-number'),
+            xpAchievements: document.getElementById('xp-achievements')
         };
     }
 
@@ -144,38 +154,36 @@ class XPDisplayManager {
         }
 
         // Actualizar Racha (Streak)
-        const streakContainer = document.getElementById('xp-streak'); // Direct element fetch strictly for safety or add to dom refs
-        if (streakContainer) { // Usar this.dom.streak si actualizo referencias, pero por seguridad y rapidez usaremos getElement aquí o actualizaremos todo.
-            // Recuperar racha. trackMessage devuelve streakDays en xpInfo?
-            // xpInfo viene de context o getUserXPInfo.
-            // getUserXPInfo devuelve { streakDays: ... }
-            // trackMessage devuelve en xpResult la info completa?
-            // El código de messageProcessor trackMessage devuelve:
-            // return { ..., totalXP: userData.xp, streakDays: userData.streakDays (Wait, let me check ExperienceService again) }
-            // ExperienceService line 335 returns object.
-            // Line 317: userData.streakDays is updated.
-            // Line 587: getUserXPInfo returns streakDays.
-
-            // Check if xpInfo has streakDays
+        const streakContainer = document.getElementById('xp-streak');
+        if (streakContainer) {
+            // Obtener días de racha y multiplicador del xpResult
             const streakDays = xpInfo.streakDays || (xpResult && xpResult.streakDays) || 0;
-            const multiplier = Math.max(1, Math.min(streakDays, 3));
+            const multiplier = xpInfo.streakMultiplier || (xpResult && xpResult.streakMultiplier) || 1;
 
             streakContainer.style.display = 'flex';
 
-            if (streakDays > 1) {
-                // Formato con racha: "5d [x3]"
-                streakContainer.innerHTML = `
-                    <span class="streak-days">${streakDays}d</span>
-                    <span class="streak-mult">[x${multiplier}]</span>
-                 `;
-                streakContainer.title = `Racha: ${streakDays} días (Bonus x${multiplier})`;
-            } else {
-                // Formato base: solo multiplicador "[x1]"
-                streakContainer.innerHTML = `
-                    <span class="streak-mult" style="opacity: 0.5;">[x1]</span>
-                 `;
-                streakContainer.title = `Sin racha activa (Bonus x1)`;
-            }
+            // Formatear multiplicador: mostrar decimales solo si es necesario (x1.5 vs x2)
+            const multDisplay = multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1);
+
+            // Mostrar con etiquetas descriptivas
+            streakContainer.innerHTML = `
+                <span class="streak-label">RACHA:</span>
+                <span class="streak-days">${streakDays}d</span>
+                <span class="streak-label">BONUS:</span>
+                <span class="streak-mult" style="${multiplier <= 1 ? 'opacity: 0.5;' : ''}">x${multDisplay}</span>
+            `;
+            streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
+        }
+
+        // Actualizar Contadores de Logros
+        if (this.dom.xpAchievements && this.totalAchievements > 0) {
+            const unlockedCount = (xpInfo.achievements || []).length;
+            this.dom.xpAchievements.style.display = 'flex';
+            this.dom.xpAchievements.innerHTML = `
+                <span class="streak-label">LOGROS:</span>
+                <span class="streak-days">${unlockedCount}/${this.totalAchievements}</span>
+            `;
+            this.dom.xpAchievements.title = `Logros desbloqueados: ${unlockedCount} de ${this.totalAchievements}`;
         }
 
         // Mostrar XP ganado si hay

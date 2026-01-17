@@ -151,6 +151,53 @@ class App {
                     console.log(`🔥 Streak set for ${username}: ${days} days`);
                 }
             };
+
+            // TEST GIST CONNECTION
+            window.testGistConnection = async () => {
+                const gistService = this.processor.getService('gist');
+                if (!gistService) {
+                    alert('❌ Servicio Gist no inicializado');
+                    return;
+                }
+
+                if (!gistService.isConfigured) {
+                    alert('⚠️ Gist no configurado en config.js (Faltan ID o Token)');
+                    return;
+                }
+
+                console.log('📡 Verificando conexión Gist...');
+                const success = await gistService.testConnection();
+                if (success) {
+                    alert('✅ CONEXIÓN EXITOSA: El sistema puede leer y escribir en el Gist.');
+                } else {
+                    alert('❌ ERROR DE CONEXIÓN: Verifica tu Token y ID en config.js. Revisa la consola para más detalles.');
+                }
+            };
+
+            // TEST ACHIEVEMENT NOTIFICATION
+            window.testAchievement = () => {
+                const achievementService = this.processor.getService('achievements');
+                if (!achievementService) {
+                    alert('❌ Servicio de Logros no inicializado');
+                    return;
+                }
+
+                // Lista de logros de prueba con diferentes rarezas
+                const testAchievements = [
+                    { id: 'test_common', name: 'First Words', description: 'Tu primer mensaje en el chat', rarity: 'common', icon: '💬' },
+                    { id: 'test_uncommon', name: 'Motormouth', description: 'Hablas más que un fixer', rarity: 'uncommon', icon: '🎙️' },
+                    { id: 'test_rare', name: 'Voice of Night City', description: 'Tu voz resuena en las calles', rarity: 'rare', icon: '🌃' },
+                    { id: 'test_epic', name: 'Chrome Tongue', description: 'Lengua mejorada cyberware', rarity: 'epic', icon: '🦾' },
+                    { id: 'test_legendary', name: 'Netrunner Comms', description: 'Comunicaciones de élite', rarity: 'legendary', icon: '🧠' }
+                ];
+
+                // Elegir uno aleatorio
+                const randomAchievement = testAchievements[Math.floor(Math.random() * testAchievements.length)];
+
+                // Emitir el evento como si fuera un logro real
+                achievementService.emitAchievementUnlocked('TestUser', randomAchievement);
+                console.log(`🏆 TEST: Mostrando logro "${randomAchievement.name}" (${randomAchievement.rarity})`);
+            };
         }
     }
 

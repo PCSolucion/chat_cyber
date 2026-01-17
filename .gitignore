@@ -15,3 +15,6 @@ Thumbs.db
 # Archivos temporales
 *.tmp
 *.temp
+
+# Configuration files with secrets
+js/config.js

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- CSP Permisiva para permitir GitHub API y Google Analytics -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://api.github.com https://www.google-analytics.com https://raw.githubusercontent.com https://gist.githubusercontent.com; img-src 'self' data: https:; media-src 'self' data: https:;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logros - Chat Cyberpunk</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* COLORES PRINCIPALES (Cyberpunk 2077) */
+            --cyber-red: #ff003c;
+            --cyber-yellow: #DABD58;
+            --takeru-yellow: #fcee09;
+            --cyber-cyan: #00f6ff;
+            --cyber-magenta: #d900ff;
+            --cyber-blue: #05d5fa;
+            --cyber-hot-pink: #ff2a6d;
+            --cyber-green: #00ff88;
+            --cyber-orange: #ff9500;
+
+            /* XP SYSTEM REDS (Widget Palette) */
+            --xp-primary: #ff3a3a;
+            --xp-primary-dark: #cc0000;
+            --xp-primary-light: #ff6666;
+            --xp-accent: #ffd700;
+
+            /* FONDOS */
+            --bg-dark: #0a0a0f;
+            --bg-panel: rgba(10, 10, 18, 0.95);
+            --bg-card: rgba(20, 10, 10, 0.6);
+            /* Slightly reddish tint for cards */
+
+            /* GLOWS */
+            --border-glow: rgba(255, 58, 58, 0.4);
+            /* Red glow */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at top, rgba(255, 58, 58, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom, rgba(0, 246, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border-glow);
+            background: linear-gradient(to right, transparent, rgba(255, 58, 58, 0.05), transparent);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--xp-primary-light), var(--xp-primary), var(--cyber-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 58, 58, 0.5);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--xp-primary-light);
+            text-shadow: 0 0 10px var(--xp-primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* CATEGORY TABS */
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 0 10px;
+        }
+
+        .tab {
+            font-family: 'Share Tech Mono', monospace;
+            padding: 10px 20px;
+            background: rgba(255, 58, 58, 0.1);
+            /* Red tint */
+            border: 1px solid rgba(255, 58, 58, 0.3);
+            color: var(--xp-primary-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .tab:hover,
+        .tab.active {
+            background: rgba(255, 58, 58, 0.3);
+            box-shadow: 0 0 20px rgba(255, 58, 58, 0.2);
+            border-color: var(--xp-primary);
+        }
+
+        .tab.active {
+            background: var(--xp-primary);
+            color: #fff;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* CATEGORY SECTION */
+        .category-section {
+            margin-bottom: 40px;
+            display: none;
+        }
+
+        .category-section.active {
+            display: block;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-glow);
+            color: var(--xp-primary-light);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(255, 58, 58, 0.5);
+        }
+
+        .category-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--xp-primary-light);
+            text-shadow: 0 0 5px var(--xp-primary);
+        }
+
+        .category-count {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: auto;
+        }
+
+        /* ACHIEVEMENTS GRID */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .achievement-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 58, 58, 0.2);
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+        }
+
+        .achievement-card:hover {
+            border-color: var(--xp-primary);
+            box-shadow: 0 0 20px rgba(255, 58, 58, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .achievement-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            background: linear-gradient(135deg, transparent 50%, rgba(255, 58, 58, 0.3) 50%);
+        }
+
+        /* ... existing card styles ... */
+
+
+        .achievement-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .achievement-id {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+        }
+
+        .achievement-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .achievement-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .achievement-condition {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--cyber-yellow);
+            padding: 5px 10px;
+            background: rgba(240, 255, 0, 0.1);
+            border-left: 2px solid var(--cyber-yellow);
+        }
+
+        /* RARITY COLORS */
+        .achievement-card[data-rarity="common"] {
+            border-left: 3px solid #888;
+        }
+
+        .achievement-card[data-rarity="uncommon"] {
+            border-left: 3px solid var(--cyber-green);
+        }
+
+        .achievement-card[data-rarity="rare"] {
+            border-left: 3px solid var(--cyber-cyan);
+        }
+
+        .achievement-card[data-rarity="epic"] {
+            border-left: 3px solid var(--cyber-magenta);
+        }
+
+        .achievement-card[data-rarity="legendary"] {
+            border-left: 3px solid var(--cyber-yellow);
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid var(--border-glow);
+            margin-top: 40px;
+        }
+
+        .footer p {
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏆 LOGROS</h1>
+            <p>Sistema de Logros - Chat Cyberpunk</p>
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value">115</div>
+                    <div class="stat-label">Total Logros</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Categorías</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- TOP ACHIEVEMENT HUNTERS -->
+        <div id="top-hunters" style="margin-bottom: 40px; text-align: center;">
+            <h2 style="
+                font-family: 'Orbitron', sans-serif;
+                color: var(--cyber-yellow);
+                text-shadow: 0 0 10px var(--cyber-yellow);
+                margin-bottom: 20px;
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            ">🏆 TOP CAZADORES</h2>
+            <div id="hunters-list" style="
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            ">
+                <!-- Se llenará dinámicamente -->
+                <div style="color: #666; font-family: 'Share Tech Mono', monospace;">Cargando datos...</div>
+            </div>
+        </div>
+
+        <!-- SEARCH SECTION -->
+        <div class="search-container" style="text-align: center; margin-bottom: 30px;">
+            <input type="text" id="username-search" placeholder="Buscar usuario..." style="
+                padding: 15px 25px;
+                font-family: 'Share Tech Mono', monospace;
+                font-size: 1.2rem;
+                background: rgba(0, 0, 0, 0.5);
+                border: 1px solid var(--cyber-cyan);
+                color: #fff;
+                width: 300px;
+                outline: none;
+                text-transform: uppercase;
+                box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+            ">
+            <button id="search-btn" style="
+                padding: 15px 30px;
+                font-family: 'Orbitron', sans-serif;
+                font-weight: 700;
+                background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(0, 240, 255, 0.1));
+                border: 1px solid var(--cyber-cyan);
+                color: var(--cyber-cyan);
+                cursor: pointer;
+                margin-left: 10px;
+                transition: all 0.3s ease;
+            ">CONSULTAR</button>
+        </div>
+
+        <!-- USER SUMMARY (Hidden by default) -->
+        <div id="user-summary" style="
+            display: none;
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.05), transparent);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            gap: 30px;
+        ">
+            <div style="flex: 1;">
+                <h2 id="summary-username" style="
+                    font-family: 'Orbitron', sans-serif; 
+                    color: #fff; 
+                    font-size: 2rem; 
+                    text-transform: uppercase;
+                    margin-bottom: 5px;
+                ">USERNAME</h2>
+                <div id="summary-rank" style="
+                    font-family: 'Share Tech Mono', monospace;
+                    color: var(--cyber-yellow);
+                    font-size: 1.2rem;
+                ">RANK: CIVILIAN</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.9rem; color: #888;">LOGROS DESBLOQUEADOS</div>
+                <div id="summary-progress" style="
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 2.5rem;
+                    color: var(--cyber-cyan);
+                    text-shadow: 0 0 10px var(--cyber-cyan);
+                ">0/115</div>
+            </div>
+        </div>
+
+        <div class="category-tabs">
+            <button class="tab active" data-category="all">📋 TODOS</button>
+            <button class="tab" data-category="messages">📝 MENSAJES</button>
+            <button class="tab" data-category="streaks">🔥 RACHAS</button>
+            <button class="tab" data-category="levels">⬆️ NIVELES</button>
+            <button class="tab" data-category="xp">💎 XP</button>
+            <button class="tab" data-category="ranking">🏅 RANKING</button>
+            <button class="tab" data-category="stream">🎮 STREAM</button>
+            <button class="tab" data-category="holidays">📅 FESTIVOS</button>
+            <button class="tab" data-category="special">🌟 ESPECIALES</button>
+        </div>
+
+        <main id="achievements-container"></main>
+
+        <footer class="footer">
+            <p>CHAT CYBERPUNK // ACHIEVEMENT SYSTEM v1.0</p>
+        </footer>
+    </div>
+
+    <!-- SCRIPTS OBLIGATORIOS PARA LEER DATOS REALES -->
+    <script src="js/config.js"></script>
+    <script src="js/services/GistStorageService.js"></script>
+    <script src="js/services/ExperienceService.js"></script>
+    <!-- No necesitamos Ranking ni otros servicios complejos, solo XP/Gist para leer Achievements -->
+
+    <script>
+        // CSS para estado Locked
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = `
+            .achievement-card.locked {
+                filter: grayscale(1) opacity(0.5);
+                border-color: rgba(255, 255, 255, 0.1);
+                background: rgba(10, 10, 15, 0.8);
+            }
+            .achievement-card.locked:hover {
+                transform: none;
+                box-shadow: none;
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            .achievement-card.locked .achievement-condition {
+                color: #666;
+                background: rgba(255, 255, 255, 0.05);
+                border-left-color: #666;
+            }
+            .achievement-card.unlocked {
+                box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+                border-color: var(--cyber-cyan);
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        // Definición de Logros (Misma que AchievementService.js)
+        const achievementsData = {
+            messages: {
+                icon: "📝",
+                title: "MENSAJES",
+                items: [
+                    { id: "first_words", name: "First Words", desc: "Tu primer mensaje en el chat", condition: "1 mensaje enviado", rarity: "common" },
+                    { id: "chatterbox", name: "Chatterbox", desc: "No puedes parar de escribir", condition: "50 mensajes", rarity: "common" },
+                    { id: "talkative", name: "Talkative", desc: "Comunicación constante", condition: "100 mensajes", rarity: "common" },
+                    { id: "motormouth", name: "Motormouth", desc: "Hablas más que un fixer", condition: "250 mensajes", rarity: "uncommon" },
+                    { id: "choom_speaker", name: "Choom Speaker", desc: "Maestro de la conversación", condition: "500 mensajes", rarity: "uncommon" },
+                    { id: "voice_of_night_city", name: "Voice of Night City", desc: "Tu voz resuena en las calles", condition: "1,000 mensajes", rarity: "rare" },
+                    { id: "legendary_talker", name: "Legendary Talker", desc: "Leyenda del chat", condition: "2,500 mensajes", rarity: "rare" },
+                    { id: "chrome_tongue", name: "Chrome Tongue", desc: "Lengua mejorada cyberware", condition: "5,000 mensajes", rarity: "epic" },
+                    { id: "infinite_broadcast", name: "Infinite Broadcast", desc: "Emisión sin fin", condition: "10,000 mensajes", rarity: "epic" },
+                    { id: "netrunner_comms", name: "Netrunner Comms", desc: "Comunicaciones de élite", condition: "25,000 mensajes", rarity: "legendary" },
+                    { id: "early_bird", name: "Early Bird", desc: "Primer mensaje del día", condition: "1 primer mensaje diario", rarity: "common" },
+                    { id: "morning_regular", name: "Morning Regular", desc: "Madrugador habitual", condition: "10 primeros mensajes", rarity: "uncommon" },
+                    { id: "dawn_patrol", name: "Dawn Patrol", desc: "Patrulla del amanecer", condition: "30 primeros mensajes", rarity: "rare" },
+                    { id: "emote_user", name: "Emote User", desc: "Usaste un emote", condition: "1 mensaje con emote", rarity: "common" },
+                    { id: "emote_spammer", name: "Emote Spammer", desc: "Fan de los emotes", condition: "100 mensajes con emotes", rarity: "uncommon" },
+                    { id: "emote_master", name: "Emote Master", desc: "Maestro del emote", condition: "500 mensajes con emotes", rarity: "rare" },
+                    { id: "mention_someone", name: "Mention Someone", desc: "Mencionaste a alguien", condition: "1 mención", rarity: "common" },
+                    { id: "social_butterfly", name: "Social Butterfly", desc: "Muy sociable", condition: "50 menciones", rarity: "uncommon" },
+                    { id: "connector", name: "Connector", desc: "Conectas a la gente", condition: "200 menciones", rarity: "rare" },
+                    { id: "night_owl", name: "Night Owl", desc: "Mensaje después de medianoche", condition: "1 mensaje después de 00:00", rarity: "uncommon" }
+                ]
+            },
+            streaks: {
+                icon: "🔥",
+                title: "RACHAS",
+                items: [
+                    { id: "streak_starter", name: "Streak Starter", desc: "Iniciaste una racha", condition: "2 días consecutivos", rarity: "common" },
+                    { id: "consistency", name: "Consistency", desc: "La constancia es clave", condition: "3 días consecutivos", rarity: "common" },
+                    { id: "dedicated", name: "Dedicated", desc: "Dedicación al chat", condition: "5 días consecutivos", rarity: "uncommon" },
+                    { id: "week_warrior", name: "Week Warrior", desc: "Una semana sin faltar", condition: "7 días consecutivos", rarity: "uncommon" },
+                    { id: "fortnight_fighter", name: "Fortnight Fighter", desc: "Dos semanas seguidas", condition: "14 días consecutivos", rarity: "rare" },
+                    { id: "monthly_devotion", name: "Monthly Devotion", desc: "Un mes entero", condition: "30 días consecutivos", rarity: "rare" },
+                    { id: "iron_will", name: "Iron Will", desc: "Voluntad de hierro", condition: "50 días consecutivos", rarity: "epic" },
+                    { id: "quarter_commitment", name: "Quarter Commitment", desc: "Compromiso trimestral", condition: "90 días consecutivos", rarity: "epic" },
+                    { id: "chrome_heart", name: "Chrome Heart", desc: "Corazón de cromo", condition: "100 días consecutivos", rarity: "epic" },
+                    { id: "half_year_hero", name: "Half Year Hero", desc: "Medio año sin parar", condition: "180 días consecutivos", rarity: "legendary" },
+                    { id: "immortal_presence", name: "Immortal Presence", desc: "Presencia inmortal", condition: "200 días consecutivos", rarity: "legendary" },
+                    { id: "annual_legend", name: "Annual Legend", desc: "Leyenda anual", condition: "365 días consecutivos", rarity: "legendary" },
+                    { id: "streak_recovery", name: "Streak Recovery", desc: "Volviste después de perder racha", condition: "Reiniciar racha 5 veces", rarity: "uncommon" },
+                    { id: "never_give_up", name: "Never Give Up", desc: "Nunca te rindes", condition: "Reiniciar racha 10 veces", rarity: "rare" },
+                    { id: "phoenix", name: "Phoenix", desc: "Renaces de las cenizas", condition: "Alcanzar 7d después de perder 14+", rarity: "epic" }
+                ]
+            },
+            levels: {
+                icon: "⬆️",
+                title: "NIVELES",
+                items: [
+                    { id: "level_up_first", name: "First Level Up", desc: "Tu primer level up", condition: "Alcanzar nivel 2", rarity: "common" },
+                    { id: "street_kid", name: "Street Kid", desc: "Ya no eres un novato", condition: "Alcanzar nivel 5", rarity: "common" },
+                    { id: "mercenary_rank", name: "Mercenary Rank", desc: "Rango de mercenario", condition: "Alcanzar nivel 10", rarity: "uncommon" },
+                    { id: "solo_status", name: "Solo Status", desc: "Status de Solo", condition: "Alcanzar nivel 15", rarity: "uncommon" },
+                    { id: "netrunner_tier", name: "Netrunner Tier", desc: "Tier de Netrunner", condition: "Alcanzar nivel 20", rarity: "rare" },
+                    { id: "level_milestone_25", name: "Quarter Century", desc: "25 niveles alcanzados", condition: "Alcanzar nivel 25", rarity: "rare" },
+                    { id: "fixer_class", name: "Fixer Class", desc: "Clase Fixer", condition: "Alcanzar nivel 30", rarity: "rare" },
+                    { id: "corpo_elite", name: "Corpo Elite", desc: "Elite Corpo", condition: "Alcanzar nivel 40", rarity: "epic" },
+                    { id: "night_city_legend", name: "Night City Legend", desc: "Leyenda de Night City", condition: "Alcanzar nivel 50", rarity: "epic" },
+                    { id: "cyberpsycho_tier", name: "Cyberpsycho Tier", desc: "Nivel Cyberpsycho", condition: "Alcanzar nivel 60", rarity: "epic" },
+                    { id: "maxtac_rank", name: "MaxTac Rank", desc: "Rango MaxTac", condition: "Alcanzar nivel 70", rarity: "legendary" },
+                    { id: "level_milestone_75", name: "Diamond Tier", desc: "Tier diamante", condition: "Alcanzar nivel 75", rarity: "legendary" },
+                    { id: "trauma_team", name: "Trauma Team", desc: "Miembro del Trauma Team", condition: "Alcanzar nivel 80", rarity: "legendary" },
+                    { id: "afterlife_legend", name: "Afterlife Legend", desc: "Leyenda del Afterlife", condition: "Alcanzar nivel 90", rarity: "legendary" },
+                    { id: "choomba_supreme", name: "Choomba Supreme", desc: "El Choomba Supremo", condition: "Alcanzar nivel 100", rarity: "legendary" },
+                    { id: "beyond_legend", name: "Beyond Legend", desc: "Más allá de la leyenda", condition: "Alcanzar nivel 125", rarity: "legendary" },
+                    { id: "mythic_status", name: "Mythic Status", desc: "Status mítico", condition: "Alcanzar nivel 150", rarity: "legendary" },
+                    { id: "transcendent", name: "Transcendent", desc: "Trascendencia digital", condition: "Alcanzar nivel 200", rarity: "legendary" },
+                    { id: "fast_learner", name: "Fast Learner", desc: "Aprendiz rápido", condition: "3 level ups en un día", rarity: "rare" },
+                    { id: "grinder", name: "Grinder", desc: "El que muele XP", condition: "5 level ups en una semana", rarity: "epic" }
+                ]
+            },
+            xp: {
+                icon: "💎",
+                title: "EXPERIENCIA",
+                items: [
+                    { id: "first_xp", name: "First XP", desc: "Tu primera experiencia", condition: "Ganar 1 XP", rarity: "common" },
+                    { id: "hundred_xp", name: "Hundred XP", desc: "Centenar de experiencia", condition: "Acumular 100 XP", rarity: "common" },
+                    { id: "thousand_xp", name: "Thousand XP", desc: "Mil experiencias", condition: "Acumular 1,000 XP", rarity: "common" },
+                    { id: "xp_collector", name: "XP Collector", desc: "Coleccionista de XP", condition: "Acumular 5,000 XP", rarity: "uncommon" },
+                    { id: "xp_hoarder", name: "XP Hoarder", desc: "Acumulador de XP", condition: "Acumular 10,000 XP", rarity: "uncommon" },
+                    { id: "xp_magnate", name: "XP Magnate", desc: "Magnate del XP", condition: "Acumular 25,000 XP", rarity: "rare" },
+                    { id: "xp_tycoon", name: "XP Tycoon", desc: "Tycoon del XP", condition: "Acumular 50,000 XP", rarity: "rare" },
+                    { id: "xp_empire", name: "XP Empire", desc: "Imperio de XP", condition: "Acumular 100,000 XP", rarity: "epic" },
+                    { id: "xp_legend", name: "XP Legend", desc: "Leyenda del XP", condition: "Acumular 250,000 XP", rarity: "epic" },
+                    { id: "xp_god", name: "XP God", desc: "Dios del XP", condition: "Acumular 500,000 XP", rarity: "legendary" },
+                    { id: "million_xp", name: "Millionaire", desc: "Millonario en XP", condition: "Acumular 1,000,000 XP", rarity: "legendary" },
+                    { id: "multiplier_bonus", name: "Multiplier Active", desc: "Multiplicador activo", condition: "Ganar XP con x1.5+", rarity: "uncommon" },
+                    { id: "double_power", name: "Double Power", desc: "Doble poder", condition: "Ganar XP con x2", rarity: "rare" },
+                    { id: "triple_threat", name: "Triple Threat", desc: "Triple amenaza", condition: "Ganar XP con x3", rarity: "epic" },
+                    { id: "bonus_hunter", name: "Bonus Hunter", desc: "Cazador de bonus", condition: "Bonus de racha 10 veces", rarity: "rare" }
+                ]
+            },
+            ranking: {
+                icon: "🏅",
+                title: "RANKING",
+                items: [
+                    { id: "top_15", name: "Top 15", desc: "Entraste al Top 15", condition: "Aparecer en Top 15", rarity: "uncommon" },
+                    { id: "top_10", name: "Top 10", desc: "Entraste al Top 10", condition: "Aparecer en Top 10", rarity: "rare" },
+                    { id: "top_5", name: "Top 5", desc: "Elite del chat", condition: "Aparecer en Top 5", rarity: "rare" },
+                    { id: "podium", name: "Podium", desc: "En el podio", condition: "Aparecer en Top 3", rarity: "epic" },
+                    { id: "runner_up", name: "Runner Up", desc: "Segundo lugar", condition: "Posición #2", rarity: "epic" },
+                    { id: "champion", name: "Champion", desc: "Campeón del chat", condition: "Posición #1", rarity: "legendary" },
+                    { id: "king_dethroner", name: "King Dethroner", desc: "Destronaste al #1", condition: "Quitar posición #1 a otro", rarity: "legendary" },
+                    { id: "climber", name: "Climber", desc: "Escalador de ranking", condition: "Subir 5 posiciones", rarity: "uncommon" },
+                    { id: "rocket", name: "Rocket", desc: "Cohete al ranking", condition: "Subir 10 posiciones en un día", rarity: "rare" },
+                    { id: "consistent_top", name: "Consistent Top", desc: "Top consistente", condition: "Top 10 por 7 días", rarity: "epic" },
+                    { id: "ranking_veteran", name: "Ranking Veteran", desc: "Veterano del ranking", condition: "Top 15 por 30 días", rarity: "epic" },
+                    { id: "untouchable", name: "Untouchable", desc: "Intocable", condition: "#1 por 7 días", rarity: "legendary" },
+                    { id: "iron_throne", name: "Iron Throne", desc: "Trono de hierro", condition: "#1 por 30 días", rarity: "legendary" },
+                    { id: "comeback_king", name: "Comeback King", desc: "Rey del regreso", condition: "Volver al Top 10", rarity: "rare" },
+                    { id: "rival_defeated", name: "Rival Defeated", desc: "Rival derrotado", condition: "Superar a quien te superó", rarity: "rare" }
+                ]
+            },
+            stream: {
+                icon: "🎮",
+                title: "STREAM",
+                items: [
+                    { id: "stream_opener", name: "Stream Opener", desc: "Abridor del stream", condition: "Mensaje en primeros 5 min", rarity: "uncommon" },
+                    { id: "early_supporter", name: "Early Supporter", desc: "Apoyo temprano", condition: "10 mensajes de apertura", rarity: "rare" },
+                    { id: "live_regular", name: "Live Regular", desc: "Regular en directo", condition: "50 mensajes en stream", rarity: "uncommon" },
+                    { id: "live_devotee", name: "Live Devotee", desc: "Devoto del directo", condition: "200 mensajes en stream", rarity: "rare" },
+                    { id: "stream_marathoner", name: "Stream Marathoner", desc: "Maratonista de stream", condition: "Activo en stream de 4+ horas", rarity: "epic" },
+                    { id: "offline_chatter", name: "Offline Chatter", desc: "Chatter offline", condition: "Mensaje cuando no hay stream", rarity: "common" },
+                    { id: "always_there", name: "Always There", desc: "Siempre presente", condition: "10 streams diferentes", rarity: "rare" },
+                    { id: "loyal_viewer", name: "Loyal Viewer", desc: "Viewer leal", condition: "50 streams diferentes", rarity: "epic" },
+                    { id: "stream_veteran", name: "Stream Veteran", desc: "Veterano de streams", condition: "100 streams diferentes", rarity: "legendary" },
+                    { id: "prime_time", name: "Prime Time", desc: "Horario estelar", condition: "Mensaje en hora pico", rarity: "uncommon" }
+                ]
+            },
+            holidays: {
+                icon: "📅",
+                title: "FECHAS FESTIVAS",
+                items: [
+                    { id: "new_year_chatter", name: "New Year Chatter", desc: "Primer mensaje del año", condition: "Mensaje el 1 de Enero", rarity: "rare" },
+                    { id: "new_year_countdown", name: "Countdown Master", desc: "Estuviste en el countdown", condition: "Mensaje 23:50-00:10 Año Nuevo", rarity: "epic" },
+                    { id: "valentines_love", name: "Digital Love", desc: "Amor en el chat", condition: "Mensaje el 14 de Febrero", rarity: "rare" },
+                    { id: "spring_awakening", name: "Spring Awakening", desc: "Despertar primaveral", condition: "Mensaje el 21 de Marzo", rarity: "uncommon" },
+                    { id: "april_fools", name: "April Fools", desc: "¡Inocente!", condition: "Mensaje el 1 de Abril", rarity: "rare" },
+                    { id: "summer_vibes", name: "Summer Vibes", desc: "Vibras de verano", condition: "Mensaje el 21 de Junio", rarity: "uncommon" },
+                    { id: "independence_day", name: "Fireworks", desc: "Fuegos artificiales", condition: "Mensaje el 4 de Julio", rarity: "rare" },
+                    { id: "halloween_spirit", name: "Halloween Spirit", desc: "Espíritu de Halloween", condition: "Mensaje el 31 de Octubre", rarity: "epic" },
+                    { id: "day_of_dead", name: "Día de Muertos", desc: "Honrando a los caídos", condition: "Mensaje el 1-2 de Noviembre", rarity: "rare" },
+                    { id: "thanksgiving", name: "Grateful Chatter", desc: "Chatter agradecido", condition: "Mensaje en Thanksgiving", rarity: "rare" },
+                    { id: "christmas_eve", name: "Christmas Eve", desc: "Nochebuena digital", condition: "Mensaje el 24 de Diciembre", rarity: "epic" },
+                    { id: "christmas_day", name: "Merry Glitchmas", desc: "¡Feliz Glitchmas!", condition: "Mensaje el 25 de Diciembre", rarity: "epic" },
+                    { id: "new_years_eve", name: "Year Ender", desc: "Finalizador del año", condition: "Mensaje el 31 de Diciembre", rarity: "rare" },
+                    { id: "friday_13th", name: "Unlucky Day", desc: "Día de mala suerte", condition: "Mensaje en Viernes 13", rarity: "epic" },
+                    { id: "leap_year", name: "Leap Chatter", desc: "Solo cada 4 años", condition: "Mensaje el 29 de Febrero", rarity: "legendary" }
+                ]
+            },
+            special: {
+                icon: "🌟",
+                title: "ESPECIALES",
+                items: [
+                    { id: "achievement_hunter", name: "Achievement Hunter", desc: "Cazador de logros", condition: "Desbloquear 25 logros", rarity: "rare" },
+                    { id: "completionist", name: "Completionist", desc: "Completista", condition: "Desbloquear 50 logros", rarity: "epic" },
+                    { id: "master_collector", name: "Master Collector", desc: "Coleccionista maestro", condition: "Desbloquear 75 logros", rarity: "epic" },
+                    { id: "platinum", name: "Platinum", desc: "Platino", condition: "Desbloquear 90 logros", rarity: "legendary" },
+                    { id: "cyberpunk_legend", name: "Cyberpunk Legend", desc: "Leyenda Cyberpunk", condition: "TODOS los logros", rarity: "legendary" }
+                ]
+            }
+        };
+
+        let currentCategory = 'all';
+        let currentUnlocked = []; // Logros desbloqueados del usuario actual
+        let isSearchActive = false;
+
+        // Servicios
+        let xpService = null;
+        let gistService = null;
+
+        // Inicializar Servicios
+        async function initServices() {
+            try {
+                // Initialize GistStorageService
+                gistService = new GistStorageService(CONFIG);
+                gistService.configure(
+                    CONFIG.XP_GIST_ID,
+                    CONFIG.XP_GIST_TOKEN,
+                    CONFIG.XP_GIST_FILENAME
+                );
+
+                // Initialize ExperienceService
+                xpService = new ExperienceService(CONFIG, gistService);
+
+                // Cargar datos
+                console.log("Cargando datos de XP...");
+                await xpService.loadData();
+                console.log("Datos cargados correctamente");
+
+                // Verificar si se cargaron datos
+                if (xpService.usersXP.size === 0) {
+                    console.warn("La carga finalizó pero usersXP está vacío.");
+
+                    // Obtener el error real del servicio
+                    const lastError = gistService.lastError || "Error desconocido";
+
+                    document.getElementById('hunters-list').innerHTML = `
+                        <div style="color: var(--cyber-orange); text-align: center; background: rgba(0,0,0,0.5); padding: 15px; border: 1px solid var(--cyber-red);">
+                            <div style="font-size: 1.2em; margin-bottom: 5px;">⚠️ Error de Conexión</div>
+                            <div style="font-family: monospace; color: #ff6666; margin-bottom: 10px;">${lastError}</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">
+                                1. Verifica que <b>config.js</b> tenga el token actualizado.<br>
+                                2. Si usas GitHub Pages, asegúrate de que el repositorio no revoca tokens.<br>
+                                3. Verifica la consola (F12) para más detalles.
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                // Renderizar Top Hunters
+                renderTopHunters();
+            } catch (error) {
+                console.error("Error inicializando servicios:", error);
+                document.getElementById('hunters-list').innerHTML = `<div style="color: var(--cyber-red);">Error cargando datos: ${error.message}</div>`;
+            }
+        }
+
+        // Renderizar Top 5 Cazadores de Logros
+        function renderTopHunters() {
+            const huntersContainer = document.getElementById('hunters-list');
+            huntersContainer.innerHTML = '';
+
+            const allUsers = [];
+
+            // Iterar sobre todos los usuarios cargados
+            xpService.usersXP.forEach((userData, username) => {
+                const achievementsCount = (userData.achievements || []).length;
+                if (achievementsCount > 0) {
+                    allUsers.push({
+                        username: userData.username || username, // Usar nombre guardado o la key
+                        count: achievementsCount,
+                        level: userData.level || 1,
+                        title: userData.title || 'CIVILIAN'
+                    });
+                }
+            });
+
+            // Ordenar por cantidad de logros descendente
+            allUsers.sort((a, b) => b.count - a.count);
+
+            // Tomar Top 5
+            const top5 = allUsers.slice(0, 5);
+
+            if (top5.length === 0) {
+                huntersContainer.innerHTML = `<div style="color: #888;">Nadie ha conseguido logros aún...</div>`;
+                return;
+            }
+
+            top5.forEach((user, index) => {
+                const isFirst = index === 0;
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: ${isFirst ? 'rgba(240, 255, 0, 0.1)' : 'rgba(0, 240, 255, 0.05)'};
+                    border: 1px solid ${isFirst ? 'var(--cyber-yellow)' : 'var(--cyber-cyan)'};
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    min-width: 150px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    box-shadow: ${isFirst ? '0 0 15px rgba(240, 255, 0, 0.2)' : 'none'};
+                    position: relative;
+                `;
+
+                if (isFirst) {
+                    card.innerHTML += `<div style="position:absolute; top:-10px; background:var(--bg-dark); padding:0 5px; color:var(--cyber-yellow); font-size:12px;">👑 #1</div>`;
+                }
+
+                card.innerHTML += `
+                    <div style="font-family:'Orbitron',sans-serif; font-weight:700; color:#fff; font-size:1.1rem; margin-bottom:5px;">
+                        ${user.username}
+                    </div>
+                    <div style="font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:${isFirst ? 'var(--cyber-yellow)' : 'var(--cyber-cyan)'};">
+                        ${user.count} Logros
+                    </div>
+                    <div style="font-size:0.7rem; color:#666; margin-top:5px;">
+                        Lvl ${user.level}
+                    </div>
+                `;
+
+                // Hacer clickeable para filtrar
+                card.style.cursor = 'pointer';
+                card.onclick = () => {
+                    document.getElementById('username-search').value = user.username;
+                    searchUser();
+                };
+
+                huntersContainer.appendChild(card);
+            });
+        }
+
+        // Renderizar logros con estado (Bloqueado/Desbloqueado)
+        function renderAchievements(category = 'all') {
+            currentCategory = category;
+            const container = document.getElementById('achievements-container');
+            container.innerHTML = '';
+
+            const categories = category === 'all' ? Object.keys(achievementsData) : [category];
+
+            categories.forEach(cat => {
+                const data = achievementsData[cat];
+                if (!data) return;
+
+                const section = document.createElement('div');
+                section.className = 'category-section active';
+
+                // Contar desbloqueados en esta categoría
+                const categoryItems = data.items;
+                const unlockedInCategory = categoryItems.filter(item => currentUnlocked.includes(item.id)).length;
+                const totalInCategory = categoryItems.length;
+
+                section.innerHTML = `
+                    <div class="category-header">
+                        <span class="category-icon">${data.icon}</span>
+                        <h2 class="category-title">${data.title}</h2>
+                        <span class="category-count">${isSearchActive ? `${unlockedInCategory}/` : ''}${totalInCategory} logros</span>
+                    </div>
+                    <div class="achievements-grid">
+                        ${data.items.map(a => {
+                    const isUnlocked = isSearchActive ? currentUnlocked.includes(a.id) : true;
+                    const lockedClass = isUnlocked ? 'unlocked' : 'locked';
+                    const statusIcon = isUnlocked ? '🏆' : '🔒';
+
+                    return `
+                            <div class="achievement-card ${lockedClass}" data-rarity="${a.rarity}">
+                                <div class="achievement-header">
+                                    <span class="achievement-id">#${a.id}</span>
+                                    ${isSearchActive ? `<span style="margin-left:auto; font-size:12px;">${statusIcon}</span>` : ''}
+                                </div>
+                                <div class="achievement-name">${a.name}</div>
+                                <div class="achievement-desc">${a.desc}</div>
+                                <div class="achievement-condition">📌 ${a.condition}</div>
+                            </div>
+                        `}).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        // Buscar Usuario
+        async function searchUser() {
+            const usernameInput = document.getElementById('username-search');
+            const username = usernameInput.value.trim();
+            const summaryDiv = document.getElementById('user-summary');
+
+            if (!username) {
+                alert("Por favor escribe un nombre de usuario");
+                return;
+            }
+
+            if (!xpService) {
+                alert("Servicio de XP no inicializado. Espera un momento...");
+                return;
+            }
+
+            // Obtener datos del usuario
+            const userData = xpService.getUserXPInfo(username);
+
+            // Si el usuario no tiene datos (level 1, 0 xp y sin logros), puede que no exista
+            // Pero el sistema crea uno por defecto. Verificamos si tiene historial real.
+            // Para efectos visuales, asumimos que si tiene 0 mensajes y 0 xp es "nuevo/no encontrado"
+            const isNew = userData.totalMessages === 0 && userData.xp === 0;
+
+            // Actualizar estado global
+            isSearchActive = true;
+            currentUnlocked = userData.achievements || [];
+
+            // Actualizar Resumen
+            summaryDiv.style.display = 'flex';
+            document.getElementById('summary-username').textContent = username;
+            document.getElementById('summary-rank').textContent = `RANK: ${userData.title} (Lvl ${userData.level})`;
+            document.getElementById('summary-progress').textContent = `${currentUnlocked.length}/115`;
+
+            // Re-renderizar
+            renderAchievements(currentCategory);
+        }
+
+        // Event Listeners
+        document.getElementById('search-btn').addEventListener('click', searchUser);
+        document.getElementById('username-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchUser();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderAchievements(tab.dataset.category);
+            });
+        });
+
+        // Inicializar
+        window.addEventListener('load', initServices);
+        // Render inicial (todo desbloqueado visualmente hasta que se busque)
+        renderAchievements('all');
+    </script>
+</body>
+
+</html>

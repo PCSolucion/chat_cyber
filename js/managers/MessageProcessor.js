@@ -67,9 +67,21 @@ class MessageProcessor {
                     this.services.gist
                 );
 
-                this.managers.xpDisplay = new XPDisplayManager(
+                // 4b. Achievement Service (depende de XP Service)
+                this.services.achievements = new AchievementService(
                     this.config,
                     this.services.xp
+                );
+
+                // Suscribirse a eventos de logro desbloqueado
+                this.services.achievements.onAchievementUnlocked((eventData) => {
+                    this._showAchievementNotification(eventData);
+                });
+
+                this.managers.xpDisplay = new XPDisplayManager(
+                    this.config,
+                    this.services.xp,
+                    this.services.achievements
                 );
 
                 // Suscribirse a eventos de Level Up para mostrar animación y sonido
@@ -211,8 +223,137 @@ class MessageProcessor {
 
         const xpResult = this.services.xp.trackMessage(username, xpContext);
 
+        // Verificar logros (Antes de actualizar display para que cuente los nuevos)
+        if (this.services.achievements) {
+            // Añadir flags relevantes para logros
+            const achievementContext = {
+                ...xpContext,
+                isFirstMessageOfDay: xpResult.xpSources && xpResult.xpSources.some(s => s.source === 'FIRST_MESSAGE_DAY'),
+                streakMultiplier: xpResult.streakMultiplier || 1
+            };
+            this.services.achievements.checkAchievements(username, achievementContext);
+
+            // Inyectar la lista actualizada de logros en xpResult
+            const latestData = this.services.xp.getUserData(username);
+            xpResult.achievements = latestData.achievements || [];
+        }
+
         if (this.managers.xpDisplay) {
             this.managers.xpDisplay.updateXPDisplay(username, xpResult);
+        }
+    }
+    /**
+     * Cola de notificaciones de logros
+     * Para evitar que aparezcan muchos a la vez
+     */
+    _achievementQueue = [];
+    _isShowingAchievement = false;
+
+    /**
+     * Añade un logro a la cola de notificaciones
+     * @private
+     * @param {Object} eventData - Datos del evento
+     */
+    _showAchievementNotification(eventData) {
+        // Limitar cola a 5 logros máximo
+        if (this._achievementQueue.length >= 5) {
+            if (this.config.DEBUG) {
+                console.log(`🏆 Cola llena, logro descartado: ${eventData.achievement.name}`);
+            }
+            return;
+        }
+
+        this._achievementQueue.push(eventData);
+        this._processAchievementQueue();
+    }
+
+    /**
+     * Procesa la cola de logros uno a uno
+     * @private
+     */
+    _processAchievementQueue() {
+        if (this._isShowingAchievement || this._achievementQueue.length === 0) {
+            return;
+        }
+
+        this._isShowingAchievement = true;
+        const eventData = this._achievementQueue.shift();
+
+        this._displayAchievementNotification(eventData);
+
+        // Esperar a que termine la animación (7s visible + 0.5s fade out)
+        setTimeout(() => {
+            this._isShowingAchievement = false;
+            this._processAchievementQueue();
+        }, 7500);
+    }
+
+    /**
+     * Muestra físicamente la notificación de logro
+     * @private
+     * @param {Object} eventData - Datos del evento
+     */
+    _displayAchievementNotification(eventData) {
+        const { username, achievement } = eventData;
+        const container = document.getElementById('achievement-notifications');
+
+        if (!container) {
+            console.warn('Achievement notifications container not found');
+            return;
+        }
+
+        // Crear elemento de notificación
+        const notification = document.createElement('div');
+        notification.className = 'achievement-notification';
+        notification.setAttribute('data-rarity', achievement.rarity);
+
+        notification.innerHTML = `
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-content">
+                <div class="achievement-label">🏆 LOGRO DESBLOQUEADO</div>
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="achievement-desc">${achievement.description}</div>
+            </div>
+            <div class="achievement-timer"></div>
+        `;
+
+        // Añadir al container
+        container.appendChild(notification);
+
+        // Trigger animation
+        requestAnimationFrame(() => {
+            notification.classList.add('show');
+        });
+
+        // Remover después de 7 segundos
+        setTimeout(() => {
+            notification.classList.remove('show');
+            notification.classList.add('hiding');
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 500);
+        }, 7000);
+
+        // Reproducir sonido de logro con 2 segundos de retraso
+        // Para evitar solapamiento con el sonido del mensaje
+        setTimeout(() => {
+            try {
+                const audio = new Audio('logro.mp3'); // Asegúrate de tener este archivo
+                audio.volume = this.config.AUDIO_VOLUME || 0.5;
+                audio.play().catch(e => {
+                    if (this.config.DEBUG) console.warn('Audio logro.mp3 no encontrado o bloqueado', e);
+                });
+            } catch (e) {
+                console.warn('Error audio:', e);
+            }
+        }, 2000);
+
+        // Log para debug
+        if (this.config.DEBUG) {
+            console.log(`🏆 Achievement notification shown: ${username} -> ${achievement.name}`);
         }
     }
 

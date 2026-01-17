@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- CSS Modular - Importa todos los componentes -->
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/achievements.css">
 </head>
 
 <body>
@@ -69,6 +70,7 @@
 
           <div class="title-row">
             <span class="mission-icon">!</span>
+            <img id="admin-icon" src="img/arasaka.png" class="admin-icon" alt="Corp">
             <span class="driver-name" id="username" data-text="NETRUNNER">NETRUNNER</span>
 
             <div class="user-identity-stack">
@@ -146,8 +148,21 @@
         "Conectando al stream de Night City..."
       </div>
 
-      <!-- XP System Display (integrated in widget) -->
 
+
+      <!-- Achievement Notifications (Dentro del widget) -->
+      <div class="achievement-notifications" id="achievement-notifications"></div>
+
+      <!-- Achievement Counter (Absolute position near footer) -->
+      <div class="xp-achievements-container" style="
+        position: absolute;
+        bottom: 35px; /* Just above the footer */
+        right: 15px;
+        z-index: 10;
+        pointer-events: none;
+      ">
+        <span class="xp-achievements" id="xp-achievements" style="display: none;"></span>
+      </div>
 
       <!-- Footer tech info -->
       <div class="footer-tech">
@@ -349,6 +364,30 @@
             font-size: 10px;
           ">RESET ALL XP</button>
         </div>
+        <div style="margin-top: 8px;">
+          <button onclick="if(window.testGistConnection) window.testGistConnection()" style="
+            width: 100%;
+            padding: 6px;
+            background: rgba(0, 246, 255, 0.1);
+            border: 1px solid #00f6ff;
+            color: #00f6ff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+          ">📡 TEST GIST CONNECTION</button>
+        </div>
+        <div style="margin-top: 8px;">
+          <button onclick="if(window.testAchievement) window.testAchievement()" style="
+            width: 100%;
+            padding: 6px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+          ">🏆 TEST ACHIEVEMENT</button>
+        </div>
       </div>
 
       <div style="margin-top: 10px; font-size: 9px; color: #555; text-align: center;">
@@ -419,6 +458,7 @@
     <script src="js/services/RankingSystem.js"></script>
     <script src="js/services/GistStorageService.js"></script>
     <script src="js/services/ExperienceService.js"></script>
+    <script src="js/services/AchievementService.js"></script>
 
     <!-- Managers -->
     <script src="js/managers/UIManager.js"></script>
