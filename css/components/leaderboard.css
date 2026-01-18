@@ -1,0 +1,283 @@
+/* ===========================================
+   TOP 10 LEADERBOARD - INACTIVITY PANEL
+   Estilo integrado con el widget principal
+   =========================================== */
+
+/* Contenedor principal del leaderboard */
+.leaderboard-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-panel);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow: hidden;
+}
+
+.leaderboard-panel.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Header del leaderboard */
+.leaderboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 58, 58, 0.3);
+    background: linear-gradient(180deg, rgba(255, 0, 60, 0.1) 0%, transparent 100%);
+}
+
+.leaderboard-header-icon {
+    color: var(--cyber-red);
+    font-size: 16px;
+    text-shadow: var(--glow-red);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.leaderboard-header-title {
+    font-family: 'Rajdhani', 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.leaderboard-header-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+/* Lista de usuarios */
+.leaderboard-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+}
+
+/* Cada entrada del leaderboard */
+.leaderboard-entry {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 2px solid transparent;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    animation: slide-in 0.4s ease forwards;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.leaderboard-entry:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.leaderboard-entry:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.leaderboard-entry:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.leaderboard-entry:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.leaderboard-entry:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.leaderboard-entry:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.leaderboard-entry:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.leaderboard-entry:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+.leaderboard-entry:nth-child(9) {
+    animation-delay: 0.45s;
+}
+
+.leaderboard-entry:nth-child(10) {
+    animation-delay: 0.5s;
+}
+
+@keyframes slide-in {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Posiciones especiales */
+.leaderboard-entry.top-1 {
+    border-left-color: var(--cyber-cyan);
+    background: linear-gradient(90deg, rgba(0, 246, 255, 0.15) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.leaderboard-entry.top-2 {
+    border-left-color: var(--vip-gold);
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.leaderboard-entry.top-3 {
+    border-left-color: #cd7f32;
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.leaderboard-entry:not(.top-1):not(.top-2):not(.top-3) {
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Posición/Número */
+.leaderboard-position {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-dim);
+}
+
+.leaderboard-entry.top-1 .leaderboard-position {
+    color: var(--cyber-cyan);
+    text-shadow: 0 0 8px var(--cyber-cyan);
+}
+
+.leaderboard-entry.top-2 .leaderboard-position {
+    color: var(--vip-gold);
+    text-shadow: 0 0 8px var(--vip-gold);
+}
+
+.leaderboard-entry.top-3 .leaderboard-position {
+    color: #cd7f32;
+    text-shadow: 0 0 8px #cd7f32;
+}
+
+/* Info del usuario */
+.leaderboard-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.leaderboard-username {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-entry.top-1 .leaderboard-username {
+    color: var(--cyber-cyan);
+    text-shadow: 0 0 5px rgba(0, 246, 255, 0.5);
+}
+
+.leaderboard-rank-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--cyber-red);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Stats del usuario */
+.leaderboard-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.leaderboard-level {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--cyber-yellow);
+    text-shadow: 0 0 5px rgba(218, 189, 88, 0.5);
+}
+
+.leaderboard-achievements {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.leaderboard-achievements-icon {
+    color: var(--vip-gold);
+    font-size: 10px;
+}
+
+/* Footer del leaderboard */
+.leaderboard-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 15px;
+    border-top: 1px solid rgba(255, 58, 58, 0.2);
+    background: linear-gradient(0deg, rgba(255, 0, 60, 0.05) 0%, transparent 100%);
+}
+
+.leaderboard-footer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Animación de pulso para el header */
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Scrollbar personalizado */
+.leaderboard-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.leaderboard-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+    background: var(--cyber-red);
+    border-radius: 2px;
+}

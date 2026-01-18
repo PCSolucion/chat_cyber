@@ -159,8 +159,8 @@ class UIManager {
             // Obtener rol del usuario (para estilos visuales de contenedor/badge)
             const userRole = this.rankingSystem.getUserRole(username);
 
-            // Obtener datos de XP y sobreescribir el título del rango
-            if (this.experienceService) {
+            // Obtener datos de XP y sobreescribir el título del rango (Excepto para SYSTEM)
+            if (this.experienceService && username !== 'SYSTEM') {
                 const xpInfo = this.experienceService.getUserXPInfo(username);
                 if (xpInfo) {
                     userRole.rankTitle = {
@@ -197,6 +197,9 @@ class UIManager {
 
                 if (isAdmin) {
                     this.dom.adminIcon.src = 'img/arasaka.png';
+                    this.dom.adminIcon.style.display = 'block';
+                } else if (username === 'SYSTEM') {
+                    this.dom.adminIcon.src = 'img/netrunner.png';
                     this.dom.adminIcon.style.display = 'block';
                 } else if (rankTitle === 'CIVILIAN') {
                     this.dom.adminIcon.src = 'img/civilian.png';
@@ -320,6 +323,31 @@ class UIManager {
         } else {
             this.dom.message.innerHTML = `"${processedMessage}"`;
         }
+    }
+
+    /**
+     * Extiende el tiempo de visualización del widget
+     * Útil cuando aparecen logros u otros eventos secundarios
+     * @param {number} extraTimeMs - Tiempo extra en milisegundos
+     */
+    extendDisplayTime(extraTimeMs) {
+        if (this.dom.container.classList.contains('hidden')) {
+            // Si estaba oculto, lo mostramos
+            this.dom.container.classList.remove('hidden');
+        }
+
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+        }
+
+        if (window.KEEP_WIDGET_VISIBLE === true) return;
+
+        // Programar nuevo timeout
+        this.hideTimeout = setTimeout(() => {
+            if (window.KEEP_WIDGET_VISIBLE === true) return;
+            this.dom.container.classList.add('hidden');
+            if (this.config.DEBUG) console.log('🔒 Widget ocultado tras extensión de tiempo');
+        }, extraTimeMs);
     }
 
     /**

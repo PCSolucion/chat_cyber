@@ -90,6 +90,17 @@ class RankingSystem {
             };
         }
 
+        // SYSTEM BOT
+        if (lowerUser === 'system') {
+            return {
+                role: 'admin', // Usamos rol admin para estilos
+                badge: 'ROOT',
+                containerClass: 'admin-user',
+                badgeClass: 'admin',
+                rankTitle: { title: 'AI CONSTRUCT', icon: 'icon-netwatch' }
+            };
+        }
+
         // Usuarios con ranking
         const rank = this.userRankings.get(lowerUser);
         if (rank) {

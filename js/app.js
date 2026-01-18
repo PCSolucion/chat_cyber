@@ -184,11 +184,11 @@ class App {
 
                 // Lista de logros de prueba con diferentes rarezas
                 const testAchievements = [
-                    { id: 'test_common', name: 'First Words', description: 'Tu primer mensaje en el chat', rarity: 'common', icon: '💬' },
-                    { id: 'test_uncommon', name: 'Motormouth', description: 'Hablas más que un fixer', rarity: 'uncommon', icon: '🎙️' },
-                    { id: 'test_rare', name: 'Voice of Night City', description: 'Tu voz resuena en las calles', rarity: 'rare', icon: '🌃' },
-                    { id: 'test_epic', name: 'Chrome Tongue', description: 'Lengua mejorada cyberware', rarity: 'epic', icon: '🦾' },
-                    { id: 'test_legendary', name: 'Netrunner Comms', description: 'Comunicaciones de élite', rarity: 'legendary', icon: '🧠' }
+                    { id: 'test_common', name: 'First Words', description: 'Tu primer mensaje en el chat', condition: '1 mensaje', rarity: 'common', icon: '💬' },
+                    { id: 'test_uncommon', name: 'Motormouth', description: 'Hablas más que un fixer', condition: '50 mensajes', rarity: 'uncommon', icon: '🎙️' },
+                    { id: 'test_rare', name: 'Voice of Night City', description: 'Tu voz resuena en las calles', condition: '1000 mensajes', rarity: 'rare', icon: '🌃' },
+                    { id: 'test_epic', name: 'Chrome Tongue', description: 'Lengua mejorada cyberware', condition: '5000 mensajes', rarity: 'epic', icon: '🦾' },
+                    { id: 'test_legendary', name: 'Netrunner Comms', description: 'Comunicaciones de élite', condition: '25000 mensajes', rarity: 'legendary', icon: '🧠' }
                 ];
 
                 // Elegir uno aleatorio
@@ -197,6 +197,18 @@ class App {
                 // Emitir el evento como si fuera un logro real
                 achievementService.emitAchievementUnlocked('TestUser', randomAchievement);
                 console.log(`🏆 TEST: Mostrando logro "${randomAchievement.name}" (${randomAchievement.rarity})`);
+            };
+
+            // TEST LEADERBOARD (Top 10)
+            window.testLeaderboard = () => {
+                const leaderboardManager = this.processor.getManager('leaderboard');
+                if (!leaderboardManager) {
+                    alert('❌ LeaderboardManager no inicializado');
+                    return;
+                }
+
+                leaderboardManager.forceShow();
+                console.log('📊 TEST: Mostrando Top 10 Leaderboard');
             };
         }
     }

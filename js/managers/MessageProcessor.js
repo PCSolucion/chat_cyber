@@ -106,6 +106,18 @@ class MessageProcessor {
             console.error('❌ CRITICAL: UIManager initialization failed:', e);
         }
 
+        // 6. Leaderboard Manager (Top 10 por inactividad)
+        if (this.config.XP_SYSTEM_ENABLED && this.services.xp) {
+            try {
+                this.managers.leaderboard = new LeaderboardManager(
+                    this.services.xp,
+                    this.config
+                );
+            } catch (e) {
+                console.error('⚠️ LeaderboardManager initialization failed:', e);
+            }
+        }
+
         this.isInitialized = true;
     }
 
@@ -163,6 +175,60 @@ class MessageProcessor {
                 console.log('📨 Processor handling:', username);
             }
 
+            // ============================================
+            // SISTEMA DE COMANDOS (!logros, !nivel)
+            // ============================================
+            if (message.startsWith('!')) {
+                const command = message.toLowerCase().trim();
+
+                // COMANDO: !logros
+                if (command === '!logros' || command === '!achievements') {
+                    if (this.services.xp && this.services.achievements) {
+                        const userData = this.services.xp.getUserData(username);
+                        const unlockedCount = (userData.achievements || []).length;
+                        const totalAchievements = Object.keys(this.services.achievements.achievements).length;
+                        const level = userData.level || 1;
+                        const title = this.services.xp.getLevelTitle(level);
+
+
+                        if (this.managers.ui) {
+                            // Ocultar sección de XP para mensajes del sistema
+                            if (this.managers.xpDisplay) {
+                                this.managers.xpDisplay.setVisible(false);
+                            }
+
+                            // Mostrar inmediatamente (sin setTimeout)
+                            const systemMsg = `@${username} -> Progreso: ${unlockedCount}/${totalAchievements} Logros | Nivel ${level} (${title})`;
+                            this.managers.ui.displayMessage(
+                                'SYSTEM',     // Usuario especial
+                                systemMsg,    // Mensaje
+                                {},           // Sin emotes
+                                99,           // Número piloto
+                                'system'      // Equipo system
+                            );
+                            return; // Detener procesamiento para no mostrar el mensaje del usuario
+                        }
+                    }
+                }
+
+                // COMANDO: !nivel (Alias simple para ver stats rápidas)
+                if (command === '!nivel' || command === '!level' || command === '!stats') {
+                    if (this.services.xp) {
+                        const info = this.services.xp.getUserXPInfo(username);
+                        if (this.managers.ui) {
+                            // Ocultar sección de XP para mensajes del sistema
+                            if (this.managers.xpDisplay) {
+                                this.managers.xpDisplay.setVisible(false);
+                            }
+
+                            const systemMsg = `@${username} -> Nivel ${info.level} | ${info.title} | XP: ${Math.floor(info.progress.xpInCurrentLevel)}/${info.progress.xpNeededForNext}`;
+                            this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
+                            return; // Detener procesamiento para no mostrar el mensaje del usuario
+                        }
+                    }
+                }
+            }
+
             // Datos auxiliares
             let userNumber = 0;
             let team = null;
@@ -196,6 +262,11 @@ class MessageProcessor {
                 this.services.audio.play();
             }
 
+            // Notificar al Leaderboard que hubo un mensaje (resetea inactividad)
+            if (this.managers.leaderboard) {
+                this.managers.leaderboard.onMessageReceived();
+            }
+
         } catch (e) {
             console.error('❌ Error processing message:', e);
         }
@@ -218,7 +289,9 @@ class MessageProcessor {
             emoteCount: emoteCount,
             isStreamLive: true,
             isStreamStart: false,
-            hasMention: message && message.includes('@')
+            isStreamStart: false,
+            hasMention: message && message.includes('@'),
+            message: message // Pasamos el mensaje crudo para análisis de palabras (ej. "bro")
         };
 
         const xpResult = this.services.xp.trackMessage(username, xpContext);
@@ -239,6 +312,7 @@ class MessageProcessor {
         }
 
         if (this.managers.xpDisplay) {
+            this.managers.xpDisplay.setVisible(true); // Asegurar que sea visible para usuarios normales
             this.managers.xpDisplay.updateXPDisplay(username, xpResult);
         }
     }
@@ -302,17 +376,26 @@ class MessageProcessor {
             return;
         }
 
-        // Crear elemento de notificación
         const notification = document.createElement('div');
         notification.className = 'achievement-notification';
         notification.setAttribute('data-rarity', achievement.rarity);
 
+        const rarityMap = {
+            'common': 'tier1.png',
+            'uncommon': 'tier2.png',
+            'rare': 'tier3.png',
+            'epic': 'tier4.png',
+            'legendary': 'tier5.png'
+        };
+        const iconFile = rarityMap[achievement.rarity] || 'tier1.png';
+        const iconPath = `img/logros/${iconFile}`;
+
         notification.innerHTML = `
-            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-icon"><img src="${iconPath}" class="achievement-icon-img" alt="Rank Icon"></div>
             <div class="achievement-content">
-                <div class="achievement-label">🏆 LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name">${achievement.name}</div>
-                <div class="achievement-desc">${achievement.description}</div>
+                <div class="achievement-label">LOGRO DESBLOQUEADO</div>
+                <div class="achievement-name"><span>${achievement.name}</span></div>
+                <div class="achievement-desc"><span>${achievement.description} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${achievement.condition}]</span></span></div>
             </div>
             <div class="achievement-timer"></div>
         `;
@@ -320,10 +403,33 @@ class MessageProcessor {
         // Añadir al container
         container.appendChild(notification);
 
+        // Check for text overflow to enable marquee
+        try {
+            const nameSpan = notification.querySelector('.achievement-name span');
+            const nameContainer = notification.querySelector('.achievement-name');
+            if (nameSpan && nameContainer && nameSpan.scrollWidth > nameContainer.clientWidth) {
+                nameSpan.classList.add('marquee-active');
+            }
+
+            const descSpan = notification.querySelector('.achievement-desc > span');
+            const descContainer = notification.querySelector('.achievement-desc');
+            if (descSpan && descContainer && descSpan.scrollWidth > descContainer.clientWidth) {
+                descSpan.classList.add('marquee-active');
+            }
+        } catch (e) {
+            console.warn('Error checking overflow:', e);
+        }
+
         // Trigger animation
         requestAnimationFrame(() => {
             notification.classList.add('show');
         });
+
+        // IMPORTANTE: Extender el tiempo del widget para que se vea el logro
+        // 8000ms = 7s de logro + 1s de margen extra
+        if (this.managers.ui) {
+            this.managers.ui.extendDisplayTime(8000);
+        }
 
         // Remover después de 7 segundos
         setTimeout(() => {
@@ -337,7 +443,7 @@ class MessageProcessor {
             }, 500);
         }, 7000);
 
-        // Reproducir sonido de logro con 2 segundos de retraso
+        // Reproducir sonido de logro con 1 segundo de retraso
         // Para evitar solapamiento con el sonido del mensaje
         setTimeout(() => {
             try {
@@ -349,7 +455,7 @@ class MessageProcessor {
             } catch (e) {
                 console.warn('Error audio:', e);
             }
-        }, 2000);
+        }, 1000);
 
         // Log para debug
         if (this.config.DEBUG) {

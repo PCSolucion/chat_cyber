@@ -746,6 +746,47 @@ class AchievementService {
                 id: 'cyberpunk_legend', name: 'Cyberpunk Legend', description: 'Leyenda Cyberpunk',
                 condition: 'TODOS los logros', category: 'special', rarity: 'legendary', icon: '🌟',
                 check: (userData) => (userData.achievements || []).length >= 114 // Total - 1 (este mismo)
+            },
+
+            // ==================== BRO (5 logros) ====================
+            bro_initiate: {
+                id: 'bro_initiate', name: 'Bro Initiate', description: 'Dijiste bro por primera vez',
+                condition: 'Decir "bro" 1 vez', category: 'bro', rarity: 'common', icon: '🤜',
+                check: (userData, stats) => (stats.broCount || 0) >= 1
+            },
+            bro_regular: {
+                id: 'bro_regular', name: 'Bro Regular', description: 'El bro habitual',
+                condition: 'Decir "bro" 10 veces', category: 'bro', rarity: 'uncommon', icon: '🤛',
+                check: (userData, stats) => (stats.broCount || 0) >= 10
+            },
+            bro_fanatic: {
+                id: 'bro_fanatic', name: 'Bro Fanatic', description: 'Fanático del bro',
+                condition: 'Decir "bro" 20 veces', category: 'bro', rarity: 'rare', icon: '😎',
+                check: (userData, stats) => (stats.broCount || 0) >= 20
+            },
+            bro_master: {
+                id: 'bro_master', name: 'Bro Master', description: 'Maestro del bro',
+                condition: 'Decir "bro" 50 veces', category: 'bro', rarity: 'epic', icon: '🧢',
+                check: (userData, stats) => (stats.broCount || 0) >= 50
+            },
+            bro_legend: {
+                id: 'bro_legend', name: 'Bro Legend', description: 'Leyenda del bro',
+                condition: 'Decir "bro" 100 veces', category: 'bro', rarity: 'legendary', icon: '💪',
+                check: (userData, stats) => (stats.broCount || 0) >= 100
+            },
+
+            // ==================== GG (1 logro) ====================
+            gg_master: {
+                id: 'gg_master', name: 'GG Master', description: 'Siempre reconoces una buena partida',
+                condition: 'Decir "gg" 50 veces', category: 'messages', rarity: 'rare', icon: '🎮',
+                check: (userData, stats) => (stats.ggCount || 0) >= 50
+            },
+
+            // ==================== HORARIOS (1 logro) ====================
+            trasnochador: {
+                id: 'trasnochador', name: 'Trasnochador', description: 'La noche es tu territorio',
+                condition: 'Mensaje entre 4:00-6:00 AM', category: 'messages', rarity: 'rare', icon: '🌙',
+                check: (userData, stats) => (stats.earlyMorningMessages || 0) >= 1
             }
         };
     }
@@ -769,7 +810,11 @@ class AchievementService {
                 firstMessageDays: savedStats.firstMessageDays || 0,
                 messagesWithEmotes: savedStats.messagesWithEmotes || 0,
                 mentionCount: savedStats.mentionCount || 0,
+                mentionCount: savedStats.mentionCount || 0,
                 nightMessages: savedStats.nightMessages || 0,
+                broCount: savedStats.broCount || 0,
+                ggCount: savedStats.ggCount || 0,
+                earlyMorningMessages: savedStats.earlyMorningMessages || 0,
 
                 // Rachas
                 streakResets: savedStats.streakResets || 0,
@@ -845,6 +890,31 @@ class AchievementService {
         const hour = now.getHours();
         if (hour >= 0 && hour < 5) {
             stats.nightMessages = (stats.nightMessages || 0) + 1;
+        }
+
+        // Mensaje de trasnochador (04:00 - 06:00)
+        if (hour >= 4 && hour < 6) {
+            stats.earlyMorningMessages = (stats.earlyMorningMessages || 0) + 1;
+        }
+
+        // Contador de "BRO"
+        // Solo cuenta si la palabra "bro" aparece aislada o en un contexto claro
+        // Evita "libro", "cerebro", etc. con regex de límite de palabra (\b)
+        if (context.message && /\bbro\b/i.test(context.message)) {
+            // Contar cuántas veces aparece en el mensaje
+            const matches = context.message.match(/\bbro\b/gi);
+            if (matches && matches.length > 0) {
+                stats.broCount = (stats.broCount || 0) + matches.length;
+            }
+        }
+
+        // Contador de "GG"
+        // Solo cuenta si "gg" aparece aislado (no "ggwp" cuenta como 1 gg, "egg" no cuenta)
+        if (context.message && /\bgg\b/i.test(context.message)) {
+            const matches = context.message.match(/\bgg\b/gi);
+            if (matches && matches.length > 0) {
+                stats.ggCount = (stats.ggCount || 0) + matches.length;
+            }
         }
 
         // ===== XP MULTIPLICADORES =====
