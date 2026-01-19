@@ -39,10 +39,12 @@ class ExperienceService {
         this.pendingChanges = new Set();
         this.saveTimeout = null;
 
+        // Control de Concurrencia (Cola de Guardado)
+        this.isSaving = false;
+        this.queuedSave = false;
+
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
-
-        // Configuración de niveles (infinito, extensible)
         this.levelConfig = this.initLevelConfig();
     }
 
@@ -214,11 +216,28 @@ class ExperienceService {
     }
 
     /**
-     * Ejecuta el guardado real
+     * Ejecuta el guardado real con control de concurrencia
      * @private
      */
     async _performSave() {
-        if (this.pendingChanges.size === 0) return;
+        // Si no hay cambios y no se forzó cola, salir
+        if (this.pendingChanges.size === 0 && !this.queuedSave) return;
+
+        // Si ya está guardando, encolar para la siguiente vuelta
+        if (this.isSaving) {
+            if (this.config.DEBUG) console.log('⏳ Guardado en curso, encolando siguiente...');
+            this.queuedSave = true;
+            return;
+        }
+
+        // Bloquear
+        this.isSaving = true;
+        this.queuedSave = false;
+
+        // Snapshot de cambios para limpiar la lista principal ANTES del await
+        // Esto permite que nuevos cambios entren en pendingChanges mientras guardamos
+        const changesSnapshot = new Set(this.pendingChanges);
+        this.pendingChanges.clear();
 
         try {
             // Convertir Map a objeto para JSON
@@ -233,14 +252,26 @@ class ExperienceService {
                 version: '1.0'
             });
 
-            this.pendingChanges.clear();
-
             if (this.config.DEBUG) {
-                console.log('💾 XP data guardado');
+                console.log('💾 XP data guardado exitosamente');
             }
 
         } catch (error) {
             console.error('❌ Error al guardar XP data:', error);
+            // Rollback: Restaurar cambios pendientes para reintentar
+            changesSnapshot.forEach(user => this.pendingChanges.add(user));
+        } finally {
+            this.isSaving = false;
+
+            // Procesar Cola
+            // Si hubo petición durante el guardado (queuedSave) o hay nuevos cambios (pendingChanges)
+            if (this.queuedSave || this.pendingChanges.size > 0) {
+                if (this.config.DEBUG) console.log('🔄 Procesando guardado encolado...');
+
+                // Ejecutar siguiente guardado (sin await para no bloquear stack, 
+                // aunque es async así que es promesa nueva)
+                this._performSave();
+            }
         }
     }
 

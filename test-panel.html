@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Panel - Cyberpunk Chat Widget</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Reusa los estilos del widget principal -->
+    <link rel="stylesheet" href="css/bundle.css">
+    <style>
+        /* =========================================
+       TEST PANEL STYLES
+       ========================================= */
+        body {
+            background: #0a0a12;
+            padding: 20px;
+        }
+
+        #test-panel {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 280px;
+            background: rgba(10, 10, 18, 0.95);
+            border: 1px solid rgba(0, 246, 255, 0.3);
+            border-left: 3px solid #00f6ff;
+            padding: 15px;
+            font-family: 'Rajdhani', sans-serif;
+            color: #fff;
+            z-index: 1000;
+        }
+
+        .panel-title {
+            margin: 0 0 15px;
+            color: #00f6ff;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        .panel-section {
+            margin-bottom: 15px;
+        }
+
+        .panel-label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .panel-label--cyan {
+            color: #00f6ff;
+        }
+
+        .panel-label--red {
+            color: #ff3a3a;
+        }
+
+        .panel-input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 246, 255, 0.3);
+            color: #fff;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .panel-input--gold {
+            border-color: rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #00f6ff;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .section-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .button-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 15px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Base button styles */
+        .btn {
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+            text-align: left;
+            border: 1px solid;
+        }
+
+        .btn--admin {
+            background: rgba(255, 0, 60, 0.2);
+            border-color: #ff003c;
+            color: #ff003c;
+        }
+
+        .btn--top1 {
+            background: rgba(0, 246, 255, 0.2);
+            border-color: #00f6ff;
+            color: #00f6ff;
+        }
+
+        .btn--top {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .btn--normal {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+        }
+
+        .btn--dim {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #888;
+        }
+
+        .btn--cyan {
+            background: rgba(0, 246, 255, 0.2);
+            border-color: #00f6ff;
+            color: #00f6ff;
+            padding: 8px 15px;
+            font-size: 11px;
+        }
+
+        .btn--gold {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: #ffd700;
+            color: #ffd700;
+            padding: 8px 15px;
+            font-size: 11px;
+        }
+
+        .btn--full {
+            width: 100%;
+            padding: 6px;
+        }
+
+        .btn--green {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .btn--red {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .btn--purple {
+            background: rgba(191, 0, 255, 0.1);
+            border-color: #bf00ff;
+            color: #bf00ff;
+        }
+
+        .divider {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 246, 255, 0.2);
+        }
+
+        .divider--red {
+            border-color: rgba(255, 58, 58, 0.3);
+        }
+
+        .panel-footer {
+            margin-top: 10px;
+            font-size: 9px;
+            color: #555;
+            text-align: center;
+        }
+
+        /* Widget iframe container */
+        .widget-container {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            width: 380px;
+            height: 450px;
+            border: 1px solid rgba(0, 246, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .widget-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .widget-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-size: 10px;
+            color: #00f6ff;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Widget Preview (embedded iframe) -->
+    <div class="widget-container">
+        <span class="widget-label">WIDGET PREVIEW</span>
+        <iframe id="widget-frame" src="index.html"></iframe>
+    </div>
+
+    <!-- Test Panel -->
+    <div id="test-panel">
+        <h3 class="panel-title">🎮 PANEL DE PRUEBAS</h3>
+
+        <div class="panel-section">
+            <label class="checkbox-label">
+                <input type="checkbox" id="keep-visible-checkbox">
+                MANTENER WIDGET VISIBLE
+            </label>
+
+            <label class="panel-label">MENSAJE:</label>
+            <input type="text" id="test-message" value="Este es un mensaje de prueba!" class="panel-input">
+        </div>
+
+        <div class="section-label">ADMIN & TOP 15:</div>
+
+        <div class="button-list">
+            <!-- ADMIN -->
+            <button onclick="testUser('Liiukiin')" class="btn btn--admin">⚡ ADMIN - Liiukiin</button>
+
+            <!-- TOP 1 -->
+            <button onclick="testUser('Takeru_xiii')" class="btn btn--top1">★ TOP 1 - Takeru_xiii</button>
+
+            <!-- TOP 2-15 -->
+            <button onclick="testUser('James_193')" class="btn btn--top">♛ TOP 2 - James_193</button>
+            <button onclick="testUser('Ractor09')" class="btn btn--top">♛ TOP 3 - Ractor09</button>
+            <button onclick="testUser('Xroockk')" class="btn btn--top">♛ TOP 4 - Xroockk</button>
+            <button onclick="testUser('X1lenz')" class="btn btn--top">♛ TOP 5 - X1lenz</button>
+            <button onclick="testUser('C_h_a_n_d_a_l_f')" class="btn btn--top">♛ TOP 6 - C_h_a_n_d_a_l_f</button>
+            <button onclick="testUser('Broxa24')" class="btn btn--top">♛ TOP 7 - Broxa24</button>
+            <button onclick="testUser('Manguerazo')" class="btn btn--top">♛ TOP 8 - Manguerazo</button>
+            <button onclick="testUser('Darkous666')" class="btn btn--top">♛ TOP 9 - Darkous666</button>
+            <button onclick="testUser('Ccxsnop')" class="btn btn--top">♛ TOP 10 - Ccxsnop</button>
+            <button onclick="testUser('Macusam')" class="btn btn--top">♛ TOP 11 - Macusam</button>
+            <button onclick="testUser('Urimas82')" class="btn btn--top">♛ TOP 12 - Urimas82</button>
+            <button onclick="testUser('Nanusso')" class="btn btn--top">♛ TOP 13 - Nanusso</button>
+            <button onclick="testUser('Reichskanz')" class="btn btn--top">♛ TOP 14 - Reichskanz</button>
+            <button onclick="testUser('Mambiitv')" class="btn btn--top">♛ TOP 15 - Mambiitv</button>
+        </div>
+
+        <div class="section-label">OTROS:</div>
+        <div class="button-list">
+            <button onclick="testUser('Ferminico')" class="btn btn--normal"># TOP 241 - Ferminico</button>
+            <button onclick="testUser('UsuarioNuevo')" class="btn btn--dim">Sin ranking - UsuarioNuevo</button>
+        </div>
+
+        <div class="divider">
+            <label class="panel-label">USUARIO PERSONALIZADO:</label>
+            <div class="button-row">
+                <input type="text" id="custom-user" placeholder="Nombre..." class="panel-input" style="flex: 1;">
+                <button onclick="testUser(document.getElementById('custom-user').value)"
+                    class="btn btn--cyan">TEST</button>
+            </div>
+        </div>
+
+        <div class="divider">
+            <label class="panel-label">RACHAS (STREAK):</label>
+            <div class="button-row">
+                <input type="number" id="streak-days" placeholder="Días..." value="5" min="1"
+                    class="panel-input panel-input--gold" style="flex: 1;">
+                <button onclick="testStreak(document.getElementById('streak-days').value)" class="btn btn--gold">SET &
+                    TEST</button>
+            </div>
+        </div>
+
+        <!-- DATA CONTROLS -->
+        <div class="divider divider--red">
+            <label class="panel-label panel-label--red">DATA CONTROLS:</label>
+            <div class="button-row">
+                <button onclick="callWidgetFunction('exportXPData')" class="btn btn--full btn--green"
+                    style="flex: 1;">EXPORT LOCAL</button>
+                <button onclick="callWidgetFunction('resetAllXP')" class="btn btn--full btn--red" style="flex: 1;">RESET
+                    ALL XP</button>
+            </div>
+            <div style="margin-top: 8px;">
+                <button onclick="callWidgetFunction('testGistConnection')" class="btn btn--full btn--top1">📡 TEST GIST
+                    CONNECTION</button>
+            </div>
+            <div style="margin-top: 8px;">
+                <button onclick="callWidgetFunction('testAchievement')" class="btn btn--full btn--top">🏆 TEST
+                    ACHIEVEMENT</button>
+            </div>
+        </div>
+
+        <!-- IDLE STATS & EMOTES CONTROLS -->
+        <div class="divider">
+            <label class="panel-label panel-label--cyan">STATS & EMOTES:</label>
+            <div class="button-row">
+                <button onclick="callWidgetFunction('testIdleMode')" class="btn btn--full btn--top1" style="flex: 1;">📊
+                    TEST IDLE STATS</button>
+                <button onclick="callWidgetFunction('showEmoteStats')" class="btn btn--full btn--purple"
+                    style="flex: 1;">🎭 EMOTE STATS</button>
+            </div>
+            <div style="margin-top: 8px;">
+                <button onclick="callWidgetFunction('testEmoteMessage')" class="btn btn--full btn--green">✨ TEST
+                    7TV/BTTV MESSAGE</button>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            Pulsa un botón para simular un mensaje
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Test Panel - Script de Control
+         * Comunica con el widget via postMessage o acceso directo al iframe
+         */
+
+        // Referencia al iframe del widget
+        const widgetFrame = document.getElementById('widget-frame');
+
+        // Esperar a que el iframe cargue
+        widgetFrame.addEventListener('load', () => {
+            console.log('✅ Widget iframe loaded');
+        });
+
+        // Obtener la ventana del widget
+        function getWidgetWindow() {
+            return widgetFrame.contentWindow;
+        }
+
+        // Simular mensaje de usuario
+        function testUser(username) {
+            const message = document.getElementById('test-message').value || 'Mensaje de prueba';
+            const win = getWidgetWindow();
+
+            if (win && win.simularMensaje && username) {
+                win.simularMensaje(username, message);
+            } else {
+                console.log('Esperando a que cargue el widget...');
+            }
+        }
+
+        // Test streak
+        function testStreak(days) {
+            const win = getWidgetWindow();
+
+            if (!win || !win.getXPStats) {
+                console.error("Widget XP System not ready");
+                return;
+            }
+
+            if (win.setTestStreak) {
+                win.setTestStreak('StreakTester', parseInt(days));
+                win.simularMensaje('StreakTester', `Testing streak: ${days} days!`);
+            } else {
+                console.log("setTestStreak not available in widget");
+            }
+        }
+
+        // Llamar función expuesta en el widget
+        function callWidgetFunction(funcName) {
+            const win = getWidgetWindow();
+
+            if (win && typeof win[funcName] === 'function') {
+                win[funcName]();
+            } else {
+                console.warn(`Function ${funcName} not available in widget`);
+            }
+        }
+
+        // Sincronizar checkbox "mantener visible"
+        document.getElementById('keep-visible-checkbox').addEventListener('change', function () {
+            const win = getWidgetWindow();
+            if (win) {
+                win.KEEP_WIDGET_VISIBLE = this.checked;
+                console.log('Keep Visible:', this.checked);
+            }
+        });
+    </script>
+</body>
+
+</html>
