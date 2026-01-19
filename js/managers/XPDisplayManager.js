@@ -289,18 +289,18 @@ class XPDisplayManager {
      * @param {number} level - Nivel alcanzado
      */
     playLevelUpSound(level = 1) {
-        let soundFile = 'level10.mp3'; // Default fallback
+        let soundFile = 'sounds/level10.mp3'; // Default fallback
 
         // Lógica de rangos solicitada
         if (level <= 10) {
-            soundFile = 'level10.mp3';
+            soundFile = 'sounds/level10.mp3';
         } else if (level <= 15) {
-            soundFile = 'level15.mp3';
+            soundFile = 'sounds/level15.mp3';
         } else if (level <= 20) {
-            soundFile = 'level20.mp3';
+            soundFile = 'sounds/level20.mp3';
         } else {
             // Nivel 21+ (incluye hasta 25 y más allá)
-            soundFile = 'level25.mp3';
+            soundFile = 'sounds/level25.mp3';
         }
 
         try {

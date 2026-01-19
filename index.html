@@ -8,6 +8,7 @@
   <!-- CSS Modular - Importa todos los componentes -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/achievements.css">
+  <link rel="stylesheet" href="css/idle-stats.css">
 </head>
 
 <body>
@@ -154,9 +155,9 @@
       <div class="achievement-notifications" id="achievement-notifications"></div>
 
       <!-- Achievement Counter (Absolute position near footer) -->
-      <div class="xp-achievements-container" style="
+      <div class="xp-achievements-container" id="xp-achievements-container-wrapper" style="
         position: absolute;
-        bottom: 35px; /* Just above the footer */
+        bottom: 4px; /* Just above the footer */
         right: 15px;
         z-index: 10;
         pointer-events: none;
@@ -388,18 +389,46 @@
             font-size: 10px;
           ">🏆 TEST ACHIEVEMENT</button>
         </div>
-        <div style="margin-top: 8px;">
-          <button onclick="if(window.testLeaderboard) window.testLeaderboard()" style="
-            width: 100%;
-            padding: 6px;
-            background: rgba(0, 246, 255, 0.15);
-            border: 1px solid #00f6ff;
-            color: #00f6ff;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 10px;
-          ">📊 TEST TOP 10</button>
+
+        <!-- IDLE STATS & EMOTES CONTROLS -->
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0, 246, 255, 0.2);">
+          <label style="display: block; font-size: 11px; color: #00f6ff; margin-bottom: 8px;">STATS & EMOTES:</label>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="if(window.testIdleMode) window.testIdleMode()" style="
+              flex: 1;
+              padding: 6px;
+              background: rgba(0, 246, 255, 0.1);
+              border: 1px solid #00f6ff;
+              color: #00f6ff;
+              cursor: pointer;
+              font-family: inherit;
+              font-size: 10px;
+            ">📊 TEST IDLE STATS</button>
+            <button onclick="if(window.showEmoteStats) window.showEmoteStats()" style="
+              flex: 1;
+              padding: 6px;
+              background: rgba(191, 0, 255, 0.1);
+              border: 1px solid #bf00ff;
+              color: #bf00ff;
+              cursor: pointer;
+              font-family: inherit;
+              font-size: 10px;
+            ">🎭 EMOTE STATS</button>
+          </div>
+          <div style="margin-top: 8px;">
+            <button onclick="if(window.testEmoteMessage) window.testEmoteMessage()" style="
+              width: 100%;
+              padding: 6px;
+              background: rgba(0, 255, 0, 0.1);
+              border: 1px solid #00ff00;
+              color: #00ff00;
+              cursor: pointer;
+              font-family: inherit;
+              font-size: 10px;
+            ">✨ TEST 7TV/BTTV MESSAGE</button>
+          </div>
         </div>
+
       </div>
 
       <div style="margin-top: 10px; font-size: 9px; color: #555; text-align: center;">
@@ -470,13 +499,17 @@
     <script src="js/services/RankingSystem.js"></script>
     <script src="js/services/GistStorageService.js"></script>
     <script src="js/services/ExperienceService.js"></script>
+    <script src="data/AchievementsData.js"></script>
     <script src="js/services/AchievementService.js"></script>
+    <script src="js/services/ThirdPartyEmoteService.js"></script>
+    <script src="js/services/SessionStatsService.js"></script>
 
     <!-- Managers -->
     <script src="js/managers/UIManager.js"></script>
     <script src="js/managers/XPDisplayManager.js"></script>
+    <script src="js/managers/IdleDisplayManager.js"></script>
+    <script src="js/managers/NotificationManager.js"></script>
     <script src="js/managers/MessageProcessor.js"></script>
-    <script src="js/managers/LeaderboardManager.js"></script>
 
     <!-- Aplicación principal -->
     <script src="js/app.js"></script>

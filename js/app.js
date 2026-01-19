@@ -199,17 +199,68 @@ class App {
                 console.log(`🏆 TEST: Mostrando logro "${randomAchievement.name}" (${randomAchievement.rarity})`);
             };
 
-            // TEST LEADERBOARD (Top 10)
-            window.testLeaderboard = () => {
-                const leaderboardManager = this.processor.getManager('leaderboard');
-                if (!leaderboardManager) {
-                    alert('❌ LeaderboardManager no inicializado');
+            // TEST IDLE MODE (Forzar entrada en modo idle)
+            window.testIdleMode = () => {
+                const idleManager = this.processor.getManager('idleDisplay');
+                if (!idleManager) {
+                    alert('❌ Idle Display Manager no inicializado');
                     return;
                 }
 
-                leaderboardManager.forceShow();
-                console.log('📊 TEST: Mostrando Top 10 Leaderboard');
+                // Forzar entrada en modo idle
+                idleManager._enterIdleMode();
+                console.log('📊 TEST: Forzando modo idle');
             };
+
+            // SHOW EMOTE STATS
+            window.showEmoteStats = () => {
+                const emoteService = this.processor.getService('thirdPartyEmotes');
+                if (!emoteService) {
+                    alert('❌ Third Party Emotes no inicializado o no habilitado');
+                    return;
+                }
+
+                const stats = emoteService.getStats();
+                const emotes = emoteService.listEmotes(20);
+
+                console.log('🎭 Third Party Emotes Stats:', stats);
+                console.log('🎭 Sample emotes:', emotes);
+
+                alert(`🎭 Third Party Emotes Stats:
+                    
+Total: ${stats.total} emotes
+7TV: ${stats.byProvider['7tv']}
+BTTV: ${stats.byProvider['bttv']}
+FFZ: ${stats.byProvider['ffz']}
+Animated: ${stats.animated}
+
+Sample emotes: ${emotes.slice(0, 10).join(', ')}...
+
+(Ver consola para más detalles)`);
+            };
+
+            // TEST EMOTE MESSAGE (Simular mensaje con emotes de terceros)
+            window.testEmoteMessage = () => {
+                const emoteService = this.processor.getService('thirdPartyEmotes');
+                if (!emoteService || !emoteService.isLoaded) {
+                    alert('❌ Third Party Emotes no cargados aún. Espera unos segundos.');
+                    return;
+                }
+
+                // Obtener algunos emotes disponibles
+                const availableEmotes = emoteService.listEmotes(5);
+                if (availableEmotes.length === 0) {
+                    alert('❌ No hay emotes de terceros disponibles');
+                    return;
+                }
+
+                // Crear mensaje con emotes
+                const testMessage = `Hola chat! ${availableEmotes[0]} Grande el stream ${availableEmotes[1] || ''} ${availableEmotes[2] || ''}`.trim();
+
+                window.simularMensaje('EmoteTester', testMessage);
+                console.log(`🎭 TEST: Mensaje con emotes: "${testMessage}"`);
+            };
+
         }
     }
 

@@ -1,11 +1,16 @@
 /**
- * AchievementService - Sistema de Logros
+ * AchievementService - Sistema de Logros (Refactorizado)
  * 
  * Responsabilidades:
- * - Definir logros disponibles
+ * - Cargar definiciones de logros desde AchievementsData.js
+ * - Evaluar reglas de logros dinámicamente
  * - Detectar cuándo se desbloquea un logro
  * - Guardar logros desbloqueados
  * - Emitir eventos de logro desbloqueado
+ * 
+ * REFACTORIZADO: Los logros ahora se definen en data/AchievementsData.js
+ * en lugar de estar hardcodeados. Esto reduce el archivo de ~1150 a ~350 líneas
+ * y permite añadir nuevos logros sin modificar esta lógica.
  * 
  * @class AchievementService
  */
@@ -22,11 +27,15 @@ class AchievementService {
         // Callbacks para eventos de logro desbloqueado
         this.achievementCallbacks = [];
 
-        // Definir todos los logros disponibles
-        this.achievements = this.initAchievements();
+        // Los logros se cargarán desde ACHIEVEMENTS_DATA
+        this.achievements = {};
+        this.isLoaded = false;
 
-        // Cache de estadísticas adicionales por usuario (para logros que necesitan tracking extra)
+        // Cache de estadísticas adicionales por usuario
         this.userStats = new Map();
+
+        // Cargar logros desde el módulo global
+        this._loadAchievementsFromModule();
 
         if (this.config.DEBUG) {
             console.log(`✅ AchievementService inicializado: ${Object.keys(this.achievements).length} logros definidos`);
@@ -34,761 +43,152 @@ class AchievementService {
     }
 
     /**
-     * Inicializa la definición de logros
-     * Cada logro tiene: id, name, description, condition (texto), category, rarity, check (función)
-     * @returns {Object}
+     * Carga los logros desde el módulo ACHIEVEMENTS_DATA
+     * @private
      */
-    initAchievements() {
-        return {
-            // ==================== MENSAJES (20 logros) ====================
+    _loadAchievementsFromModule() {
+        try {
+            if (typeof ACHIEVEMENTS_DATA !== 'undefined' && ACHIEVEMENTS_DATA.achievements) {
+                this._processAchievementData(ACHIEVEMENTS_DATA);
+                this.isLoaded = true;
+                console.log(`📦 Logros cargados desde AchievementsData.js: ${Object.keys(this.achievements).length}`);
+            } else {
+                console.warn('⚠️ ACHIEVEMENTS_DATA no encontrado, los logros no se cargarán');
+                this.achievements = {};
+            }
+        } catch (e) {
+            console.error('❌ Error cargando logros desde módulo:', e);
+            this.achievements = {};
+        }
+    }
 
-            // Logros de cantidad de mensajes
-            first_words: {
-                id: 'first_words',
-                name: 'First Words',
-                description: 'Tus primeros mensajes en el chat',
-                condition: '10 mensajes enviados',
-                category: 'messages',
-                rarity: 'common',
-                icon: '💬',
-                check: (userData) => userData.totalMessages >= 10
-            },
-            chatterbox: {
-                id: 'chatterbox',
-                name: 'Chatterbox',
-                description: 'No puedes parar de escribir',
-                condition: '50 mensajes',
-                category: 'messages',
-                rarity: 'common',
-                icon: '🗣️',
-                check: (userData) => userData.totalMessages >= 50
-            },
-            talkative: {
-                id: 'talkative',
-                name: 'Talkative',
-                description: 'Comunicación constante',
-                condition: '100 mensajes',
-                category: 'messages',
-                rarity: 'common',
-                icon: '📢',
-                check: (userData) => userData.totalMessages >= 100
-            },
-            motormouth: {
-                id: 'motormouth',
-                name: 'Motormouth',
-                description: 'Hablas más que un fixer',
-                condition: '250 mensajes',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🎙️',
-                check: (userData) => userData.totalMessages >= 250
-            },
-            choom_speaker: {
-                id: 'choom_speaker',
-                name: 'Choom Speaker',
-                description: 'Maestro de la conversación',
-                condition: '500 mensajes',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🔊',
-                check: (userData) => userData.totalMessages >= 500
-            },
-            voice_of_night_city: {
-                id: 'voice_of_night_city',
-                name: 'Voice of Night City',
-                description: 'Tu voz resuena en las calles',
-                condition: '1,000 mensajes',
-                category: 'messages',
-                rarity: 'rare',
-                icon: '🌃',
-                check: (userData) => userData.totalMessages >= 1000
-            },
-            legendary_talker: {
-                id: 'legendary_talker',
-                name: 'Legendary Talker',
-                description: 'Leyenda del chat',
-                condition: '2,500 mensajes',
-                category: 'messages',
-                rarity: 'rare',
-                icon: '⭐',
-                check: (userData) => userData.totalMessages >= 2500
-            },
-            chrome_tongue: {
-                id: 'chrome_tongue',
-                name: 'Chrome Tongue',
-                description: 'Lengua mejorada cyberware',
-                condition: '5,000 mensajes',
-                category: 'messages',
-                rarity: 'epic',
-                icon: '🦾',
-                check: (userData) => userData.totalMessages >= 5000
-            },
-            infinite_broadcast: {
-                id: 'infinite_broadcast',
-                name: 'Infinite Broadcast',
-                description: 'Emisión sin fin',
-                condition: '10,000 mensajes',
-                category: 'messages',
-                rarity: 'epic',
-                icon: '📡',
-                check: (userData) => userData.totalMessages >= 10000
-            },
-            netrunner_comms: {
-                id: 'netrunner_comms',
-                name: 'Netrunner Comms',
-                description: 'Comunicaciones de élite',
-                condition: '25,000 mensajes',
-                category: 'messages',
-                rarity: 'legendary',
-                icon: '🧠',
-                check: (userData) => userData.totalMessages >= 25000
-            },
+    /**
+     * Procesa los datos del JSON y genera funciones check
+     * @private
+     * @param {Object} data - Datos del JSON
+     */
+    _processAchievementData(data) {
+        const achievementEntries = data.achievements || {};
 
-            // Logros de primer mensaje del día
-            early_bird: {
-                id: 'early_bird',
-                name: 'Early Bird',
-                description: 'Madrugador del chat',
-                condition: '3 primeros mensajes del día',
-                category: 'messages',
-                rarity: 'common',
-                icon: '🐦',
-                check: (userData, stats) => (stats.firstMessageDays || 0) >= 3
-            },
-            morning_regular: {
-                id: 'morning_regular',
-                name: 'Morning Regular',
-                description: 'Madrugador habitual',
-                condition: '10 primeros mensajes',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🌅',
-                check: (userData, stats) => (stats.firstMessageDays || 0) >= 10
-            },
-            dawn_patrol: {
-                id: 'dawn_patrol',
-                name: 'Dawn Patrol',
-                description: 'Patrulla del amanecer',
-                condition: '30 primeros mensajes',
-                category: 'messages',
-                rarity: 'rare',
-                icon: '🌄',
-                check: (userData, stats) => (stats.firstMessageDays || 0) >= 30
-            },
+        for (const [id, achData] of Object.entries(achievementEntries)) {
+            this.achievements[id] = {
+                id: id,
+                name: achData.name,
+                description: achData.description,
+                condition: achData.condition,
+                category: achData.category,
+                rarity: achData.rarity,
+                icon: achData.icon,
+                // Generar función check a partir de la regla
+                check: this._createCheckFunction(achData.rule)
+            };
+        }
+    }
 
-            // Logros de emotes
-            emote_user: {
-                id: 'emote_user',
-                name: 'Emote User',
-                description: 'Fan de los emotes',
-                condition: '25 mensajes con emotes',
-                category: 'messages',
-                rarity: 'common',
-                icon: '😀',
-                check: (userData, stats) => (stats.messagesWithEmotes || 0) >= 25
-            },
-            emote_spammer: {
-                id: 'emote_spammer',
-                name: 'Emote Spammer',
-                description: 'Fan de los emotes',
-                condition: '100 mensajes con emotes',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🎭',
-                check: (userData, stats) => (stats.messagesWithEmotes || 0) >= 100
-            },
-            emote_master: {
-                id: 'emote_master',
-                name: 'Emote Master',
-                description: 'Maestro del emote',
-                condition: '500 mensajes con emotes',
-                category: 'messages',
-                rarity: 'rare',
-                icon: '👑',
-                check: (userData, stats) => (stats.messagesWithEmotes || 0) >= 500
-            },
+    /**
+     * Crea una función de verificación a partir de una regla JSON
+     * @private
+     * @param {Object} rule - { field, operator, value }
+     * @returns {Function}
+     */
+    _createCheckFunction(rule) {
+        if (!rule) {
+            return () => false;
+        }
 
-            // Logros de menciones
-            mention_someone: {
-                id: 'mention_someone',
-                name: 'Mention Someone',
-                description: 'Mencionas a otros usuarios',
-                condition: '10 menciones',
-                category: 'messages',
-                rarity: 'common',
-                icon: '👋',
-                check: (userData, stats) => (stats.mentionCount || 0) >= 10
-            },
-            social_butterfly: {
-                id: 'social_butterfly',
-                name: 'Social Butterfly',
-                description: 'Muy sociable',
-                condition: '50 menciones',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🦋',
-                check: (userData, stats) => (stats.mentionCount || 0) >= 50
-            },
-            connector: {
-                id: 'connector',
-                name: 'Connector',
-                description: 'Conectas a la gente',
-                condition: '200 menciones',
-                category: 'messages',
-                rarity: 'rare',
-                icon: '🔗',
-                check: (userData, stats) => (stats.mentionCount || 0) >= 200
-            },
+        return (userData, stats) => {
+            try {
+                // Obtener el valor del campo
+                const fieldValue = this._getFieldValue(rule.field, userData, stats);
 
-            // Logro nocturno
-            night_owl: {
-                id: 'night_owl',
-                name: 'Night Owl',
-                description: 'Activo después de medianoche',
-                condition: '5 mensajes después de 00:00',
-                category: 'messages',
-                rarity: 'uncommon',
-                icon: '🦉',
-                check: (userData, stats) => (stats.nightMessages || 0) >= 5
-            },
-
-            // ==================== RACHAS (15 logros) ====================
-
-            streak_starter: {
-                id: 'streak_starter', name: 'Streak Starter', description: 'Iniciaste una racha',
-                condition: '2 días consecutivos', category: 'streaks', rarity: 'common', icon: '🔥',
-                check: (userData) => (userData.streakDays || 0) >= 2
-            },
-            consistency: {
-                id: 'consistency', name: 'Consistency', description: 'La constancia es clave',
-                condition: '3 días consecutivos', category: 'streaks', rarity: 'common', icon: '📆',
-                check: (userData) => (userData.streakDays || 0) >= 3
-            },
-            dedicated: {
-                id: 'dedicated', name: 'Dedicated', description: 'Dedicación al chat',
-                condition: '5 días consecutivos', category: 'streaks', rarity: 'uncommon', icon: '💪',
-                check: (userData) => (userData.streakDays || 0) >= 5
-            },
-            week_warrior: {
-                id: 'week_warrior', name: 'Week Warrior', description: 'Una semana sin faltar',
-                condition: '7 días consecutivos', category: 'streaks', rarity: 'uncommon', icon: '🗓️',
-                check: (userData) => (userData.streakDays || 0) >= 7
-            },
-            fortnight_fighter: {
-                id: 'fortnight_fighter', name: 'Fortnight Fighter', description: 'Dos semanas seguidas',
-                condition: '14 días consecutivos', category: 'streaks', rarity: 'rare', icon: '⚔️',
-                check: (userData) => (userData.streakDays || 0) >= 14
-            },
-            monthly_devotion: {
-                id: 'monthly_devotion', name: 'Monthly Devotion', description: 'Un mes entero',
-                condition: '30 días consecutivos', category: 'streaks', rarity: 'rare', icon: '📅',
-                check: (userData) => (userData.streakDays || 0) >= 30
-            },
-            iron_will: {
-                id: 'iron_will', name: 'Iron Will', description: 'Voluntad de hierro',
-                condition: '50 días consecutivos', category: 'streaks', rarity: 'epic', icon: '🔩',
-                check: (userData) => (userData.streakDays || 0) >= 50
-            },
-            quarter_commitment: {
-                id: 'quarter_commitment', name: 'Quarter Commitment', description: 'Compromiso trimestral',
-                condition: '90 días consecutivos', category: 'streaks', rarity: 'epic', icon: '🏅',
-                check: (userData) => (userData.streakDays || 0) >= 90
-            },
-            chrome_heart: {
-                id: 'chrome_heart', name: 'Chrome Heart', description: 'Corazón de cromo',
-                condition: '100 días consecutivos', category: 'streaks', rarity: 'epic', icon: '💎',
-                check: (userData) => (userData.streakDays || 0) >= 100
-            },
-            half_year_hero: {
-                id: 'half_year_hero', name: 'Half Year Hero', description: 'Medio año sin parar',
-                condition: '180 días consecutivos', category: 'streaks', rarity: 'legendary', icon: '🦸',
-                check: (userData) => (userData.streakDays || 0) >= 180
-            },
-            immortal_presence: {
-                id: 'immortal_presence', name: 'Immortal Presence', description: 'Presencia inmortal',
-                condition: '200 días consecutivos', category: 'streaks', rarity: 'legendary', icon: '👁️',
-                check: (userData) => (userData.streakDays || 0) >= 200
-            },
-            annual_legend: {
-                id: 'annual_legend', name: 'Annual Legend', description: 'Leyenda anual',
-                condition: '365 días consecutivos', category: 'streaks', rarity: 'legendary', icon: '🏆',
-                check: (userData) => (userData.streakDays || 0) >= 365
-            },
-            streak_recovery: {
-                id: 'streak_recovery', name: 'Streak Recovery', description: 'Volviste después de perder racha',
-                condition: 'Reiniciar racha 5 veces', category: 'streaks', rarity: 'uncommon', icon: '🔄',
-                check: (userData, stats) => (stats.streakResets || 0) >= 5
-            },
-            never_give_up: {
-                id: 'never_give_up', name: 'Never Give Up', description: 'Nunca te rindes',
-                condition: 'Reiniciar racha 10 veces', category: 'streaks', rarity: 'rare', icon: '💥',
-                check: (userData, stats) => (stats.streakResets || 0) >= 10
-            },
-            phoenix: {
-                id: 'phoenix', name: 'Phoenix', description: 'Renaces de las cenizas',
-                condition: 'Alcanzar 7d después de perder 14+', category: 'streaks', rarity: 'epic', icon: '🔥',
-                check: (userData, stats) => (stats.phoenixAchieved || false)
-            },
-
-            // ==================== NIVELES (20 logros) ====================
-
-            level_up_first: {
-                id: 'level_up_first', name: 'First Level Up', description: 'Tu primer level up',
-                condition: 'Alcanzar nivel 2', category: 'levels', rarity: 'common', icon: '⬆️',
-                check: (userData) => (userData.level || 1) >= 2
-            },
-            street_kid: {
-                id: 'street_kid', name: 'Street Kid', description: 'Ya no eres un novato',
-                condition: 'Alcanzar nivel 5', category: 'levels', rarity: 'common', icon: '🛹',
-                check: (userData) => (userData.level || 1) >= 5
-            },
-            mercenary_rank: {
-                id: 'mercenary_rank', name: 'Mercenary Rank', description: 'Rango de mercenario',
-                condition: 'Alcanzar nivel 10', category: 'levels', rarity: 'uncommon', icon: '🎖️',
-                check: (userData) => (userData.level || 1) >= 10
-            },
-            solo_status: {
-                id: 'solo_status', name: 'Solo Status', description: 'Status de Solo',
-                condition: 'Alcanzar nivel 15', category: 'levels', rarity: 'uncommon', icon: '🔫',
-                check: (userData) => (userData.level || 1) >= 15
-            },
-            netrunner_tier: {
-                id: 'netrunner_tier', name: 'Netrunner Tier', description: 'Tier de Netrunner',
-                condition: 'Alcanzar nivel 20', category: 'levels', rarity: 'rare', icon: '💻',
-                check: (userData) => (userData.level || 1) >= 20
-            },
-            level_milestone_25: {
-                id: 'level_milestone_25', name: 'Quarter Century', description: '25 niveles alcanzados',
-                condition: 'Alcanzar nivel 25', category: 'levels', rarity: 'rare', icon: '🎯',
-                check: (userData) => (userData.level || 1) >= 25
-            },
-            fixer_class: {
-                id: 'fixer_class', name: 'Fixer Class', description: 'Clase Fixer',
-                condition: 'Alcanzar nivel 30', category: 'levels', rarity: 'rare', icon: '🤝',
-                check: (userData) => (userData.level || 1) >= 30
-            },
-            corpo_elite: {
-                id: 'corpo_elite', name: 'Corpo Elite', description: 'Elite Corpo',
-                condition: 'Alcanzar nivel 40', category: 'levels', rarity: 'epic', icon: '🏢',
-                check: (userData) => (userData.level || 1) >= 40
-            },
-            night_city_legend: {
-                id: 'night_city_legend', name: 'Night City Legend', description: 'Leyenda de Night City',
-                condition: 'Alcanzar nivel 50', category: 'levels', rarity: 'epic', icon: '🌃',
-                check: (userData) => (userData.level || 1) >= 50
-            },
-            cyberpsycho_tier: {
-                id: 'cyberpsycho_tier', name: 'Cyberpsycho Tier', description: 'Nivel Cyberpsycho',
-                condition: 'Alcanzar nivel 60', category: 'levels', rarity: 'epic', icon: '🤖',
-                check: (userData) => (userData.level || 1) >= 60
-            },
-            maxtac_rank: {
-                id: 'maxtac_rank', name: 'MaxTac Rank', description: 'Rango MaxTac',
-                condition: 'Alcanzar nivel 70', category: 'levels', rarity: 'legendary', icon: '🚔',
-                check: (userData) => (userData.level || 1) >= 70
-            },
-            level_milestone_75: {
-                id: 'level_milestone_75', name: 'Diamond Tier', description: 'Tier diamante',
-                condition: 'Alcanzar nivel 75', category: 'levels', rarity: 'legendary', icon: '💠',
-                check: (userData) => (userData.level || 1) >= 75
-            },
-            trauma_team: {
-                id: 'trauma_team', name: 'Trauma Team', description: 'Miembro del Trauma Team',
-                condition: 'Alcanzar nivel 80', category: 'levels', rarity: 'legendary', icon: '🚑',
-                check: (userData) => (userData.level || 1) >= 80
-            },
-            afterlife_legend: {
-                id: 'afterlife_legend', name: 'Afterlife Legend', description: 'Leyenda del Afterlife',
-                condition: 'Alcanzar nivel 90', category: 'levels', rarity: 'legendary', icon: '☠️',
-                check: (userData) => (userData.level || 1) >= 90
-            },
-            choomba_supreme: {
-                id: 'choomba_supreme', name: 'Choomba Supreme', description: 'El Choomba Supremo',
-                condition: 'Alcanzar nivel 100', category: 'levels', rarity: 'legendary', icon: '👑',
-                check: (userData) => (userData.level || 1) >= 100
-            },
-            beyond_legend: {
-                id: 'beyond_legend', name: 'Beyond Legend', description: 'Más allá de la leyenda',
-                condition: 'Alcanzar nivel 125', category: 'levels', rarity: 'legendary', icon: '🌟',
-                check: (userData) => (userData.level || 1) >= 125
-            },
-            mythic_status: {
-                id: 'mythic_status', name: 'Mythic Status', description: 'Status mítico',
-                condition: 'Alcanzar nivel 150', category: 'levels', rarity: 'legendary', icon: '🔱',
-                check: (userData) => (userData.level || 1) >= 150
-            },
-            transcendent: {
-                id: 'transcendent', name: 'Transcendent', description: 'Trascendencia digital',
-                condition: 'Alcanzar nivel 200', category: 'levels', rarity: 'legendary', icon: '✨',
-                check: (userData) => (userData.level || 1) >= 200
-            },
-            fast_learner: {
-                id: 'fast_learner', name: 'Fast Learner', description: 'Aprendiz rápido',
-                condition: '3 level ups en un día', category: 'levels', rarity: 'rare', icon: '📚',
-                check: (userData, stats) => (stats.levelUpsToday || 0) >= 3
-            },
-            grinder: {
-                id: 'grinder', name: 'Grinder', description: 'El que muele XP',
-                condition: '5 level ups en una semana', category: 'levels', rarity: 'epic', icon: '⚙️',
-                check: (userData, stats) => (stats.levelUpsThisWeek || 0) >= 5
-            },
-
-            // ==================== EXPERIENCIA (15 logros) ====================
-
-            first_xp: {
-                id: 'first_xp', name: 'First XP', description: 'Empezando a ganar experiencia',
-                condition: 'Ganar 50 XP', category: 'xp', rarity: 'common', icon: '✨',
-                check: (userData) => (userData.xp || 0) >= 50
-            },
-            hundred_xp: {
-                id: 'hundred_xp', name: 'Hundred XP', description: 'Centenar de experiencia',
-                condition: 'Acumular 100 XP', category: 'xp', rarity: 'common', icon: '💯',
-                check: (userData) => (userData.xp || 0) >= 100
-            },
-            thousand_xp: {
-                id: 'thousand_xp', name: 'Thousand XP', description: 'Mil experiencias',
-                condition: 'Acumular 1,000 XP', category: 'xp', rarity: 'common', icon: '🔢',
-                check: (userData) => (userData.xp || 0) >= 1000
-            },
-            xp_collector: {
-                id: 'xp_collector', name: 'XP Collector', description: 'Coleccionista de XP',
-                condition: 'Acumular 5,000 XP', category: 'xp', rarity: 'uncommon', icon: '📦',
-                check: (userData) => (userData.xp || 0) >= 5000
-            },
-            xp_hoarder: {
-                id: 'xp_hoarder', name: 'XP Hoarder', description: 'Acumulador de XP',
-                condition: 'Acumular 10,000 XP', category: 'xp', rarity: 'uncommon', icon: '🏦',
-                check: (userData) => (userData.xp || 0) >= 10000
-            },
-            xp_magnate: {
-                id: 'xp_magnate', name: 'XP Magnate', description: 'Magnate del XP',
-                condition: 'Acumular 25,000 XP', category: 'xp', rarity: 'rare', icon: '💰',
-                check: (userData) => (userData.xp || 0) >= 25000
-            },
-            xp_tycoon: {
-                id: 'xp_tycoon', name: 'XP Tycoon', description: 'Tycoon del XP',
-                condition: 'Acumular 50,000 XP', category: 'xp', rarity: 'rare', icon: '🏭',
-                check: (userData) => (userData.xp || 0) >= 50000
-            },
-            xp_empire: {
-                id: 'xp_empire', name: 'XP Empire', description: 'Imperio de XP',
-                condition: 'Acumular 100,000 XP', category: 'xp', rarity: 'epic', icon: '🏰',
-                check: (userData) => (userData.xp || 0) >= 100000
-            },
-            xp_legend: {
-                id: 'xp_legend', name: 'XP Legend', description: 'Leyenda del XP',
-                condition: 'Acumular 250,000 XP', category: 'xp', rarity: 'epic', icon: '🌠',
-                check: (userData) => (userData.xp || 0) >= 250000
-            },
-            xp_god: {
-                id: 'xp_god', name: 'XP God', description: 'Dios del XP',
-                condition: 'Acumular 500,000 XP', category: 'xp', rarity: 'legendary', icon: '⚡',
-                check: (userData) => (userData.xp || 0) >= 500000
-            },
-            million_xp: {
-                id: 'million_xp', name: 'Millionaire', description: 'Millonario en XP',
-                condition: 'Acumular 1,000,000 XP', category: 'xp', rarity: 'legendary', icon: '💎',
-                check: (userData) => (userData.xp || 0) >= 1000000
-            },
-            multiplier_bonus: {
-                id: 'multiplier_bonus', name: 'Multiplier Active', description: 'Multiplicador activo',
-                condition: 'Ganar XP con x1.5+', category: 'xp', rarity: 'uncommon', icon: '✖️',
-                check: (userData, stats) => (stats.usedMultiplier15 || false)
-            },
-            double_power: {
-                id: 'double_power', name: 'Double Power', description: 'Doble poder',
-                condition: 'Ganar XP con x2', category: 'xp', rarity: 'rare', icon: '2️⃣',
-                check: (userData, stats) => (stats.usedMultiplier2 || false)
-            },
-            triple_threat: {
-                id: 'triple_threat', name: 'Triple Threat', description: 'Triple amenaza',
-                condition: 'Ganar XP con x3', category: 'xp', rarity: 'epic', icon: '3️⃣',
-                check: (userData, stats) => (stats.usedMultiplier3 || false)
-            },
-            bonus_hunter: {
-                id: 'bonus_hunter', name: 'Bonus Hunter', description: 'Cazador de bonus',
-                condition: 'Bonus de racha 10 veces', category: 'xp', rarity: 'rare', icon: '🎯',
-                check: (userData, stats) => (stats.streakBonusCount || 0) >= 10
-            },
-
-            // ==================== RANKING (15 logros) ====================
-
-            top_15: {
-                id: 'top_15', name: 'Top 15', description: 'Entraste al Top 15',
-                condition: 'Aparecer en Top 15', category: 'ranking', rarity: 'uncommon', icon: '📊',
-                check: (userData, stats) => (stats.bestRank || 999) <= 15
-            },
-            top_10: {
-                id: 'top_10', name: 'Top 10', description: 'Entraste al Top 10',
-                condition: 'Aparecer en Top 10', category: 'ranking', rarity: 'rare', icon: '🔟',
-                check: (userData, stats) => (stats.bestRank || 999) <= 10
-            },
-            top_5: {
-                id: 'top_5', name: 'Top 5', description: 'Elite del chat',
-                condition: 'Aparecer en Top 5', category: 'ranking', rarity: 'rare', icon: '5️⃣',
-                check: (userData, stats) => (stats.bestRank || 999) <= 5
-            },
-            podium: {
-                id: 'podium', name: 'Podium', description: 'En el podio',
-                condition: 'Aparecer en Top 3', category: 'ranking', rarity: 'epic', icon: '🥉',
-                check: (userData, stats) => (stats.bestRank || 999) <= 3
-            },
-            runner_up: {
-                id: 'runner_up', name: 'Runner Up', description: 'Segundo lugar',
-                condition: 'Posición #2', category: 'ranking', rarity: 'epic', icon: '🥈',
-                check: (userData, stats) => (stats.bestRank || 999) <= 2
-            },
-            champion: {
-                id: 'champion', name: 'Champion', description: 'Campeón del chat',
-                condition: 'Posición #1', category: 'ranking', rarity: 'legendary', icon: '🥇',
-                check: (userData, stats) => (stats.bestRank || 999) === 1
-            },
-            king_dethroner: {
-                id: 'king_dethroner', name: 'King Dethroner', description: 'Destronaste al #1',
-                condition: 'Quitar posición #1 a otro', category: 'ranking', rarity: 'legendary', icon: '👑',
-                check: (userData, stats) => (stats.dethroned || false)
-            },
-            climber: {
-                id: 'climber', name: 'Climber', description: 'Escalador de ranking',
-                condition: 'Subir 5 posiciones', category: 'ranking', rarity: 'uncommon', icon: '🧗',
-                check: (userData, stats) => (stats.bestClimb || 0) >= 5
-            },
-            rocket: {
-                id: 'rocket', name: 'Rocket', description: 'Cohete al ranking',
-                condition: 'Subir 10 posiciones en un día', category: 'ranking', rarity: 'rare', icon: '🚀',
-                check: (userData, stats) => (stats.bestDailyClimb || 0) >= 10
-            },
-            consistent_top: {
-                id: 'consistent_top', name: 'Consistent Top', description: 'Top consistente',
-                condition: 'Top 10 por 7 días', category: 'ranking', rarity: 'epic', icon: '📈',
-                check: (userData, stats) => (stats.daysInTop10 || 0) >= 7
-            },
-            ranking_veteran: {
-                id: 'ranking_veteran', name: 'Ranking Veteran', description: 'Veterano del ranking',
-                condition: 'Top 15 por 30 días', category: 'ranking', rarity: 'epic', icon: '🎖️',
-                check: (userData, stats) => (stats.daysInTop15 || 0) >= 30
-            },
-            untouchable: {
-                id: 'untouchable', name: 'Untouchable', description: 'Intocable',
-                condition: '#1 por 7 días', category: 'ranking', rarity: 'legendary', icon: '🛡️',
-                check: (userData, stats) => (stats.daysAsTop1 || 0) >= 7
-            },
-            iron_throne: {
-                id: 'iron_throne', name: 'Iron Throne', description: 'Trono de hierro',
-                condition: '#1 por 30 días', category: 'ranking', rarity: 'legendary', icon: '🪑',
-                check: (userData, stats) => (stats.daysAsTop1 || 0) >= 30
-            },
-            comeback_king: {
-                id: 'comeback_king', name: 'Comeback King', description: 'Rey del regreso',
-                condition: 'Volver al Top 10', category: 'ranking', rarity: 'rare', icon: '↩️',
-                check: (userData, stats) => (stats.comebacks || 0) >= 1
-            },
-            rival_defeated: {
-                id: 'rival_defeated', name: 'Rival Defeated', description: 'Rival derrotado',
-                condition: 'Superar a quien te superó', category: 'ranking', rarity: 'rare', icon: '⚔️',
-                check: (userData, stats) => (stats.rivalsDefeated || 0) >= 1
-            },
-
-            // ==================== STREAM (10 logros) ====================
-
-            stream_opener: {
-                id: 'stream_opener', name: 'Stream Opener', description: 'Abridor del stream',
-                condition: '5 mensajes en primeros 5 min', category: 'stream', rarity: 'uncommon', icon: '🎬',
-                check: (userData, stats) => (stats.streamOpenerCount || 0) >= 5
-            },
-            early_supporter: {
-                id: 'early_supporter', name: 'Early Supporter', description: 'Apoyo temprano',
-                condition: '10 mensajes de apertura', category: 'stream', rarity: 'rare', icon: '🌟',
-                check: (userData, stats) => (stats.streamOpenerCount || 0) >= 10
-            },
-            live_regular: {
-                id: 'live_regular', name: 'Live Regular', description: 'Regular en directo',
-                condition: '100 mensajes en stream', category: 'stream', rarity: 'uncommon', icon: '📺',
-                check: (userData, stats) => (stats.liveMessages || 0) >= 100
-            },
-            live_devotee: {
-                id: 'live_devotee', name: 'Live Devotee', description: 'Devoto del directo',
-                condition: '200 mensajes en stream', category: 'stream', rarity: 'rare', icon: '🎥',
-                check: (userData, stats) => (stats.liveMessages || 0) >= 200
-            },
-            stream_marathoner: {
-                id: 'stream_marathoner', name: 'Stream Marathoner', description: 'Maratonista de stream',
-                condition: 'Activo en stream de 4+ horas', category: 'stream', rarity: 'epic', icon: '🏃',
-                check: (userData, stats) => (stats.marathonStreams || 0) >= 1
-            },
-            offline_chatter: {
-                id: 'offline_chatter', name: 'Offline Chatter', description: 'Activo cuando no hay stream',
-                condition: '10 mensajes offline', category: 'stream', rarity: 'common', icon: '💤',
-                check: (userData, stats) => (stats.offlineMessages || 0) >= 10
-            },
-            always_there: {
-                id: 'always_there', name: 'Always There', description: 'Siempre presente',
-                condition: '10 streams diferentes', category: 'stream', rarity: 'rare', icon: '📍',
-                check: (userData, stats) => (stats.uniqueStreams || 0) >= 10
-            },
-            loyal_viewer: {
-                id: 'loyal_viewer', name: 'Loyal Viewer', description: 'Viewer leal',
-                condition: '50 streams diferentes', category: 'stream', rarity: 'epic', icon: '💝',
-                check: (userData, stats) => (stats.uniqueStreams || 0) >= 50
-            },
-            stream_veteran: {
-                id: 'stream_veteran', name: 'Stream Veteran', description: 'Veterano de streams',
-                condition: '100 streams diferentes', category: 'stream', rarity: 'legendary', icon: '🎖️',
-                check: (userData, stats) => (stats.uniqueStreams || 0) >= 100
-            },
-            prime_time: {
-                id: 'prime_time', name: 'Prime Time', description: 'Activo en horario estelar',
-                condition: '20 mensajes en hora pico', category: 'stream', rarity: 'uncommon', icon: '⏰',
-                check: (userData, stats) => (stats.primeTimeMessages || 0) >= 20
-            },
-
-            // ==================== FECHAS FESTIVAS (15 logros) ====================
-
-            new_year_chatter: {
-                id: 'new_year_chatter', name: 'New Year Chatter', description: 'Primer mensaje del año',
-                condition: 'Mensaje el 1 de Enero', category: 'holidays', rarity: 'rare', icon: '🎆',
-                check: (userData, stats) => (stats.holidays || []).includes('new_year')
-            },
-            new_year_countdown: {
-                id: 'new_year_countdown', name: 'Countdown Master', description: 'Estuviste en el countdown',
-                condition: 'Mensaje 23:50-00:10 Año Nuevo', category: 'holidays', rarity: 'epic', icon: '🕐',
-                check: (userData, stats) => (stats.holidays || []).includes('countdown')
-            },
-            valentines_love: {
-                id: 'valentines_love', name: 'Digital Love', description: 'Amor en el chat',
-                condition: 'Mensaje el 14 de Febrero', category: 'holidays', rarity: 'rare', icon: '💕',
-                check: (userData, stats) => (stats.holidays || []).includes('valentines')
-            },
-            spring_awakening: {
-                id: 'spring_awakening', name: 'Spring Awakening', description: 'Despertar primaveral',
-                condition: 'Mensaje el 21 de Marzo', category: 'holidays', rarity: 'uncommon', icon: '🌸',
-                check: (userData, stats) => (stats.holidays || []).includes('spring')
-            },
-            april_fools: {
-                id: 'april_fools', name: 'April Fools', description: '¡Inocente!',
-                condition: 'Mensaje el 1 de Abril', category: 'holidays', rarity: 'rare', icon: '🃏',
-                check: (userData, stats) => (stats.holidays || []).includes('april_fools')
-            },
-            summer_vibes: {
-                id: 'summer_vibes', name: 'Summer Vibes', description: 'Vibras de verano',
-                condition: 'Mensaje el 21 de Junio', category: 'holidays', rarity: 'uncommon', icon: '☀️',
-                check: (userData, stats) => (stats.holidays || []).includes('summer')
-            },
-            independence_day: {
-                id: 'independence_day', name: 'Fireworks', description: 'Fuegos artificiales',
-                condition: 'Mensaje el 4 de Julio', category: 'holidays', rarity: 'rare', icon: '🎇',
-                check: (userData, stats) => (stats.holidays || []).includes('july4')
-            },
-            halloween_spirit: {
-                id: 'halloween_spirit', name: 'Halloween Spirit', description: 'Espíritu de Halloween',
-                condition: 'Mensaje el 31 de Octubre', category: 'holidays', rarity: 'epic', icon: '🎃',
-                check: (userData, stats) => (stats.holidays || []).includes('halloween')
-            },
-            day_of_dead: {
-                id: 'day_of_dead', name: 'Día de Muertos', description: 'Honrando a los caídos',
-                condition: 'Mensaje el 1-2 de Noviembre', category: 'holidays', rarity: 'rare', icon: '💀',
-                check: (userData, stats) => (stats.holidays || []).includes('day_of_dead')
-            },
-            thanksgiving: {
-                id: 'thanksgiving', name: 'Grateful Chatter', description: 'Chatter agradecido',
-                condition: 'Mensaje en Thanksgiving', category: 'holidays', rarity: 'rare', icon: '🦃',
-                check: (userData, stats) => (stats.holidays || []).includes('thanksgiving')
-            },
-            christmas_eve: {
-                id: 'christmas_eve', name: 'Christmas Eve', description: 'Nochebuena digital',
-                condition: 'Mensaje el 24 de Diciembre', category: 'holidays', rarity: 'epic', icon: '🎄',
-                check: (userData, stats) => (stats.holidays || []).includes('christmas_eve')
-            },
-            christmas_day: {
-                id: 'christmas_day', name: 'Merry Glitchmas', description: '¡Feliz Glitchmas!',
-                condition: 'Mensaje el 25 de Diciembre', category: 'holidays', rarity: 'epic', icon: '🎅',
-                check: (userData, stats) => (stats.holidays || []).includes('christmas')
-            },
-            new_years_eve: {
-                id: 'new_years_eve', name: 'Year Ender', description: 'Finalizador del año',
-                condition: 'Mensaje el 31 de Diciembre', category: 'holidays', rarity: 'rare', icon: '🥂',
-                check: (userData, stats) => (stats.holidays || []).includes('new_years_eve')
-            },
-            friday_13th: {
-                id: 'friday_13th', name: 'Unlucky Day', description: 'Día de mala suerte',
-                condition: 'Mensaje en Viernes 13', category: 'holidays', rarity: 'epic', icon: '🔮',
-                check: (userData, stats) => (stats.holidays || []).includes('friday_13')
-            },
-            leap_year: {
-                id: 'leap_year', name: 'Leap Chatter', description: 'Solo cada 4 años',
-                condition: 'Mensaje el 29 de Febrero', category: 'holidays', rarity: 'legendary', icon: '🐸',
-                check: (userData, stats) => (stats.holidays || []).includes('leap_day')
-            },
-
-            // ==================== ESPECIALES (5 logros) ====================
-
-            achievement_hunter: {
-                id: 'achievement_hunter', name: 'Achievement Hunter', description: 'Cazador de logros',
-                condition: 'Desbloquear 25 logros', category: 'special', rarity: 'rare', icon: '🏹',
-                check: (userData) => (userData.achievements || []).length >= 25
-            },
-            completionist: {
-                id: 'completionist', name: 'Completionist', description: 'Completista',
-                condition: 'Desbloquear 50 logros', category: 'special', rarity: 'epic', icon: '📋',
-                check: (userData) => (userData.achievements || []).length >= 50
-            },
-            master_collector: {
-                id: 'master_collector', name: 'Master Collector', description: 'Coleccionista maestro',
-                condition: 'Desbloquear 75 logros', category: 'special', rarity: 'epic', icon: '🗂️',
-                check: (userData) => (userData.achievements || []).length >= 75
-            },
-            platinum: {
-                id: 'platinum', name: 'Platinum', description: 'Platino',
-                condition: 'Desbloquear 90 logros', category: 'special', rarity: 'legendary', icon: '🏅',
-                check: (userData) => (userData.achievements || []).length >= 90
-            },
-            cyberpunk_legend: {
-                id: 'cyberpunk_legend', name: 'Cyberpunk Legend', description: 'Leyenda Cyberpunk',
-                condition: 'TODOS los logros', category: 'special', rarity: 'legendary', icon: '🌟',
-                check: (userData) => (userData.achievements || []).length >= 114 // Total - 1 (este mismo)
-            },
-
-            // ==================== BRO (5 logros) ====================
-            bro_initiate: {
-                id: 'bro_initiate', name: 'Bro Initiate', description: 'Dijiste bro por primera vez',
-                condition: 'Decir "bro" 1 vez', category: 'bro', rarity: 'common', icon: '🤜',
-                check: (userData, stats) => (stats.broCount || 0) >= 1
-            },
-            bro_regular: {
-                id: 'bro_regular', name: 'Bro Regular', description: 'El bro habitual',
-                condition: 'Decir "bro" 10 veces', category: 'bro', rarity: 'uncommon', icon: '🤛',
-                check: (userData, stats) => (stats.broCount || 0) >= 10
-            },
-            bro_fanatic: {
-                id: 'bro_fanatic', name: 'Bro Fanatic', description: 'Fanático del bro',
-                condition: 'Decir "bro" 20 veces', category: 'bro', rarity: 'rare', icon: '😎',
-                check: (userData, stats) => (stats.broCount || 0) >= 20
-            },
-            bro_master: {
-                id: 'bro_master', name: 'Bro Master', description: 'Maestro del bro',
-                condition: 'Decir "bro" 50 veces', category: 'bro', rarity: 'epic', icon: '🧢',
-                check: (userData, stats) => (stats.broCount || 0) >= 50
-            },
-            bro_legend: {
-                id: 'bro_legend', name: 'Bro Legend', description: 'Leyenda del bro',
-                condition: 'Decir "bro" 100 veces', category: 'bro', rarity: 'legendary', icon: '💪',
-                check: (userData, stats) => (stats.broCount || 0) >= 100
-            },
-
-            // ==================== GG (1 logro) ====================
-            gg_master: {
-                id: 'gg_master', name: 'GG Master', description: 'Siempre reconoces una buena partida',
-                condition: 'Decir "gg" 50 veces', category: 'messages', rarity: 'rare', icon: '🎮',
-                check: (userData, stats) => (stats.ggCount || 0) >= 50
-            },
-
-            // ==================== HORARIOS (1 logro) ====================
-            trasnochador: {
-                id: 'trasnochador', name: 'Trasnochador', description: 'La noche es tu territorio',
-                condition: 'Mensaje entre 4:00-6:00 AM', category: 'messages', rarity: 'rare', icon: '🌙',
-                check: (userData, stats) => (stats.earlyMorningMessages || 0) >= 1
+                // Evaluar el operador
+                return this._evaluateOperator(fieldValue, rule.operator, rule.value);
+            } catch (e) {
+                if (this.config.DEBUG) {
+                    console.warn(`Error evaluando regla ${rule.field}:`, e);
+                }
+                return false;
             }
         };
+    }
+
+    /**
+     * Obtiene el valor de un campo desde userData o stats
+     * @private
+     * @param {string} field - Path del campo (ej: "userData.totalMessages")
+     * @param {Object} userData 
+     * @param {Object} stats 
+     * @returns {*}
+     */
+    _getFieldValue(field, userData, stats) {
+        const parts = field.split('.');
+        let obj;
+
+        // Determinar el objeto raíz
+        if (parts[0] === 'userData') {
+            obj = userData;
+            parts.shift();
+        } else if (parts[0] === 'stats') {
+            obj = stats;
+            parts.shift();
+        } else {
+            return undefined;
+        }
+
+        // Navegar por el path
+        for (const part of parts) {
+            if (obj === undefined || obj === null) {
+                return undefined;
+            }
+            obj = obj[part];
+        }
+
+        // Manejar valores por defecto
+        if (obj === undefined || obj === null) {
+            // Retornar valores por defecto según el tipo esperado
+            if (field.includes('level')) return 1;
+            if (field.includes('Count') || field.includes('Messages') || field.includes('Days')) return 0;
+            if (field.includes('achievements')) return [];
+            return 0;
+        }
+
+        return obj;
+    }
+
+    /**
+     * Evalúa un operador de comparación
+     * @private
+     * @param {*} fieldValue 
+     * @param {string} operator 
+     * @param {*} targetValue 
+     * @returns {boolean}
+     */
+    _evaluateOperator(fieldValue, operator, targetValue) {
+        switch (operator) {
+            case '>=':
+                return (fieldValue || 0) >= targetValue;
+            case '<=':
+                return (fieldValue || 999) <= targetValue;
+            case '>':
+                return (fieldValue || 0) > targetValue;
+            case '<':
+                return (fieldValue || 999) < targetValue;
+            case '==':
+            case '===':
+                return fieldValue === targetValue;
+            case '!=':
+            case '!==':
+                return fieldValue !== targetValue;
+            case 'includes':
+                // Para arrays (como holidays)
+                if (Array.isArray(fieldValue)) {
+                    return fieldValue.includes(targetValue);
+                }
+                return false;
+            default:
+                console.warn(`Operador desconocido: ${operator}`);
+                return false;
+        }
     }
 
     /**
@@ -809,7 +209,6 @@ class AchievementService {
                 // Mensajes
                 firstMessageDays: savedStats.firstMessageDays || 0,
                 messagesWithEmotes: savedStats.messagesWithEmotes || 0,
-                mentionCount: savedStats.mentionCount || 0,
                 mentionCount: savedStats.mentionCount || 0,
                 nightMessages: savedStats.nightMessages || 0,
                 broCount: savedStats.broCount || 0,
@@ -870,8 +269,6 @@ class AchievementService {
         const lowerUser = username.toLowerCase();
         const stats = this.getUserStats(lowerUser);
         const now = new Date();
-        const today = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-        const currentWeek = this.getWeekNumber(now);
 
         // ===== MENSAJES =====
         if (context.isFirstMessageOfDay) {
@@ -898,10 +295,7 @@ class AchievementService {
         }
 
         // Contador de "BRO"
-        // Solo cuenta si la palabra "bro" aparece aislada o en un contexto claro
-        // Evita "libro", "cerebro", etc. con regex de límite de palabra (\b)
         if (context.message && /\bbro\b/i.test(context.message)) {
-            // Contar cuántas veces aparece en el mensaje
             const matches = context.message.match(/\bbro\b/gi);
             if (matches && matches.length > 0) {
                 stats.broCount = (stats.broCount || 0) + matches.length;
@@ -909,7 +303,6 @@ class AchievementService {
         }
 
         // Contador de "GG"
-        // Solo cuenta si "gg" aparece aislado (no "ggwp" cuenta como 1 gg, "egg" no cuenta)
         if (context.message && /\bgg\b/i.test(context.message)) {
             const matches = context.message.match(/\bgg\b/gi);
             if (matches && matches.length > 0) {
@@ -944,8 +337,25 @@ class AchievementService {
         }
 
         // ===== FECHAS FESTIVAS =====
+        this._updateHolidayStats(stats, now);
+
+        this.userStats.set(lowerUser, stats);
+
+        // Sincronizar con userData para guardar en Gist
+        const userData = this.experienceService.getUserData(lowerUser);
+        userData.achievementStats = stats;
+    }
+
+    /**
+     * Actualiza estadísticas de fechas festivas
+     * @private
+     * @param {Object} stats 
+     * @param {Date} now 
+     */
+    _updateHolidayStats(stats, now) {
         const month = now.getMonth() + 1; // 1-12
         const day = now.getDate();
+        const hour = now.getHours();
         const dayOfWeek = now.getDay(); // 0 = Sunday
 
         if (!stats.holidays) stats.holidays = [];
@@ -988,12 +398,6 @@ class AchievementService {
                 stats.holidays.push(key);
             }
         });
-
-        this.userStats.set(lowerUser, stats);
-
-        // Sincronizar con userData para guardar en Gist
-        const userData = this.experienceService.getUserData(lowerUser);
-        userData.achievementStats = stats;
     }
 
     /**
@@ -1129,7 +533,6 @@ class AchievementService {
 
     /**
      * Carga estadísticas adicionales desde los datos del usuario
-     * (Para cuando se cargan datos del Gist)
      * @param {string} username 
      * @param {Object} savedStats 
      */
@@ -1146,6 +549,23 @@ class AchievementService {
      */
     getStatsForSave(username) {
         return this.getUserStats(username);
+    }
+
+    /**
+     * Obtiene el total de logros disponibles
+     * @returns {number}
+     */
+    getTotalAchievements() {
+        return Object.keys(this.achievements).length;
+    }
+
+    /**
+     * Recarga los logros desde el JSON (útil para hot-reload)
+     * @returns {Promise<void>}
+     */
+    async reloadAchievements() {
+        await this.loadAchievementsAsync();
+        console.log(`🔄 Logros recargados: ${Object.keys(this.achievements).length}`);
     }
 }
 

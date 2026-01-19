@@ -19,11 +19,14 @@ class UIManager {
      * Constructor del UIManager
      * @param {Object} config - Configuración global
      * @param {RankingSystem} rankingSystem - Sistema de ranking
+     * @param {ExperienceService} experienceService - Servicio de XP
+     * @param {ThirdPartyEmoteService} [thirdPartyEmoteService] - Servicio de emotes externos
      */
-    constructor(config, rankingSystem, experienceService) {
+    constructor(config, rankingSystem, experienceService, thirdPartyEmoteService) {
         this.config = config;
         this.rankingSystem = rankingSystem;
         this.experienceService = experienceService;
+        this.thirdPartyEmoteService = thirdPartyEmoteService;
 
         // Referencias a elementos DOM
         this.dom = this.initDOMReferences();
@@ -184,43 +187,38 @@ class UIManager {
             this.dom.username.setAttribute('data-text', displayUsername);
 
             // Ajustar tamaño de fuente para nombres largos
-            if (displayUsername.length > 12) {
+            this.dom.username.classList.remove('small-text', 'extra-small-text');
+
+            if (displayUsername.length > 16) {
+                this.dom.username.classList.add('extra-small-text');
+            } else if (displayUsername.length > 12) {
                 this.dom.username.classList.add('small-text');
-            } else {
-                this.dom.username.classList.remove('small-text');
             }
 
+            // Gestionar icono de admin (Arasaka) o Rangos Especiales
             // Gestionar icono de admin (Arasaka) o Rangos Especiales
             if (this.dom.adminIcon) {
                 const isAdmin = username.toLowerCase() === (this.config.SPECIAL_USER?.username || 'liiukiin').toLowerCase();
                 const rankTitle = userRole.rankTitle ? userRole.rankTitle.title : '';
 
+                // Obtener configuración de iconos
+                // Se usa fallback por seguridad si el config es antiguo
+                const uiConfig = this.config.UI || { RANK_ICONS: {}, SPECIAL_ICONS: {} };
+                const rankIcons = uiConfig.RANK_ICONS || {};
+                const specialIcons = uiConfig.SPECIAL_ICONS || {};
+
+                let iconFilename = null;
+
                 if (isAdmin) {
-                    this.dom.adminIcon.src = 'img/arasaka.png';
-                    this.dom.adminIcon.style.display = 'block';
+                    iconFilename = specialIcons.ADMIN || 'arasaka.png';
                 } else if (username === 'SYSTEM') {
-                    this.dom.adminIcon.src = 'img/netrunner.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'CIVILIAN') {
-                    this.dom.adminIcon.src = 'img/civilian.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'STREET RAT') {
-                    this.dom.adminIcon.src = 'img/streetrat.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'MERCENARY') {
-                    this.dom.adminIcon.src = 'img/mercenary.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'SOLO') {
-                    this.dom.adminIcon.src = 'img/solo.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'NETRUNNER') {
-                    this.dom.adminIcon.src = 'img/netrunner.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'FIXER') {
-                    this.dom.adminIcon.src = 'img/fixer.png';
-                    this.dom.adminIcon.style.display = 'block';
-                } else if (rankTitle === 'CORPO') {
-                    this.dom.adminIcon.src = 'img/corpo.png';
+                    iconFilename = specialIcons.SYSTEM || 'netrunner.png';
+                } else if (rankIcons[rankTitle]) {
+                    iconFilename = rankIcons[rankTitle];
+                }
+
+                if (iconFilename) {
+                    this.dom.adminIcon.src = `img/${iconFilename}`;
                     this.dom.adminIcon.style.display = 'block';
                 } else {
                     this.dom.adminIcon.style.display = 'none';
@@ -310,6 +308,7 @@ class UIManager {
         const processedMessage = UIUtils.processEmotes(
             message,
             emotes,
+            this.thirdPartyEmoteService,
             this.config.EMOTE_SIZE
         );
 

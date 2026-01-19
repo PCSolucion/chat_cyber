@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Técnico del Proyecto - Twitch Chat Overlay</title>
+    <style>
+        :root {
+            /* Colores Base - Estilo Limpio (Documentación) */
+            --bg-color: #ffffff;
+            --sidebar-bg: #f8f9fa;
+            --text-color: #24292e;
+            --heading-color: #1a1a1a;
+            --link-color: #0366d6;
+            --border-color: #e1e4e8;
+            --code-bg: #f6f8fa;
+            --secondary-text: #6c757d;
+
+            /* Tipografía */
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            height: 100vh;
+            font-size: 16px;
+        }
+
+        /* Sidebar de Navegación */
+        #sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding-bottom: 40px;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--heading-color);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85rem;
+            color: var(--secondary-text);
+            margin-top: 5px;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .toc-item {
+            margin-bottom: 4px;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 8px 24px;
+            color: #495057;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .toc-link:hover {
+            color: #000;
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        .toc-link.active {
+            color: var(--link-color);
+            background-color: #e1f0ff;
+            border-left-color: var(--link-color);
+            font-weight: 600;
+        }
+
+        .toc-sublist {
+            list-style: none;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.02);
+            padding: 5px 0;
+        }
+
+        .toc-item.expanded .toc-sublist {
+            display: block;
+        }
+
+        .toc-sublink {
+            display: block;
+            padding: 6px 24px 6px 40px;
+            color: #6a737d;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .toc-sublink:hover {
+            color: #24292e;
+            text-decoration: underline;
+        }
+
+        .toc-sublink.active-sub {
+            color: #24292e;
+            font-weight: 600;
+        }
+
+        /* Contenido Principal */
+        #content {
+            flex-grow: 1;
+            padding: 60px 80px;
+            overflow-y: auto;
+            max-width: 1400px;
+            scroll-behavior: smooth;
+        }
+
+        section {
+            margin-bottom: 80px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 60px;
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            letter-spacing: -0.5px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin: 40px 0 20px 0;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #24292e;
+            margin: 25px 0 15px 0;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: #24292e;
+            text-align: justify;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+            color: #24292e;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Elementos Técnicos */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 25px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: rgba(27, 31, 35, 0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 85%;
+            color: #24292e;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 100%;
+            color: inherit;
+        }
+
+        /* Tablas Técnicas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+            color: #24292e;
+            border-left: 1px solid var(--border-color);
+        }
+
+        td {
+            border-left: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Notas y Alertas */
+        .technical-note {
+            background-color: #f1f8ff;
+            border: 1px solid #c8e1ff;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .technical-note strong {
+            color: #0366d6;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .warning-box {
+            background-color: #fff5b1;
+            border: 1px solid #ffeb3b;
+            color: #664d03;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        /* Árbol de Directorios Estilizado */
+        .directory-tree {
+            font-family: var(--font-mono);
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tree-list,
+        .tree-sublist {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .tree-sublist {
+            padding-left: 20px;
+            border-left: 1px solid var(--border-color);
+            margin-left: 10px;
+        }
+
+        .tree-item {
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .tree-item::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: -30px;
+            width: 20px;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .tree-list>.tree-item::before {
+            display: none;
+            /* Hide for root items */
+        }
+
+        .icon-folder {
+            color: #79b8ff;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .icon-file {
+            color: #959da5;
+            margin-right: 8px;
+        }
+
+        .file-desc {
+            color: #6a737d;
+            font-style: italic;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 100px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--secondary-text);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h1>Twitch Overlay Docs</h1>
+            <p>Versión 2.0 (Modular)</p>
+        </div>
+        <ul class="toc-list">
+            <li class="toc-item">
+                <a href="#overview" class="toc-link">1. Visión General</a>
+                <ul class="toc-sublist">
+                    <li><a href="#overview-tech" class="toc-sublink">Stack Tecnológico</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#config" class="toc-link">2. Configuración</a>
+                <ul class="toc-sublist">
+                    <li><a href="#config-params" class="toc-sublink">Parámetros (config.js)</a></li>
+                    <li><a href="#config-static" class="toc-sublink">Datos Estáticos (data.js)</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#architecture" class="toc-link">3. Arquitectura del Sistema</a>
+                <ul class="toc-sublist">
+                    <li><a href="#arch-modules" class="toc-sublink">Estructura de Módulos</a></li>
+                    <li><a href="#arch-services" class="toc-sublink">Análisis de Servicios</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#logic-flow" class="toc-link">4. Flujo Lógico</a>
+                <ul class="toc-sublist">
+                    <li><a href="#logic-message" class="toc-sublink">Ciclo de Vida del Mensaje</a></li>
+                    <li><a href="#logic-reconnect" class="toc-sublink">Reconexión (Backoff)</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#xp-engine" class="toc-link">5. Motor de Experiencia (XP)</a>
+                <ul class="toc-sublist">
+                    <li><a href="#xp-math" class="toc-sublink">Fórmulas Matemáticas</a></li>
+                    <li><a href="#xp-sources" class="toc-sublink">Tablas de Puntuación</a></li>
+                    <li><a href="#xp-persistence" class="toc-sublink">Modelo de Datos y Sincronización</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#ranking-engine" class="toc-link">6. Sistema de Ranking</a>
+                <ul class="toc-sublist">
+                    <li><a href="#rank-roles" class="toc-sublink">Jerarquía de Roles</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#visuals" class="toc-link">7. Sistema Visual</a>
+                <ul class="toc-sublist">
+                    <li><a href="#vis-tokens" class="toc-sublink">Design Tokens (CSS)</a></li>
+                    <li><a href="#vis-managers" class="toc-sublink">Gestión del DOM</a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#api" class="toc-link">8. API de Depuración</a>
+            </li>
+        </ul>
+    </nav>
+
+    <main id="content">
+        <!-- 1. VISION GENERAL -->
+        <section id="overview">
+            <h2>1. Visión General del Proyecto</h2>
+            <p>
+                Este proyecto constituye una solución completa de overlay para streaming, ejecutándose enteramente en el
+                lado del cliente (Navegador/OBS Browser Source). Su objetivo es gamificar la interacción del chat
+                mediante un sistema de RPG persistente, visualización temática Cyberpunk 2077 y feedback sonoro.
+            </p>
+            <p>
+                A diferencia de los overlays tradicionales que son meramente estéticos, este sistema implementa una
+                lógica de negocio compleja (cálculo de XP, niveles, rachas, logros) directamente en el frontend,
+                utilizando APIs "Serverless" (GitHub Gists) para la persistencia.
+            </p>
+
+            <h3 id="overview-tech">Stack Tecnológico</h3>
+            <ul>
+                <li><strong>Runtime:</strong> Navegador Web (Chrome/Edge/OBS Browser Source).</li>
+                <li><strong>Lenguaje:</strong> JavaScript ES6+ (Clases, Async/Await, Modules).</li>
+                <li><strong>Estilos:</strong> CSS3 Nativo con Variables (Custom Properties) y Keyframe Animations.</li>
+                <li><strong>Librerías Externas:</strong> <code>tmi.js</code> (Cliente WebSocket para Twitch IRC).</li>
+                <li><strong>Backend (BaaS):</strong> GitHub Gist API (Almacenamiento JSON).</li>
+            </ul>
+        </section>
+
+        <!-- 2. CONFIGURACIÓN -->
+        <section id="config">
+            <h2>2. Configuración Detallada</h2>
+            <p>La configuración operativa reside en <code>js/config.js</code> dentro de la constante global
+                <code>CONFIG</code>.
+            </p>
+
+            <h3 id="config-params">Parámetros Globales (CONFIG)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Tipo</th>
+                        <th>Default</th>
+                        <th>Descripción Técnica</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>TWITCH_CHANNEL</code></td>
+                        <td>String</td>
+                        <td>'liiukiin'</td>
+                        <td>Canal IRC al que se conecta el WebSocket. Debe estar en minúsculas.</td>
+                    </tr>
+                    <tr>
+                        <td><code>MESSAGE_DISPLAY_TIME</code></td>
+                        <td>Integer</td>
+                        <td>14000</td>
+                        <td>Tiempo en milisegundos (ms) antes de que un mensaje inicie su animación de salida (hide).
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>TRANSITION_DURATION</code></td>
+                        <td>Integer</td>
+                        <td>700</td>
+                        <td>Tiempo (ms) reservado para animaciones CSS de entrada/salida.</td>
+                    </tr>
+                    <tr>
+                        <td><code>XP_SYSTEM_ENABLED</code></td>
+                        <td>Boolean</td>
+                        <td>true</td>
+                        <td>Master switch para activar/desactivar toda la lógica de cálculo y visualización de XP.</td>
+                    </tr>
+                    <tr>
+                        <td><code>XP_GIST_ID</code></td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td>ID alfanumérico del Gist privado usado como base de datos.</td>
+                    </tr>
+                    <tr>
+                        <td><code>XP_GIST_TOKEN</code></td>
+                        <td>String</td>
+                        <td>-</td>
+                        <td>GitHub Personal Access Token (Scope: <code>gist</code>). <strong>Riesgo de
+                                seguridad:</strong> Expuesto en cliente.</td>
+                    </tr>
+                    <tr>
+                        <td><code>XP_LEVELUP_DISPLAY_TIME</code></td>
+                        <td>Integer</td>
+                        <td>3000</td>
+                        <td>Duración (ms) del popup de notificación de subida de nivel.</td>
+                    </tr>
+                    <tr>
+                        <td><code>AUDIO_VOLUME</code></td>
+                        <td>Float</td>
+                        <td>1.0</td>
+                        <td>Valor normalizado (0.0 a 1.0) para el volumen global de efectos de sonido.</td>
+                    </tr>
+                    <tr>
+                        <td><code>TOP_DATA_URL</code></td>
+                        <td>String</td>
+                        <td>(URL Gist)</td>
+                        <td>Endpoint RAW para descargar la lista estática de Ranking (Top 250).</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 id="config-static">Datos Estáticos (js/data.js)</h3>
+            <p>Archivo auxiliar que exporta constantes de negocio no configurables. Contiene:</p>
+            <ul>
+                <li><code>teams</code>: Definiciones hexadecimales de color y URLs de logos para equipos F1.</li>
+                <li><code>userNumbers</code>: Diccionario <code>{ 'username': number }</code> para asignar dorsales
+                    fijos.</li>
+                <li><code>userTeams</code>: Diccionario <code>{ 'username': 'teamKey' }</code> para asignar equipos.
+                </li>
+            </ul>
+        </section>
+
+        <!-- 3. ARQUITECTURA -->
+        <section id="architecture">
+            <h2>3. Arquitectura del Sistema</h2>
+            <p>El código sigue una arquitectura orientada a servicios (SOA) en el cliente. La clase <code>App</code>
+                (Singleton) instancia y coordina los servicios.</p>
+
+            <h3 id="arch-modules">Estructura de Módulos</h3>
+
+            <div class="directory-tree">
+                <ul class="tree-list">
+                    <li class="tree-item">
+                        <span class="icon-folder">js/</span>
+                        <ul class="tree-sublist">
+                            <li class="tree-item"><span class="icon-file">📄</span> app.js <span
+                                    class="file-desc">(Bootstrapper & Coordinador)</span></li>
+                            <li class="tree-item"><span class="icon-file">📄</span> config.js <span
+                                    class="file-desc">(Variables de Entorno)</span></li>
+                            <li class="tree-item"><span class="icon-file">📄</span> data.js <span
+                                    class="file-desc">(Datos Estáticos)</span></li>
+
+                            <li class="tree-item">
+                                <span class="icon-folder">services/</span> <span class="file-desc">(Lógica de Negocio
+                                    Pura)</span>
+                                <ul class="tree-sublist">
+                                    <li class="tree-item"><span class="icon-file">📄</span> TwitchService.js <span
+                                            class="file-desc">(Wrapper de tmi.js)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> ExperienceService.js <span
+                                            class="file-desc">(Cálculo XP/Niveles)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> RankingSystem.js <span
+                                            class="file-desc">(Resolución de Roles)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> GistStorageService.js <span
+                                            class="file-desc">(API GitHub)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> AudioService.js <span
+                                            class="file-desc">(Gestión de Sonido)</span></li>
+                                </ul>
+                            </li>
+
+                            <li class="tree-item">
+                                <span class="icon-folder">managers/</span> <span class="file-desc">(Controladores
+                                    Vista/DOM)</span>
+                                <ul class="tree-sublist">
+                                    <li class="tree-item"><span class="icon-file">📄</span> UIManager.js <span
+                                            class="file-desc">(Renderizado Chat)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> XPDisplayManager.js <span
+                                            class="file-desc">(Renderizado XP)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> MessageProcessor.js <span
+                                            class="file-desc">(Pipeline)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> IdleDisplayManager.js <span
+                                            class="file-desc">(Screensaver)</span></li>
+                                </ul>
+                            </li>
+
+                            <li class="tree-item">
+                                <span class="icon-folder">utils/</span>
+                                <ul class="tree-sublist">
+                                    <li class="tree-item"><span class="icon-file">📄</span> UIUtils.js <span
+                                            class="file-desc">(Helpers Estáticos)</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <h3 id="arch-services">Análisis de Servicios Clave</h3>
+            <ul>
+                <li><strong>TwitchService:</strong> Abstrae la librería <code>tmi.js</code>. Gestiona eventos
+                    <code>connected</code>, <code>disconnected</code>, y <code>message</code>.
+                </li>
+                <li><strong>ExperienceService:</strong> Mantiene el estado en memoria (Heap) de todos los usuarios
+                    (<code>usersXP</code> Map). Implementa la lógica de cálculo y decide cuándo guardar.</li>
+                <li><strong>GistStorageService:</strong> Implementa el patrón "Repository". Maneja la lectura/escritura
+                    asíncrona, caché local (LocalStorage) y control de errores HTTP.</li>
+            </ul>
+        </section>
+
+        <!-- 4. FLUJO LÓGICO -->
+        <section id="logic-flow">
+            <h2>4. Flujo Lógico Detallado</h2>
+
+            <h3 id="logic-message">Ciclo de Vida de un Mensaje</h3>
+            <ol>
+                <li><strong>Evento:</strong> WebSocket recibe payload IRC <code>PRIVMSG</code>.</li>
+                <li><strong>TwitchService:</strong> Emite callback hacia <code>App.onMessageReceived</code>.</li>
+                <li><strong>App:</strong> Delega el payload a <code>MessageProcessor.process</code>.</li>
+                <li><strong>MessageProcessor (Paralelo):</strong>
+                    <ul>
+                        <li>Invoca <code>ExperienceService.trackMessage</code>: Calcula XP ganado, verifica Level Up.
+                            Retorna objeto de estado actualizado.</li>
+                        <li>Invoca <code>RankingSystem.getUserRole</code>: Resuelve si es VIP/Admin.</li>
+                    </ul>
+                </li>
+                <li><strong>Renderizado:</strong>
+                    <ul>
+                        <li><code>UIManager</code>: Construye el HTML del mensaje, decide si usar animación "Full
+                            Incoming" (si > 30s inactivo) o "Fast Transition". Inyecta el HTML en el DOM.</li>
+                        <li><code>XPDisplayManager</code>: Actualiza la barra de progreso, números y si hubo Level Up,
+                            inyecta la animación de ascenso.</li>
+                    </ul>
+                </li>
+                <li><strong>Efectos Secundarios:</strong>
+                    <ul>
+                        <li><code>AudioService</code>: Reproduce sonido (si volumen > 0).</li>
+                        <li><code>ExperienceService</code>: Programa un guardado diferido (Debounce 5s) si hubo cambios
+                            en los datos.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3 id="logic-reconnect">Estrategia de Reconexión (Exponential Backoff)</h3>
+            <p>Implementado en <code>TwitchService.js</code>, método <code>handleReconnect()</code>:</p>
+            <pre><code>delay = Math.min(1000 * Math.pow(2, attempts), 30000);</code></pre>
+            <p><strong>Comportamiento:</strong> Reintentos a 1s, 2s, 4s, 8s, 16s, y tope en 30s. Máximo 5 intentos antes
+                de rendirse (aunque el tope de intentos reinicia el contador si hay conexión exitosa).</p>
+        </section>
+
+        <!-- 5. MOTOR DE XP -->
+        <section id="xp-engine">
+            <h2>5. Motor de Experiencia (Game Design)</h2>
+            <p>La lógica matemática reside estrictamente en <code>ExperienceService.js</code>.</p>
+
+            <h3 id="xp-math">Fórmulas Matemáticas</h3>
+
+            <div class="technical-note">
+                <strong>Curva de Nivel (Exponencial):</strong><br>
+                <code>Nivel = floor( (XP / BaseXP) ^ (1 / Exponente) ) + 1</code><br>
+                <code>XP_Requerida(Nivel) = BaseXP * ( (Nivel-1) ^ Exponente )</code><br>
+                <br>
+                Constantes:<br>
+                - <strong>BaseXP:</strong> 100<br>
+                - <strong>Exponente:</strong> 1.5
+            </div>
+
+            <h3 id="xp-sources">Sistema de Puntuación</h3>
+            <table>
+                <tr>
+                    <th>Origen (Source ID)</th>
+                    <th>Valor (XP)</th>
+                    <th>Reglas Lógicas</th>
+                </tr>
+                <tr>
+                    <td><code>MESSAGE</code></td>
+                    <td>5</td>
+                    <td>Se otorga en cada mensaje válido.</td>
+                </tr>
+                <tr>
+                    <td><code>FIRST_MESSAGE_DAY</code></td>
+                    <td>20</td>
+                    <td>Se otorga una vez cada 24h (reset local).</td>
+                </tr>
+                <tr>
+                    <td><code>STREAM_ACTIVE</code></td>
+                    <td>10</td>
+                    <td>Se suma si la variable <code>isStreamLive</code> es true.</td>
+                </tr>
+                <tr>
+                    <td><code>EMOTE_USED</code></td>
+                    <td>2 / emote</td>
+                    <td>Tope de 5 emotes calculables por mensaje (Max 10 XP).</td>
+                </tr>
+                <tr>
+                    <td><code>MENTION_USER</code></td>
+                    <td>8</td>
+                    <td>Si el mensaje contiene un '@usuario'.</td>
+                </tr>
+                <tr>
+                    <td><code>STREAK_BONUS</code></td>
+                    <td>50</td>
+                    <td>Se otorga si <code>streakDays % 3 === 0</code> (Cada 3 días de racha).</td>
+                </tr>
+                <tr>
+                    <td><code>STREAM_START</code></td>
+                    <td>25</td>
+                    <td>Bono "Early Bird" (Primeros 5 min de stream).</td>
+                </tr>
+            </table>
+
+            <h3 id="xp-persistence">Modelo de Datos y Sincronización</h3>
+            <p>El esquema JSON almacenado en Gist es:</p>
+            <pre><code>{
+  "users": {
+    "username_lowercase": {
+      "xp": 1250,
+      "level": 5,
+      "lastActivity": 1705634000000, (Timestamp)
+      "streakDays": 4,
+      "lastStreakDate": "2026-01-19",
+      "totalMessages": 450,
+      "achievements": []
+    }
+  },
+  "lastUpdated": "ISO_DATE_STRING",
+  "version": "1.0"
+}</code></pre>
+
+            <div class="warning-box">
+                <strong>Control de Concurrencia:</strong> El sistema utiliza una estrategia de "Last Write Wins". Existe
+                una ventana de <strong>Debounce de 5000ms</strong> en <code>ExperienceService.saveData()</code>. Esto
+                significa que los cambios se acumulan en memoria durante 5 segundos antes de enviarse a GitHub,
+                reduciendo el consumo de API pero introduciendo un riesgo de pérdida de datos si el navegador se cierra
+                abruptamente en esa ventana.
+            </div>
+        </section>
+
+        <!-- 6. RANKING -->
+        <section id="ranking-engine">
+            <h2>6. Sistema de Ranking</h2>
+
+            <h3 id="rank-roles">Jerarquía de Roles</h3>
+            <p>Evaluado por <code>RankingSystem.js</code> en orden estricto de precedencia:</p>
+            <ol>
+                <li><strong>ADMIN:</strong> Usuario === 'liiukiin' o 'system'.
+                    <ul>
+                        <li>Badge: ADMIN/ROOT. Icon: Arasaka/Netwatch. Estilo: Rojo/Negro.</li>
+                    </ul>
+                </li>
+                <li><strong>TOP 1:</strong> Rank === 1.
+                    <ul>
+                        <li>Badge: TOP 1. Estilo: Dorado/Brillante.</li>
+                    </ul>
+                </li>
+                <li><strong>VIP:</strong> Rank >= 2 && Rank <= 15. <ul>
+                <li>Badge: TOP {N}. Estilo: Class 'vip-user'.</li>
+                </ul>
+                </li>
+                <li><strong>RANKED:</strong> Rank >= 16.
+                    <ul>
+                        <li>Badge: TOP {N}. Estilo: Class 'ranked-user' (Más discreto).</li>
+                    </ul>
+                </li>
+                <li><strong>NORMAL:</strong> No encontrado en lista.
+                    <ul>
+                        <li>Badge: Nivel de XP (Ej. LVL 5). Estilo: Standard.</li>
+                    </ul>
+                </li>
+            </ol>
+        </section>
+
+        <!-- 7. VISUALES -->
+        <section id="visuals">
+            <h2>7. Sistema Visual</h2>
+
+            <h3 id="vis-tokens">Design Tokens (CSS Variables)</h3>
+            <p>Definidas en <code>css/base/variables.css</code>:</p>
+            <ul>
+                <li><strong>Colores Principales:</strong>
+                    <code>--cyber-red (#ff003c)</code>,
+                    <code>--cyber-yellow (#DABD58)</code>,
+                    <code>--cyber-cyan (#00f6ff)</code>.
+                </li>
+                <li><strong>Dimensiones:</strong>
+                    <code>--container-width: 340px</code> (Ancho fijo del widget).
+                </li>
+                <li><strong>Animaciones:</strong>
+                    <code>--transition-speed: 0.35s</code>.
+                </li>
+            </ul>
+
+            <h3 id="vis-managers">Gestión del DOM (UIManager)</h3>
+            <p>El <code>UIManager</code> emplea una técnica de <strong>reciclaje de nodos</strong> parcial. No crea y
+                destruye elementos para cada mensaje, sino que actualiza el contenido de texto y clases del contenedor
+                <code>#message-container</code> existente para optimizar el rendimiento de repintado (Reflow/Repaint)
+                del navegador.
+            </p>
+            <p>El efecto de "escribiendo" o "decrypting" (scramble text) se realiza manipulando directamente el
+                <code>textContent</code> mediante <code>UIUtils.scrambleText</code>, alternando caracteres aleatorios
+                antes de fijar el texto final.
+            </p>
+        </section>
+
+        <!-- 8. API -->
+        <section id="api">
+            <h2>8. API de Depuración (Runtime Console)</h2>
+            <p>Funciones expuestas globalmente en <code>window</code> por <code>App.exposeTestingFunctions()</code>.
+                Útiles para pruebas sin conexión.</p>
+
+            <table>
+                <tr>
+                    <th>Comando</th>
+                    <th>Argumentos</th>
+                    <th>Efecto</th>
+                </tr>
+                <tr>
+                    <td><code>simularMensaje(user, txt)</code></td>
+                    <td>user (str), txt (str)</td>
+                    <td>Inyecta mensaje en el procesador. Gana XP, activa sonido y UI.</td>
+                </tr>
+                <tr>
+                    <td><code>getXPStats()</code></td>
+                    <td>-</td>
+                    <td>Imprime objeto: totalUsers, totalXP, highestLevel.</td>
+                </tr>
+                <tr>
+                    <td><code>testLevelUp(lvl)</code></td>
+                    <td>lvl (int)</td>
+                    <td>Fuerza la animación de Level Up al nivel especificado.</td>
+                </tr>
+                <tr>
+                    <td><code>resetAllXP()</code></td>
+                    <td>-</td>
+                    <td><strong>Peligro:</strong> Borra LocalStorage y sobrescribe Gist con objeto vacío.</td>
+                </tr>
+                <tr>
+                    <td><code>exportXPData()</code></td>
+                    <td>-</td>
+                    <td>Descarga el estado actual de XP como archivo <code>.json</code> local.</td>
+                </tr>
+                <tr>
+                    <td><code>setTestStreak(user, days)</code></td>
+                    <td>user (str), days (int)</td>
+                    <td>Fuerza una racha de días específica para un usuario (Debugging).</td>
+                </tr>
+                <tr>
+                    <td><code>testGistConnection()</code></td>
+                    <td>-</td>
+                    <td>Realiza un ciclo de lectura/escritura de prueba contra la API de GitHub.</td>
+                </tr>
+            </table>
+        </section>
+
+    </main>
+
+    <script>
+        // Lógica de Sidebar (Auto-highlight y colapso)
+        const links = document.querySelectorAll('.toc-link, .toc-sublink');
+        const sections = document.querySelectorAll('section');
+
+        // Observer para highlight en scroll
+        window.addEventListener('scroll', () => {
+            let currentId = '';
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= (sectionTop - 120)) {
+                    currentId = section.getAttribute('id');
+                }
+            });
+
+            links.forEach(link => {
+                link.classList.remove('active');
+                link.classList.remove('active-sub');
+
+                const href = link.getAttribute('href').substring(1);
+
+                if (href === currentId) {
+                    if (link.classList.contains('toc-link')) {
+                        link.classList.add('active');
+                    }
+                }
+
+                // Expandir padre si estamos en una subsección
+                if (link.classList.contains('toc-sublink')) {
+                    // Lógica simplificada: si el padre de este sublink apunta a la sección actual
+                    const parentItem = link.closest('.toc-item');
+                    const parentLink = parentItem.querySelector('.toc-link');
+                    const parentHref = parentLink.getAttribute('href').substring(1);
+
+                    if (parentHref === currentId) {
+                        parentLink.classList.add('active');
+                        parentItem.classList.add('expanded');
+                    }
+                }
+            });
+        });
+
+        // Click handler para expandir/colapsar manualmente
+        document.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // No prevenir default para que el ancla funcione
+                const item = link.closest('.toc-item');
+                if (item.querySelector('.toc-sublist')) {
+                    // Colapsar otros
+                    document.querySelectorAll('.toc-item').forEach(i => {
+                        if (i !== item) i.classList.remove('expanded');
+                    });
+                    item.classList.add('expanded');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

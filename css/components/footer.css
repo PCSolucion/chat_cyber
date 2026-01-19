@@ -32,6 +32,13 @@
 
 .tech-line.right {
     color: var(--cyber-cyan);
+    display: none;
+    /* Hidden by default to show Achievement Counter */
+}
+
+/* Show only in Idle Mode */
+.container.idle-mode .tech-line.right {
+    display: flex;
 }
 
 .tech-data {

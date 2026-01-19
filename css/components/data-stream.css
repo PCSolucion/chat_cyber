@@ -15,7 +15,7 @@
 }
 
 .data-stream::before {
-    content: 'MSG.INCOMING';
+    content: '';
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px;
     color: var(--cyber-cyan);

@@ -25,45 +25,74 @@ const UIUtils = {
      * Procesa los emotes de Twitch en un mensaje
      * - Reemplaza IDs de emotes con imágenes
      * - Mantiene el texto escapado para seguridad
+     * - También procesa emotes de terceros (7TV, BTTV, FFZ) si están disponibles
      * 
      * @param {string} text - Texto del mensaje
      * @param {Object} emotes - Objeto de emotes de Twitch (tags.emotes)
      * @param {string} emoteSize - Tamaño de los emotes (ej: '1.2em')
      * @returns {string} HTML con emotes procesados
      */
-    processEmotes(text, emotes, emoteSize = '1.2em') {
-        if (!emotes) return this.escapeHTML(text);
+    /**
+     * Procesa los emotes de Twitch en un mensaje
+     * - Reemplaza IDs de emotes con imágenes
+     * - Mantiene el texto escapado para seguridad
+     * - También procesa emotes de terceros (7TV, BTTV, FFZ) si están disponibles
+     * 
+     * @param {string} text - Texto del mensaje
+     * @param {Object} emotes - Objeto de emotes de Twitch (tags.emotes)
+     * @param {Object} [thirdPartyService] - Servicio de emotes de terceros (opcional)
+     * @param {string} emoteSize - Tamaño de los emotes (ej: '1.2em')
+     * @returns {string} HTML con emotes procesados
+     */
+    processEmotes(text, emotes, thirdPartyService, emoteSize = '1.2em') {
+        let result = text;
 
-        try {
-            let splitText = text.split('');
-            let emoteReplacements = [];
+        // Primero procesar emotes de Twitch
+        if (emotes) {
+            try {
+                let splitText = text.split('');
+                let emoteReplacements = [];
 
-            // Recopilar todas las posiciones de emotes
-            Object.entries(emotes).forEach(([emoteId, positions]) => {
-                positions.forEach(pos => {
-                    const [start, end] = pos.split('-').map(Number);
-                    emoteReplacements.push({ start, end, id: emoteId });
+                // Recopilar todas las posiciones de emotes
+                Object.entries(emotes).forEach(([emoteId, positions]) => {
+                    positions.forEach(pos => {
+                        const [start, end] = pos.split('-').map(Number);
+                        emoteReplacements.push({ start, end, id: emoteId });
+                    });
                 });
-            });
 
-            // Ordenar de mayor a menor para reemplazar sin afectar índices
-            emoteReplacements.sort((a, b) => b.start - a.start);
+                // Ordenar de mayor a menor para reemplazar sin afectar índices
+                emoteReplacements.sort((a, b) => b.start - a.start);
 
-            // Reemplazar emotes con imágenes
-            emoteReplacements.forEach(({ start, end, id }) => {
-                const emoteImg = `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/2.0" alt="emote" class="emote-img" style="height:${emoteSize};vertical-align:middle;">`;
-                splitText.splice(start, end - start + 1, emoteImg);
-            });
+                // Reemplazar emotes con imágenes
+                emoteReplacements.forEach(({ start, end, id }) => {
+                    const emoteImg = `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/2.0" alt="emote" class="emote-img" style="height:${emoteSize};vertical-align:middle;">`;
+                    splitText.splice(start, end - start + 1, emoteImg);
+                });
 
-            // Escapar caracteres que no son emotes
-            return splitText.map(char => {
-                return char.startsWith('<img') ? char : this.escapeHTML(char);
-            }).join('');
+                // Escapar caracteres que no son emotes
+                result = splitText.map(char => {
+                    return char.startsWith('<img') ? char : this.escapeHTML(char);
+                }).join('');
 
-        } catch (error) {
-            console.error('Error al procesar emotes:', error);
-            return this.escapeHTML(text);
+            } catch (error) {
+                console.error('Error al procesar emotes de Twitch:', error);
+                result = this.escapeHTML(text);
+            }
+        } else {
+            result = this.escapeHTML(text);
         }
+
+        // Luego procesar emotes de terceros (7TV, BTTV, FFZ)
+        if (thirdPartyService && thirdPartyService.isLoaded) {
+            try {
+                result = thirdPartyService.processThirdPartyEmotes(result, emoteSize);
+            } catch (error) {
+                console.error('Error al procesar emotes de terceros:', error);
+            }
+        }
+
+        return result;
     },
 
     /**

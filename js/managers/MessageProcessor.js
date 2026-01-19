@@ -14,6 +14,9 @@ class MessageProcessor {
         this.services = {};
         this.managers = {};
         this.isInitialized = false;
+
+        // NotificationManager will be initialized in init()
+        this.notificationManager = null;
     }
 
     /**
@@ -74,8 +77,11 @@ class MessageProcessor {
                 );
 
                 // Suscribirse a eventos de logro desbloqueado
+                // (Se conectará al NotificationManager después de su inicialización)
                 this.services.achievements.onAchievementUnlocked((eventData) => {
-                    this._showAchievementNotification(eventData);
+                    if (this.notificationManager) {
+                        this.notificationManager.showAchievement(eventData);
+                    }
                 });
 
                 this.managers.xpDisplay = new XPDisplayManager(
@@ -95,34 +101,70 @@ class MessageProcessor {
             }
         }
 
-        // 5. UI Manager
+        // 5. Third Party Emote Service (7TV, BTTV, FFZ)
+        // Inicializar antes que UI para inyectar dependencia
+        if (this.config.THIRD_PARTY_EMOTES_ENABLED) {
+            try {
+                this.services.thirdPartyEmotes = new ThirdPartyEmoteService(this.config);
+                console.log('🎭 Third Party Emotes service initialized');
+            } catch (e) {
+                console.warn('⚠️ Third Party Emotes initialization failed:', e);
+            }
+        }
+
+        // 6. UI Manager
         try {
             this.managers.ui = new UIManager(
                 this.config,
                 this.services.ranking,
-                this.services.xp
+                this.services.xp,
+                this.services.thirdPartyEmotes // Inyección de dependencia
             );
         } catch (e) {
             console.error('❌ CRITICAL: UIManager initialization failed:', e);
         }
 
-        // 6. Leaderboard Manager (Top 10 por inactividad)
-        if (this.config.XP_SYSTEM_ENABLED && this.services.xp) {
-            try {
-                this.managers.leaderboard = new LeaderboardManager(
-                    this.services.xp,
-                    this.config
-                );
-            } catch (e) {
-                console.error('⚠️ LeaderboardManager initialization failed:', e);
-            }
+        // 7. Session Stats Service (Estadísticas en tiempo real)
+        try {
+            this.services.sessionStats = new SessionStatsService(
+                this.config,
+                this.services.xp,
+                this.services.achievements
+            );
+            console.log('📊 Session Stats service initialized');
+        } catch (e) {
+            console.warn('⚠️ Session Stats initialization failed:', e);
+        }
+
+        // 8. Idle Display Manager (Muestra stats cuando no hay chat)
+        try {
+            this.managers.idleDisplay = new IdleDisplayManager(
+                this.config,
+                this.services.sessionStats,
+                this.managers.ui
+            );
+            console.log('💤 Idle Display Manager initialized');
+        } catch (e) {
+            console.warn('⚠️ Idle Display Manager initialization failed:', e);
+        }
+
+        // 9. Notification Manager (Gestión centralizada de notificaciones)
+        try {
+            this.notificationManager = new NotificationManager(
+                this.config,
+                this.managers.ui
+            );
+            this.managers.notification = this.notificationManager;
+            console.log('📢 Notification Manager initialized');
+        } catch (e) {
+            console.warn('⚠️ Notification Manager initialization failed:', e);
         }
 
         this.isInitialized = true;
     }
 
     /**
-     * Carga datos asíncronos (Rankings, XP)
+     * Carga datos asíncronos (Rankings, XP, Emotes de terceros)
      */
     async loadAsyncData() {
         // Cargar Rankings
@@ -150,9 +192,25 @@ class MessageProcessor {
             }
         }
 
+        // Cargar emotes de terceros (7TV, BTTV, FFZ)
+        if (this.services.thirdPartyEmotes) {
+            try {
+                const emoteStats = await this.services.thirdPartyEmotes.loadEmotes();
+                console.log('🎭 Third Party Emotes loaded:', this.services.thirdPartyEmotes.getStats());
+            } catch (e) {
+                console.warn('⚠️ Failed to load third party emotes:', e);
+            }
+        }
+
+        // Iniciar Idle Display Manager
+        if (this.managers.idleDisplay) {
+            this.managers.idleDisplay.start();
+        }
+
         return {
             rankedUsers: this.services.ranking ? this.services.ranking.getTotalRankedUsers() : 0,
-            xpEnabled: !!this.services.xp
+            xpEnabled: !!this.services.xp,
+            thirdPartyEmotes: this.services.thirdPartyEmotes ? this.services.thirdPartyEmotes.getStats() : null
         };
     }
 
@@ -178,55 +236,8 @@ class MessageProcessor {
             // ============================================
             // SISTEMA DE COMANDOS (!logros, !nivel)
             // ============================================
-            if (message.startsWith('!')) {
-                const command = message.toLowerCase().trim();
-
-                // COMANDO: !logros
-                if (command === '!logros' || command === '!achievements') {
-                    if (this.services.xp && this.services.achievements) {
-                        const userData = this.services.xp.getUserData(username);
-                        const unlockedCount = (userData.achievements || []).length;
-                        const totalAchievements = Object.keys(this.services.achievements.achievements).length;
-                        const level = userData.level || 1;
-                        const title = this.services.xp.getLevelTitle(level);
-
-
-                        if (this.managers.ui) {
-                            // Ocultar sección de XP para mensajes del sistema
-                            if (this.managers.xpDisplay) {
-                                this.managers.xpDisplay.setVisible(false);
-                            }
-
-                            // Mostrar inmediatamente (sin setTimeout)
-                            const systemMsg = `@${username} -> Progreso: ${unlockedCount}/${totalAchievements} Logros | Nivel ${level} (${title})`;
-                            this.managers.ui.displayMessage(
-                                'SYSTEM',     // Usuario especial
-                                systemMsg,    // Mensaje
-                                {},           // Sin emotes
-                                99,           // Número piloto
-                                'system'      // Equipo system
-                            );
-                            return; // Detener procesamiento para no mostrar el mensaje del usuario
-                        }
-                    }
-                }
-
-                // COMANDO: !nivel (Alias simple para ver stats rápidas)
-                if (command === '!nivel' || command === '!level' || command === '!stats') {
-                    if (this.services.xp) {
-                        const info = this.services.xp.getUserXPInfo(username);
-                        if (this.managers.ui) {
-                            // Ocultar sección de XP para mensajes del sistema
-                            if (this.managers.xpDisplay) {
-                                this.managers.xpDisplay.setVisible(false);
-                            }
-
-                            const systemMsg = `@${username} -> Nivel ${info.level} | ${info.title} | XP: ${Math.floor(info.progress.xpInCurrentLevel)}/${info.progress.xpNeededForNext}`;
-                            this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
-                            return; // Detener procesamiento para no mostrar el mensaje del usuario
-                        }
-                    }
-                }
+            if (this._handleCommands(message, username)) {
+                return;
             }
 
             // Datos auxiliares
@@ -262,9 +273,20 @@ class MessageProcessor {
                 this.services.audio.play();
             }
 
-            // Notificar al Leaderboard que hubo un mensaje (resetea inactividad)
-            if (this.managers.leaderboard) {
-                this.managers.leaderboard.onMessageReceived();
+            // Trackear estadísticas de sesión
+            if (this.services.sessionStats) {
+                let emoteCount = 0;
+                if (emotes) {
+                    Object.values(emotes).forEach(positions => {
+                        emoteCount += positions.length;
+                    });
+                }
+                this.services.sessionStats.trackMessage(username, message, { emoteCount });
+            }
+
+            // Notificar actividad al Idle Manager
+            if (this.managers.idleDisplay) {
+                this.managers.idleDisplay.onActivity();
             }
 
         } catch (e) {
@@ -316,157 +338,81 @@ class MessageProcessor {
             this.managers.xpDisplay.updateXPDisplay(username, xpResult);
         }
     }
-    /**
-     * Cola de notificaciones de logros
-     * Para evitar que aparezcan muchos a la vez
-     */
-    _achievementQueue = [];
-    _isShowingAchievement = false;
 
-    /**
-     * Añade un logro a la cola de notificaciones
-     * @private
-     * @param {Object} eventData - Datos del evento
-     */
-    _showAchievementNotification(eventData) {
-        // Limitar cola a 5 logros máximo
-        if (this._achievementQueue.length >= 5) {
-            if (this.config.DEBUG) {
-                console.log(`🏆 Cola llena, logro descartado: ${eventData.achievement.name}`);
-            }
-            return;
-        }
-
-        this._achievementQueue.push(eventData);
-        this._processAchievementQueue();
-    }
-
-    /**
-     * Procesa la cola de logros uno a uno
-     * @private
-     */
-    _processAchievementQueue() {
-        if (this._isShowingAchievement || this._achievementQueue.length === 0) {
-            return;
-        }
-
-        this._isShowingAchievement = true;
-        const eventData = this._achievementQueue.shift();
-
-        this._displayAchievementNotification(eventData);
-
-        // Esperar a que termine la animación (7s visible + 0.5s fade out)
-        setTimeout(() => {
-            this._isShowingAchievement = false;
-            this._processAchievementQueue();
-        }, 7500);
-    }
-
-    /**
-     * Muestra físicamente la notificación de logro
-     * @private
-     * @param {Object} eventData - Datos del evento
-     */
-    _displayAchievementNotification(eventData) {
-        const { username, achievement } = eventData;
-        const container = document.getElementById('achievement-notifications');
-
-        if (!container) {
-            console.warn('Achievement notifications container not found');
-            return;
-        }
-
-        const notification = document.createElement('div');
-        notification.className = 'achievement-notification';
-        notification.setAttribute('data-rarity', achievement.rarity);
-
-        const rarityMap = {
-            'common': 'tier1.png',
-            'uncommon': 'tier2.png',
-            'rare': 'tier3.png',
-            'epic': 'tier4.png',
-            'legendary': 'tier5.png'
-        };
-        const iconFile = rarityMap[achievement.rarity] || 'tier1.png';
-        const iconPath = `img/logros/${iconFile}`;
-
-        notification.innerHTML = `
-            <div class="achievement-icon"><img src="${iconPath}" class="achievement-icon-img" alt="Rank Icon"></div>
-            <div class="achievement-content">
-                <div class="achievement-label">LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name"><span>${achievement.name}</span></div>
-                <div class="achievement-desc"><span>${achievement.description} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${achievement.condition}]</span></span></div>
-            </div>
-            <div class="achievement-timer"></div>
-        `;
-
-        // Añadir al container
-        container.appendChild(notification);
-
-        // Check for text overflow to enable marquee
-        try {
-            const nameSpan = notification.querySelector('.achievement-name span');
-            const nameContainer = notification.querySelector('.achievement-name');
-            if (nameSpan && nameContainer && nameSpan.scrollWidth > nameContainer.clientWidth) {
-                nameSpan.classList.add('marquee-active');
-            }
-
-            const descSpan = notification.querySelector('.achievement-desc > span');
-            const descContainer = notification.querySelector('.achievement-desc');
-            if (descSpan && descContainer && descSpan.scrollWidth > descContainer.clientWidth) {
-                descSpan.classList.add('marquee-active');
-            }
-        } catch (e) {
-            console.warn('Error checking overflow:', e);
-        }
-
-        // Trigger animation
-        requestAnimationFrame(() => {
-            notification.classList.add('show');
-        });
-
-        // IMPORTANTE: Extender el tiempo del widget para que se vea el logro
-        // 8000ms = 7s de logro + 1s de margen extra
-        if (this.managers.ui) {
-            this.managers.ui.extendDisplayTime(8000);
-        }
-
-        // Remover después de 7 segundos
-        setTimeout(() => {
-            notification.classList.remove('show');
-            notification.classList.add('hiding');
-
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 500);
-        }, 7000);
-
-        // Reproducir sonido de logro con 1 segundo de retraso
-        // Para evitar solapamiento con el sonido del mensaje
-        setTimeout(() => {
-            try {
-                const audio = new Audio('logro.mp3'); // Asegúrate de tener este archivo
-                audio.volume = this.config.AUDIO_VOLUME || 0.5;
-                audio.play().catch(e => {
-                    if (this.config.DEBUG) console.warn('Audio logro.mp3 no encontrado o bloqueado', e);
-                });
-            } catch (e) {
-                console.warn('Error audio:', e);
-            }
-        }, 1000);
-
-        // Log para debug
-        if (this.config.DEBUG) {
-            console.log(`🏆 Achievement notification shown: ${username} -> ${achievement.name}`);
-        }
-    }
+    // =========================================================================
+    // NOTA: La lógica de notificaciones de logros ha sido extraída a 
+    // NotificationManager.js para seguir el principio de Single Responsibility.
+    // Ver: js/managers/NotificationManager.js
+    // =========================================================================
 
     /**
      * Limpieza al cerrar
      */
-    async destroy() {
+    /**
+     * Procesa comandos de chat (!comando)
+     * @private
+     * @returns {boolean} true si el comando fue procesado y debe detener el flujo normal
+     */
+    _handleCommands(message, username) {
+        if (!message.startsWith('!')) return false;
+
+        const command = message.toLowerCase().trim();
+
+        if (['!logros', '!achievements'].includes(command)) {
+            return this._handleAchievementsCommand(username);
+        }
+
+        if (['!nivel', '!level', '!stats'].includes(command)) {
+            return this._handleLevelCommand(username);
+        }
+
+        return false;
+    }
+
+    /**
+     * Maneja el comando !logros
+     * @private
+     */
+    _handleAchievementsCommand(username) {
+        if (!this.services.xp || !this.services.achievements || !this.managers.ui) return false;
+
+        const userData = this.services.xp.getUserData(username);
+        const unlockedCount = (userData.achievements || []).length;
+
+        // Usar método getTotalAchievements si existe, sino fallback al objeto
+        const totalAchievements = this.services.achievements.getTotalAchievements
+            ? this.services.achievements.getTotalAchievements()
+            : (this.services.achievements.achievements ? Object.keys(this.services.achievements.achievements).length : 0);
+
+        const level = userData.level || 1;
+        const title = this.services.xp.getLevelTitle(level);
+
+        if (this.managers.xpDisplay) this.managers.xpDisplay.setVisible(false);
+
+        const systemMsg = `@${username} -> Progreso: ${unlockedCount}/${totalAchievements} Logros | Nivel ${level} (${title})`;
+        this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
+
+        return true;
+    }
+
+    /**
+     * Maneja el comando !nivel
+     * @private
+     */
+    _handleLevelCommand(username) {
+        if (!this.services.xp || !this.managers.ui) return false;
+
+        const info = this.services.xp.getUserXPInfo(username);
+
+        if (this.managers.xpDisplay) this.managers.xpDisplay.setVisible(false);
+
+        const systemMsg = `@${username} -> Nivel ${info.level} | ${info.title} | XP: ${Math.floor(info.progress.xpInCurrentLevel)}/${info.progress.xpNeededForNext}`;
+        this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
+
+        return true;
+    }
+
+    async save() {
         if (this.services.xp) {
             console.log('💾 Saving XP data...');
             await this.services.xp.saveData(true);

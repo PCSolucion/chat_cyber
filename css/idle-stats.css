@@ -1,0 +1,433 @@
+/* ========================================
+   IDLE STATS DISPLAY
+   Estilos para el modo de estadísticas
+   cuando no hay chat activo
+   ======================================== */
+
+/* ========================================
+   REORDENAR LAYOUT GLOBAL:
+   Nombre/Rank ARRIBA, XP/Level ABAJO
+   (Aplica siempre, no solo en idle)
+   ======================================== */
+.info-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-container .xp-section {
+    order: 2;
+    /* XP va abajo */
+    margin-top: 8px !important;
+    margin-bottom: -10px !important;
+    border-top: 1px solid rgba(255, 58, 58, 0.2) !important;
+    border-bottom: none !important;
+}
+
+.info-container .title-row {
+    order: 1;
+    /* Nombre/Rank va arriba */
+    margin-bottom: 0;
+}
+
+/* ========================================
+   MODO IDLE: Ocultar XP section
+   ======================================== */
+.container.idle-mode {
+    padding-top: 15px;
+}
+
+.container.idle-mode .xp-section {
+    display: none !important;
+    /* Ocultar completamente en modo idle */
+}
+
+/* Estilo especial para el título en modo idle */
+.idle-stats-title {
+    color: var(--cyber-red, #ff003c) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.5) !important;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+}
+
+/* Encabezado principal del modo idle (deprecated) */
+.idle-main-header {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--cyber-red, #ff003c);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 0, 60, 0.3);
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+}
+
+/* Contenedor principal del modo idle */
+.idle-stats-display {
+    width: 100%;
+    padding: 10px 15px;
+    box-sizing: border-box;
+}
+
+/* Animación de entrada de pantalla */
+.idle-screen-enter {
+    animation: idle-screen-enter 0.5s ease-out;
+}
+
+@keyframes idle-screen-enter {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pantalla base */
+.idle-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Título de sección */
+.idle-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.idle-icon {
+    color: var(--cyber-cyan, #00f6ff);
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px var(--cyber-cyan, #00f6ff);
+}
+
+.idle-title-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cyber-cyan, #00f6ff);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Grid de estadísticas (Summary Screen) */
+.idle-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.idle-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 5px;
+    background: linear-gradient(180deg, rgba(0, 246, 255, 0.08) 0%, transparent 100%);
+    border: 1px solid rgba(0, 246, 255, 0.15);
+    border-radius: 3px;
+}
+
+.idle-stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.idle-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+/* Footer del idle */
+.idle-footer {
+    text-align: center;
+    padding-top: 5px;
+    border-top: 1px solid rgba(0, 246, 255, 0.1);
+}
+
+.idle-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+    animation: idle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes idle-pulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ========================================
+   LEADERBOARD SCREEN
+   ======================================== */
+.idle-leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.idle-leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.idle-leaderboard-row.top-1 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
+    border-left-color: #ffd700;
+}
+
+.idle-leaderboard-row.top-3 {
+    background: linear-gradient(90deg, rgba(0, 246, 255, 0.1) 0%, transparent 100%);
+    border-left-color: var(--cyber-cyan, #00f6ff);
+}
+
+.idle-rank {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    min-width: 25px;
+}
+
+.idle-leaderboard-row.top-1 .idle-rank {
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.idle-username {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.idle-user-level {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--cyber-cyan, #00f6ff);
+    padding: 2px 6px;
+    background: rgba(0, 246, 255, 0.1);
+    border-radius: 2px;
+}
+
+.idle-user-msgs {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    min-width: 50px;
+    text-align: right;
+}
+
+/* ========================================
+   ACHIEVEMENTS SCREEN
+   ======================================== */
+.idle-stats-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.idle-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 4px;
+}
+
+.idle-stat-big {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.idle-recent-section {
+    margin-top: 5px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.idle-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.idle-recent-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.idle-recent-user {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    color: #fff;
+    flex: 1;
+}
+
+.idle-recent-arrow {
+    color: var(--cyber-cyan, #00f6ff);
+    font-size: 0.7rem;
+}
+
+.idle-recent-level {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffd700;
+}
+
+.idle-empty,
+.idle-empty-small {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    padding: 15px;
+}
+
+.idle-empty-small {
+    padding: 8px;
+    font-size: 0.7rem;
+}
+
+/* ========================================
+   STREAKS SCREEN
+   ======================================== */
+.idle-streak-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.idle-streak-highlight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.idle-streak-days {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    color: #ff6a00;
+    text-shadow: 0 0 20px rgba(255, 106, 0, 0.5);
+    line-height: 1;
+}
+
+.idle-streak-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+}
+
+.idle-streak-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.idle-streak-icon {
+    font-size: 1.2rem;
+}
+
+.idle-streak-footer {
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.idle-total-streaks {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--cyber-cyan, #00f6ff);
+}
+
+/* ========================================
+   BADGE PARA MODO IDLE
+   ======================================== */
+.user-badge.idle-badge {
+    display: inline-flex;
+    background: linear-gradient(90deg, rgba(0, 246, 255, 0.2) 0%, rgba(0, 246, 255, 0.1) 100%);
+    border: 1px solid var(--cyber-cyan, #00f6ff);
+    color: var(--cyber-cyan, #00f6ff);
+    padding: 2px 8px;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+}
+
+/* ========================================
+   EMOTES DE TERCEROS (7TV/BTTV/FFZ)
+   ======================================== */
+.emote-3p {
+    /* Emotes de terceros - margen entre emotes */
+    margin: 0 2px;
+    display: inline;
+    vertical-align: middle;
+}
+
+.emote-3p.emote-animated {
+    /* Emotes animados - sin filtros para mantener calidad */
+    image-rendering: auto;
+}
+
+/* Indicador de provider - diferenciación sutil */
+.emote-3p[data-provider="7tv"] {
+    /* 7TV usa WebP/GIF de alta calidad */
+    filter: brightness(1.02);
+}
+
+.emote-3p[data-provider="bttv"] {
+    /* BTTV - estilo clásico */
+    filter: brightness(1);
+}
+
+.emote-3p[data-provider="ffz"] {
+    /* FFZ - ligero ajuste */
+    filter: brightness(1.01);
+}

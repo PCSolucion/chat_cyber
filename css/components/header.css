@@ -22,6 +22,8 @@
     padding-left: 0;
     /* Eliminado padding extra a la izquierda */
     width: 100%;
+    overflow: hidden;
+    /* Ensure content doesn't break layout */
 }
 
 /* Container for Image + Badge stacking */
@@ -34,6 +36,10 @@
     margin-right: auto;
     /* Opcional: empujar el resto a la derecha */
     gap: 2px;
+    flex: 0 0 auto;
+    /* Prevent shrinking - ALWAYS VISIBLE */
+    min-width: max-content;
+    /* Ensure it takes necessary width */
 }
 
 /* Modifier: Horizontal layout for Admin */
@@ -61,6 +67,8 @@
     margin-right: 5px;
     filter: drop-shadow(0 0 5px rgba(255, 0, 60, 0.5));
     object-fit: contain;
+    flex: 0 0 auto;
+    /* Icon shouldn't shrink */
 }
 
 /* ===========================================
@@ -79,13 +87,26 @@
     animation: usernameGlow 3s ease-in-out infinite;
     white-space: nowrap;
     /* Evitar saltos de línea */
+
+    /* Flex behavior for long names */
+    flex: 0 1 auto;
+    /* Allow shrinking */
+    min-width: 0;
+    /* Allow shrinking below content size if necessary */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Optional: adds ... if it still overflows despite font sizing */
 }
 
-/* Fuente más pequeña para nombres largos */
+/* Fuentes más pequeñas para nombres largos */
 .driver-name.small-text {
-    font-size: clamp(14px, 2.5em, 24px) !important;
-    /* Reducir tamaño dinámicamente */
+    font-size: 1.1rem !important;
     letter-spacing: 2px;
+}
+
+.driver-name.extra-small-text {
+    font-size: 0.9rem !important;
+    letter-spacing: 1px;
 }
 
 /* ===========================================
