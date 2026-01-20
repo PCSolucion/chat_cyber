@@ -165,8 +165,51 @@ const UIUtils = {
      */
     hasImages(html) {
         return html.includes('<img');
+    },
+
+    /**
+     * Inicializa el ecualizador generando las barras dinámicamente
+     * Esto evita tener 40+ líneas de HTML repetitivo
+     * 
+     * @param {string} containerId - ID del contenedor del ecualizador
+     * @param {number} barCount - Número de barras a generar (default: 20)
+     */
+    initEqualizer(containerId = 'equalizer', barCount = 20) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.warn(`⚠️ Equalizer container #${containerId} not found`);
+            return;
+        }
+
+        // Limpiar contenido previo
+        container.innerHTML = '';
+
+        // Crear barras con delays de animación variados
+        const fragment = document.createDocumentFragment();
+
+        for (let i = 0; i < barCount; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+
+            // Delay aleatorio entre 0 y 0.25s para efecto más orgánico
+            const delay = (Math.random() * 0.25).toFixed(3);
+            bar.style.animationDelay = `${delay}s`;
+
+            fragment.appendChild(bar);
+        }
+
+        container.appendChild(fragment);
+
+        if (typeof CONFIG !== 'undefined' && CONFIG.DEBUG) {
+            console.log(`🎵 Equalizer initialized with ${barCount} bars`);
+        }
     }
 };
+
+// Auto-inicializar el ecualizador cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    UIUtils.initEqualizer('equalizer', 20);
+});
 
 // Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
