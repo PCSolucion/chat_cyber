@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Logros - Cyberpunk Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: #000;
+            color: #ccc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #fcee0a;
+            /* Cyberpunk Yellow */
+            text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(252, 238, 10, 0.5);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #fff;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 5px solid #00f7ff;
+            padding-left: 15px;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            max-width: 1200px;
+            background: rgba(20, 20, 20, 0.9);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background-color: #1a1a1a;
+            color: #00f7ff;
+            /* Cyan */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        tr:hover {
+            background-color: rgba(0, 247, 255, 0.05);
+        }
+
+        /* Rarity Colors */
+        .rarity-common {
+            color: #b0b0b0;
+        }
+
+        .rarity-uncommon {
+            color: #1eff00;
+        }
+
+        /* Green */
+        .rarity-rare {
+            color: #0070dd;
+        }
+
+        /* Blue */
+        .rarity-epic {
+            color: #a335ee;
+        }
+
+        /* Purple */
+        .rarity-legendary {
+            color: #ff8000;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 128, 0, 0.4);
+        }
+
+        .category-badge {
+            background: #333;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .icon-cell {
+            font-size: 1.5em;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Base de Datos de Logros</h1>
+
+    <div id="content-container"></div>
+
+    <!-- Data Source -->
+    <script src="data/AchievementsData.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof ACHIEVEMENTS_DATA === 'undefined') {
+                document.body.innerHTML = '<h2 style="color:red; text-align:center">Error: No se pudo cargar data/AchievementsData.js</h2>';
+                return;
+            }
+
+            const rarityOrder = {
+                'common': 1,
+                'uncommon': 2,
+                'rare': 3,
+                'epic': 4,
+                'legendary': 5
+            };
+
+            const achievements = Object.values(ACHIEVEMENTS_DATA.achievements);
+            const container = document.getElementById('content-container');
+
+            // 1. Group by Category
+            const grouped = {};
+            achievements.forEach(ach => {
+                const cat = ach.category || 'Varios';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(ach);
+            });
+
+            // 2. Sort Logic
+            const sortAchievements = (a, b) => {
+                const rDiff = (rarityOrder[a.rarity] || 0) - (rarityOrder[b.rarity] || 0);
+                if (rDiff !== 0) return rDiff; // First by rarity
+                return a.name.localeCompare(b.name); // Then alphabetically
+            };
+
+            // 3. Render Groups
+            // Sort categories alphabetically
+            Object.keys(grouped).sort().forEach(category => {
+                const group = grouped[category];
+                group.sort(sortAchievements);
+
+                // Title
+                const h2 = document.createElement('h2');
+                h2.textContent = `Categoría: ${category.toUpperCase()}`;
+                container.appendChild(h2);
+
+                // Table
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th width="80">Icono</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th width="120">Rareza</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+
+                const tbody = table.querySelector('tbody');
+
+                group.forEach(ach => {
+                    const tr = document.createElement('tr');
+
+                    const iconTd = document.createElement('td');
+                    iconTd.className = 'icon-cell';
+                    iconTd.textContent = ach.icon || '🏆';
+
+                    const nameTd = document.createElement('td');
+                    nameTd.innerHTML = `<strong>${ach.name}</strong>`;
+
+                    const descTd = document.createElement('td');
+                    descTd.innerHTML = `${ach.description}<br><em style="font-size:0.85em; color:#888">${ach.condition}</em>`;
+
+                    const rarityTd = document.createElement('td');
+                    rarityTd.className = `rarity-${ach.rarity}`;
+                    rarityTd.textContent = ach.rarity.toUpperCase();
+
+                    tr.appendChild(iconTd);
+                    tr.appendChild(nameTd);
+                    tr.appendChild(descTd);
+                    tr.appendChild(rarityTd);
+
+                    tbody.appendChild(tr);
+                });
+
+                container.appendChild(table);
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -115,6 +115,28 @@ class TwitchService {
     }
 
     /**
+     * Obtiene la categoría (juego) actual del canal usando una API pública
+     * @returns {Promise<string|null>} Nombre de la categoría o null si falla
+     */
+    async fetchChannelCategory() {
+        try {
+            // Usamos decapi.me como proxy público para evitar necesidad de tokens OAuth complejos
+            // para una funcionalidad visual simple
+            const response = await fetch(`https://decapi.me/twitch/game/${this.channel}`);
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const category = await response.text();
+            // Retornamos la categoría limpia (trim)
+            return category ? category.trim() : null;
+        } catch (error) {
+            console.warn('⚠️ No se pudo obtener la categoría del stream:', error);
+            return null;
+        }
+    }
+
+    /**
      * Desconecta del canal de Twitch
      */
     disconnect() {

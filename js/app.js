@@ -62,6 +62,9 @@ class App {
 
         // Exponer herramientas de testing
         this.exposeTestingFunctions();
+
+        // Iniciar actualización de categoría
+        this.startStreamCategoryUpdate();
     }
 
     /**
@@ -283,8 +286,35 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
         }
     }
 
+    /**
+     * Inicia el ciclo de actualización de categoría del stream
+     * Se actualiza cada 5 minutos
+     */
+    startStreamCategoryUpdate() {
+        const updateCategory = async () => {
+            if (!this.twitchService) return;
+
+            const category = await this.twitchService.fetchChannelCategory();
+            // Solo actualizamos si obtuvimos una categoría válida
+            if (category && this.processor) {
+                const uiManager = this.processor.getManager('ui');
+                if (uiManager) {
+                    uiManager.updateStreamCategory(category);
+                }
+            }
+        };
+
+        // Primera llamada inmediata (con un pequeño delay para asegurar carga de UI)
+        setTimeout(updateCategory, 2000);
+
+        // Actualizar según configuración (default 5 min)
+        const interval = this.config.STREAM_CATEGORY_UPDATE_INTERVAL || 300000;
+        this.categoryInterval = setInterval(updateCategory, interval);
+    }
+
     async destroy() {
         console.log('🛑 Shutting down...');
+        if (this.categoryInterval) clearInterval(this.categoryInterval);
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();
     }

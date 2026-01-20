@@ -322,6 +322,11 @@ class ExperienceService {
         let totalXP = 0;
         const xpSources = [];
 
+        // Verificar si el usuario está excluido de bonos (bots, admin, etc.)
+        const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
+            .map(u => u.toLowerCase())
+            .includes(lowerUser);
+
         // 1. XP base por mensaje
         if (this.xpConfig.sources.MESSAGE.enabled) {
             totalXP += this.xpConfig.sources.MESSAGE.xp;
@@ -329,7 +334,7 @@ class ExperienceService {
         }
 
         // 2. Bonus primer mensaje del día
-        if (this.xpConfig.sources.FIRST_MESSAGE_DAY.enabled && !this.dailyFirstMessage.has(lowerUser)) {
+        if (!ignoredForBonus && this.xpConfig.sources.FIRST_MESSAGE_DAY.enabled && !this.dailyFirstMessage.has(lowerUser)) {
             totalXP += this.xpConfig.sources.FIRST_MESSAGE_DAY.xp;
             xpSources.push({ source: 'FIRST_MESSAGE_DAY', xp: this.xpConfig.sources.FIRST_MESSAGE_DAY.xp });
             this.dailyFirstMessage.set(lowerUser, true);
@@ -362,7 +367,17 @@ class ExperienceService {
         }
 
         // 7. Verificar y actualizar racha
-        const streakResult = this.updateStreak(lowerUser, userData);
+        // Si es usuario ignorado, mantenemos los datos actuales sin cambios ni bonos
+        let streakResult = {
+            streakDays: userData.streakDays || 0,
+            lastStreakDate: userData.lastStreakDate,
+            bonusAwarded: false
+        };
+
+        if (!ignoredForBonus) {
+            streakResult = this.updateStreak(lowerUser, userData);
+        }
+
         if (streakResult.bonusAwarded) {
             totalXP += this.xpConfig.sources.STREAK_BONUS.xp;
             xpSources.push({ source: 'STREAK_BONUS', xp: this.xpConfig.sources.STREAK_BONUS.xp });

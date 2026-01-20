@@ -52,6 +52,7 @@ class UIManager {
             container: document.querySelector('.container'),
             userBadge: document.getElementById('user-badge'),
             adminIcon: document.getElementById('admin-icon'),
+            streamCategory: document.getElementById('stream-category'),
             root: document.documentElement
         };
     }
@@ -333,6 +334,24 @@ class UIManager {
                 console.log('🔒 Widget ocultado automáticamente');
             }
         }, displayTime);
+    }
+
+    /**
+     * Actualiza la categoría del stream en la barra de estado
+     * @param {string} categoryName - Nombre de la categoría (Juego)
+     */
+    updateStreamCategory(categoryName) {
+        if (!this.dom.streamCategory || !categoryName) return;
+
+        // Efecto visual simple de actualización
+        this.dom.streamCategory.style.opacity = '0';
+
+        setTimeout(() => {
+            // Formato: SYS.ONLINE | [CATEGORY]
+            // Pero 'SYS.ONLINE |' está en otros elementos, aquí solo cambiamos el último span
+            this.dom.streamCategory.textContent = categoryName.toUpperCase();
+            this.dom.streamCategory.style.opacity = '1';
+        }, 300);
     }
 
     /**

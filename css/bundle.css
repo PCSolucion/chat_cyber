@@ -606,14 +606,20 @@ body {
 }
 
 .status-divider {
-    display: none;
+    display: block;
+    color: #444;
+    margin: 0 5px;
 }
 
 .status-code {
-    display: none;
+    display: block;
     color: var(--text-dim);
     font-size: 9px;
     letter-spacing: 1px;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ===========================================
