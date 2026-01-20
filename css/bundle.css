@@ -1562,29 +1562,66 @@ body {
 
 .xp-progress-fill {
     width: 0%;
+    /* Gradiente animado para efecto líquido sutil */
     background: linear-gradient(90deg,
             var(--xp-primary-dark) 0%,
-            var(--xp-primary) 50%,
-            var(--xp-primary-light) 100%);
+            var(--xp-primary) 40%,
+            var(--xp-primary-light) 60%,
+            var(--xp-primary) 100%);
+    background-size: 200% 100%;
+    animation: liquidFlow 4s ease-in-out infinite;
     transition: width 1.5s ease-in-out;
     z-index: 2;
-    box-shadow: 0 0 5px rgba(var(--xp-primary-rgb), 0.3);
+    box-shadow: 0 0 8px rgba(var(--xp-primary-rgb), 0.4);
+    overflow: hidden;
+    position: relative;
 }
 
-.xp-progress-glow {
-    width: 30px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: xpGlowSweep 2s infinite;
+/* Brillo superior para dar profundidad líquida */
+.xp-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(255, 255, 255, 0.1) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: liquidPulse 2s ease-in-out infinite;
 }
 
-@keyframes xpGlowSweep {
-    0% {
-        transform: translateX(-100%);
-    }
+/* Animación de flujo líquido del gradiente - movimiento horizontal */
+@keyframes liquidFlow {
 
+    0%,
     100% {
-        transform: translateX(400%);
+        background-position: 100% 50%;
     }
+
+    50% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Animación de pulso de brillo - intensidad sin movimiento */
+@keyframes liquidPulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Glow sweep desactivado - reemplazado por liquidFlow/liquidPulse */
+.xp-progress-glow {
+    display: none;
 }
 
 /* Texto de progreso */
