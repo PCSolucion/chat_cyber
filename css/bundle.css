@@ -453,6 +453,9 @@ body {
 .container-wrapper {
     perspective: 600px;
     perspective-origin: left center;
+    position: absolute;
+    left: 20px;
+    bottom: 20%;
 }
 
 .container {

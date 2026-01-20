@@ -127,7 +127,8 @@
 .idle-terminal {
     font-family: 'Share Tech Mono', monospace;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
-    border-left: 2px solid var(--cyber-cyan, #00f6ff);
+    /* Border left removed */
+    border: 1px solid rgba(0, 246, 255, 0.1);
     padding: 8px 12px;
     position: relative;
     overflow: hidden;
@@ -322,14 +323,10 @@
     align-items: center;
     padding: 4px 0;
     font-size: 0.85rem;
-    border-left: 2px solid transparent;
-    padding-left: 8px;
-    margin-left: -8px;
     transition: all 0.2s ease;
 }
 
 .idle-rank-line.rank-1 {
-    border-left-color: var(--cyber-yellow, #ffd700);
     background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
 }
 
@@ -339,7 +336,6 @@
 }
 
 .idle-rank-line.rank-top3 {
-    border-left-color: var(--cyber-cyan, #00f6ff);
     background: linear-gradient(90deg, rgba(0, 246, 255, 0.05) 0%, transparent 100%);
 }
 
@@ -537,18 +533,18 @@
     gap: 8px;
     padding: 6px 10px;
     background: rgba(255, 255, 255, 0.03);
-    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
 }
 
 .idle-leaderboard-row.top-1 {
     background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
-    border-left-color: #ffd700;
+    border-color: rgba(255, 215, 0, 0.3);
 }
 
 .idle-leaderboard-row.top-3 {
     background: linear-gradient(90deg, rgba(0, 246, 255, 0.1) 0%, transparent 100%);
-    border-left-color: var(--cyber-cyan, #00f6ff);
+    border-color: rgba(0, 246, 255, 0.3);
 }
 
 .idle-rank {

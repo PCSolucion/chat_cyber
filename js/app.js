@@ -99,6 +99,25 @@ class App {
         if (this.processor && this.processor.getService('xp')) {
             window.getXPStats = () => this.processor.getService('xp').getGlobalStats();
 
+            // LISTEN FOR POST MESSAGES (Cross-Origin safe for local testing)
+            window.addEventListener('message', (event) => {
+                const data = event.data;
+                if (!data || !data.type) return;
+
+                console.log('📨 Message received via postMessage:', data);
+
+                if (data.type === 'TEST_LEVEL_UP') {
+                    const xpDisplay = this.processor.getManager('xpDisplay');
+                    if (xpDisplay) {
+                        xpDisplay.showLevelUp({
+                            username: data.username || 'Test',
+                            newLevel: data.level || 10,
+                            title: data.title || 'TEST RANK'
+                        });
+                    }
+                }
+            });
+
             window.testLevelUp = (lvl) => {
                 const xpDisplay = this.processor.getManager('xpDisplay');
                 if (xpDisplay) {

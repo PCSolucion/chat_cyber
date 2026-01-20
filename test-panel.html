@@ -198,40 +198,56 @@
             text-align: center;
         }
 
-        /* Widget iframe container */
+        /* Widget iframe container - Dynamic Full Screen Preview */
         .widget-container {
             position: fixed;
             left: 20px;
             top: 20px;
-            width: 420px;
-            height: 500px;
+            /* Occupy space up to the right panel (280px + 20px right margin + 20px gap) */
+            width: calc(100% - 340px);
+            /* Maintain 16:9 Aspect Ratio */
+            aspect-ratio: 16/9;
+            /* Ensure it doesn't overflow vertically on small screens */
+            max-height: calc(100vh - 40px);
             border: 1px solid rgba(0, 246, 255, 0.2);
             border-radius: 4px;
             overflow: hidden;
+            background: #000;
+            z-index: 500;
+            /* Centered vertically if aspect ratio forces it smaller than height */
+            margin: auto;
         }
 
         .widget-container iframe {
-            width: 100%;
-            height: 100%;
+            width: 1920px;
+            height: 1080px;
             border: none;
+            /* Transformation will be handled by JS */
+            transform-origin: 0 0;
+            pointer-events: auto;
         }
 
         .widget-label {
             position: absolute;
-            top: -20px;
-            left: 0;
-            font-size: 10px;
+            top: 10px;
+            left: 10px;
+            font-size: 12px;
             color: #00f6ff;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 2px;
             font-family: 'Share Tech Mono', monospace;
             letter-spacing: 1px;
+            z-index: 10;
+            pointer-events: none;
         }
     </style>
 </head>
 
 <body>
     <!-- Widget Preview (embedded iframe) -->
-    <div class="widget-container">
-        <span class="widget-label">WIDGET PREVIEW</span>
+    <div class="widget-container" id="preview-container">
+        <span class="widget-label">1080p PREVIEW</span>
         <iframe id="widget-frame" src="index.html"></iframe>
     </div>
 
@@ -317,6 +333,9 @@
                 <button onclick="callWidgetFunction('testAchievement')" class="btn btn--full btn--top">🏆 TEST
                     ACHIEVEMENT</button>
             </div>
+            <div style="margin-top: 8px;">
+                <button onclick="testLevelUp()" class="btn btn--full btn--purple">🚀 TEST LEVEL UP (NUEVO)</button>
+            </div>
         </div>
 
         <!-- IDLE STATS & EMOTES CONTROLS -->
@@ -347,10 +366,32 @@
 
         // Referencia al iframe del widget
         const widgetFrame = document.getElementById('widget-frame');
+        const previewContainer = document.getElementById('preview-container');
+
+        // AUTO-SCALE FUNCTION: Hace que el iframe 1920x1080 quepa en el contenedor
+        function fitPreview() {
+            if (!widgetFrame || !previewContainer) return;
+
+            // El contenedor tiene width variable pero 16:9 aspect ratio
+            const containerWidth = previewContainer.getBoundingClientRect().width;
+
+            // Calculamos la escala necesaria (ancho actual / 1920)
+            const scale = containerWidth / 1920;
+
+            // Aplicamos la escala
+            widgetFrame.style.transform = `scale(${scale})`;
+
+            console.log(`🖥️ Preview rescaled: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
+        }
+
+        // Ajustar al cargar y al redimensionar ventana
+        window.addEventListener('load', fitPreview);
+        window.addEventListener('resize', fitPreview);
 
         // Esperar a que el iframe cargue
         widgetFrame.addEventListener('load', () => {
             console.log('✅ Widget iframe loaded');
+            fitPreview(); // Re-check scale
         });
 
         // Obtener la ventana del widget
@@ -406,6 +447,24 @@
                 console.log('Keep Visible:', this.checked);
             }
         });
+
+        // Test Level Up (Specific for Cyberpunk overlay)
+        function testLevelUp() {
+            const win = getWidgetWindow();
+            if (win) {
+                // Use postMessage for cross-origin safety (local files)
+                win.postMessage({
+                    type: 'TEST_LEVEL_UP',
+                    username: 'NetRunner_Test',
+                    level: Math.floor(Math.random() * 50) + 10,
+                    title: 'LEGEND OF NIGHT CITY'
+                }, '*');
+
+                console.log('Triggered Level Up Animation via postMessage');
+            } else {
+                console.warn('Widget window not found');
+            }
+        }
     </script>
 </body>
 

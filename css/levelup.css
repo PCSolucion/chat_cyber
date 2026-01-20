@@ -1,0 +1,194 @@
+/* Cyberpunk 2077 Level Up Overlay */
+.cp-levelup-overlay {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease-out, transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.cp-levelup-overlay.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.cp-levelup-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    filter: drop-shadow(0 0 5px rgba(54, 209, 220, 0.5));
+}
+
+/* Hexagon Icon */
+.cp-levelup-icon {
+    width: 60px;
+    height: 60px;
+    margin-right: 15px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cp-hex-svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: #36D1DC;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 2px #36D1DC);
+}
+
+.cp-hex-arrows {
+    position: absolute;
+    color: #36D1DC;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 0.8;
+    animation: cp-arrows-pulse 1s infinite alternate;
+}
+
+@keyframes cp-arrows-pulse {
+    from {
+        opacity: 0.6;
+        transform: translateY(1px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+}
+
+/* Main Bar */
+.cp-levelup-bar {
+    display: flex;
+    flex-direction: column;
+}
+
+.cp-levelup-main-text {
+    background: linear-gradient(90deg, #36D1DC 0%, #5B86E5 100%);
+    background: #4deeea;
+    /* Cyberpunk Cyan */
+    color: #000;
+    padding: 5px 20px 5px 30px;
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+    display: flex;
+    align-items: center;
+    font-family: 'Blender Pro', 'Rajdhani', sans-serif;
+    /* Use project font */
+    font-weight: 800;
+    min-width: 350px;
+    position: relative;
+}
+
+.cp-level-arrow {
+    font-size: 24px;
+    margin-right: 15px;
+    color: #000;
+}
+
+.cp-level-number {
+    font-size: 32px;
+    margin-right: 10px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.cp-level-text {
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.cp-level-decor-right {
+    margin-left: auto;
+    border: 2px solid #000;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+.cp-level-decor-icon {
+    width: 20px;
+    height: 20px;
+    fill: #000;
+}
+
+/* Sub Bar (Attribute Points style) */
+.cp-levelup-sub-bar {
+    display: flex;
+    margin-top: 5px;
+    margin-left: 10px;
+    gap: 15px;
+}
+
+.cp-stat-box {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #4deeea;
+    color: #4deeea;
+    padding: 2px 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
+}
+
+.cp-stat-icon {
+    margin-right: 5px;
+    font-size: 12px;
+}
+
+.cp-stat-label {
+    margin-right: 5px;
+    opacity: 0.8;
+}
+
+.cp-stat-value {
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Glitch Effect on Enter */
+.cp-levelup-overlay.show .cp-levelup-main-text {
+    animation: cp-bar-glitch 0.4s ease-out;
+}
+
+@keyframes cp-bar-glitch {
+    0% {
+        transform: scaleX(0.1);
+        opacity: 0;
+    }
+
+    40% {
+        transform: scaleX(1.1);
+        opacity: 0.8;
+    }
+
+    60% {
+        transform: scaleX(0.95);
+        opacity: 1;
+    }
+
+    80% {
+        transform: scaleX(1.02);
+    }
+
+    100% {
+        transform: scaleX(1);
+    }
+}
