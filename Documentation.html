@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infografía - Cyberpunk Chat Widget</title>
+    <style>
+        :root {
+            --cyber-red: #ff3a3a;
+            --cyber-cyan: #00d4ff;
+            --cyber-yellow: #ffd700;
+            --cyber-magenta: #ff00ff;
+            --cyber-green: #00ff88;
+            --bg-dark: #0a0a0f;
+            --bg-card: #111118;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-left: 280px;
+            padding: 40px 30px;
+        }
+
+        /* Fixed Sidebar Navigation */
+        .sidebar-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(17, 17, 24, 0.98) 0%, rgba(10, 10, 15, 0.98) 100%);
+            border-right: 1px solid rgba(0, 212, 255, 0.15);
+            padding: 30px 0;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--cyber-red), var(--cyber-cyan), var(--cyber-magenta));
+            opacity: 0.5;
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 0 20px 25px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo h3 {
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--cyber-red), var(--cyber-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        .sidebar-logo span {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .nav-section {
+            margin-bottom: 10px;
+        }
+
+        .nav-section-title {
+            font-size: 0.65rem;
+            color: var(--cyber-cyan);
+            letter-spacing: 2px;
+            padding: 8px 25px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            border-left: 2px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: rgba(0, 212, 255, 0.05);
+            border-left-color: var(--cyber-cyan);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--cyber-cyan);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            opacity: 1;
+        }
+
+        .nav-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar-nav {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .container {
+                margin-left: 0;
+            }
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        header::before {
+            content: 'SYSTEM.DOCUMENTATION';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--cyber-cyan);
+            letter-spacing: 4px;
+            opacity: 0.6;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--cyber-red), var(--cyber-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(255, 58, 58, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 60px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--cyber-cyan);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--cyber-cyan);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h2::before {
+            content: '▶';
+            color: var(--cyber-red);
+            font-size: 0.8rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: var(--cyber-yellow);
+            margin: 20px 0 15px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyber-red), var(--cyber-cyan), transparent);
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 30%);
+            pointer-events: none;
+        }
+
+        .card.service {
+            border-color: rgba(255, 58, 58, 0.3);
+        }
+
+        .card.service::before {
+            background: linear-gradient(90deg, var(--cyber-red), rgba(255, 58, 58, 0.3), transparent);
+        }
+
+        .card.manager {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .card.manager::before {
+            background: linear-gradient(90deg, var(--cyber-green), rgba(0, 255, 136, 0.3), transparent);
+        }
+
+        .card.util {
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .card.util::before {
+            background: linear-gradient(90deg, var(--cyber-yellow), rgba(255, 215, 0, 0.3), transparent);
+        }
+
+        /* Component Grid */
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .component-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .component-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .component-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .component-file {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: 'Consolas', monospace;
+        }
+
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--cyber-cyan);
+            font-weight: 600;
+        }
+
+        .stats-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0d0d15;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .code-keyword {
+            color: var(--cyber-magenta);
+        }
+
+        .code-class {
+            color: var(--cyber-yellow);
+        }
+
+        .code-function {
+            color: var(--cyber-green);
+        }
+
+        .code-string {
+            color: var(--cyber-cyan);
+        }
+
+        .code-comment {
+            color: #666;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(255, 58, 58, 0.1), rgba(0, 212, 255, 0.1));
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            position: relative;
+            border: 1px solid rgba(255, 58, 58, 0.2);
+        }
+
+        .highlight-box::before {
+            content: '⚡';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--bg-dark);
+            padding: 0 8px;
+            font-size: 1rem;
+        }
+
+        .highlight-box strong {
+            color: var(--cyber-red);
+        }
+
+        /* Tag */
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+
+        .tag.service {
+            background: rgba(255, 58, 58, 0.2);
+            color: var(--cyber-red);
+        }
+
+        .tag.manager {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--cyber-green);
+        }
+
+        .tag.util {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--cyber-yellow);
+        }
+
+        .tag.data {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--cyber-cyan);
+        }
+
+        /* List styles */
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        li strong {
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyber-cyan);
+            border-radius: 4px;
+        }
+
+        /* ============================================ */
+        /* ANIMATION SECTION STYLES */
+        /* ============================================ */
+
+        .animation-container {
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .animation-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .animation-title {
+            font-size: 1.4rem;
+            color: var(--cyber-cyan);
+            margin-bottom: 5px;
+        }
+
+        .animation-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Message Preview */
+        .msg-preview {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.5s ease;
+        }
+
+        .msg-preview.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .msg-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .msg-content {
+            flex: 1;
+        }
+
+        .msg-user {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 3px;
+        }
+
+        .msg-text {
+            color: #ccc;
+            font-size: 0.95rem;
+        }
+
+        /* Status Display */
+        .status-display {
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--cyber-cyan);
+        }
+
+        /* Flow Steps */
+        .anim-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .anim-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            opacity: 0.25;
+            transform: scale(0.97);
+            transition: all 0.4s ease;
+        }
+
+        .anim-step.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .anim-step.done {
+            opacity: 0.6;
+        }
+
+        .anim-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .anim-step.active .anim-num {
+            box-shadow: 0 0 15px currentColor;
+            animation: pulse-anim 1s ease infinite;
+        }
+
+        @keyframes pulse-anim {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .anim-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .anim-step.active .anim-box {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .anim-step-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .anim-step-desc {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        /* Step colors */
+        .step-c1 .anim-num {
+            background: linear-gradient(135deg, #4A90D9, #357ABD);
+        }
+
+        .step-c2 .anim-num {
+            background: linear-gradient(135deg, #5DADE2, #3498DB);
+        }
+
+        .step-c3 .anim-num {
+            background: linear-gradient(135deg, #F39C12, #E67E22);
+        }
+
+        .step-c4 .anim-num {
+            background: linear-gradient(135deg, #27AE60, #229954);
+        }
+
+        .step-c5 .anim-num {
+            background: linear-gradient(135deg, #2ECC71, #27AE60);
+        }
+
+        /* Arrow */
+        .anim-arrow {
+            width: 2px;
+            height: 25px;
+            background: #333;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .anim-arrow.active {
+            background: linear-gradient(180deg, var(--cyber-cyan), var(--cyber-magenta));
+        }
+
+        .anim-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .anim-arrow.active::after {
+            border-top-color: var(--cyber-magenta);
+        }
+
+        /* Parallel Branches */
+        .parallel-wrap {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 800px;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0.25;
+            transition: all 0.4s ease;
+            margin: 5px 0;
+        }
+
+        .parallel-wrap.active {
+            opacity: 1;
+        }
+
+        .branch-box {
+            flex: 1;
+            min-width: 150px;
+            max-width: 180px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+            opacity: 0.4;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+        }
+
+        .branch-box.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .branch-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid;
+        }
+
+        .branch-xp {
+            border-color: #ffc107;
+        }
+
+        .branch-xp .branch-title {
+            color: #ffc107;
+        }
+
+        .branch-logros {
+            border-color: #e91e63;
+        }
+
+        .branch-logros .branch-title {
+            color: #e91e63;
+        }
+
+        .branch-sesion {
+            border-color: #00bcd4;
+        }
+
+        .branch-sesion .branch-title {
+            color: #00bcd4;
+        }
+
+        .branch-audio {
+            border-color: #9c27b0;
+        }
+
+        .branch-audio .branch-title {
+            color: #9c27b0;
+        }
+
+        .branch-item {
+            font-size: 0.75rem;
+            color: #888;
+            padding: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all 0.25s ease;
+        }
+
+        .branch-box.active .branch-item {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .branch-item::before {
+            content: '▸';
+            color: #666;
+            font-size: 0.7rem;
+        }
+
+        /* Timing Info */
+        .timing-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .timing-item {
+            text-align: center;
+        }
+
+        .timing-label {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .timing-value {
+            font-size: 0.9rem;
+            color: var(--cyber-yellow);
+            font-weight: 600;
+        }
+
+        /* Replay hint */
+        .replay-hint {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #666;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .replay-hint.visible {
+            opacity: 1;
+        }
+
+        .replay-hint span {
+            cursor: pointer;
+            color: var(--cyber-cyan);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar-nav">
+        <div class="sidebar-logo">
+            <h3>CYBERPUNK WIDGET</h3>
+            <span>DOCUMENTACIÓN v1.0</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Inicio</div>
+            <a href="#resumen" class="nav-link">
+                <span class="nav-icon">›</span>
+                Resumen Ejecutivo
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Flujo de Datos</div>
+            <a href="#flujo" class="nav-link">
+                <span class="nav-icon">›</span>
+                Animación de Flujo
+            </a>
+            <a href="#arquitectura" class="nav-link">
+                <span class="nav-icon">›</span>
+                Arquitectura
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Componentes</div>
+            <a href="#componentes" class="nav-link">
+                <span class="nav-icon">›</span>
+                Servicios y Managers
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Sistemas</div>
+            <a href="#xp" class="nav-link">
+                <span class="nav-icon">›</span>
+                Sistema de XP
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Proyecto</div>
+            <a href="#archivos" class="nav-link">
+                <span class="nav-icon">›</span>
+                Estructura de Archivos
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>CYBERPUNK CHAT WIDGET</h1>
+            <p class="subtitle">ANÁLISIS TÉCNICO</p>
+        </header>
+
+        <!-- ============== RESUMEN EJECUTIVO ============== -->
+        <section id="resumen">
+            <h2>Resumen Ejecutivo</h2>
+            <div class="card">
+                <p>
+                    El <strong>Cyberpunk Chat Widget</strong> es un overlay de chat para Twitch con estética cyberpunk
+                    inspirada en el juego Cyberpunk 2077. Va más allá de un simple visualizador de mensajes,
+                    incorporando un <strong>sistema completo de gamificación</strong> con experiencia (XP), niveles,
+                    rachas, y más de 120 logros desbloqueables.
+                </p>
+                <br>
+                <table class="stats-table">
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Valor</th>
+                    </tr>
+                    <tr>
+                        <td>Total de Archivos JS</td>
+                        <td>15 archivos (~150KB)</td>
+                    </tr>
+                    <tr>
+                        <td>Archivos CSS</td>
+                        <td>3 archivos (~76KB)</td>
+                    </tr>
+                    <tr>
+                        <td>Logros Definidos</td>
+                        <td>120 logros en 9 categorías</td>
+                    </tr>
+                    <tr>
+                        <td>Servicios de Emotes</td>
+                        <td>7TV + BTTV + FFZ + Twitch Nativo</td>
+                    </tr>
+                    <tr>
+                        <td>Persistencia</td>
+                        <td>GitHub Gist API + localStorage (backup)</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============== ANIMACIÓN DE FLUJO ============== -->
+        <section id="flujo">
+            <h2>Flujo de un Mensaje (Animación)</h2>
+
+            <div class="animation-container" id="animation-section">
+                <div class="animation-header">
+                    <div class="animation-title">Ciclo de Vida de un Mensaje</div>
+                    <div class="animation-subtitle">Observa paso a paso qué sucede cuando un usuario envía un mensaje
+                    </div>
+                </div>
+
+                <!-- Message Preview -->
+                <div class="msg-preview" id="msg-preview">
+                    <div class="msg-avatar">U</div>
+                    <div class="msg-content">
+                        <div class="msg-user">Usuario123</div>
+                        <div class="msg-text">"¡Hola a todos! LUL Kappa"</div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="status-display">
+                    <div class="status-label">Estado actual:</div>
+                    <div class="status-text" id="anim-status">Iniciando animación...</div>
+                </div>
+
+                <!-- Flow Steps -->
+                <div class="anim-flow">
+                    <!-- Step 1 -->
+                    <div class="anim-step step-c1" data-step="1">
+                        <div class="anim-num">1</div>
+                        <div class="anim-box">
+                            <div class="anim-step-title">Usuario escribe mensaje en Twitch</div>
+                            <div class="anim-step-desc">El usuario envía un mensaje desde el chat</div>
+                        </div>
+                    </div>
+
+                    <div class="anim-arrow" data-arrow="1"></div>
+
+                    <!-- Step 2 -->
+                    <div class="anim-step step-c2" data-step="2">
+                        <div class="anim-num">2</div>
+                        <div class="anim-box">
+                            <div class="anim-step-title">TwitchService recibe via WebSocket</div>
+                            <div class="anim-step-desc">tmi.js captura el mensaje del IRC de Twitch</div>
+                        </div>
+                    </div>
+
+                    <div class="anim-arrow" data-arrow="2"></div>
+
+                    <!-- Step 3 -->
+                    <div class="anim-step step-c3" data-step="3">
+                        <div class="anim-num">3</div>
+                        <div class="anim-box">
+                            <div class="anim-step-title">Procesador de Mensajes orquesta</div>
+                            <div class="anim-step-desc">Distribuye el trabajo a los servicios</div>
+                        </div>
+                    </div>
+
+                    <div class="anim-arrow" data-arrow="3"></div>
+
+                    <!-- Parallel Branches -->
+                    <div class="parallel-wrap" id="parallel-branches">
+                        <div class="branch-box branch-xp" data-branch="xp">
+                            <div class="branch-title">XP</div>
+                            <div class="branch-item" data-d="0">Calcular XP</div>
+                            <div class="branch-item" data-d="1">Multiplicador racha</div>
+                            <div class="branch-item" data-d="2">Subida de nivel</div>
+                        </div>
+                        <div class="branch-box branch-logros" data-branch="logros">
+                            <div class="branch-title">Logros</div>
+                            <div class="branch-item" data-d="0">Actualizar stats</div>
+                            <div class="branch-item" data-d="1">Evaluar reglas</div>
+                            <div class="branch-item" data-d="2">Desbloquear</div>
+                        </div>
+                        <div class="branch-box branch-sesion" data-branch="sesion">
+                            <div class="branch-title">Sesión</div>
+                            <div class="branch-item" data-d="0">Contar mensajes</div>
+                            <div class="branch-item" data-d="1">Calcular métricas</div>
+                        </div>
+                        <div class="branch-box branch-audio" data-branch="audio">
+                            <div class="branch-title">Audio</div>
+                            <div class="branch-item" data-d="0">Reproducir sonido</div>
+                        </div>
+                    </div>
+
+                    <div class="anim-arrow" data-arrow="4"></div>
+
+                    <!-- Step 4 -->
+                    <div class="anim-step step-c4" data-step="4">
+                        <div class="anim-num">4</div>
+                        <div class="anim-box">
+                            <div class="anim-step-title">Gestores de UI actualizan pantalla</div>
+                            <div class="anim-step-desc">UIManager, XPDisplayManager preparan la visualización</div>
+                        </div>
+                    </div>
+
+                    <div class="anim-arrow" data-arrow="5"></div>
+
+                    <!-- Step 5 -->
+                    <div class="anim-step step-c5" data-step="5">
+                        <div class="anim-num">5</div>
+                        <div class="anim-box">
+                            <div class="anim-step-title">Renderizar en navegador</div>
+                            <div class="anim-step-desc">El mensaje aparece en el widget con efectos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timing Info -->
+                <div class="timing-info">
+                    <div class="timing-item">
+                        <div class="timing-label">Transición</div>
+                        <div class="timing-value">700ms</div>
+                    </div>
+                    <div class="timing-item">
+                        <div class="timing-label">Modo inactivo</div>
+                        <div class="timing-value">tras 30s</div>
+                    </div>
+                </div>
+
+                <!-- Replay hint -->
+                <div class="replay-hint" id="replay-hint">
+                    Animación completada. <span onclick="restartAnimation()">▶ Ver de nuevo</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== ARQUITECTURA GENERAL ============== -->
+        <section id="arquitectura">
+            <h2>Arquitectura del Sistema</h2>
+
+            <div class="highlight-box">
+                <strong>Patrón Arquitectónico:</strong> El widget sigue un patrón de <em>Service-Oriented Architecture
+                    (SOA)</em>
+                con separación clara entre <strong>Servicios</strong> (lógica de negocio), <strong>Managers</strong>
+                (UI/presentación)
+                y un <strong>Orquestador Central</strong> (MessageProcessor).
+            </div>
+
+            <h3>Capas del Sistema</h3>
+            <div class="card">
+                <table class="stats-table">
+                    <tr>
+                        <th>Capa</th>
+                        <th>Componente</th>
+                        <th>Descripción</th>
+                    </tr>
+                    <tr>
+                        <td>1. Entrada</td>
+                        <td>TwitchService.js</td>
+                        <td>Conexión IRC con tmi.js, recibe mensajes en tiempo real</td>
+                    </tr>
+                    <tr>
+                        <td>2. Configuración</td>
+                        <td>config.js</td>
+                        <td>Todas las constantes, tokens, tiempos centralizados</td>
+                    </tr>
+                    <tr>
+                        <td>3. Orquestación</td>
+                        <td>MessageProcessor.js</td>
+                        <td>Hub central que coordina todos los servicios</td>
+                    </tr>
+                    <tr>
+                        <td>4. Servicios</td>
+                        <td>ExperienceService, AchievementService, etc.</td>
+                        <td>Lógica de negocio (XP, logros, estadísticas)</td>
+                    </tr>
+                    <tr>
+                        <td>5. Managers</td>
+                        <td>UIManager, XPDisplayManager, etc.</td>
+                        <td>Gestión de interfaz y animaciones</td>
+                    </tr>
+                    <tr>
+                        <td>6. Persistencia</td>
+                        <td>GistStorageService</td>
+                        <td>Almacenamiento en GitHub Gist + localStorage</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============== COMPONENTES ============== -->
+        <section id="componentes">
+            <h2>Componentes del Sistema</h2>
+
+            <h3>Servicios (Business Logic)</h3>
+            <div class="component-grid">
+                <div class="card service">
+                    <div class="component-header">
+                        <div class="component-icon">T</div>
+                        <div>
+                            <div class="component-title">TwitchService</div>
+                            <div class="component-file">js/services/TwitchService.js</div>
+                        </div>
+                    </div>
+                    <span class="tag service">Service</span>
+                    <ul>
+                        <li>Conexión WebSocket a Twitch IRC via <strong>tmi.js</strong></li>
+                        <li>Manejo de eventos: connected, message, disconnected, error</li>
+                        <li>Reconexión automática con <strong>exponential backoff</strong></li>
+                    </ul>
+                </div>
+
+                <div class="card service">
+                    <div class="component-header">
+                        <div class="component-icon">X</div>
+                        <div>
+                            <div class="component-title">ExperienceService</div>
+                            <div class="component-file">js/services/ExperienceService.js</div>
+                        </div>
+                    </div>
+                    <span class="tag service">Service</span>
+                    <ul>
+                        <li><strong>795 líneas</strong> - El servicio más grande del sistema</li>
+                        <li>Sistema de XP con múltiples fuentes</li>
+                        <li>7 rangos: CIVILIAN → CORPO</li>
+                        <li>Sistema de rachas con multiplicadores</li>
+                    </ul>
+                </div>
+
+                <div class="card service">
+                    <div class="component-header">
+                        <div class="component-icon">A</div>
+                        <div>
+                            <div class="component-title">AchievementService</div>
+                            <div class="component-file">js/services/AchievementService.js</div>
+                        </div>
+                    </div>
+                    <span class="tag service">Service</span>
+                    <ul>
+                        <li>Motor de reglas dinámico desde JSON</li>
+                        <li><strong>120 logros</strong> en 9 categorías</li>
+                        <li>5 niveles de rareza</li>
+                    </ul>
+                </div>
+
+                <div class="card service">
+                    <div class="component-header">
+                        <div class="component-icon">G</div>
+                        <div>
+                            <div class="component-title">GistStorageService</div>
+                            <div class="component-file">js/services/GistStorageService.js</div>
+                        </div>
+                    </div>
+                    <span class="tag service">Service</span>
+                    <ul>
+                        <li>Persistencia en <strong>GitHub Gist</strong></li>
+                        <li>Cache local con TTL de 5 minutos</li>
+                        <li>Fallback a localStorage</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Managers (UI/Presentación)</h3>
+            <div class="component-grid">
+                <div class="card manager">
+                    <div class="component-header">
+                        <div class="component-icon">U</div>
+                        <div>
+                            <div class="component-title">UIManager</div>
+                            <div class="component-file">js/managers/UIManager.js</div>
+                        </div>
+                    </div>
+                    <span class="tag manager">Manager</span>
+                    <ul>
+                        <li>Gestiona todos los elementos DOM del widget</li>
+                        <li>Coordina animaciones de entrada/salida</li>
+                        <li>Aplica estilos según rol de usuario</li>
+                    </ul>
+                </div>
+
+                <div class="card manager">
+                    <div class="component-header">
+                        <div class="component-icon">D</div>
+                        <div>
+                            <div class="component-title">XPDisplayManager</div>
+                            <div class="component-file">js/managers/XPDisplayManager.js</div>
+                        </div>
+                    </div>
+                    <span class="tag manager">Manager</span>
+                    <ul>
+                        <li>Actualiza barra de progreso de XP</li>
+                        <li>Indicadores flotantes de XP ganado</li>
+                        <li>Animación especial de <strong>Level Up</strong></li>
+                    </ul>
+                </div>
+
+                <div class="card manager">
+                    <div class="component-header">
+                        <div class="component-icon">I</div>
+                        <div>
+                            <div class="component-title">IdleDisplayManager</div>
+                            <div class="component-file">js/managers/IdleDisplayManager.js</div>
+                        </div>
+                    </div>
+                    <span class="tag manager">Manager</span>
+                    <ul>
+                        <li>Se activa después de <strong>30 segundos sin mensajes</strong></li>
+                        <li>Rota entre 4 pantallas de estadísticas</li>
+                    </ul>
+                </div>
+
+                <div class="card manager">
+                    <div class="component-header">
+                        <div class="component-icon">M</div>
+                        <div>
+                            <div class="component-title">MessageProcessor</div>
+                            <div class="component-file">js/managers/MessageProcessor.js</div>
+                        </div>
+                    </div>
+                    <span class="tag manager">Orchestrator</span>
+                    <ul>
+                        <li><strong>Orquestador central</strong> - Coordina todo</li>
+                        <li>Procesa: XP → Logros → UI → Audio</li>
+                        <li>Maneja comandos (!logros, !nivel)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== SISTEMA DE XP ============== -->
+        <section id="xp">
+            <h2>Sistema de Experiencia (XP)</h2>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Fuentes de XP</h3>
+                <table class="stats-table">
+                    <tr>
+                        <th>Fuente</th>
+                        <th>XP Base</th>
+                        <th>Descripción</th>
+                    </tr>
+                    <tr>
+                        <td>Mensaje Base</td>
+                        <td>10 XP</td>
+                        <td>Por cada mensaje enviado</td>
+                    </tr>
+                    <tr>
+                        <td>Emotes</td>
+                        <td>2 XP c/u</td>
+                        <td>Por cada emote (máx 10)</td>
+                    </tr>
+                    <tr>
+                        <td>Mensaje Largo</td>
+                        <td>5 XP</td>
+                        <td>Si mensaje > 50 caracteres</td>
+                    </tr>
+                    <tr>
+                        <td>Primer Mensaje del Día</td>
+                        <td>25 XP</td>
+                        <td>Bonus diario</td>
+                    </tr>
+                    <tr>
+                        <td>Mención</td>
+                        <td>3 XP</td>
+                        <td>Si menciona a otro usuario</td>
+                    </tr>
+                    <tr>
+                        <td>Primer Mensaje del Stream</td>
+                        <td>15 XP</td>
+                        <td>Bonus por iniciar conversación</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Multiplicadores de Racha</h3>
+                <table class="stats-table">
+                    <tr>
+                        <th>Días Consecutivos</th>
+                        <th>Multiplicador XP</th>
+                    </tr>
+                    <tr>
+                        <td>2-6 días</td>
+                        <td>×1.5</td>
+                    </tr>
+                    <tr>
+                        <td>7-13 días</td>
+                        <td>×2.0</td>
+                    </tr>
+                    <tr>
+                        <td>14+ días</td>
+                        <td>×3.0</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Progresión de Rangos</h3>
+                <table class="stats-table">
+                    <tr>
+                        <th>Nivel</th>
+                        <th>Título</th>
+                        <th>XP Requerido</th>
+                    </tr>
+                    <tr>
+                        <td>1-4</td>
+                        <td>CIVILIAN</td>
+                        <td>0+</td>
+                    </tr>
+                    <tr>
+                        <td>5-9</td>
+                        <td>STREET RAT</td>
+                        <td>800+</td>
+                    </tr>
+                    <tr>
+                        <td>10-14</td>
+                        <td>MERCENARY</td>
+                        <td>2,700+</td>
+                    </tr>
+                    <tr>
+                        <td>15-19</td>
+                        <td>SOLO</td>
+                        <td>5,268+</td>
+                    </tr>
+                    <tr>
+                        <td>20-29</td>
+                        <td>NETRUNNER</td>
+                        <td>8,297+</td>
+                    </tr>
+                    <tr>
+                        <td>30-39</td>
+                        <td>FIXER</td>
+                        <td>16,062+</td>
+                    </tr>
+                    <tr>
+                        <td>40+</td>
+                        <td>CORPO</td>
+                        <td>25,000+</td>
+                    </tr>
+                </table>
+                <p style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Fórmula:</strong> XP requerido = 100 × (nivel-1)<sup>1.5</sup>
+                </p>
+            </div>
+        </section>
+
+        <!-- ============== ESTRUCTURA DE ARCHIVOS ============== -->
+        <section id="archivos">
+            <h2>Estructura de Archivos</h2>
+
+            <!-- Árbol Visual -->
+            <div class="card"
+                style="background: #0d0d15; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9rem; line-height: 1.8;">
+                <h3 style="margin-top: 0; font-family: 'Segoe UI', sans-serif;">Árbol de Directorios</h3>
+                <div style="color: #888; margin-top: 15px;">
+                    <div><span style="color: var(--cyber-cyan);">📁</span> <strong
+                            style="color: var(--cyber-cyan);">chat_twitch-main/</strong></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: #e34c26;">📄</span> <span style="color: #fff;">index.html</span> <span
+                            style="color: #555;">← Widget principal</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: #e34c26;">📄</span> <span style="color: #fff;">test-panel.html</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: #264de4;">📁</span> <span style="color: #264de4;">css/</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: #264de4;">📄</span> bundle.css</div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: #264de4;">📄</span> achievements.css</div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> <span
+                            style="color: #264de4;">📄</span> idle-stats.css</div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: #f7df1e;">📁</span> <span style="color: #f7df1e;">js/</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: #f7df1e;">📄</span> app.js</div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: #f7df1e;">📄</span> config.js</div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: var(--cyber-red);">📁</span> <span
+                            style="color: var(--cyber-red);">services/</span> <span style="color: #555;">(8
+                            archivos)</span></div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> TwitchService.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> ExperienceService.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> AchievementService.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 5
+                            más...</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
+                            style="color: var(--cyber-green);">📁</span> <span
+                            style="color: var(--cyber-green);">managers/</span> <span style="color: #555;">(5
+                            archivos)</span></div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> MessageProcessor.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> UIManager.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 3
+                            más...</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> <span
+                            style="color: var(--cyber-yellow);">📁</span> <span
+                            style="color: var(--cyber-yellow);">utils/</span></div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> UIUtils.js</div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: var(--cyber-magenta);">📁</span> <span
+                            style="color: var(--cyber-magenta);">data/</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> AchievementsData.js <span
+                            style="color: #555;">← 120 logros</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> � <span
+                            style="color: #aaa;">img/</span> <span style="color: #555;">← Iconos e imágenes</span></div>
+                    <div style="margin-left: 20px;"><span style="color: #666;">└──</span> � <span
+                            style="color: #aaa;">sounds/</span> <span style="color: #555;">← Efectos de sonido</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>CYBERPUNK CHAT WIDGET v1.0 | Documentación Técnica</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+                <a href="https://pc-solucion.es" target="_blank"
+                    style="color: var(--cyber-cyan); text-decoration: none;">pc-solucion.es</a> | Night City • 2077
+            </p>
+        </footer>
+    </div>
+
+    <!-- Animation Script -->
+    <script>
+        // Status messages in Spanish
+        const statusMessages = {
+            0: 'Iniciando animación...',
+            1: '📝 Recibiendo mensaje del usuario...',
+            2: '📡 Conectando via WebSocket IRC...',
+            3: '🧠 Procesando en paralelo...',
+            3.5: '⭐ Calculando XP... 🏆 Verificando logros...',
+            4: '🖥️ Actualizando interfaz...',
+            5: '✅ ¡Mensaje mostrado!',
+            6: '🎉 ¡Proceso completado!'
+        };
+
+        let animationRunning = false;
+        let animationObserver = null;
+
+        // Helper function for delays
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Update status text
+        function updateStatus(step) {
+            const statusEl = document.getElementById('anim-status');
+            if (statusEl) {
+                statusEl.textContent = statusMessages[step] || '';
+            }
+        }
+
+        // Animate a step
+        function animateStep(stepNum) {
+            return new Promise(resolve => {
+                const step = document.querySelector(`[data-step="${stepNum}"]`);
+
+                // Mark previous steps as done
+                document.querySelectorAll('.anim-step.active').forEach(s => {
+                    s.classList.remove('active');
+                    s.classList.add('done');
+                });
+
+                if (step) {
+                    step.classList.add('active');
+                }
+
+                setTimeout(resolve, 400);
+            });
+        }
+
+        // Animate an arrow
+        function animateArrow(arrowNum) {
+            return new Promise(resolve => {
+                const arrow = document.querySelector(`[data-arrow="${arrowNum}"]`);
+                if (arrow) {
+                    arrow.classList.add('active');
+                }
+                setTimeout(resolve, 250);
+            });
+        }
+
+        // Animate parallel branches
+        async function animateParallelBranches() {
+            const container = document.getElementById('parallel-branches');
+            if (!container) return;
+
+            container.classList.add('active');
+
+            const branches = container.querySelectorAll('.branch-box');
+
+            for (let i = 0; i < branches.length; i++) {
+                await delay(150);
+                branches[i].classList.add('active');
+
+                const items = branches[i].querySelectorAll('.branch-item');
+                for (let j = 0; j < items.length; j++) {
+                    await delay(100);
+                    items[j].style.opacity = '1';
+                    items[j].style.transform = 'translateX(0)';
+                }
+            }
+        }
+
+        // Reset all visuals
+        function resetVisuals() {
+            document.querySelectorAll('.anim-step').forEach(s => {
+                s.classList.remove('active', 'done');
+            });
+
+            document.querySelectorAll('.anim-arrow').forEach(a => {
+                a.classList.remove('active');
+            });
+
+            const container = document.getElementById('parallel-branches');
+            if (container) {
+                container.classList.remove('active');
+                container.querySelectorAll('.branch-box').forEach(b => {
+                    b.classList.remove('active');
+                });
+                container.querySelectorAll('.branch-item').forEach(item => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-8px)';
+                });
+            }
+
+            const msgPreview = document.getElementById('msg-preview');
+            if (msgPreview) msgPreview.classList.remove('visible');
+
+            const replayHint = document.getElementById('replay-hint');
+            if (replayHint) replayHint.classList.remove('visible');
+
+            updateStatus(0);
+        }
+
+        // Main animation function
+        async function runAnimation() {
+            if (animationRunning) return;
+            animationRunning = true;
+
+            resetVisuals();
+
+            await delay(500);
+
+            // Show message preview
+            const msgPreview = document.getElementById('msg-preview');
+            if (msgPreview) msgPreview.classList.add('visible');
+
+            // Step 1
+            await animateStep(1);
+            updateStatus(1);
+            await delay(1200);
+
+            // Step 2
+            await animateArrow(1);
+            await animateStep(2);
+            updateStatus(2);
+            await delay(1200);
+
+            // Step 3
+            await animateArrow(2);
+            await animateStep(3);
+            updateStatus(3);
+            await delay(800);
+
+            // Parallel branches
+            await animateArrow(3);
+            await animateParallelBranches();
+            updateStatus(3.5);
+            await delay(1500);
+
+            // Step 4
+            await animateArrow(4);
+            await animateStep(4);
+            updateStatus(4);
+            await delay(1200);
+
+            // Step 5
+            await animateArrow(5);
+            await animateStep(5);
+            updateStatus(5);
+            await delay(800);
+
+            // Complete
+            updateStatus(6);
+
+            // Show replay hint
+            const replayHint = document.getElementById('replay-hint');
+            if (replayHint) replayHint.classList.add('visible');
+
+            animationRunning = false;
+        }
+
+        // Restart animation (called from replay link)
+        function restartAnimation() {
+            runAnimation();
+        }
+
+        // Intersection Observer to auto-start animation when visible
+        function setupAutoAnimation() {
+            const animSection = document.getElementById('animation-section');
+            if (!animSection) return;
+
+            animationObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !animationRunning) {
+                        // Disconnect after first trigger to avoid re-running
+                        animationObserver.disconnect();
+                        runAnimation();
+                    }
+                });
+            }, {
+                threshold: 0.3 // Trigger when 30% visible
+            });
+
+            animationObserver.observe(animSection);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', setupAutoAnimation);
+    </script>
+</body>
+
+</html>
