@@ -26,19 +26,7 @@ class MessageProcessor {
     init() {
         console.log('⚙️ Inicializando procesador de mensajes...');
 
-        // 1. Data Service
-        try {
-            this.services.data = new DataService(
-                this.config,
-                typeof teams !== 'undefined' ? teams : {},
-                typeof userNumbers !== 'undefined' ? userNumbers : {},
-                typeof userTeams !== 'undefined' ? userTeams : {}
-            );
-        } catch (e) {
-            console.error('❌ Error initializing DataService:', e);
-        }
-
-        // 2. Audio Service
+        // 1. Audio Service
         try {
             this.services.audio = new AudioService(
                 this.config.AUDIO_URL,
@@ -240,18 +228,18 @@ class MessageProcessor {
                 return;
             }
 
-            // Datos auxiliares
-            let userNumber = 0;
-            let team = null;
-            if (this.services.data) {
-                userNumber = this.services.data.getUserNumber(username);
-                team = this.services.data.getUserTeam(username);
+            // Calcular emoteCount una sola vez para reutilizar
+            let emoteCount = 0;
+            if (emotes) {
+                Object.values(emotes).forEach(positions => {
+                    emoteCount += positions.length;
+                });
             }
 
             // Proceso XP (Aislado)
             if (this.services.xp) {
                 try {
-                    this._processXP(username, message, emotes);
+                    this._processXP(username, message, emoteCount);
                 } catch (e) {
                     console.error('⚠️ XP Processing error:', e);
                 }
@@ -262,9 +250,7 @@ class MessageProcessor {
                 this.managers.ui.displayMessage(
                     username,
                     message,
-                    emotes,
-                    userNumber,
-                    team
+                    emotes
                 );
             }
 
@@ -275,12 +261,6 @@ class MessageProcessor {
 
             // Trackear estadísticas de sesión
             if (this.services.sessionStats) {
-                let emoteCount = 0;
-                if (emotes) {
-                    Object.values(emotes).forEach(positions => {
-                        emoteCount += positions.length;
-                    });
-                }
                 this.services.sessionStats.trackMessage(username, message, { emoteCount });
             }
 
@@ -297,20 +277,15 @@ class MessageProcessor {
     /**
      * Lógica interna de XP
      * @private
+     * @param {string} username - Nombre del usuario
+     * @param {string} message - Mensaje de texto
+     * @param {number} emoteCount - Cantidad de emotes (ya calculado en process)
      */
-    _processXP(username, message, emotes) {
-        let emoteCount = 0;
-        if (emotes) {
-            Object.values(emotes).forEach(positions => {
-                emoteCount += positions.length;
-            });
-        }
-
+    _processXP(username, message, emoteCount) {
         const xpContext = {
             hasEmotes: emoteCount > 0,
             emoteCount: emoteCount,
             isStreamLive: true,
-            isStreamStart: false,
             isStreamStart: false,
             hasMention: message && message.includes('@'),
             message: message // Pasamos el mensaje crudo para análisis de palabras (ej. "bro")

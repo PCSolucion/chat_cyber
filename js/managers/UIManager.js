@@ -52,10 +52,6 @@ class UIManager {
             container: document.querySelector('.container'),
             userBadge: document.getElementById('user-badge'),
             adminIcon: document.getElementById('admin-icon'),
-            // rankIcon: document.getElementById('rank-icon'), // Removed
-            // rankText: document.getElementById('rank-text'), // Removed
-            customUserImage: document.getElementById('custom-user-image'),
-            userIdentityStack: document.querySelector('.user-identity-stack'),
             root: document.documentElement
         };
     }
@@ -68,10 +64,8 @@ class UIManager {
      * @param {string} username - Nombre del usuario
      * @param {string} message - Mensaje a mostrar
      * @param {Object} emotes - Emotes de Twitch
-     * @param {number} userNumber - Número de piloto
-     * @param {Object} team - Equipo de F1
      */
-    displayMessage(username, message, emotes, userNumber, team) {
+    displayMessage(username, message, emotes) {
         try {
             // Verificar si el widget está visible
             const isVisible = !this.dom.container.classList.contains('hidden');
@@ -95,10 +89,10 @@ class UIManager {
 
             if (!shouldShowIncoming) {
                 // TRANSICIÓN RÁPIDA (conversación continua)
-                this.fastTransition(username, message, emotes, userNumber, team);
+                this.fastTransition(username, message, emotes);
             } else {
                 // ANIMACIÓN COMPLETA DE ENTRADA (> 30s de silencio)
-                this.fullIncomingSequence(username, message, emotes, userNumber, team);
+                this.fullIncomingSequence(username, message, emotes);
             }
 
         } catch (error) {
@@ -110,12 +104,12 @@ class UIManager {
      * Transición rápida entre mensajes (sin animación de "incoming")
      * @private
      */
-    fastTransition(username, message, emotes, userNumber, team) {
+    fastTransition(username, message, emotes) {
         this.dom.username.style.opacity = '0';
         this.dom.message.style.opacity = '0';
 
         this.fastRevealTimeout = setTimeout(() => {
-            this.revealMessage(username, message, emotes, userNumber, team);
+            this.revealMessage(username, message, emotes);
             this.dom.username.style.opacity = '1';
             this.dom.message.style.opacity = '1';
         }, 100);
@@ -125,7 +119,7 @@ class UIManager {
      * Secuencia completa de animación de entrada
      * @private
      */
-    fullIncomingSequence(username, message, emotes, userNumber, team) {
+    fullIncomingSequence(username, message, emotes) {
         // Reset clases
         this.dom.container.className = 'container';
 
@@ -139,22 +133,16 @@ class UIManager {
         // Limpiar otros elementos
         this.dom.userBadge.textContent = '';
         this.dom.userBadge.className = 'user-badge';
-        // this.dom.rankIcon.className = ''; // Removed
-        // this.dom.rankText.textContent = "ESTABLISHING CONNECTION..."; // Removed
-
-        if (this.dom.customUserImage) {
-            this.dom.customUserImage.style.display = 'none';
-        }
 
         // Revelar después de delay
         this.decryptTimeout = setTimeout(() => {
             this.dom.username.classList.remove('decrypting');
             this.dom.message.classList.remove('decrypting');
-            this.revealMessage(username, message, emotes, userNumber, team);
+            this.revealMessage(username, message, emotes);
         }, 800);
     }
 
-    revealMessage(username, message, emotes, userNumber, team) {
+    revealMessage(username, message, emotes) {
         try {
             // Procesar nombre de usuario
             const displayUsername = UIUtils.cleanUsername(username);
@@ -225,11 +213,6 @@ class UIManager {
                 }
             }
 
-            // Gestionar imagen personalizada
-            this.updateCustomUserImage(displayUsername, userRole);
-
-            // updateRankDisplay removed
-
             // Procesar y mostrar mensaje
             this.displayMessageContent(message, emotes, userRole);
 
@@ -276,29 +259,7 @@ class UIManager {
         }
     }
 
-    /**
-     * Actualiza la imagen personalizada del usuario
-     * @private
-     */
-    updateCustomUserImage(username, userRole) {
-        if (!this.dom.customUserImage) return;
 
-        // Siempre ocultar imagen
-        this.dom.customUserImage.style.display = 'none';
-        this.dom.customUserImage.innerHTML = '';
-
-        if (this.dom.userIdentityStack) {
-            this.dom.userIdentityStack.classList.remove('horizontal-stack');
-        }
-    }
-
-    /**
-     * Actualiza la visualización del ranking (DEPRECATED/REMOVED)
-     * @private
-     */
-    updateRankDisplay(userRole) {
-        // Feature removed by user request
-    }
 
     /**
      * Procesa y muestra el contenido del mensaje

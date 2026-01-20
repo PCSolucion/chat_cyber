@@ -99,7 +99,7 @@
 /* Achievement Name - Marquee Bounce */
 .achievement-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     font-weight: 800;
     color: #fff;
     text-transform: uppercase;
@@ -108,9 +108,8 @@
     white-space: nowrap;
     overflow: hidden;
     max-width: 260px;
-    /* Limit width */
     display: block;
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .achievement-name span {

@@ -352,7 +352,7 @@
     <nav id="sidebar">
         <div class="sidebar-header">
             <h1>Twitch Overlay Docs</h1>
-            <p>Versión 2.0 (Modular)</p>
+            <p>Versión 3.0 (Modular + Logros)</p>
         </div>
         <ul class="toc-list">
             <li class="toc-item">
@@ -365,7 +365,6 @@
                 <a href="#config" class="toc-link">2. Configuración</a>
                 <ul class="toc-sublist">
                     <li><a href="#config-params" class="toc-sublink">Parámetros (config.js)</a></li>
-                    <li><a href="#config-static" class="toc-sublink">Datos Estáticos (data.js)</a></li>
                 </ul>
             </li>
             <li class="toc-item">
@@ -508,18 +507,39 @@
                         <td>(URL Gist)</td>
                         <td>Endpoint RAW para descargar la lista estática de Ranking (Top 250).</td>
                     </tr>
+                    <tr>
+                        <td><code>IDLE_TIMEOUT_MS</code></td>
+                        <td>Integer</td>
+                        <td>30000</td>
+                        <td>Tiempo (ms) sin mensajes antes de activar el modo Idle con estadísticas rotativas.</td>
+                    </tr>
+                    <tr>
+                        <td><code>IDLE_ROTATION_MS</code></td>
+                        <td>Integer</td>
+                        <td>8000</td>
+                        <td>Intervalo (ms) de rotación entre pantallas de estadísticas en modo Idle.</td>
+                    </tr>
+                    <tr>
+                        <td><code>THIRD_PARTY_EMOTES_ENABLED</code></td>
+                        <td>Boolean</td>
+                        <td>true</td>
+                        <td>Habilita la integración con emotes de 7TV, BTTV y FFZ.</td>
+                    </tr>
+                    <tr>
+                        <td><code>UI.RANK_ICONS</code></td>
+                        <td>Object</td>
+                        <td>{...}</td>
+                        <td>Mapeo de rangos (CIVILIAN, STREET RAT, etc.) a archivos de icono PNG.</td>
+                    </tr>
+                    <tr>
+                        <td><code>UI.SPECIAL_ICONS</code></td>
+                        <td>Object</td>
+                        <td>{...}</td>
+                        <td>Mapeo de roles especiales (ADMIN, SYSTEM) a archivos de icono PNG.</td>
+                    </tr>
                 </tbody>
             </table>
 
-            <h3 id="config-static">Datos Estáticos (js/data.js)</h3>
-            <p>Archivo auxiliar que exporta constantes de negocio no configurables. Contiene:</p>
-            <ul>
-                <li><code>teams</code>: Definiciones hexadecimales de color y URLs de logos para equipos F1.</li>
-                <li><code>userNumbers</code>: Diccionario <code>{ 'username': number }</code> para asignar dorsales
-                    fijos.</li>
-                <li><code>userTeams</code>: Diccionario <code>{ 'username': 'teamKey' }</code> para asignar equipos.
-                </li>
-            </ul>
         </section>
 
         <!-- 3. ARQUITECTURA -->
@@ -538,9 +558,7 @@
                             <li class="tree-item"><span class="icon-file">📄</span> app.js <span
                                     class="file-desc">(Bootstrapper & Coordinador)</span></li>
                             <li class="tree-item"><span class="icon-file">📄</span> config.js <span
-                                    class="file-desc">(Variables de Entorno)</span></li>
-                            <li class="tree-item"><span class="icon-file">📄</span> data.js <span
-                                    class="file-desc">(Datos Estáticos)</span></li>
+                                    class="file-desc">(Variables de Entorno + CONFIG.UI)</span></li>
 
                             <li class="tree-item">
                                 <span class="icon-folder">services/</span> <span class="file-desc">(Lógica de Negocio
@@ -556,6 +574,13 @@
                                             class="file-desc">(API GitHub)</span></li>
                                     <li class="tree-item"><span class="icon-file">📄</span> AudioService.js <span
                                             class="file-desc">(Gestión de Sonido)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> AchievementService.js <span
+                                            class="file-desc">(Sistema de Logros/Achievements)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> SessionStatsService.js <span
+                                            class="file-desc">(Estadísticas de Sesión)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> ThirdPartyEmoteService.js
+                                        <span class="file-desc">(7TV/BTTV/FFZ)</span>
+                                    </li>
                                 </ul>
                             </li>
 
@@ -570,7 +595,9 @@
                                     <li class="tree-item"><span class="icon-file">📄</span> MessageProcessor.js <span
                                             class="file-desc">(Pipeline)</span></li>
                                     <li class="tree-item"><span class="icon-file">📄</span> IdleDisplayManager.js <span
-                                            class="file-desc">(Screensaver)</span></li>
+                                            class="file-desc">(Modo Idle/Estadísticas)</span></li>
+                                    <li class="tree-item"><span class="icon-file">📄</span> NotificationManager.js <span
+                                            class="file-desc">(Cola de Notificaciones)</span></li>
                                 </ul>
                             </li>
 
@@ -581,6 +608,26 @@
                                             class="file-desc">(Helpers Estáticos)</span></li>
                                 </ul>
                             </li>
+                        </ul>
+                    </li>
+                    <li class="tree-item">
+                        <span class="icon-folder">data/</span>
+                        <ul class="tree-sublist">
+                            <li class="tree-item"><span class="icon-file">📄</span> AchievementsData.js <span
+                                    class="file-desc">(122 logros definidos)</span></li>
+                            <li class="tree-item"><span class="icon-file">📄</span> achievements.json <span
+                                    class="file-desc">(Cache de logros)</span></li>
+                        </ul>
+                    </li>
+                    <li class="tree-item">
+                        <span class="icon-folder">css/</span>
+                        <ul class="tree-sublist">
+                            <li class="tree-item"><span class="icon-file">📄</span> bundle.css <span
+                                    class="file-desc">(Estilos consolidados del widget)</span></li>
+                            <li class="tree-item"><span class="icon-file">📄</span> achievements.css <span
+                                    class="file-desc">(Estilos notificaciones logros)</span></li>
+                            <li class="tree-item"><span class="icon-file">📄</span> idle-stats.css <span
+                                    class="file-desc">(Estilos modo Idle/Top 10)</span></li>
                         </ul>
                     </li>
                 </ul>
@@ -595,6 +642,14 @@
                     (<code>usersXP</code> Map). Implementa la lógica de cálculo y decide cuándo guardar.</li>
                 <li><strong>GistStorageService:</strong> Implementa el patrón "Repository". Maneja la lectura/escritura
                     asíncrona, caché local (LocalStorage) y control de errores HTTP.</li>
+                <li><strong>AchievementService:</strong> Gestiona 122 logros organizados por categorías (streaks,
+                    niveles, XP, ranking, stream). Evalúa reglas basadas en eventos para desbloquear achievements.</li>
+                <li><strong>ThirdPartyEmoteService:</strong> Integra emotes de 7TV, BTTV y FFZ. Descarga y cachea los
+                    emotes activos del canal.</li>
+                <li><strong>SessionStatsService:</strong> Recopila estadísticas de la sesión actual: usuarios activos,
+                    mensajes, XP ganado, logros desbloqueados.</li>
+                <li><strong>NotificationManager:</strong> Sistema de cola para mostrar notificaciones de logros
+                    secuencialmente con delays configurables.</li>
             </ul>
         </section>
 
@@ -765,7 +820,7 @@
             <h2>7. Sistema Visual</h2>
 
             <h3 id="vis-tokens">Design Tokens (CSS Variables)</h3>
-            <p>Definidas en <code>css/base/variables.css</code>:</p>
+            <p>Definidas en <code>css/bundle.css</code> (estilos consolidados):</p>
             <ul>
                 <li><strong>Colores Principales:</strong>
                     <code>--cyber-red (#ff003c)</code>,
@@ -779,6 +834,8 @@
                     <code>--transition-speed: 0.35s</code>.
                 </li>
             </ul>
+            <p>Estilos adicionales en <code>css/achievements.css</code> y <code>css/idle-stats.css</code> para los
+                nuevos módulos.</p>
 
             <h3 id="vis-managers">Gestión del DOM (UIManager)</h3>
             <p>El <code>UIManager</code> emplea una técnica de <strong>reciclaje de nodos</strong> parcial. No crea y

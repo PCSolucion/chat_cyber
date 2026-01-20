@@ -659,33 +659,15 @@ body {
     /* Ensure content doesn't break layout */
 }
 
-/* Container for Image + Badge stacking */
 .user-identity-stack {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-left: 10px;
-    /* Cambiado de auto a 10px para pegar al nombre */
     margin-right: auto;
-    /* Opcional: empujar el resto a la derecha */
     gap: 2px;
     flex: 0 0 auto;
-    /* Prevent shrinking - ALWAYS VISIBLE */
     min-width: max-content;
-    /* Ensure it takes necessary width */
-}
-
-/* Modifier: Horizontal layout for Admin */
-.user-identity-stack.horizontal-stack {
-    flex-direction: row-reverse;
-    align-items: center;
-    gap: 12px;
-    margin-left: 15px;
-}
-
-/* Force custom image to center in stack */
-.custom-user-img {
-    align-self: center;
 }
 
 /* Hexagon icon - hidden */
@@ -1604,7 +1586,7 @@ body {
     background: linear-gradient(135deg, var(--xp-primary-dark), var(--xp-primary));
     padding: 3px 10px;
     clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
-    min-width: 55px;
+    min-width: 58px;
     transform: translateY(-8px);
 }
 
@@ -1618,7 +1600,7 @@ body {
 
 .xp-level-value {
     font-family: var(--font-orbitron);
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--xp-text);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
