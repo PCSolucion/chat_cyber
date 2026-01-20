@@ -290,45 +290,62 @@ class IdleDisplayManager {
     }
 
     /**
-     * Renderiza pantalla de resumen
+     * Renderiza pantalla de resumen con estilo terminal
      * @private
      */
     _renderSummaryScreen(screenData) {
         const { data } = screenData;
 
+        // Obtener hora de inicio formateada
+        const startTime = new Date(this.statsService.sessionStart);
+        const startTimeStr = startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen idle-summary">
-                <div class="idle-title">
-                    <span class="idle-icon">◆</span>
-                    <span class="idle-title-text">${screenData.title}</span>
+            <div class="idle-terminal">
+                <div class="idle-terminal-header">
+                    <span class="idle-terminal-prompt">></span>
+                    <span class="idle-terminal-title">SESION_ACTIVA</span>
+                    <span class="idle-terminal-separator"></span>
                 </div>
-                <div class="idle-stats-grid">
-                    <div class="idle-stat">
-                        <span class="idle-stat-value">${data.duration}</span>
-                        <span class="idle-stat-label">DURACIÓN</span>
+                <div class="idle-terminal-body">
+                    <div class="idle-data-line">
+                        <span class="idle-data-label">TIEMPO</span>
+                        <span class="idle-data-dots"></span>
+                        <span class="idle-data-value value-cyan">${data.duration}</span>
+                        <span class="idle-data-indicator"></span>
                     </div>
-                    <div class="idle-stat">
-                        <span class="idle-stat-value">${data.messages}</span>
-                        <span class="idle-stat-label">MENSAJES</span>
+                    <div class="idle-data-line">
+                        <span class="idle-data-label">MENSAJES</span>
+                        <span class="idle-data-dots"></span>
+                        <span class="idle-data-value">${data.messages}</span>
                     </div>
-                    <div class="idle-stat">
-                        <span class="idle-stat-value">${data.users}</span>
-                        <span class="idle-stat-label">USUARIOS</span>
+                    <div class="idle-data-line">
+                        <span class="idle-data-label">USUARIOS</span>
+                        <span class="idle-data-dots"></span>
+                        <span class="idle-data-value">${data.users}</span>
                     </div>
-                    <div class="idle-stat">
-                        <span class="idle-stat-value">${data.avgMpm}</span>
-                        <span class="idle-stat-label">MSG/MIN</span>
+                    <div class="idle-data-line">
+                        <span class="idle-data-label">MSG/MIN</span>
+                        <span class="idle-data-dots"></span>
+                        <span class="idle-data-value value-gold">${data.avgMpm}</span>
+                    </div>
+                    <div class="idle-data-line">
+                        <span class="idle-data-label">INICIO</span>
+                        <span class="idle-data-dots"></span>
+                        <span class="idle-data-value">${startTimeStr}h</span>
                     </div>
                 </div>
-                <div class="idle-footer">
-                    <span class="idle-hint">Esperando mensajes...</span>
+                <div class="idle-terminal-footer">
+                    <span class="idle-status-dot"></span>
+                    <span class="idle-terminal-status">ESPERANDO DATOS</span>
+                    <span class="idle-terminal-cursor"></span>
                 </div>
             </div>
         `;
     }
 
     /**
-     * Renderiza pantalla de leaderboard
+     * Renderiza pantalla de leaderboard con estilo terminal
      * @private
      */
     _renderLeaderboardScreen(screenData) {
@@ -336,28 +353,29 @@ class IdleDisplayManager {
 
         let usersHtml = '';
         users.forEach((user, index) => {
-            const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
+            const rankClass = index === 0 ? 'rank-1' : index < 3 ? 'rank-top3' : '';
             usersHtml += `
-                <div class="idle-leaderboard-row ${rankClass}">
-                    <span class="idle-rank">#${index + 1}</span>
-                    <span class="idle-username">${user.username}</span>
-                    <span class="idle-user-level">LVL ${user.level}</span>
-                    <span class="idle-user-msgs">${user.messages} msgs</span>
+                <div class="idle-rank-line ${rankClass}">
+                    <span class="idle-rank-num">#${String(index + 1).padStart(2, '0')}</span>
+                    <span class="idle-rank-name">${user.username}</span>
+                    <span class="idle-rank-level">LVL ${user.level}</span>
+                    <span class="idle-rank-msgs">${user.messages}msg</span>
                 </div>
             `;
         });
 
         if (users.length === 0) {
-            usersHtml = '<div class="idle-empty">Sin actividad aún</div>';
+            usersHtml = '<div class="idle-empty-state">SIN ACTIVIDAD</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen idle-leaderboard">
-                <div class="idle-title">
-                    <span class="idle-icon">★</span>
-                    <span class="idle-title-text">${screenData.title}</span>
+            <div class="idle-terminal">
+                <div class="idle-terminal-header">
+                    <span class="idle-terminal-prompt">></span>
+                    <span class="idle-terminal-title">RANKING_SESION</span>
+                    <span class="idle-terminal-separator"></span>
                 </div>
-                <div class="idle-leaderboard-list">
+                <div class="idle-terminal-body idle-leaderboard-terminal">
                     ${usersHtml}
                 </div>
             </div>
@@ -365,7 +383,7 @@ class IdleDisplayManager {
     }
 
     /**
-     * Renderiza pantalla de logros y level-ups
+     * Renderiza pantalla de logros y level-ups con estilo terminal
      * @private
      */
     _renderAchievementsScreen(screenData) {
@@ -375,35 +393,37 @@ class IdleDisplayManager {
         if (data.recent && data.recent.length > 0) {
             data.recent.forEach(levelUp => {
                 recentHtml += `
-                    <div class="idle-recent-item">
-                        <span class="idle-recent-user">${levelUp.username}</span>
-                        <span class="idle-recent-arrow">→</span>
-                        <span class="idle-recent-level">NVL ${levelUp.newLevel}</span>
+                    <div class="idle-levelup-line">
+                        <span class="idle-levelup-prompt">></span>
+                        <span class="idle-levelup-user">${levelUp.username}</span>
+                        <span class="idle-levelup-arrow">-></span>
+                        <span class="idle-levelup-level">LVL ${levelUp.newLevel}</span>
                     </div>
                 `;
             });
         } else {
-            recentHtml = '<div class="idle-empty-small">Sin subidas de nivel</div>';
+            recentHtml = '<div class="idle-empty-state small">SIN SUBIDAS DE NIVEL</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen idle-achievements">
-                <div class="idle-title">
-                    <span class="idle-icon">🏆</span>
-                    <span class="idle-title-text">${screenData.title}</span>
+            <div class="idle-terminal">
+                <div class="idle-terminal-header">
+                    <span class="idle-terminal-prompt">></span>
+                    <span class="idle-terminal-title">PROGRESO_HOY</span>
+                    <span class="idle-terminal-separator"></span>
                 </div>
-                <div class="idle-stats-row">
-                    <div class="idle-stat-box">
-                        <span class="idle-stat-big">${data.levelUps}</span>
-                        <span class="idle-stat-label">SUBIDAS</span>
+                <div class="idle-terminal-body">
+                    <div class="idle-progress-stats">
+                        <div class="idle-progress-box">
+                            <span class="idle-progress-num">${data.levelUps}</span>
+                            <div class="idle-progress-label">NIVELES</div>
+                        </div>
+                        <div class="idle-progress-box">
+                            <span class="idle-progress-num">${data.achievements}</span>
+                            <div class="idle-progress-label">LOGROS</div>
+                        </div>
                     </div>
-                    <div class="idle-stat-box">
-                        <span class="idle-stat-big">${data.achievements}</span>
-                        <span class="idle-stat-label">LOGROS</span>
-                    </div>
-                </div>
-                <div class="idle-recent-section">
-                    <div class="idle-subtitle">ÚTIMAS SUBIDAS DE NIVEL</div>
+                    <div class="idle-recent-header">ULTIMOS LEVEL-UPS</div>
                     ${recentHtml}
                 </div>
             </div>
@@ -411,7 +431,7 @@ class IdleDisplayManager {
     }
 
     /**
-     * Renderiza pantalla de rachas
+     * Renderiza pantalla de rachas con estilo terminal
      * @private
      */
     _renderStreaksScreen(screenData) {
@@ -420,30 +440,26 @@ class IdleDisplayManager {
         let streakContent = '';
         if (data.highestStreak) {
             streakContent = `
-                <div class="idle-streak-highlight">
-                    <span class="idle-streak-days">${data.highestStreak.days}</span>
-                    <span class="idle-streak-label">DÍAS</span>
-                </div>
-                <div class="idle-streak-user">
-                    <span class="idle-streak-icon">🔥</span>
-                    <span>${data.highestStreak.username}</span>
+                <div class="idle-streak-display">
+                    <div class="idle-streak-big">${data.highestStreak.days}</div>
+                    <div class="idle-streak-unit">DIAS</div>
+                    <div class="idle-streak-owner">${data.highestStreak.username}</div>
                 </div>
             `;
         } else {
-            streakContent = '<div class="idle-empty">Sin rachas activas</div>';
+            streakContent = '<div class="idle-empty-state">SIN RACHAS ACTIVAS</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen idle-streaks">
-                <div class="idle-title">
-                    <span class="idle-icon">⚡</span>
-                    <span class="idle-title-text">${screenData.title}</span>
+            <div class="idle-terminal">
+                <div class="idle-terminal-header">
+                    <span class="idle-terminal-prompt">></span>
+                    <span class="idle-terminal-title">RACHA_MAXIMA</span>
+                    <span class="idle-terminal-separator"></span>
                 </div>
-                <div class="idle-streak-content">
+                <div class="idle-terminal-body">
                     ${streakContent}
-                </div>
-                <div class="idle-streak-footer">
-                    <span class="idle-total-streaks">${data.totalActive} rachas activas</span>
+                    <div class="idle-streak-total">${data.totalActive} RACHAS ACTIVAS</div>
                 </div>
             </div>
         `;

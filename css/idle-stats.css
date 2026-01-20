@@ -118,65 +118,408 @@
     letter-spacing: 2px;
 }
 
-/* Grid de estadísticas (Summary Screen) */
-.idle-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
+/* ========================================
+   TERMINAL DATA DISPLAY - Nuevo diseño
+   Estilo de terminal de datos cyberpunk
+   ======================================== */
 
-.idle-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 5px;
-    background: linear-gradient(180deg, rgba(0, 246, 255, 0.08) 0%, transparent 100%);
-    border: 1px solid rgba(0, 246, 255, 0.15);
-    border-radius: 3px;
-}
-
-.idle-stat-value {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-}
-
-.idle-stat-label {
+/* Contenedor principal de terminal */
+.idle-terminal {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+    border-left: 2px solid var(--cyber-cyan, #00f6ff);
+    padding: 8px 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efecto de scanline sutil */
+.idle-terminal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 246, 255, 0.03) 2px,
+            rgba(0, 246, 255, 0.03) 4px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Header del terminal */
+.idle-terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 246, 255, 0.3);
+    position: relative;
+    z-index: 2;
+}
+
+.idle-terminal-prompt {
+    color: var(--cyber-red, #ff003c);
+    font-weight: 700;
+    font-size: 1rem;
+    text-shadow: 0 0 5px rgba(255, 0, 60, 0.5);
+}
+
+.idle-terminal-title {
+    color: var(--cyber-cyan, #00f6ff);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(0, 246, 255, 0.4);
+}
+
+.idle-terminal-separator {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0, 246, 255, 0.5), transparent);
+}
+
+/* Contenido del terminal */
+.idle-terminal-body {
+    position: relative;
+    z-index: 2;
+}
+
+/* Líneas de datos */
+.idle-data-line {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.idle-data-label {
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 2px;
+    min-width: 90px;
 }
 
-/* Footer del idle */
-.idle-footer {
-    text-align: center;
-    padding-top: 5px;
-    border-top: 1px solid rgba(0, 246, 255, 0.1);
+.idle-data-dots {
+    flex: 1;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+    margin: 0 6px;
+    height: 0.6em;
 }
 
-.idle-hint {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.3);
-    font-style: italic;
-    animation: idle-pulse 2s ease-in-out infinite;
+.idle-data-value {
+    color: #fff;
+    font-weight: 600;
+    text-align: right;
+    min-width: 50px;
 }
 
-@keyframes idle-pulse {
+/* Variantes de color para valores */
+.idle-data-value.value-cyan {
+    color: var(--cyber-cyan, #00f6ff);
+    text-shadow: 0 0 5px rgba(0, 246, 255, 0.4);
+}
+
+.idle-data-value.value-gold {
+    color: var(--cyber-yellow, #ffd700);
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.4);
+}
+
+.idle-data-value.value-red {
+    color: var(--cyber-red, #ff003c);
+    text-shadow: 0 0 5px rgba(255, 0, 60, 0.4);
+}
+
+/* Indicador pulsante */
+.idle-data-indicator {
+    width: 6px;
+    height: 6px;
+    background: var(--cyber-cyan, #00f6ff);
+    margin-left: 8px;
+    animation: indicator-pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 5px var(--cyber-cyan, #00f6ff);
+}
+
+@keyframes indicator-pulse {
 
     0%,
     100% {
-        opacity: 0.3;
+        opacity: 1;
+        transform: scale(1);
     }
 
     50% {
-        opacity: 0.6;
+        opacity: 0.4;
+        transform: scale(0.7);
     }
+}
+
+/* Cursor parpadeante */
+.idle-terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 12px;
+    background: var(--cyber-cyan, #00f6ff);
+    margin-left: 4px;
+    animation: cursor-blink 1s step-end infinite;
+    vertical-align: middle;
+    box-shadow: 0 0 5px var(--cyber-cyan, #00f6ff);
+}
+
+@keyframes cursor-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Footer del terminal */
+.idle-terminal-footer {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    z-index: 2;
+}
+
+.idle-terminal-status {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+.idle-status-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--cyber-cyan, #00f6ff);
+    animation: indicator-pulse 2s ease-in-out infinite;
+}
+
+/* ========================================
+   LEADERBOARD - Estilo terminal
+   ======================================== */
+.idle-leaderboard-terminal {
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.idle-rank-line {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    border-left: 2px solid transparent;
+    padding-left: 8px;
+    margin-left: -8px;
+    transition: all 0.2s ease;
+}
+
+.idle-rank-line.rank-1 {
+    border-left-color: var(--cyber-yellow, #ffd700);
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+}
+
+.idle-rank-line.rank-1 .idle-rank-num {
+    color: var(--cyber-yellow, #ffd700);
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.idle-rank-line.rank-top3 {
+    border-left-color: var(--cyber-cyan, #00f6ff);
+    background: linear-gradient(90deg, rgba(0, 246, 255, 0.05) 0%, transparent 100%);
+}
+
+.idle-rank-num {
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 28px;
+    font-weight: 600;
+}
+
+.idle-rank-name {
+    flex: 1;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.idle-rank-level {
+    color: var(--cyber-cyan, #00f6ff);
+    font-size: 0.8rem;
+    padding: 1px 6px;
+    background: rgba(0, 246, 255, 0.1);
+    margin-left: 8px;
+}
+
+.idle-rank-msgs {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* ========================================
+   ACHIEVEMENTS - Estilo terminal
+   ======================================== */
+.idle-progress-stats {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.idle-progress-box {
+    text-align: center;
+    padding: 10px 15px;
+    background: linear-gradient(180deg, rgba(0, 246, 255, 0.08) 0%, transparent 100%);
+    border: 1px solid rgba(0, 246, 255, 0.2);
+    min-width: 70px;
+}
+
+.idle-progress-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--cyber-cyan, #00f6ff);
+    text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
+    line-height: 1;
+}
+
+.idle-progress-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+.idle-recent-header {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
+    margin: 8px 0 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.idle-levelup-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.idle-levelup-prompt {
+    color: var(--cyber-red, #ff003c);
+    font-weight: 700;
+}
+
+.idle-levelup-user {
+    color: #fff;
+}
+
+.idle-levelup-arrow {
+    color: var(--cyber-cyan, #00f6ff);
+}
+
+.idle-levelup-level {
+    color: var(--cyber-yellow, #ffd700);
+    font-weight: 600;
+}
+
+/* ========================================
+   STREAKS - Estilo terminal
+   ======================================== */
+.idle-streak-display {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.idle-streak-big {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--cyber-red, #ff003c);
+    text-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
+    line-height: 1;
+    position: relative;
+    display: inline-block;
+}
+
+.idle-streak-big::before,
+.idle-streak-big::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: var(--cyber-red, #ff003c);
+    box-shadow: 0 0 5px rgba(255, 0, 60, 0.5);
+}
+
+.idle-streak-big::before {
+    left: -30px;
+}
+
+.idle-streak-big::after {
+    right: -30px;
+}
+
+.idle-streak-unit {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 3px;
+    margin-top: 4px;
+}
+
+.idle-streak-owner {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-top: 8px;
+}
+
+.idle-streak-total {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--cyber-cyan, #00f6ff);
+    margin-top: 10px;
+}
+
+/* ========================================
+   ESTADOS VACÍOS
+   ======================================== */
+.idle-empty-state {
+    text-align: center;
+    padding: 15px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.idle-empty-state.small {
+    padding: 8px;
+    font-size: 0.7rem;
 }
 
 /* ========================================
