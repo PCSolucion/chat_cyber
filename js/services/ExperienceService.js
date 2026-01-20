@@ -445,28 +445,77 @@ class ExperienceService {
      * @param {number} xp - XP total
      * @returns {number} Nivel
      */
+    /**
+     * Calcula el nivel basado en XP total
+     * A partir del nivel 50, escala la dificultad un 30% más.
+     * @param {number} xp - XP total
+     * @returns {number} Nivel
+     */
     calculateLevel(xp) {
         const { baseXP, exponent } = this.levelConfig;
 
-        if (xp < baseXP) return 1;
+        // Configuración de dificultad dinámica
+        const difficultyThreshold = 50;   // Punto de corte
+        const difficultyMultiplier = 1.3; // 30% más difícil a partir del corte
 
-        // Resolver: xp = baseXP * ((level-1) ^ exponent)
-        // (level-1) = (xp / baseXP) ^ (1 / exponent)
-        // level = (xp / baseXP) ^ (1 / exponent) + 1
-        const level = Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
+        // Calcular XP límite del sistema normal (Nivel 50)
+        // Nota: Se usa threshold-1 porque la fórmula es (level-1)
+        const xpAtThreshold = baseXP * Math.pow(difficultyThreshold - 1, exponent);
+
+        // Si estamos por debajo del umbral, usar fórmula normal
+        if (xp <= xpAtThreshold) {
+            if (xp < baseXP) return 1;
+            return Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
+        }
+
+        // --- ZONA DIFICULTAD AUMENTADA (> Nivel 50) ---
+        // Invertimos la fórmula escalada:
+        // XP_Real = XP_Threshold + (XP_Extra_Normal * 1.3)
+        // Despejamos XP_Extra_Normal:
+        const xpExtraNormal = (xp - xpAtThreshold) / difficultyMultiplier;
+
+        // Reconstruimos el "XP Efectivo" que tendría el sistema sin penalización
+        const effectiveXP = xpAtThreshold + xpExtraNormal;
+
+        // Calculamos nivel basándonos en ese XP efectivo
+        const level = Math.floor(Math.pow(effectiveXP / baseXP, 1 / exponent)) + 1;
         return Math.max(1, level);
     }
 
     /**
      * Calcula el XP requerido para un nivel específico
      * Level 1 = 0 XP, Level 2 = baseXP, etc.
+     * Incluye penalización del 30% a partir de nivel 50.
      * @param {number} level - Nivel objetivo
      * @returns {number} XP requerido
      */
     getXPForLevel(level) {
         if (level <= 1) return 0;
+
         const { baseXP, exponent } = this.levelConfig;
-        return Math.floor(baseXP * Math.pow(level - 1, exponent));
+
+        const difficultyThreshold = 50;
+        const difficultyMultiplier = 1.3; // 30% más costoso
+
+        // Fórmula Normal
+        if (level <= difficultyThreshold) {
+            return Math.floor(baseXP * Math.pow(level - 1, exponent));
+        }
+
+        // --- ZONA DIFICULTAD AUMENTADA ---
+        // 1. Calcular base hasta nivel 50
+        const xpAtThreshold = baseXP * Math.pow(difficultyThreshold - 1, exponent);
+
+        // 2. Calcular cuánto XP pediría el sistema normal para el nivel objetivo
+        const xpTargetNormal = baseXP * Math.pow(level - 1, exponent);
+
+        // 3. Obtener la diferencia (cuánto XP hay entre nivel 50 y el objetivo)
+        const xpDifference = xpTargetNormal - xpAtThreshold;
+
+        // 4. Aplicar el multiplicador de dificultad SOLO a esa diferencia
+        const finalXP = xpAtThreshold + (xpDifference * difficultyMultiplier);
+
+        return Math.floor(finalXP);
     }
 
     /**

@@ -454,8 +454,10 @@ body {
     perspective: 600px;
     perspective-origin: left center;
     position: absolute;
-    left: 20px;
+    left: 10px;
     bottom: 20%;
+    transform: scale(0.95);
+    transform-origin: bottom left;
 }
 
 .container {

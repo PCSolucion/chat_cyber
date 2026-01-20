@@ -84,6 +84,7 @@ class XPDisplayManager {
             cpLevelOverlay: document.getElementById('cp-levelup-overlay'),
             cpNewLevel: document.getElementById('cp-new-level'),
             cpNewTitle: document.getElementById('cp-new-title'),
+            cpUsername: document.getElementById('cp-username'),
             // Referencias antiguas (mantenidas por seguridad o si se usan en layouts legacy)
             levelUpInline: document.getElementById('xp-levelup-inline'),
             levelUpNumber: document.getElementById('levelup-number'),
@@ -243,6 +244,10 @@ class XPDisplayManager {
             if (this.dom.cpNewTitle) {
                 this.dom.cpNewTitle.textContent = eventData.title || 'MERCENARY';
             }
+            // Actualizar usuario
+            if (this.dom.cpUsername) {
+                this.dom.cpUsername.textContent = eventData.username || 'UNKNOWN';
+            }
 
             // Mostrar Overlay
             this.dom.cpLevelOverlay.classList.remove('hidden');
@@ -257,10 +262,10 @@ class XPDisplayManager {
                 container.classList.add('level-up-effect');
             }
 
-            // Ocultar después del tiempo configurado
+            // Ocultar después del tiempo configurado (Aumentado 2s extra)
             this.levelUpTimeout = setTimeout(() => {
                 this.hideLevelUp();
-            }, this.levelUpDisplayTime + 1000);
+            }, this.levelUpDisplayTime + 3000);
 
             if (this.config.DEBUG) {
                 console.log(`🎉 CP2077 Level Up mostrado: ${eventData.username} → LVL ${eventData.newLevel}`);
