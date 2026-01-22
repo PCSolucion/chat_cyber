@@ -92,7 +92,7 @@ body {
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
 }
 
 /* === SOURCE: css/animations/keyframes.css === */
@@ -454,7 +454,7 @@ body {
     perspective: 600px;
     perspective-origin: left center;
     position: absolute;
-    left: 10px;
+    left: 0;
     bottom: 20%;
     transform: scale(0.95);
     transform-origin: bottom left;

@@ -741,6 +741,159 @@
 }
 
 /* ========================================
+   TRENDING SCREEN - Palabras y Emotes populares
+   ======================================== */
+.idle-trending-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.idle-trending-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.idle-trending-section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2px;
+}
+
+.trending-section-icon {
+    font-size: 0.85rem;
+}
+
+.trending-section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--cyber-cyan, #00f6ff);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.trending-section-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-left: auto;
+}
+
+.idle-trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.idle-trending-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 246, 255, 0.3), transparent);
+    margin: 4px 0;
+}
+
+/* Trending items base */
+.idle-trending-word,
+.idle-trending-emote {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Top trending item highlight */
+.idle-trending-word.trending-top,
+.idle-trending-emote.trending-top {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+    border-left: 2px solid var(--cyber-yellow, #ffd700);
+}
+
+.trending-top .trending-rank {
+    color: var(--cyber-yellow, #ffd700) !important;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.trending-top .trending-word-text {
+    color: var(--cyber-yellow, #ffd700) !important;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+/* Ranking number */
+.trending-rank {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    min-width: 22px;
+    font-size: 0.75rem;
+}
+
+/* Word text */
+.trending-word-text {
+    flex: 1;
+    color: #fff;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Emote name (when no image) */
+.trending-emote-name {
+    flex: 1;
+    color: #fff;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Emote image */
+.trending-emote-img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Provider badge */
+.trending-provider {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    background: rgba(0, 246, 255, 0.15);
+    color: var(--cyber-cyan, #00f6ff);
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+/* Count badge */
+.trending-count {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.7rem;
+    min-width: 30px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.trending-top .trending-count {
+    color: var(--cyber-yellow, #ffd700);
+}
+
+/* Hover effects */
+.idle-trending-word:hover,
+.idle-trending-emote:hover {
+    background: rgba(0, 246, 255, 0.05);
+}
+
+/* ========================================
    EMOTES DE TERCEROS (7TV/BTTV/FFZ)
    ======================================== */
 .emote-3p {

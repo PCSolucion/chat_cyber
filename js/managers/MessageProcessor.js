@@ -230,9 +230,36 @@ class MessageProcessor {
 
             // Calcular emoteCount una sola vez para reutilizar
             let emoteCount = 0;
+            let emoteNames = [];
+
+            // Extraer emotes de Twitch
             if (emotes) {
-                Object.values(emotes).forEach(positions => {
+                Object.entries(emotes).forEach(([emoteId, positions]) => {
                     emoteCount += positions.length;
+                    // Extraer el nombre del emote del mensaje usando las posiciones
+                    if (positions.length > 0) {
+                        const pos = positions[0].split('-');
+                        const start = parseInt(pos[0]);
+                        const end = parseInt(pos[1]);
+                        const emoteName = message.substring(start, end + 1);
+                        emoteNames.push({ name: emoteName, provider: 'twitch', url: null });
+                    }
+                });
+            }
+
+            // Extraer emotes de terceros (7TV, BTTV, FFZ)
+            if (this.services.thirdPartyEmotes) {
+                const words = message.split(/\s+/);
+                words.forEach(word => {
+                    const emoteData = this.services.thirdPartyEmotes.getEmote(word);
+                    if (emoteData) {
+                        emoteCount++;
+                        emoteNames.push({
+                            name: word,
+                            provider: emoteData.provider,
+                            url: emoteData.url
+                        });
+                    }
                 });
             }
 
@@ -259,9 +286,12 @@ class MessageProcessor {
                 this.services.audio.play();
             }
 
-            // Trackear estadísticas de sesión
+            // Trackear estadísticas de sesión (incluyendo nombres de emotes)
             if (this.services.sessionStats) {
-                this.services.sessionStats.trackMessage(username, message, { emoteCount });
+                this.services.sessionStats.trackMessage(username, message, {
+                    emoteCount,
+                    emoteNames
+                });
             }
 
             // Notificar actividad al Idle Manager

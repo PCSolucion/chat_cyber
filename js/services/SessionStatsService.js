@@ -29,6 +29,7 @@ class SessionStatsService {
 
             // Emotes
             emotesUsed: new Map(),  // { emoteName: count }
+            emotesUsedByName: new Map(), // { emoteName: { count, provider, url } }
             totalEmotesUsed: 0,
 
             // Level-ups de la sesión
@@ -137,9 +138,14 @@ class SessionStatsService {
         const currentCount = this.stats.userMessageCounts.get(lowerUser) || 0;
         this.stats.userMessageCounts.set(lowerUser, currentCount + 1);
 
-        // Trackear emotes usados
+        // Trackear emotes usados (cantidad total)
         if (context.emoteCount && context.emoteCount > 0) {
             this.stats.totalEmotesUsed += context.emoteCount;
+        }
+
+        // Trackear emotes individuales por nombre
+        if (context.emoteNames && context.emoteNames.length > 0) {
+            this._trackEmotes(context.emoteNames);
         }
 
         // Trackear comandos
@@ -149,7 +155,7 @@ class SessionStatsService {
             this.stats.commandsUsed.set(command, cmdCount + 1);
         }
 
-        // Trackear palabras (simple)
+        // Trackear palabras (con filtrado de stopwords)
         this._trackWords(message);
 
         // Actualizar rachas si están disponibles
@@ -166,22 +172,96 @@ class SessionStatsService {
     }
 
     /**
-     * Trackea frecuencia de palabras
+     * Trackea emotes individuales por nombre
+     * @private
+     * @param {Array} emoteNames - Array de objetos { name, provider?, url? }
+     */
+    _trackEmotes(emoteNames) {
+        emoteNames.forEach(emote => {
+            const name = typeof emote === 'string' ? emote : emote.name;
+            const provider = typeof emote === 'object' ? emote.provider : 'twitch';
+            const url = typeof emote === 'object' ? emote.url : null;
+            
+            const existing = this.stats.emotesUsedByName.get(name);
+            if (existing) {
+                existing.count++;
+            } else {
+                this.stats.emotesUsedByName.set(name, {
+                    count: 1,
+                    provider: provider,
+                    url: url
+                });
+            }
+        });
+    }
+
+    /**
+     * Trackea frecuencia de palabras (con filtrado de stopwords)
      * @private
      */
     _trackWords(message) {
         // Ignorar comandos y mensajes muy cortos
         if (message.startsWith('!') || message.length < 3) return;
 
+        // Stopwords comunes en español e inglés + palabras muy genéricas
+        const stopwords = new Set([
+            // Español
+            'que', 'como', 'para', 'pero', 'esto', 'esta', 'este', 'esos', 'esas',
+            'todo', 'toda', 'todos', 'todas', 'porque', 'cuando', 'donde', 'quien',
+            'cual', 'cuales', 'muy', 'mas', 'menos', 'solo', 'algo', 'nada',
+            'cada', 'otro', 'otra', 'otros', 'otras', 'mismo', 'misma', 'tanto',
+            'bien', 'mal', 'ahora', 'aqui', 'alli', 'siempre', 'nunca', 'tambien',
+            'aunque', 'entre', 'desde', 'hasta', 'sobre', 'bajo', 'hacia', 'contra',
+            'durante', 'mediante', 'segun', 'tras', 'ante', 'creo', 'pues', 'hacer',
+            'tiene', 'tienen', 'puede', 'pueden', 'seria', 'sido', 'siendo', 'haber',
+            // Inglés
+            'the', 'that', 'this', 'with', 'have', 'just', 'like', 'what', 'when',
+            'where', 'which', 'who', 'how', 'all', 'each', 'every', 'both', 'few',
+            'more', 'most', 'other', 'some', 'such', 'than', 'too', 'very', 'can',
+            'will', 'just', 'should', 'now', 'then', 'only', 'also', 'into', 'over',
+            'after', 'before', 'between', 'under', 'again', 'there', 'here', 'been',
+            'being', 'would', 'could', 'about', 'their', 'them', 'these', 'those',
+            'your', 'from', 'they', 'were', 'have', 'been', 'made', 'make'
+        ]);
+
         const words = message.toLowerCase()
             .replace(/[^\w\sáéíóúñü]/g, '')
             .split(/\s+/)
-            .filter(w => w.length > 3);  // Solo palabras de 4+ caracteres
+            .filter(w => w.length > 3 && !stopwords.has(w));  // 4+ chars y no stopword
 
         words.forEach(word => {
             const count = this.stats.wordFrequency.get(word) || 0;
             this.stats.wordFrequency.set(word, count + 1);
         });
+    }
+
+    /**
+     * Obtiene las top N palabras más usadas
+     * @param {number} n - Número de palabras a retornar
+     * @returns {Array} Array de { word, count }
+     */
+    getTopWords(n = 5) {
+        return Array.from(this.stats.wordFrequency.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, n)
+            .map(([word, count]) => ({ word, count }));
+    }
+
+    /**
+     * Obtiene los top N emotes más usados
+     * @param {number} n - Número de emotes a retornar
+     * @returns {Array} Array de { name, count, provider, url }
+     */
+    getTopEmotes(n = 5) {
+        return Array.from(this.stats.emotesUsedByName.entries())
+            .sort((a, b) => b[1].count - a[1].count)
+            .slice(0, n)
+            .map(([name, data]) => ({
+                name,
+                count: data.count,
+                provider: data.provider,
+                url: data.url
+            }));
     }
 
     /**
@@ -363,7 +443,18 @@ class SessionStatsService {
                 title: 'MÁS ACTIVOS',
                 data: displayStats.topUsers
             },
-            // Pantalla 3: XP y logros
+            // Pantalla 3: TRENDING - Palabras y Emotes populares
+            {
+                type: 'trending',
+                title: 'TRENDING HOY',
+                data: {
+                    topWords: this.getTopWords(3),
+                    topEmotes: this.getTopEmotes(3),
+                    totalEmotes: this.stats.totalEmotesUsed,
+                    uniqueWords: this.stats.wordFrequency.size
+                }
+            },
+            // Pantalla 4: XP y logros
             {
                 type: 'achievements',
                 title: 'PROGRESO DE SESIÓN',
@@ -373,7 +464,7 @@ class SessionStatsService {
                     recent: displayStats.recentLevelUps.slice(0, 3)
                 }
             },
-            // Pantalla 4: Rachas
+            // Pantalla 5: Rachas
             {
                 type: 'streaks',
                 title: 'RACHAS ACTIVAS',
@@ -400,6 +491,7 @@ class SessionStatsService {
             uniqueUsers: new Set(),
             userMessageCounts: new Map(),
             emotesUsed: new Map(),
+            emotesUsedByName: new Map(),
             totalEmotesUsed: 0,
             levelUps: [],
             achievementsUnlocked: [],

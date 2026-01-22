@@ -272,6 +272,9 @@ class IdleDisplayManager {
             case 'leaderboard':
                 this._renderLeaderboardScreen(screenData);
                 break;
+            case 'trending':
+                this._renderTrendingScreen(screenData);
+                break;
             case 'achievements':
                 this._renderAchievementsScreen(screenData);
                 break;
@@ -377,6 +380,93 @@ class IdleDisplayManager {
                 </div>
                 <div class="idle-terminal-body idle-leaderboard-terminal">
                     ${usersHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Renderiza pantalla de trending (palabras y emotes populares)
+     * @private
+     */
+    _renderTrendingScreen(screenData) {
+        const { data } = screenData;
+        const { topWords, topEmotes, totalEmotes, uniqueWords } = data;
+
+        // Generar HTML para palabras trending
+        let wordsHtml = '';
+        if (topWords && topWords.length > 0) {
+            topWords.forEach((item, index) => {
+                const isFirst = index === 0;
+                const fireIcon = isFirst ? '🔥' : '';
+                wordsHtml += `
+                    <div class="idle-trending-word ${isFirst ? 'trending-top' : ''}">
+                        <span class="trending-rank">#${index + 1}</span>
+                        <span class="trending-word-text">${fireIcon}${item.word.toUpperCase()}</span>
+                        <span class="trending-count">${item.count}x</span>
+                    </div>
+                `;
+            });
+        } else {
+            wordsHtml = '<div class="idle-empty-state small">SIN PALABRAS AÚN</div>';
+        }
+
+        // Generar HTML para emotes trending
+        let emotesHtml = '';
+        if (topEmotes && topEmotes.length > 0) {
+            topEmotes.forEach((item, index) => {
+                const isFirst = index === 0;
+                // Si tenemos URL del emote, mostrar imagen
+                const emoteDisplay = item.url
+                    ? `<img src="${item.url}" alt="${item.name}" class="trending-emote-img" />`
+                    : `<span class="trending-emote-name">${item.name}</span>`;
+
+                const providerBadge = item.provider && item.provider !== 'twitch'
+                    ? `<span class="trending-provider">${item.provider.toUpperCase()}</span>`
+                    : '';
+
+                emotesHtml += `
+                    <div class="idle-trending-emote ${isFirst ? 'trending-top' : ''}">
+                        <span class="trending-rank">#${index + 1}</span>
+                        ${emoteDisplay}
+                        ${providerBadge}
+                        <span class="trending-count">${item.count}x</span>
+                    </div>
+                `;
+            });
+        } else {
+            emotesHtml = '<div class="idle-empty-state small">SIN EMOTES AÚN</div>';
+        }
+
+        this._currentScreenContent.innerHTML = `
+            <div class="idle-terminal">
+                <div class="idle-terminal-header">
+                    <span class="idle-terminal-prompt">></span>
+                    <span class="idle-terminal-title">TRENDING_DATA</span>
+                    <span class="idle-terminal-separator"></span>
+                </div>
+                <div class="idle-terminal-body idle-trending-body">
+                    <div class="idle-trending-section">
+                        <div class="idle-trending-section-header">
+                            <span class="trending-section-icon">💬</span>
+                            <span class="trending-section-title">PALABRAS</span>
+                            <span class="trending-section-count">${uniqueWords} únicas</span>
+                        </div>
+                        <div class="idle-trending-list">
+                            ${wordsHtml}
+                        </div>
+                    </div>
+                    <div class="idle-trending-divider"></div>
+                    <div class="idle-trending-section">
+                        <div class="idle-trending-section-header">
+                            <span class="trending-section-icon">🎭</span>
+                            <span class="trending-section-title">EMOTES</span>
+                            <span class="trending-section-count">${totalEmotes} usados</span>
+                        </div>
+                        <div class="idle-trending-list">
+                            ${emotesHtml}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
