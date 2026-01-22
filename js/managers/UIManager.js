@@ -274,12 +274,30 @@ class UIManager {
             this.config.EMOTE_SIZE
         );
 
-        // Aplicar efecto scramble solo a Admin y Top 1
+        // Detectar si es solo emotes (Twitch, 7TV, BTTV, FFZ)
+        const emoteAnalysis = UIUtils.isEmoteOnlyMessage(processedMessage);
+
+        // Aplicar efecto scramble solo a Admin y Top 1 (NO si es solo emotes)
         const isHighRank = userRole.role === 'admin' ||
             (userRole.role === 'top' && userRole.rankTitle?.icon === 'icon-skull');
         const hasImages = UIUtils.hasImages(processedMessage);
 
-        if (isHighRank && !hasImages) {
+        // Limpiar clases de tamaño de emotes previas
+        this.dom.message.classList.remove('emote-only', 'emote-large', 'emote-medium');
+
+        if (emoteAnalysis.isEmoteOnly) {
+            // Mensaje solo de emotes: sin comillas
+            this.dom.message.classList.add('emote-only');
+
+            // Agregar clase de tamaño según cantidad de emotes
+            if (emoteAnalysis.emoteCount <= 2) {
+                this.dom.message.classList.add('emote-large');
+            } else if (emoteAnalysis.emoteCount <= 4) {
+                this.dom.message.classList.add('emote-medium');
+            }
+
+            this.dom.message.innerHTML = processedMessage;
+        } else if (isHighRank && !hasImages) {
             UIUtils.scrambleText(this.dom.message, processedMessage);
         } else {
             this.dom.message.innerHTML = `"${processedMessage}"`;

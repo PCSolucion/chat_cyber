@@ -168,6 +168,35 @@ const UIUtils = {
     },
 
     /**
+     * Detecta si un mensaje procesado contiene SOLO emotes (sin texto)
+     * Funciona con emotes de Twitch (class="emote-img") y 
+     * de terceros como 7TV, BTTV, FFZ (class="emote-img emote-3p")
+     * 
+     * @param {string} html - HTML procesado del mensaje
+     * @returns {Object} { isEmoteOnly: boolean, emoteCount: number }
+     */
+    isEmoteOnlyMessage(html) {
+        // Regex para detectar cualquier emote (Twitch o terceros)
+        // Ambos usan class="emote-img..." 
+        const emoteRegex = /<img[^>]*class="emote-img[^"]*"[^>]*>/gi;
+
+        // Remover todas las imágenes de emotes temporalmente
+        const withoutEmotes = html.replace(emoteRegex, '');
+
+        // Verificar si queda solo espacios o nada
+        const hasOnlyWhitespace = withoutEmotes.trim() === '';
+
+        // Contar emotes
+        const emoteMatches = html.match(emoteRegex);
+        const emoteCount = emoteMatches ? emoteMatches.length : 0;
+
+        return {
+            isEmoteOnly: hasOnlyWhitespace && emoteCount > 0,
+            emoteCount: emoteCount
+        };
+    },
+
+    /**
      * Inicializa el ecualizador generando las barras dinámicamente
      * Esto evita tener 40+ líneas de HTML repetitivo
      * 

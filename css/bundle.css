@@ -1335,6 +1335,37 @@ body {
 }
 
 /* ===========================================
+   EMOTE-ONLY MESSAGES (Sin comillas, más grandes)
+   =========================================== */
+
+/* Ocultar comilla decorativa cuando es solo emotes */
+.quote.emote-only::after {
+    display: none;
+}
+
+/* Centrar emotes en mensajes solo-emote */
+.quote.emote-only {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Emotes grandes (1-2 emotes) */
+.quote.emote-large .emote-img {
+    height: 3.5em !important;
+    filter: drop-shadow(0 0 8px rgba(0, 246, 255, 0.5));
+}
+
+/* Emotes medianos (3-4 emotes) */
+.quote.emote-medium .emote-img {
+    height: 2.5em !important;
+    filter: drop-shadow(0 0 5px rgba(0, 246, 255, 0.4));
+}
+
+/* ===========================================
    DECRYPTION ANIMATION (INCOMING SIGNAL)
    =========================================== */
 
