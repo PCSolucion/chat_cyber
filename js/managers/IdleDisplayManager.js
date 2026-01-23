@@ -135,7 +135,7 @@ class IdleDisplayManager {
         if (badge) {
             this._savedBadge = badge.textContent;
             this._savedBadgeClass = badge.className;
-            badge.textContent = '📡 LIVE';
+            badge.textContent = 'LIVE';
             badge.className = 'user-badge idle-badge';
         }
 
@@ -398,11 +398,10 @@ class IdleDisplayManager {
         if (topWords && topWords.length > 0) {
             topWords.forEach((item, index) => {
                 const isFirst = index === 0;
-                const fireIcon = isFirst ? '🔥' : '';
                 wordsHtml += `
                     <div class="idle-trending-word ${isFirst ? 'trending-top' : ''}">
                         <span class="trending-rank">#${index + 1}</span>
-                        <span class="trending-word-text">${fireIcon}${item.word.toUpperCase()}</span>
+                        <span class="trending-word-text">${item.word.toUpperCase()}</span>
                         <span class="trending-count">${item.count}x</span>
                     </div>
                 `;
@@ -448,7 +447,7 @@ class IdleDisplayManager {
                 <div class="idle-terminal-body idle-trending-body">
                     <div class="idle-trending-section">
                         <div class="idle-trending-section-header">
-                            <span class="trending-section-icon">💬</span>
+                            <span class="trending-section-icon">></span>
                             <span class="trending-section-title">PALABRAS</span>
                             <span class="trending-section-count">${uniqueWords} únicas</span>
                         </div>
@@ -459,7 +458,7 @@ class IdleDisplayManager {
                     <div class="idle-trending-divider"></div>
                     <div class="idle-trending-section">
                         <div class="idle-trending-section-header">
-                            <span class="trending-section-icon">🎭</span>
+                            <span class="trending-section-icon">></span>
                             <span class="trending-section-title">EMOTES</span>
                             <span class="trending-section-count">${totalEmotes} usados</span>
                         </div>

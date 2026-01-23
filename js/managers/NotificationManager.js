@@ -125,7 +125,6 @@ class NotificationManager {
         const iconPath = `img/logros/${iconFile}`;
 
         notification.innerHTML = `
-            <div class="achievement-icon"><img src="${iconPath}" class="achievement-icon-img" alt="Rank Icon"></div>
             <div class="achievement-content">
                 <div class="achievement-label">LOGRO DESBLOQUEADO</div>
                 <div class="achievement-name"><span>${achievement.name}</span></div>

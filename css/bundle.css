@@ -28,10 +28,10 @@
     /* ========================================
      COLORES PRINCIPALES (Cyberpunk 2077)
      ======================================== */
-    --cyber-red: #ff003c;
-    --cyber-yellow: #DABD58;
+    --cyber-red: #FF3B45;
+    --cyber-yellow: #DBBE3B;
     --takeru-yellow: #fcee09;
-    --cyber-cyan: #00f6ff;
+    --cyber-cyan: #FF3B45;
     --cyber-magenta: #d900ff;
     --cyber-blue: #05d5fa;
     --cyber-hot-pink: #ff2a6d;
@@ -426,7 +426,7 @@ body {
    =========================================== */
 
 .container.status-red {
-    animation: activeBorderPulse 3s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+    animation: slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 /* ===========================================
@@ -434,7 +434,7 @@ body {
    =========================================== */
 
 .container.top-user {
-    animation: activeBorderPulseCyan 1.5s infinite ease-in-out, slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards !important;
+    animation: slideInLeft 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards !important;
 }
 
 /* ===========================================
@@ -485,8 +485,7 @@ body {
     /* Main border glow */
     box-shadow:
         inset 0 0 50px rgba(0, 0, 0, 0.8),
-        0 0 40px rgba(0, 0, 0, 0.9),
-        0 0 2px var(--cyber-cyan);
+        0 0 40px rgba(0, 0, 0, 0.9);
 
     /* Transitions - GLOBAL */
     transition: opacity 0.6s var(--transition-ease), transform 0.6s var(--transition-ease);
@@ -524,15 +523,9 @@ body {
     display: none;
 }
 
-/* Bottom accent line */
+/* Bottom accent line - disabled */
 .border-glow::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 25px;
-    right: 25px;
-    height: 1px;
-    background: linear-gradient(90deg, var(--cyber-cyan), transparent);
+    display: none;
 }
 
 /* ===========================================
@@ -584,7 +577,7 @@ body {
     gap: 10px;
     padding: 10px 15px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
     font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
     transition: all 0.3s ease;
@@ -599,27 +592,31 @@ body {
 }
 
 .status-text {
-    color: #bbb;
+    color: #ff3b45;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 500;
+    font-size: 9px;
+    text-shadow: 0 0 8px rgba(255, 59, 69, 0.6);
 }
 
 .status-divider {
-    display: block;
-    color: #444;
-    margin: 0 5px;
+    display: none;
 }
 
 .status-code {
     display: block;
-    color: var(--text-dim);
-    font-size: 9px;
-    letter-spacing: 1px;
-    max-width: 150px;
+    color: #ff3b45;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 500;
+    margin-left: auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 200px;
+    text-shadow: 0 0 8px rgba(255, 59, 69, 0.6);
 }
 
 /* ===========================================
@@ -628,7 +625,7 @@ body {
 
 .container.status-red .status-bar {
     background: linear-gradient(180deg, rgba(255, 0, 60, 0.15), transparent);
-    border-bottom: 1px solid var(--cyber-red);
+    border-bottom: none;
 }
 
 .container.status-red .status-dot {
@@ -1173,7 +1170,7 @@ body {
 
 .container.admin-user .status-bar {
     background: linear-gradient(180deg, rgba(255, 0, 60, 0.1), transparent);
-    border-bottom: 1px solid rgba(255, 0, 60, 0.3);
+    border-bottom: none;
 }
 
 .container.admin-user .status-text {
@@ -1203,53 +1200,26 @@ body {
     color: #fff;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
     background: rgba(0, 0, 0, 0.2);
-    border-left: 2px solid var(--cyber-red);
+    /* border-left removed to avoid double border */
     padding-left: 20px;
 }
 
 /* === SOURCE: css/components/data-stream.css === */
 /* ===========================================
-   DATA STREAM - Visual separator
+   DATA STREAM - Línea separadora simple
    =========================================== */
 
 .data-stream {
-    height: 20px;
-    position: relative;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    padding: 0 15px;
-    gap: 8px;
-    border-top: 1px solid rgba(0, 246, 255, 0.1);
-    border-bottom: 1px solid rgba(0, 246, 255, 0.1);
-}
-
-.data-stream::before {
-    content: '';
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    color: var(--cyber-cyan);
-    letter-spacing: 1px;
-    opacity: 0.7;
-}
-
-.stream-line {
-    flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, var(--cyber-cyan), transparent);
-    position: relative;
-    overflow: hidden;
+    background: rgba(255, 59, 69, 0.2);
+    width: 100%;
 }
 
+/* Ocultar elementos internos no necesarios */
+.data-stream::before,
+.stream-line,
 .stream-line::after {
-    content: '';
-    position: absolute;
-    left: -30%;
-    top: -2px;
-    width: 30%;
-    height: 5px;
-    background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
-    animation: dataFlow 2s linear infinite;
+    display: none;
 }
 
 /* === SOURCE: css/components/equalizer.css === */
@@ -1268,6 +1238,7 @@ body {
     height: 30px;
     background: rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    margin-top: 5px;
 }
 
 .bar {
@@ -1396,8 +1367,8 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px 15px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
-    border-top: 1px solid rgba(0, 246, 255, 0.1);
+    background: linear-gradient(0deg, rgba(255, 59, 69, 0.15), transparent);
+    border-top: none;
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px;
 }

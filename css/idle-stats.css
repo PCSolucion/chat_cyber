@@ -33,7 +33,7 @@
    MODO IDLE: Ocultar XP section
    ======================================== */
 .container.idle-mode {
-    padding-top: 15px;
+    padding-top: 0;
 }
 
 .container.idle-mode .xp-section {
@@ -41,11 +41,16 @@
     /* Ocultar completamente en modo idle */
 }
 
+/* Ocultar ecualizador en modo idle para ganar espacio */
+.container.idle-mode .equalizer {
+    display: none !important;
+}
+
 /* Estilo especial para el título en modo idle */
 .idle-stats-title {
     color: var(--cyber-red, #ff003c) !important;
     text-shadow: 0 0 10px rgba(255, 0, 60, 0.5) !important;
-    font-size: 0.9em;
+    font-size: 1.1em;
     letter-spacing: 1px;
 }
 
@@ -123,42 +128,29 @@
    Estilo de terminal de datos cyberpunk
    ======================================== */
 
-/* Contenedor principal de terminal */
+/* Contenedor principal de terminal - simplificado sin bordes */
 .idle-terminal {
     font-family: 'Share Tech Mono', monospace;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
-    /* Border left removed */
-    border: 1px solid rgba(0, 246, 255, 0.1);
-    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    padding: 5px 8px;
     position: relative;
     overflow: hidden;
 }
 
-/* Efecto de scanline sutil */
+/* Efecto de scanline - deshabilitado para diseño limpio */
 .idle-terminal::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 246, 255, 0.03) 2px,
-            rgba(0, 246, 255, 0.03) 4px);
-    pointer-events: none;
-    z-index: 1;
+    display: none;
 }
 
-/* Header del terminal */
+/* Header del terminal - simplificado */
 .idle-terminal-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 246, 255, 0.3);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 2;
 }
@@ -166,13 +158,13 @@
 .idle-terminal-prompt {
     color: var(--cyber-red, #ff003c);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.2rem;
     text-shadow: 0 0 5px rgba(255, 0, 60, 0.5);
 }
 
 .idle-terminal-title {
     color: var(--cyber-cyan, #00f6ff);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -191,13 +183,13 @@
     z-index: 2;
 }
 
-/* Líneas de datos */
+/* Líneas de datos - tamaño aumentado */
 .idle-data-line {
     display: flex;
     align-items: center;
-    padding: 3px 0;
-    font-size: 0.85rem;
-    line-height: 1.4;
+    padding: 4px 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
 }
 
 .idle-data-label {
@@ -216,9 +208,10 @@
 
 .idle-data-value {
     color: #fff;
-    font-weight: 600;
+    font-weight: 700;
     text-align: right;
-    min-width: 50px;
+    min-width: 60px;
+    font-size: 1.2rem;
 }
 
 /* Variantes de color para valores */
@@ -322,7 +315,7 @@
     display: flex;
     align-items: center;
     padding: 4px 0;
-    font-size: 0.85rem;
+    font-size: 1rem;
     transition: all 0.2s ease;
 }
 
@@ -378,17 +371,18 @@
     margin-bottom: 10px;
 }
 
+/* Stats boxes - simplificados sin recuadros */
 .idle-progress-box {
     text-align: center;
-    padding: 10px 15px;
-    background: linear-gradient(180deg, rgba(0, 246, 255, 0.08) 0%, transparent 100%);
-    border: 1px solid rgba(0, 246, 255, 0.2);
+    padding: 8px 15px;
+    background: transparent;
+    border: none;
     min-width: 70px;
 }
 
 .idle-progress-num {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--cyber-cyan, #00f6ff);
     text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
@@ -397,7 +391,7 @@
 
 .idle-progress-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -531,25 +525,23 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 0;
+    background: transparent;
+    border: none;
     transition: all 0.2s ease;
 }
 
 .idle-leaderboard-row.top-1 {
-    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
-    border-color: rgba(255, 215, 0, 0.3);
+    background: transparent;
 }
 
 .idle-leaderboard-row.top-3 {
-    background: linear-gradient(90deg, rgba(0, 246, 255, 0.1) 0%, transparent 100%);
-    border-color: rgba(0, 246, 255, 0.3);
+    background: transparent;
 }
 
 .idle-rank {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
+    font-size: 1rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.5);
     min-width: 25px;
@@ -562,7 +554,7 @@
 
 .idle-username {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: #fff;
     flex: 1;
@@ -578,11 +570,12 @@
     padding: 2px 6px;
     background: rgba(0, 246, 255, 0.1);
     border-radius: 2px;
+    font-size: 0.85rem;
 }
 
 .idle-user-msgs {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.4);
     min-width: 50px;
     text-align: right;
@@ -735,9 +728,23 @@
     background: linear-gradient(90deg, rgba(0, 246, 255, 0.2) 0%, rgba(0, 246, 255, 0.1) 100%);
     border: 1px solid var(--cyber-cyan, #00f6ff);
     color: var(--cyber-cyan, #00f6ff);
-    padding: 2px 8px;
-    font-size: 0.65rem;
+    padding: 3px 10px;
+    font-size: 0.8rem;
     letter-spacing: 1px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Ajustar el header en modo idle para que el badge se posicione bien */
+.container.idle-mode .header {
+    position: relative;
+}
+
+.container.idle-mode .user-identity-stack {
+    margin-right: 60px;
+    /* Espacio para el badge */
 }
 
 /* ========================================
@@ -804,7 +811,7 @@
     gap: 8px;
     padding: 3px 6px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 1rem;
     transition: all 0.2s ease;
     background: rgba(255, 255, 255, 0.02);
 }
@@ -831,7 +838,7 @@
     color: rgba(255, 255, 255, 0.5);
     font-weight: 600;
     min-width: 22px;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
 }
 
 /* Word text */
@@ -865,7 +872,7 @@
 
 /* Provider badge */
 .trending-provider {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     padding: 1px 4px;
     background: rgba(0, 246, 255, 0.15);
     color: var(--cyber-cyan, #00f6ff);
@@ -877,7 +884,7 @@
 /* Count badge */
 .trending-count {
     color: rgba(255, 255, 255, 0.6);
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     min-width: 30px;
     text-align: right;
     flex-shrink: 0;
