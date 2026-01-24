@@ -816,6 +816,61 @@ body {
 }
 
 /* ===========================================
+   CUSTOM USER BACKGROUNDS
+   =========================================== */
+
+.container.takeru-bg {
+    background:
+        /* Capa superior: Gradiente oscuro suave */
+        linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
+        /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
+        url('../img/takeru.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        /* Capa inferior: Fondo base */
+        #0a0a0f !important;
+
+    /* Sin borde extra */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+.container.chandalf-bg {
+    background:
+        /* Capa superior: Gradiente oscuro suave */
+        linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
+        /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
+        url('../img/chandalf.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        /* Capa inferior: Fondo base */
+        #0a0a0f !important;
+
+    /* Sin borde extra */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Ocultar fondo en la cabecera para usuarios con background custom - Esto hace que la imagen empiece visualmente desde el ecualizador hacia abajo */
+.container.takeru-bg .status-bar,
+.container.takeru-bg .header,
+.container.x1lenz-bg .status-bar,
+.container.x1lenz-bg .header,
+.container.chandalf-bg .status-bar,
+.container.chandalf-bg .header {
+    background: #0a0a0f !important;
+    z-index: 2;
+    /* Asegurar que tape el fondo del contenedor */
+}
+
+.container.x1lenz-bg {
+    background:
+        /* Capa superior: Gradiente oscuro suave */
+        linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
+        /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
+        url('../img/x1lenz.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        /* Capa inferior: Fondo base */
+        #0a0a0f !important;
+
+    /* Sin borde extra */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* ===========================================
    VIP Badge - Red (Matched to Admin, No Animation)
    =========================================== */
 

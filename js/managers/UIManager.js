@@ -80,6 +80,9 @@ class UIManager {
             // Limpiar clases de animación
             this.dom.username.classList.remove('decrypting');
             this.dom.message.classList.remove('decrypting');
+            this.dom.container.classList.remove('takeru-bg');
+            this.dom.container.classList.remove('x1lenz-bg');
+            this.dom.container.classList.remove('chandalf-bg');
 
             // Determinar tipo de animación
             const now = Date.now();
@@ -212,6 +215,21 @@ class UIManager {
                 } else {
                     this.dom.adminIcon.style.display = 'none';
                 }
+            }
+
+            // Custom Background for Takeru_xiii
+            if (username.toLowerCase() === 'takeru_xiii') {
+                this.dom.container.classList.add('takeru-bg');
+            }
+
+            // Custom Background for x1lenz
+            if (username.toLowerCase() === 'x1lenz') {
+                this.dom.container.classList.add('x1lenz-bg');
+            }
+
+            // Custom Background for chandalf
+            if (['chandalf', 'c_h_a_n_d_a_l_f'].includes(username.toLowerCase())) {
+                this.dom.container.classList.add('chandalf-bg');
             }
 
             // Procesar y mostrar mensaje

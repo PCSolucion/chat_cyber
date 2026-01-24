@@ -112,6 +112,9 @@ class IdleDisplayManager {
         if (container) {
             container.classList.remove('hidden');
             container.classList.add('idle-mode');
+            container.classList.remove('takeru-bg'); // Limpiar fondo personalizado de Takeru al entrar en modo idle
+            container.classList.remove('x1lenz-bg');
+            container.classList.remove('chandalf-bg');
         }
 
         // Ocultar mensaje normal
