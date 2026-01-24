@@ -128,8 +128,8 @@ class IdleDisplayManager {
         if (usernameEl) {
             this._savedUsername = usernameEl.textContent;
             this._savedUsernameData = usernameEl.getAttribute('data-text');
-            usernameEl.textContent = 'ESTADÍSTICAS DE DIRECTO';
-            usernameEl.setAttribute('data-text', 'ESTADÍSTICAS DE DIRECTO');
+            usernameEl.textContent = 'ESTADÍSTICAS DEL DIRECTO';
+            usernameEl.setAttribute('data-text', 'ESTADÍSTICAS DEL DIRECTO');
             usernameEl.classList.add('idle-stats-title');
         }
 
@@ -299,6 +299,10 @@ class IdleDisplayManager {
      * Renderiza pantalla de resumen con estilo terminal
      * @private
      */
+    /**
+     * Renderiza pantalla de resumen con estilo moderno (Dashboard)
+     * @private
+     */
     _renderSummaryScreen(screenData) {
         const { data } = screenData;
 
@@ -307,45 +311,31 @@ class IdleDisplayManager {
         const startTimeStr = startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-terminal">
-                <div class="idle-terminal-header">
-                    <span class="idle-terminal-prompt">></span>
-                    <span class="idle-terminal-title">SESION_ACTIVA</span>
-                    <span class="idle-terminal-separator"></span>
+            <div class="idle-screen-title">RESUMEN DE SESIÓN</div>
+            <div class="idle-dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-icon timer-icon"></div>
+                    <div class="stat-value">${data.duration}</div>
+                    <div class="stat-label">TIEMPO</div>
                 </div>
-                <div class="idle-terminal-body">
-                    <div class="idle-data-line">
-                        <span class="idle-data-label">TIEMPO</span>
-                        <span class="idle-data-dots"></span>
-                        <span class="idle-data-value value-cyan">${data.duration}</span>
-                        <span class="idle-data-indicator"></span>
-                    </div>
-                    <div class="idle-data-line">
-                        <span class="idle-data-label">MENSAJES</span>
-                        <span class="idle-data-dots"></span>
-                        <span class="idle-data-value">${data.messages}</span>
-                    </div>
-                    <div class="idle-data-line">
-                        <span class="idle-data-label">USUARIOS</span>
-                        <span class="idle-data-dots"></span>
-                        <span class="idle-data-value">${data.users}</span>
-                    </div>
-                    <div class="idle-data-line">
-                        <span class="idle-data-label">MSG/MIN</span>
-                        <span class="idle-data-dots"></span>
-                        <span class="idle-data-value value-gold">${data.avgMpm}</span>
-                    </div>
-                    <div class="idle-data-line">
-                        <span class="idle-data-label">INICIO</span>
-                        <span class="idle-data-dots"></span>
-                        <span class="idle-data-value">${startTimeStr}h</span>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-icon msg-icon"></div>
+                    <div class="stat-value mobile-highlight">${data.messages}</div>
+                    <div class="stat-label">MENSAJES</div>
                 </div>
-                <div class="idle-terminal-footer">
-                    <span class="idle-status-dot"></span>
-                    <span class="idle-terminal-status">ESPERANDO DATOS</span>
-                    <span class="idle-terminal-cursor"></span>
+                <div class="stat-card">
+                    <div class="stat-icon user-icon"></div>
+                    <div class="stat-value">${data.users}</div>
+                    <div class="stat-label">USUARIOS</div>
                 </div>
+                <div class="stat-card highlight-card">
+                    <div class="stat-icon speed-icon"></div>
+                    <div class="stat-value cyan-glow">${data.avgMpm}</div>
+                    <div class="stat-label">MSG/MIN</div>
+                </div>
+            </div>
+            <div class="idle-footer-info">
+                <span class="pulse-dot"></span> INICIO: ${startTimeStr}h
             </div>
         `;
     }
@@ -354,36 +344,39 @@ class IdleDisplayManager {
      * Renderiza pantalla de leaderboard con estilo terminal
      * @private
      */
+    /**
+     * Renderiza pantalla de leaderboard con estilo lista moderna
+     * @private
+     */
     _renderLeaderboardScreen(screenData) {
         const users = screenData.data || [];
 
         let usersHtml = '';
         users.forEach((user, index) => {
-            const rankClass = index === 0 ? 'rank-1' : index < 3 ? 'rank-top3' : '';
+            const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
             usersHtml += `
-                <div class="idle-rank-line ${rankClass}">
-                    <span class="idle-rank-num">#${String(index + 1).padStart(2, '0')}</span>
-                    <span class="idle-rank-name">${user.username}</span>
-                    <span class="idle-rank-level">LVL ${user.level}</span>
-                    <span class="idle-rank-msgs">${user.messages}msg</span>
+                <div class="modern-list-item ${rankClass}">
+                    <div class="list-rank">#${index + 1}</div>
+                    <div class="list-content">
+                        <span class="list-name">${user.username}</span>
+                        <span class="list-sub">NIVEL ${user.level}</span>
+                    </div>
+                    <div class="list-stat">
+                        <span class="stat-num">${user.messages}</span>
+                        <span class="stat-unit">msg</span>
+                    </div>
                 </div>
             `;
         });
 
         if (users.length === 0) {
-            usersHtml = '<div class="idle-empty-state">SIN ACTIVIDAD</div>';
+            usersHtml = '<div class="empty-message">ESPERANDO ACTIVIDAD...</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-terminal">
-                <div class="idle-terminal-header">
-                    <span class="idle-terminal-prompt">></span>
-                    <span class="idle-terminal-title">RANKING_SESION</span>
-                    <span class="idle-terminal-separator"></span>
-                </div>
-                <div class="idle-terminal-body idle-leaderboard-terminal">
-                    ${usersHtml}
-                </div>
+            <div class="idle-screen-title">TOP ACTIVOS</div>
+            <div class="idle-list-container">
+                ${usersHtml}
             </div>
         `;
     }
@@ -392,83 +385,69 @@ class IdleDisplayManager {
      * Renderiza pantalla de trending (palabras y emotes populares)
      * @private
      */
+    /**
+     * Renderiza pantalla de trending (palabras y emotes populares)
+     * @private
+     */
     _renderTrendingScreen(screenData) {
         const { data } = screenData;
         const { topWords, topEmotes, totalEmotes, uniqueWords } = data;
 
-        // Generar HTML para palabras trending
+        // PALABRAS
         let wordsHtml = '';
         if (topWords && topWords.length > 0) {
-            topWords.forEach((item, index) => {
-                const isFirst = index === 0;
+            // Tomamos solo top 3 para que quepa bien
+            topWords.slice(0, 3).forEach((item, index) => {
+                const percent = Math.min(100, (item.count / (topWords[0].count || 1)) * 100);
                 wordsHtml += `
-                    <div class="idle-trending-word ${isFirst ? 'trending-top' : ''}">
-                        <span class="trending-rank">#${index + 1}</span>
-                        <span class="trending-word-text">${item.word.toUpperCase()}</span>
-                        <span class="trending-count">${item.count}x</span>
+                    <div class="trend-item">
+                        <div class="trend-info">
+                            <span class="trend-name">${item.word.toUpperCase()}</span>
+                            <span class="trend-count">${item.count}</span>
+                        </div>
+                        <div class="trend-bar-bg"><div class="trend-bar-fill" style="width: ${percent}%"></div></div>
                     </div>
                 `;
             });
         } else {
-            wordsHtml = '<div class="idle-empty-state small">SIN PALABRAS AÚN</div>';
+            wordsHtml = '<div class="empty-message small">---</div>';
         }
 
-        // Generar HTML para emotes trending
+        // EMOTES
         let emotesHtml = '';
         if (topEmotes && topEmotes.length > 0) {
-            topEmotes.forEach((item, index) => {
-                const isFirst = index === 0;
-                // Si tenemos URL del emote, mostrar imagen
+            // Tomamos solo top 3
+            topEmotes.slice(0, 3).forEach((item, index) => {
+                const percent = Math.min(100, (item.count / (topEmotes[0].count || 1)) * 100);
                 const emoteDisplay = item.url
-                    ? `<img src="${item.url}" alt="${item.name}" class="trending-emote-img" />`
-                    : `<span class="trending-emote-name">${item.name}</span>`;
-
-                const providerBadge = item.provider && item.provider !== 'twitch'
-                    ? `<span class="trending-provider">${item.provider.toUpperCase()}</span>`
-                    : '';
+                    ? `<img src="${item.url}" alt="${item.name}" class="mini-emote" />`
+                    : `<span class="mini-emote-text">${item.name}</span>`;
 
                 emotesHtml += `
-                    <div class="idle-trending-emote ${isFirst ? 'trending-top' : ''}">
-                        <span class="trending-rank">#${index + 1}</span>
-                        ${emoteDisplay}
-                        ${providerBadge}
-                        <span class="trending-count">${item.count}x</span>
+                    <div class="trend-item">
+                        <div class="trend-info">
+                            <div class="trend-name-flex">${emoteDisplay}</div>
+                            <span class="trend-count">${item.count}</span>
+                        </div>
+                        <div class="trend-bar-bg"><div class="trend-bar-fill fill-cyan" style="width: ${percent}%"></div></div>
                     </div>
                 `;
             });
         } else {
-            emotesHtml = '<div class="idle-empty-state small">SIN EMOTES AÚN</div>';
+            emotesHtml = '<div class="empty-message small">---</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-terminal">
-                <div class="idle-terminal-header">
-                    <span class="idle-terminal-prompt">></span>
-                    <span class="idle-terminal-title">TRENDING_DATA</span>
-                    <span class="idle-terminal-separator"></span>
+            <div class="idle-screen-title">TENDENCIAS</div>
+            <div class="idle-split-view">
+                <div class="split-col">
+                    <div class="col-header">PALABRAS <span class="col-count">(${uniqueWords})</span></div>
+                    <div class="col-list">${wordsHtml}</div>
                 </div>
-                <div class="idle-terminal-body idle-trending-body">
-                    <div class="idle-trending-section">
-                        <div class="idle-trending-section-header">
-                            <span class="trending-section-icon">></span>
-                            <span class="trending-section-title">PALABRAS</span>
-                            <span class="trending-section-count">${uniqueWords} únicas</span>
-                        </div>
-                        <div class="idle-trending-list">
-                            ${wordsHtml}
-                        </div>
-                    </div>
-                    <div class="idle-trending-divider"></div>
-                    <div class="idle-trending-section">
-                        <div class="idle-trending-section-header">
-                            <span class="trending-section-icon">></span>
-                            <span class="trending-section-title">EMOTES</span>
-                            <span class="trending-section-count">${totalEmotes} usados</span>
-                        </div>
-                        <div class="idle-trending-list">
-                            ${emotesHtml}
-                        </div>
-                    </div>
+                <div class="split-divider"></div>
+                <div class="split-col">
+                    <div class="col-header">EMOTES <span class="col-count">(${totalEmotes})</span></div>
+                    <div class="col-list">${emotesHtml}</div>
                 </div>
             </div>
         `;
@@ -478,46 +457,42 @@ class IdleDisplayManager {
      * Renderiza pantalla de logros y level-ups con estilo terminal
      * @private
      */
+    /**
+     * Renderiza pantalla de logros y level-ups con estilo limpio
+     * @private
+     */
     _renderAchievementsScreen(screenData) {
         const { data } = screenData;
 
         let recentHtml = '';
         if (data.recent && data.recent.length > 0) {
-            data.recent.forEach(levelUp => {
+            data.recent.slice(0, 3).forEach(levelUp => {
                 recentHtml += `
-                    <div class="idle-levelup-line">
-                        <span class="idle-levelup-prompt">></span>
-                        <span class="idle-levelup-user">${levelUp.username}</span>
-                        <span class="idle-levelup-arrow">-></span>
-                        <span class="idle-levelup-level">LVL ${levelUp.newLevel}</span>
+                    <div class="recent-levelup-item">
+                        <span class="levelup-user">${levelUp.username}</span>
+                        <div class="levelup-badge">LVL ${levelUp.newLevel}</div>
                     </div>
                 `;
             });
         } else {
-            recentHtml = '<div class="idle-empty-state small">SIN SUBIDAS DE NIVEL</div>';
+            recentHtml = '<div class="empty-message small">NINGUNO RECIENTEMENTE</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-terminal">
-                <div class="idle-terminal-header">
-                    <span class="idle-terminal-prompt">></span>
-                    <span class="idle-terminal-title">PROGRESO_HOY</span>
-                    <span class="idle-terminal-separator"></span>
+            <div class="idle-screen-title">PROGRESO GLOBAL</div>
+            <div class="idle-stats-row">
+                <div class="big-stat-box">
+                    <span class="big-stat-num">${data.levelUps}</span>
+                    <span class="big-stat-label">NIVELES</span>
                 </div>
-                <div class="idle-terminal-body">
-                    <div class="idle-progress-stats">
-                        <div class="idle-progress-box">
-                            <span class="idle-progress-num">${data.levelUps}</span>
-                            <div class="idle-progress-label">NIVELES</div>
-                        </div>
-                        <div class="idle-progress-box">
-                            <span class="idle-progress-num">${data.achievements}</span>
-                            <div class="idle-progress-label">LOGROS</div>
-                        </div>
-                    </div>
-                    <div class="idle-recent-header">ULTIMOS LEVEL-UPS</div>
-                    ${recentHtml}
+                <div class="big-stat-box">
+                    <span class="big-stat-num">${data.achievements}</span>
+                    <span class="big-stat-label">LOGROS</span>
                 </div>
+            </div>
+            <div class="recent-section">
+                <div class="section-label">ÚLTIMOS ASCENSOS</div>
+                ${recentHtml}
             </div>
         `;
     }
@@ -526,32 +501,34 @@ class IdleDisplayManager {
      * Renderiza pantalla de rachas con estilo terminal
      * @private
      */
+    /**
+     * Renderiza pantalla de rachas - diseño Hero
+     * @private
+     */
     _renderStreaksScreen(screenData) {
         const { data } = screenData;
 
         let streakContent = '';
         if (data.highestStreak) {
             streakContent = `
-                <div class="idle-streak-display">
-                    <div class="idle-streak-big">${data.highestStreak.days}</div>
-                    <div class="idle-streak-unit">DIAS</div>
-                    <div class="idle-streak-owner">${data.highestStreak.username}</div>
+                <div class="hero-streak-card">
+                    <div class="streak-days">${data.highestStreak.days}</div>
+                    <div class="streak-label">DÍAS CONSECUTIVOS</div>
+                    <div class="streak-owner-badge">
+                         👑 ${data.highestStreak.username}
+                    </div>
                 </div>
             `;
         } else {
-            streakContent = '<div class="idle-empty-state">SIN RACHAS ACTIVAS</div>';
+            streakContent = '<div class="empty-message">SIN RACHAS AUN</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-terminal">
-                <div class="idle-terminal-header">
-                    <span class="idle-terminal-prompt">></span>
-                    <span class="idle-terminal-title">RACHA_MAXIMA</span>
-                    <span class="idle-terminal-separator"></span>
-                </div>
-                <div class="idle-terminal-body">
-                    ${streakContent}
-                    <div class="idle-streak-total">${data.totalActive} RACHAS ACTIVAS</div>
+            <div class="idle-screen-title">MAYOR RACHA</div>
+            <div class="idle-hero-container">
+                ${streakContent}
+                <div class="sub-stat">
+                    <span class="highlight">${data.totalActive}</span> RACHAS ACTIVAS
                 </div>
             </div>
         `;

@@ -824,7 +824,7 @@ body {
         /* Capa superior: Gradiente oscuro suave */
         linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
         /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
-        url('../img/takeru.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        url('../img/takeru.jpg') center calc(100% + 35px) / 100% 65% no-repeat,
         /* Capa inferior: Fondo base */
         #0a0a0f !important;
 
@@ -837,7 +837,7 @@ body {
         /* Capa superior: Gradiente oscuro suave */
         linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
         /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
-        url('../img/chandalf.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        url('../img/chandalf.jpg') center calc(100% + 35px) / 100% 65% no-repeat,
         /* Capa inferior: Fondo base */
         #0a0a0f !important;
 
@@ -862,7 +862,7 @@ body {
         /* Capa superior: Gradiente oscuro suave */
         linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
         /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
-        url('../img/x1lenz.png') center calc(100% + 35px) / 100% 65% no-repeat,
+        url('../img/x1lenz.jpg') center calc(100% + 35px) / 100% 65% no-repeat,
         /* Capa inferior: Fondo base */
         #0a0a0f !important;
 
