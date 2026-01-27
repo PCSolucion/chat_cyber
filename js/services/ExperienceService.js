@@ -143,7 +143,7 @@ class ExperienceService {
             // Títulos por nivel exacto o rango inicial
             titles: {
                 1: 'CIVILIAN',
-                5: 'STREET RAT',
+                5: 'ROOKIE',
                 10: 'MERCENARY',
                 15: 'SOLO',
                 20: 'NETRUNNER',

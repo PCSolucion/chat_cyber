@@ -177,7 +177,12 @@
 
                     const iconTd = document.createElement('td');
                     iconTd.className = 'icon-cell';
-                    iconTd.textContent = ach.icon || '🏆';
+                    // Mostrar imagen (prioridad) o texto como fallback
+                    if (ach.image) {
+                        iconTd.innerHTML = `<img src="${ach.image}" style="width: 48px; height: 48px; object-fit: contain;">`;
+                    } else {
+                        iconTd.innerHTML = `<img src="img/logros/default.png" style="width: 48px; height: 48px; object-fit: contain;">`;
+                    }
 
                     const nameTd = document.createElement('td');
                     nameTd.innerHTML = `<strong>${ach.name}</strong>`;

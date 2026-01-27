@@ -78,7 +78,9 @@ class AchievementService {
                 condition: achData.condition,
                 category: achData.category,
                 rarity: achData.rarity,
-                icon: achData.icon,
+                // Si hay imagen especifica usi esa, sino usa default.png, ignoramos icono
+                image: achData.image || 'img/logros/default.png',
+                icon: null, // Ignoramos el icono original
                 // Generar función check a partir de la regla
                 check: this._createCheckFunction(achData.rule)
             };

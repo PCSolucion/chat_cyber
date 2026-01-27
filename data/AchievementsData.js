@@ -16,6 +16,7 @@
  *     category: "messages|streaks|levels|xp|ranking|stream|holidays|special|bro",
  *     rarity: "common|uncommon|rare|epic|legendary",
  *     icon: "🎮",
+ *     image: "img/logros/achievement_name.png", // [NUEVO] Ruta a la imagen (opcional)
  *     rule: { field: "userData.totalMessages", operator: ">=", value: 100 }
  * }
  * 
@@ -41,6 +42,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "💬",
+            image: "img/logros/first_words.png", // Ejemplo de imagen
             rule: { field: "userData.totalMessages", operator: ">=", value: 10 }
         },
         chatterbox: {
@@ -68,6 +70,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "uncommon",
             icon: "🎙️",
+            image: "img/logros/motormouth.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 250 }
         },
         choom_speaker: {

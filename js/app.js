@@ -207,7 +207,7 @@ class App {
                 // Lista de logros de prueba con diferentes rarezas
                 const testAchievements = [
                     { id: 'test_common', name: 'First Words', description: 'Tu primer mensaje en el chat', condition: '1 mensaje', rarity: 'common', icon: '💬' },
-                    { id: 'test_uncommon', name: 'Motormouth', description: 'Hablas más que un fixer', condition: '50 mensajes', rarity: 'uncommon', icon: '🎙️' },
+                    { id: 'test_uncommon', name: 'Motormouth', description: 'Hablas más que un fixer', condition: '50 mensajes', rarity: 'uncommon', icon: '🎙️', image: 'img/logros/motormouth.png' },
                     { id: 'test_rare', name: 'Voice of Night City', description: 'Tu voz resuena en las calles', condition: '1000 mensajes', rarity: 'rare', icon: '🌃' },
                     { id: 'test_epic', name: 'Chrome Tongue', description: 'Lengua mejorada cyberware', condition: '5000 mensajes', rarity: 'epic', icon: '🦾' },
                     { id: 'test_legendary', name: 'Netrunner Comms', description: 'Comunicaciones de élite', condition: '25000 mensajes', rarity: 'legendary', icon: '🧠' }

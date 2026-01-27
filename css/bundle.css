@@ -851,7 +851,11 @@ body {
 .container.x1lenz-bg .status-bar,
 .container.x1lenz-bg .header,
 .container.chandalf-bg .status-bar,
-.container.chandalf-bg .header {
+.container.chandalf-bg .header,
+.container.manguerazo-bg .status-bar,
+.container.manguerazo-bg .header,
+.container.duckcris-bg .status-bar,
+.container.duckcris-bg .header {
     background: #0a0a0f !important;
     z-index: 2;
     /* Asegurar que tape el fondo del contenedor */
@@ -1313,7 +1317,7 @@ body {
 .quote {
     padding: 20px;
     min-height: 100px;
-    max-height: 120px;
+    flex: 1;
     overflow: hidden;
     font-size: var(--message-size);
     color: var(--text-bright);
@@ -1732,7 +1736,7 @@ body {
     position: absolute;
     left: 5px;
     top: 50%;
-    transform: translateY(-120%);
+    transform: translateY(0);
     font-family: var(--font-orbitron);
     font-size: 15px;
     font-weight: 700;
@@ -1741,11 +1745,12 @@ body {
     opacity: 0;
     white-space: nowrap;
     pointer-events: none;
-    transition: opacity 0.2s ease-out;
+    transition: opacity 0.2s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .xp-gain-indicator.show {
     opacity: 1;
+    transform: translateY(-120%);
     animation: none;
 }
 
@@ -1765,6 +1770,7 @@ body {
 }
 
 .xp-title-icon {
+    display: none !important;
     color: #00f6ff;
     font-size: 10px;
     animation: xpTitlePulse 2s infinite;
@@ -1785,7 +1791,7 @@ body {
 
 .xp-title-text {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.9);
     letter-spacing: 0.5px;
@@ -2345,7 +2351,6 @@ body {
     text-shadow: none !important;
     /* Remove glow for cleaner look */
 }
-}
 
 /* ===========================================
    ACHIEVEMENT TEXT ALIGNMENT FIX
@@ -2361,22 +2366,23 @@ body {
 }
 
 /* ===========================================
-   ACHIEVEMENT BAR COLOR CORRECTION (BLUE)
+   ACHIEVEMENT BAR COLOR CORRECTION (YELLOW #F8D100)
    =========================================== */
 .achievement-bar-track {
-    border-color: rgba(5, 213, 250, 0.3) !important;
+    border-color: rgba(248, 209, 0, 0.4) !important;
 }
 
 .achievement-bar-fill {
-    background: linear-gradient(90deg, #04a2be 0%, var(--cyber-blue) 40%, #72eaff 60%, var(--cyber-blue) 100%) !important;
-    box-shadow: 0 0 8px rgba(5, 213, 250, 0.4) !important;
-    background-size: 200% 100% !important;
+    background: #F8D100 !important;
+    box-shadow: 0 0 8px rgba(248, 209, 0, 0.5) !important;
+    background-size: initial !important;
+    animation: none !important;
 }
 
 /* Update label color to match if desired, though XP label color is usually standard */
 .achievement-label {
-    color: var(--cyber-blue) !important;
-    text-shadow: 0 0 5px rgba(5, 213, 250, 0.3);
+    color: #F8D100 !important;
+    text-shadow: 0 0 5px rgba(248, 209, 0, 0.4);
 }
 
 
@@ -2498,15 +2504,15 @@ body {
    ACHIEVEMENT BAR TRANSPARENCY
    =========================================== */
 .achievement-bar-track {
-    border-color: rgba(5, 213, 250, 0.15) !important;
-    /* Reduced opacity on border */
-    background: rgba(255, 255, 255, 0.05) !important;
-    /* More transparent internal background */
+    border-color: rgba(248, 209, 0, 0.3) !important;
+    /* Reduced transparency on border */
+    background: rgba(255, 255, 255, 0.1) !important;
+    /* Less transparent internal background */
 }
 
 .achievement-bar-fill {
-    opacity: 0.8 !important;
-    /* Slightly transparent fill */
+    opacity: 0.95 !important;
+    /* Much more solid fill */
 }
 
 
@@ -2514,8 +2520,8 @@ body {
    ACHIEVEMENT BAR FILL TRANSPARENCY ADJUSTMENT
    =========================================== */
 .achievement-bar-fill {
-    opacity: 0.6 !important;
-    /* Increased transparency (was 0.8) */
+    opacity: 0.9 !important;
+    /* Reduced transparency significantly */
 }
 
 
@@ -2543,9 +2549,41 @@ body {
     box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Ocultar fondo en la cabecera para manguerazo */
-.container.manguerazo-bg .status-bar,
-.container.manguerazo-bg .header {
-    background: #0a0a0f !important;
-    z-index: 2;
+
+
+/* ===========================================
+   ACHIEVEMENT BAR COLOR REVERT (MATCH XP BAR)
+   =========================================== */
+.achievement-bar-track {
+    border: none !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.achievement-bar-fill {
+    background: linear-gradient(90deg, #ff5959 0%, var(--xp-primary) 40%, var(--xp-primary-light) 60%, var(--xp-primary) 100%) !important;
+    background-size: 200% 100% !important;
+    box-shadow: 0 0 8px rgba(var(--xp-primary-rgb), 0.4) !important;
+    animation: liquidFlow 4s ease-in-out infinite !important;
+    opacity: 1 !important;
+}
+
+.achievement-label {
+    color: var(--xp-text-secondary) !important;
+    text-shadow: none !important;
+}
+
+/* ===========================================
+   DUCKCRIS CUSTOM BACKGROUND
+   =========================================== */
+.container.duckcris-bg {
+    background:
+        /* Capa superior: Gradiente oscuro suave */
+        linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
+        /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
+        url('../img/duckcris.jpg') center calc(100% + 35px) / 100% 65% no-repeat,
+        /* Capa inferior: Fondo base */
+        #0a0a0f !important;
+
+    /* Sin borde extra */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
 }

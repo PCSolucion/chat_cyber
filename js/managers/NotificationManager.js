@@ -26,7 +26,7 @@ class NotificationManager {
         this.isShowingNotification = false;
 
         // Configuración de tiempos
-        this.NOTIFICATION_DISPLAY_TIME = 7000; // 7 segundos
+        this.NOTIFICATION_DISPLAY_TIME = 9000; // 9 segundos
         this.NOTIFICATION_FADE_TIME = 500;     // 0.5 segundos
         this.QUEUE_MAX_SIZE = 5;               // Máximo 5 en cola
 
@@ -172,10 +172,13 @@ class NotificationManager {
         notification.className = 'achievement-notification';
         notification.setAttribute('data-rarity', achievement.rarity);
 
-        const iconFile = this.rarityIconMap[achievement.rarity] || 'tier1.png';
-        const iconPath = `img/logros/${iconFile}`;
+        // Usamos la imagen del logro (que ya viene con default.png si no tiene específica)
+        const imagePath = achievement.image || 'img/logros/default.png';
 
         notification.innerHTML = `
+            <div class="achievement-icon">
+                <img src="${imagePath}" alt="Achievement Icon" onerror="this.onerror=null;this.src='img/logros/default.png';">
+            </div>
             <div class="achievement-content">
                 <div class="achievement-label">LOGRO DESBLOQUEADO</div>
                 <div class="achievement-name"><span>${achievement.name}</span></div>

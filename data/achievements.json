@@ -69,6 +69,7 @@
             "category": "messages",
             "rarity": "uncommon",
             "icon": "🎙️",
+            "image": "img/logros/motormouth.png",
             "rule": {
                 "field": "userData.totalMessages",
                 "operator": ">=",

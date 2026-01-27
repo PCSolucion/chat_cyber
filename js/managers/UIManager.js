@@ -86,6 +86,7 @@ class UIManager {
             this.dom.container.classList.remove('x1lenz-bg');
             this.dom.container.classList.remove('chandalf-bg');
             this.dom.container.classList.remove('manguerazo-bg');
+            this.dom.container.classList.remove('duckcris-bg');
 
             // Determinar tipo de animación
             const now = Date.now();
@@ -238,6 +239,11 @@ class UIManager {
             // Custom Background for manguerazo
             if (username.toLowerCase() === 'manguerazo') {
                 this.dom.container.classList.add('manguerazo-bg');
+            }
+
+            // Custom Background for DUCKCris
+            if (username.toLowerCase() === 'duckcris') {
+                this.dom.container.classList.add('duckcris-bg');
             }
 
             // Procesar y mostrar mensaje

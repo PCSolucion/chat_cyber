@@ -25,10 +25,8 @@
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    background: linear-gradient(90deg,
-            rgba(0, 240, 255, 0.12) 0%,
-            rgba(0, 240, 255, 0.03) 100%);
-    border-left: 3px solid var(--cyber-cyan, #00f0ff);
+    background: rgba(14, 13, 22, 0.8);
+    border-left: 4px solid #ff4b4b;
     position: relative;
     transform: translateY(-10px);
     opacity: 0;
@@ -48,22 +46,41 @@
 
 /* Icono del logro */
 /* Icono del logro */
+/* Icono del logro */
 .achievement-icon {
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    /* +10% from 45px */
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     /* Prevent shrinking */
+    filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
 }
 
-.achievement-icon-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
-    /* Subtle glow for the icon */
+/* Target img directly */
+/* Target img directly */
+.achievement-icon img {
+    /* Force clean image */
+    all: initial !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    filter: none !important;
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    transform: none !important;
+    clip-path: none !important;
+    mask: none !important;
+    -webkit-mask: none !important;
 }
 
 /* Contenido del logro */
@@ -80,7 +97,8 @@
 /* Label: "LOGRO DESBLOQUEADO" */
 .achievement-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 13px;
+    /* Increased from 10px */
     font-weight: 700;
     color: var(--cyber-cyan, #00f0ff);
     text-transform: uppercase;
@@ -99,7 +117,8 @@
 /* Achievement Name - Marquee Bounce */
 .achievement-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.05rem;
+    font-size: 0.9rem;
+    /* Decreased from 1.05rem */
     font-weight: 800;
     color: #fff;
     text-transform: uppercase;
@@ -189,9 +208,9 @@
     bottom: 0;
     left: 0;
     height: 2px;
-    background: var(--cyber-cyan, #00f0ff);
+    background: #ff4b4b;
     box-shadow: 0 0 4px currentColor;
-    animation: timer-shrink 7s linear forwards;
+    animation: timer-shrink 9s linear forwards;
 }
 
 @keyframes timer-shrink {
@@ -211,8 +230,7 @@
 /* Common - Gris (tier1) */
 .achievement-notification[data-rarity="common"] {
     --rarity-color: #8a8a8a;
-    border-left-color: var(--rarity-color);
-    background: linear-gradient(90deg, rgba(138, 138, 138, 0.12) 0%, transparent 100%);
+    /* Rarity border removed */
 }
 
 .achievement-notification[data-rarity="common"] .achievement-label {
@@ -220,16 +238,12 @@
     text-shadow: none;
 }
 
-.achievement-notification[data-rarity="common"] .achievement-timer {
-    background: var(--rarity-color);
-    box-shadow: none;
-}
+/* Timer Override Removed */
 
-/* Uncommon - Verde Lima (tier2) - Color exacto del borde de la imagen */
+/* Uncommon - Verde (tier2) */
 .achievement-notification[data-rarity="uncommon"] {
-    --rarity-color: #39ff14;
-    border-left-color: var(--rarity-color);
-    background: linear-gradient(90deg, rgba(57, 255, 20, 0.12) 0%, transparent 100%);
+    --rarity-color: #4caf50;
+    /* Rarity border removed */
 }
 
 .achievement-notification[data-rarity="uncommon"] .achievement-label {
@@ -237,15 +251,12 @@
     text-shadow: 0 0 5px var(--rarity-color);
 }
 
-.achievement-notification[data-rarity="uncommon"] .achievement-timer {
-    background: var(--rarity-color);
-}
+/* Timer Override Removed */
 
-/* Rare - Azul Cyan (tier3) - Color exacto del borde de la imagen */
+/* Rare - Azul (tier3) */
 .achievement-notification[data-rarity="rare"] {
-    --rarity-color: #00bfff;
-    border-left-color: var(--rarity-color);
-    background: linear-gradient(90deg, rgba(0, 191, 255, 0.12) 0%, transparent 100%);
+    --rarity-color: #2196f3;
+    /* Rarity border removed */
 }
 
 .achievement-notification[data-rarity="rare"] .achievement-label {
@@ -253,15 +264,12 @@
     text-shadow: 0 0 5px var(--rarity-color);
 }
 
-.achievement-notification[data-rarity="rare"] .achievement-timer {
-    background: var(--rarity-color);
-}
+/* Timer Override Removed */
 
-/* Epic - Magenta/Violeta (tier4) - Color exacto del borde de la imagen */
+/* Epic - Violeta (tier4) */
 .achievement-notification[data-rarity="epic"] {
-    --rarity-color: #bf00ff;
-    border-left-color: var(--rarity-color);
-    background: linear-gradient(90deg, rgba(191, 0, 255, 0.12) 0%, transparent 100%);
+    --rarity-color: #9c27b0;
+    /* Rarity border removed */
 }
 
 .achievement-notification[data-rarity="epic"] .achievement-label {
@@ -273,15 +281,12 @@
     color: #fff;
 }
 
-.achievement-notification[data-rarity="epic"] .achievement-timer {
-    background: var(--rarity-color);
-}
+/* Timer Override Removed */
 
-/* Legendary - Naranja (tier5) - Color exacto del borde de la imagen */
+/* Legendary - Naranja (tier5) */
 .achievement-notification[data-rarity="legendary"] {
-    --rarity-color: #ff6a00;
-    border-left-color: var(--rarity-color);
-    background: linear-gradient(90deg, rgba(255, 106, 0, 0.15) 0%, rgba(255, 106, 0, 0.03) 100%);
+    --rarity-color: #ff9800;
+    /* Rarity border removed */
 }
 
 .achievement-notification[data-rarity="legendary"] .achievement-label {
@@ -294,11 +299,7 @@
     text-shadow: 0 0 10px rgba(255, 106, 0, 0.5);
 }
 
-.achievement-notification[data-rarity="legendary"] .achievement-timer {
-    background: var(--rarity-color);
-    height: 3px;
-    box-shadow: 0 0 8px var(--rarity-color);
-}
+/* Timer Override Removed */
 
 @keyframes legendary-glow {
     0% {
