@@ -184,12 +184,18 @@ class XPDisplayManager {
         // Actualizar Contadores de Logros
         if (this.dom.xpAchievements && this.totalAchievements > 0) {
             const unlockedCount = (xpInfo.achievements || []).length;
-            this.dom.xpAchievements.style.display = 'flex';
+            const percentage = Math.min(100, Math.max(0, (unlockedCount / this.totalAchievements) * 100));
+
+            this.dom.xpAchievements.style.display = 'block';
             this.dom.xpAchievements.innerHTML = `
-                <span class="streak-label">LOGROS:</span>
-                <span class="streak-days">${unlockedCount}/${this.totalAchievements}</span>
+                <div class="achievement-bar-container" title="Logros: ${unlockedCount}/${this.totalAchievements} (${percentage.toFixed(1)}%)">
+                    <span class="achievement-label">LOGROS</span>
+                    <div class="achievement-bar-track">
+                        <div class="achievement-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="achievement-bar-text">${unlockedCount}/${this.totalAchievements}</span>
+                </div>
             `;
-            this.dom.xpAchievements.title = `Logros desbloqueados: ${unlockedCount} de ${this.totalAchievements}`;
         }
 
         // Mostrar XP ganado si hay

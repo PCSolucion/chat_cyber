@@ -333,7 +333,11 @@ class SessionStatsService {
      * Obtiene los top N usuarios más activos
      * @private
      */
-    _getTopUsers(n = 5) {
+    /**
+     * Obtiene los top N usuarios más activos
+     * @private
+     */
+    _getTopUsers(n = 20) {
         return Array.from(this.stats.userMessageCounts.entries())
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)

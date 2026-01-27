@@ -166,7 +166,7 @@ class UIManager {
             }
 
             // Calcular tiempo de visualización
-            let displayTime = this.config.MESSAGE_DISPLAY_TIME;
+            let displayTime = this.config.MESSAGE_DISPLAY_TIME + 1000; // Increased by 1s
             if (['admin', 'top', 'vip'].includes(userRole.role)) {
                 displayTime += 2000; // +2s para usuarios especiales
             }

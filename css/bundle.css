@@ -2009,14 +2009,15 @@ body {
     color: rgba(255, 255, 255, 0.85);
     /* Brighter */
     letter-spacing: 0.5px;
-    background: rgba(0, 0, 0, 0.7);
-    /* Darker bg */
-    padding: 3px 8px;
-    /* Slightly more padding */
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    /* Shadow for separation */
+
+    /* Removed background, border, shadow for Redesign V2 */
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    /* Ensure it takes full width for the inner bar */
 }
 
 .xp-achievements .streak-days {
@@ -2103,12 +2104,14 @@ body {
         padding: 12px;
     }
 }
+
 /* ===========================================
    BRO PROGRESS NOTIFICATION
    =========================================== */
 
 .bro-notification {
-    margin-top: 8px; /* Slightly closer */
+    margin-top: 8px;
+    /* Slightly closer */
     background: rgba(10, 10, 15, 0.9);
     border: 1px solid rgba(252, 238, 9, 0.3);
     border-left: 4px solid var(--cyber-yellow);
@@ -2117,7 +2120,8 @@ body {
     overflow: hidden;
     animation: slideInLeft 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    width: 100%; /* Fit container */
+    width: 100%;
+    /* Fit container */
     margin-bottom: 5px;
 }
 
@@ -2174,3 +2178,337 @@ body {
 .bro-notification:hover {
     border-color: #fff;
 }
+
+/* ===========================================
+   ACHIEVEMENT PROGRESS BAR (FOOTER)
+   =========================================== */
+
+.achievement-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--cyber-yellow);
+    background: rgba(10, 10, 10, 0.6);
+    padding: 3px 6px;
+    border-left: 2px solid var(--cyber-yellow);
+    /* border: 1px solid rgba(252, 238, 9, 0.2); */
+    margin-top: 2px;
+    pointer-events: auto;
+    /* Enable tooltips if any */
+}
+
+.achievement-icon {
+    font-size: 0.9em;
+    filter: drop-shadow(0 0 2px var(--cyber-yellow));
+}
+
+.achievement-bar-track {
+    width: 80px;
+    /* Slightly wider */
+    height: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-bar-fill {
+    height: 100%;
+    background: var(--cyber-yellow);
+    box-shadow: 0 0 6px var(--cyber-yellow);
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.achievement-bar-text {
+    font-weight: bold;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+    margin-left: 2px;
+}
+
+/* ===========================================
+   ACHIEVEMENT PROGRESS BAR (REDESIGN V2)
+   =========================================== */
+
+/* Override absolute positioning wrapper size/pos via inner container */
+.achievement-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    /* Transparent container, no borders */
+    background: transparent;
+    padding: 0;
+    width: 330px;
+    /* Full width */
+    border: none;
+    box-shadow: none;
+
+    pointer-events: auto;
+}
+
+.achievement-label {
+    font-family: var(--font-rajdhani);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--xp-text-secondary);
+    /* Matches XP label color */
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.4) 0%,
+            rgba(255, 255, 255, 0.1) 60%,
+            transparent 100%);
+    pointer-events: none;
+    animation: liquidPulse 2s ease-in-out infinite;
+}
+
+.achievement-bar-text {
+    font-weight: bold;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+    margin-left: 4px;
+    min-width: 50px;
+    text-align: right;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* ===========================================
+   ACHIEVEMENT BAR FIXES (WIDTH & TEXT)
+   =========================================== */
+
+.achievement-bar-container {
+    width: 100% !important;
+    /* Force full width adaptation */
+}
+
+.achievement-bar-text {
+    flex-shrink: 0 !important;
+    /* Prevent text from being squished */
+    white-space: nowrap !important;
+    /* Prevent line breaks */
+    min-width: fit-content !important;
+    padding-left: 6px;
+    /* consistent spacer */
+    margin-left: 0 !important;
+}
+
+.achievement-label {
+    flex-shrink: 0 !important;
+}
+
+.achievement-bar-track {
+    min-width: 20px;
+    /* Ensure track always has minimal visibility */
+}
+
+/* ===========================================
+   ACHIEVEMENT BAR LABEL ALIGNMENT FIX
+   =========================================== */
+.achievement-label {
+    margin-right: -2px;
+    /* Pull label closer to bar */
+    padding-left: 5px;
+    /* Left padding */
+}
+
+
+/* ===========================================
+   FINAL ACHIEVEMENT BAR TWEAKS
+   =========================================== */
+.achievement-bar-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-bottom: 4px !important;
+    /* Slight padding for bottom placement */
+}
+
+/* ===========================================
+   ACHIEVEMENT BAR ALIGNMENT & COLOR FIX
+   =========================================== */
+.xp-achievements {
+    justify-content: flex-start !important;
+    /* Left alignment */
+}
+
+.achievement-bar-text {
+    color: rgba(255, 255, 255, 0.6) !important;
+    /* Grey text */
+    text-shadow: none !important;
+    /* Remove glow for cleaner look */
+}
+}
+
+/* ===========================================
+   ACHIEVEMENT TEXT ALIGNMENT FIX
+   =========================================== */
+.achievement-bar-text {
+    line-height: 1 !important;
+    /* Reset line-height to fix vertical center */
+    padding-bottom: 0 !important;
+    margin-right: -2px !important;
+    /* Nudge right slightly */
+    transform: translateY(1px);
+    /* Micro-adjustment downwards to match bar center */
+}
+
+/* ===========================================
+   ACHIEVEMENT BAR COLOR CORRECTION (BLUE)
+   =========================================== */
+.achievement-bar-track {
+    border-color: rgba(5, 213, 250, 0.3) !important;
+}
+
+.achievement-bar-fill {
+    background: linear-gradient(90deg, #04a2be 0%, var(--cyber-blue) 40%, #72eaff 60%, var(--cyber-blue) 100%) !important;
+    box-shadow: 0 0 8px rgba(5, 213, 250, 0.4) !important;
+    background-size: 200% 100% !important;
+}
+
+/* Update label color to match if desired, though XP label color is usually standard */
+.achievement-label {
+    color: var(--cyber-blue) !important;
+    text-shadow: 0 0 5px rgba(5, 213, 250, 0.3);
+}
+
+
+/* ===========================================
+   REVERTING TEXT COLOR & HEIGHT (KEEPING BLUE BAR)
+   =========================================== */
+
+/* Revert label color to standard XP text color */
+.achievement-label {
+    color: var(--xp-text-secondary) !important;
+    text-shadow: none !important;
+}
+
+/* Revert track height to 18px (matches XP bar standard) */
+.achievement-bar-track {
+    height: 18px !important;
+}
+
+
+/* ===========================================
+   STREAK OWNER BADGE - REMOVE BORDERS
+   =========================================== */
+.streak-owner-badge {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    /* Cleaner look, just text */
+}
+
+
+/* ===========================================
+   FINAL ACHIEVEMENT FIXES
+   =========================================== */
+.xp-achievements {
+    background: transparent !important;
+    /* Force no background */
+    border: none !important;
+    padding: 0 !important;
+}
+
+.achievement-bar-container {
+    padding: 0 !important;
+    /* Remove excess padding */
+    width: 340px !important;
+    /* Force correct width */
+    max-width: 100% !important;
+    justify-content: space-between !important;
+}
+
+.achievement-label {
+    background: none !important;
+    /* Ensure no background on label */
+    padding-left: 0 !important;
+}
+/* ===========================================
+   ACHIEVEMENT BAR SPACING FIX - RESET
+   =========================================== */
+.achievement-bar-container {
+    padding-top: 1px !important;
+    padding-bottom: 2px !important;
+    align-items: center !important; /* Center vertically */
+}
+
+
+/* ===========================================
+   CRITICAL WIDTH FIX FOR ACHIEVEMENT BAR
+   =========================================== */
+.achievement-bar-track {
+    width: auto !important; /* Override any fixed width */
+    flex-grow: 1 !important; /* Force it to take all space */
+    min-width: 50px !important;
+    margin: 0 8px !important; /* Spacing between label and text */
+}
+
+/* Ensure container allows growth */
+.achievement-bar-container {
+    width: 100% !important;
+    justify-content: normal !important; /* Let flex-grow handle spacing, not space-between */
+    box-sizing: border-box !important;
+}
+
+
+/* ===========================================
+   HEIGHT REDUCTION & GRADIENT REMOVAL
+   =========================================== */
+.achievement-bar-track {
+    height: 14px !important; /* Reduced 20% from 18px */
+}
+
+/* Remove red gradient from bottom of container/body if present */
+.container::after {
+    background: none !important; /* Often used for bottom gradients */
+}
+
+
+/* ===========================================
+   FINAL ADJUSTMENTS: HEIGHT & FOOTER REFRESH
+   =========================================== */
+.achievement-bar-track {
+    height: 11px !important; /* Reduced ~20% from 14px */
+}
+
+.footer-tech {
+    background: transparent !important; /* Remove red gradient */
+}
+
+
+/* ===========================================
+   ACHIEVEMENT BAR TRANSPARENCY
+   =========================================== */
+.achievement-bar-track {
+    border-color: rgba(5, 213, 250, 0.15) !important; /* Reduced opacity on border */
+    background: rgba(255, 255, 255, 0.05) !important; /* More transparent internal background */
+}
+
+.achievement-bar-fill {
+    opacity: 0.8 !important; /* Slightly transparent fill */
+}
+
+
+/* ===========================================
+   ACHIEVEMENT BAR FILL TRANSPARENCY ADJUSTMENT
+   =========================================== */
+.achievement-bar-fill {
+    opacity: 0.6 !important; /* Increased transparency (was 0.8) */
+}
+
+
+/* ===========================================
+   ACHIEVEMENT BAR BORDER REMOVAL
+   =========================================== */
+.achievement-bar-track {
+    border: none !important;
+}
+

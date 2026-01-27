@@ -349,7 +349,11 @@ class IdleDisplayManager {
      * @private
      */
     _renderLeaderboardScreen(screenData) {
-        const users = screenData.data || [];
+        // Aseguramos mostrar al menos 15 usuarios si hay datos disponibles
+        // screenData.data viene del SessionStatsService, verifiquemos que traiga suficientes
+        const allUsers = screenData.data || [];
+        // Tomar hasta 20 para el scroll
+        const users = allUsers.slice(0, 20);
 
         let usersHtml = '';
         users.forEach((user, index) => {
@@ -373,10 +377,21 @@ class IdleDisplayManager {
             usersHtml = '<div class="empty-message">ESPERANDO ACTIVIDAD...</div>';
         }
 
-        this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">TOP ACTIVOS</div>
-            <div class="idle-list-container">
+        // Wrapper for animation
+        // Solo animar si hay más de 5 usuarios (que es lo que cabe aprox sin scroll)
+        const shouldScroll = users.length > 5;
+        const animationDuration = Math.max(10, users.length * 2.5); // Min 10s, 2.5s per item
+
+        const content = `
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
                 ${usersHtml}
+            </div>
+        `;
+
+        this._currentScreenContent.innerHTML = `
+            <div class="idle-screen-title">TOP ACTIVOS (${users.length})</div>
+            <div class="idle-list-container">
+                ${content}
             </div>
         `;
     }
@@ -515,7 +530,7 @@ class IdleDisplayManager {
                     <div class="streak-days">${data.highestStreak.days}</div>
                     <div class="streak-label">DÍAS CONSECUTIVOS</div>
                     <div class="streak-owner-badge">
-                         👑 ${data.highestStreak.username}
+                         ${data.highestStreak.username}
                     </div>
                 </div>
             `;
