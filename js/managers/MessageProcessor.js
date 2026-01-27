@@ -333,6 +333,34 @@ class MessageProcessor {
             };
             this.services.achievements.checkAchievements(username, achievementContext);
 
+            // ============================================
+            // BRO PROGRESS BAR
+            // ============================================
+            // Si el mensaje contiene "bro", mostramos el progreso
+            if (/\bbro\b/i.test(message) && this.notificationManager) {
+                const stats = this.services.achievements.getUserStats(username);
+                const broCount = stats.broCount || 0;
+
+                // Hitos definidos en AchievementsData (1, 10, 20, 50, 100)
+                const broMilestones = [1, 10, 20, 50, 100];
+
+                // Encontrar el siguiente hito (el primero que sea mayor que el count actual)
+                // Si broCount es 10, el siguiente es 20.
+                let nextMilestone = broMilestones.find(m => m > broCount);
+
+                // Si está justo en un hito (ej: 10), mostramos ese hito como meta cumplida por un momento
+                // O mejor, mostramos el progreso hacia el siguiente.
+                // Si broCount == 10, find(m > 10) retorna 20. Muestra 10/20.
+                // Si el usuario quiere ver "como va ese logro", y acaba de conseguir el de 10, ver que ya va a por el de 20 es correcto.
+
+                // Fallback para super usuarios
+                if (!nextMilestone) {
+                    nextMilestone = Math.ceil((broCount + 1) / 100) * 100;
+                }
+
+                this.notificationManager.showBroProgress(broCount, nextMilestone);
+            }
+
             // Inyectar la lista actualizada de logros en xpResult
             const latestData = this.services.xp.getUserData(username);
             xpResult.achievements = latestData.achievements || [];

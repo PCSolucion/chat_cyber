@@ -127,6 +127,7 @@ class SessionStatsService {
      */
     trackMessage(username, message, context = {}) {
         const lowerUser = username.toLowerCase();
+        if (lowerUser === 'wizebot') return;
 
         // Contadores básicos
         this.stats.totalMessages++;
@@ -181,7 +182,7 @@ class SessionStatsService {
             const name = typeof emote === 'string' ? emote : emote.name;
             const provider = typeof emote === 'object' ? emote.provider : 'twitch';
             const url = typeof emote === 'object' ? emote.url : null;
-            
+
             const existing = this.stats.emotesUsedByName.get(name);
             if (existing) {
                 existing.count++;

@@ -103,6 +103,57 @@ class NotificationManager {
         }, totalTime);
     }
 
+
+    /**
+     * Muestra una barra de progreso para el contador de "Bro"
+     * @param {number} current - Contador actual
+     * @param {number} max - Meta del siguiente logro
+     */
+    showBroProgress(current, max) {
+        const container = document.getElementById('achievement-notifications');
+        if (!container) return;
+
+        // Crear elemento
+        const notification = document.createElement('div');
+        notification.className = 'bro-notification';
+
+        // Calcular porcentaje
+        const percent = Math.min(100, Math.max(0, (current / max) * 100));
+
+        notification.innerHTML = `
+            <div class="bro-header">
+                <div class="bro-title">
+                    <span>👊 BRO COUNT</span>
+                </div>
+                <div class="bro-count">${current} / ${max}</div>
+            </div>
+            <div class="bro-progress-container">
+                <div class="bro-progress-fill" style="width: 0%"></div>
+            </div>
+        `;
+
+        container.appendChild(notification);
+
+        // Animar barra
+        requestAnimationFrame(() => {
+            const fill = notification.querySelector('.bro-progress-fill');
+            if (fill) fill.style.width = `${percent}%`;
+        });
+
+        // Extender tiempo widget
+        if (this.uiManager) {
+            this.uiManager.extendDisplayTime(4000);
+        }
+
+        // Remover después de 3-4 segundos
+        setTimeout(() => {
+            notification.classList.add('hiding');
+            setTimeout(() => {
+                if (notification.parentNode) notification.parentNode.removeChild(notification);
+            }, 500);
+        }, 3500);
+    }
+
     /**
      * Muestra físicamente la notificación de logro
      * @private
