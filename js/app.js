@@ -291,25 +291,31 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
      * Se actualiza cada 5 minutos
      */
     startStreamCategoryUpdate() {
-        const updateCategory = async () => {
+        const updateMetadata = async () => {
             if (!this.twitchService) return;
 
+            // 1. Obtener Categoría (Juego)
             const category = await this.twitchService.fetchChannelCategory();
-            // Solo actualizamos si obtuvimos una categoría válida
-            if (category && this.processor) {
+
+            // 2. Obtener Estado (Online/Offline)
+            const isOnline = await this.twitchService.fetchStreamStatus();
+
+            if (this.processor) {
                 const uiManager = this.processor.getManager('ui');
                 if (uiManager) {
-                    uiManager.updateStreamCategory(category);
+                    // Actualizar UI
+                    if (category) uiManager.updateStreamCategory(category);
+                    uiManager.updateSystemStatus(isOnline);
                 }
             }
         };
 
         // Primera llamada inmediata (con un pequeño delay para asegurar carga de UI)
-        setTimeout(updateCategory, 2000);
+        setTimeout(updateMetadata, 2000);
 
         // Actualizar según configuración (default 5 min)
         const interval = this.config.STREAM_CATEGORY_UPDATE_INTERVAL || 300000;
-        this.categoryInterval = setInterval(updateCategory, interval);
+        this.categoryInterval = setInterval(updateMetadata, interval);
     }
 
     async destroy() {

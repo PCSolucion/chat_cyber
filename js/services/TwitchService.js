@@ -137,6 +137,28 @@ class TwitchService {
     }
 
     /**
+     * Verifica si el stream está online u offline
+     * @returns {Promise<boolean>} true si está online, false si está offline
+     */
+    async fetchStreamStatus() {
+        try {
+            const response = await fetch(`https://decapi.me/twitch/uptime/${this.channel}`);
+            if (!response.ok) {
+                return false; // Asumir offline en error
+            }
+
+            const text = await response.text();
+            // La API devuelve "Channel is offline" o similar si no está en directo
+            // Si está en directo devuelve el tiempo ej: "1 hour, 30 mins"
+            const isOffline = text.toLowerCase().includes('offline');
+            return !isOffline;
+        } catch (error) {
+            console.warn('⚠️ No se pudo verificar estado del stream:', error);
+            return false;
+        }
+    }
+
+    /**
      * Desconecta del canal de Twitch
      */
     disconnect() {

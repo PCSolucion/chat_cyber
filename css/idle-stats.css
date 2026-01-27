@@ -347,27 +347,33 @@
 
 .col-header {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.95rem;
+    /* Increased from 0.75rem */
     color: var(--cyber-cyan, #00f6ff);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    /* Increased spacing */
     text-transform: uppercase;
     display: flex;
     justify-content: space-between;
+    font-weight: 700;
 }
 
 .col-count {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.6);
+    /* Brighter */
 }
 
 .col-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    /* Increased gap */
 }
 
 .trend-item {
     position: relative;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    /* More spacing */
 }
 
 .trend-info {
@@ -376,40 +382,52 @@
     align-items: center;
     position: relative;
     z-index: 2;
-    padding: 2px 4px;
+    padding: 4px 6px;
+    /* Increased padding */
 }
 
 .trend-name {
-    font-size: 0.85rem;
+    font-size: 1.1rem;
+    /* Increased from 0.85rem */
     color: #fff;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80px;
+    max-width: 100%;
+    /* Removing hard limit of 80px */
+    flex: 1;
+    /* Take available space */
+    margin-right: 10px;
 }
 
 .trend-name-flex {
     display: flex;
     align-items: center;
-    height: 24px;
+    height: 28px;
+    /* Slight increase */
 }
 
 .mini-emote {
-    max-height: 24px;
-    max-width: 24px;
+    max-height: 28px;
+    /* Increased */
+    max-width: 28px;
     object-fit: contain;
 }
 
 .mini-emote-text {
-    font-size: 0.8rem;
+    font-size: 1.1rem;
+    /* Increased from 0.8rem */
     color: #fff;
 }
 
 .trend-count {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    /* Increased from 0.8rem */
+    color: rgba(255, 255, 255, 0.9);
+    /* Brighter */
     font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
 }
 
 .trend-bar-bg {

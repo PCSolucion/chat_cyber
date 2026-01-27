@@ -53,6 +53,8 @@ class UIManager {
             userBadge: document.getElementById('user-badge'),
             adminIcon: document.getElementById('admin-icon'),
             streamCategory: document.getElementById('stream-category'),
+            systemStatus: document.getElementById('system-status-text'),
+            liveBadge: document.querySelector('.live-badge'),
             root: document.documentElement
         };
     }
@@ -394,6 +396,34 @@ class UIManager {
             this.dom.streamCategory.textContent = categoryName.toUpperCase();
             this.dom.streamCategory.style.opacity = '1';
         }, 300);
+    }
+
+    /**
+     * Actualiza el estado del sistema (ONLINE/OFFLINE)
+     * @param {boolean} isOnline 
+     */
+    updateSystemStatus(isOnline) {
+        if (!this.dom.systemStatus) return;
+
+        const text = isOnline ? 'SYS.ONLINE' : 'SYS.OFFLINE';
+
+        // Solo actualizar si cambia
+        if (this.dom.systemStatus.textContent !== text) {
+            this.dom.systemStatus.style.opacity = '0';
+            setTimeout(() => {
+                this.dom.systemStatus.textContent = text;
+                this.dom.systemStatus.style.opacity = '1';
+
+                // Opcional: Cambiar color si es offline
+                if (!isOnline) {
+                    this.dom.systemStatus.style.color = '#555'; // Greyed out for offline
+                    if (this.dom.liveBadge) this.dom.liveBadge.style.display = 'none';
+                } else {
+                    this.dom.systemStatus.style.color = ''; // Reset to default
+                    if (this.dom.liveBadge) this.dom.liveBadge.style.display = 'block';
+                }
+            }, 300);
+        }
     }
 
     /**
