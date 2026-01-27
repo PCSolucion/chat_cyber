@@ -2431,13 +2431,15 @@ body {
     /* Ensure no background on label */
     padding-left: 0 !important;
 }
+
 /* ===========================================
    ACHIEVEMENT BAR SPACING FIX - RESET
    =========================================== */
 .achievement-bar-container {
     padding-top: 1px !important;
     padding-bottom: 2px !important;
-    align-items: center !important; /* Center vertically */
+    align-items: center !important;
+    /* Center vertically */
 }
 
 
@@ -2445,16 +2447,20 @@ body {
    CRITICAL WIDTH FIX FOR ACHIEVEMENT BAR
    =========================================== */
 .achievement-bar-track {
-    width: auto !important; /* Override any fixed width */
-    flex-grow: 1 !important; /* Force it to take all space */
+    width: auto !important;
+    /* Override any fixed width */
+    flex-grow: 1 !important;
+    /* Force it to take all space */
     min-width: 50px !important;
-    margin: 0 8px !important; /* Spacing between label and text */
+    margin: 0 8px !important;
+    /* Spacing between label and text */
 }
 
 /* Ensure container allows growth */
 .achievement-bar-container {
     width: 100% !important;
-    justify-content: normal !important; /* Let flex-grow handle spacing, not space-between */
+    justify-content: normal !important;
+    /* Let flex-grow handle spacing, not space-between */
     box-sizing: border-box !important;
 }
 
@@ -2463,12 +2469,14 @@ body {
    HEIGHT REDUCTION & GRADIENT REMOVAL
    =========================================== */
 .achievement-bar-track {
-    height: 14px !important; /* Reduced 20% from 18px */
+    height: 14px !important;
+    /* Reduced 20% from 18px */
 }
 
 /* Remove red gradient from bottom of container/body if present */
 .container::after {
-    background: none !important; /* Often used for bottom gradients */
+    background: none !important;
+    /* Often used for bottom gradients */
 }
 
 
@@ -2476,11 +2484,13 @@ body {
    FINAL ADJUSTMENTS: HEIGHT & FOOTER REFRESH
    =========================================== */
 .achievement-bar-track {
-    height: 11px !important; /* Reduced ~20% from 14px */
+    height: 11px !important;
+    /* Reduced ~20% from 14px */
 }
 
 .footer-tech {
-    background: transparent !important; /* Remove red gradient */
+    background: transparent !important;
+    /* Remove red gradient */
 }
 
 
@@ -2488,12 +2498,15 @@ body {
    ACHIEVEMENT BAR TRANSPARENCY
    =========================================== */
 .achievement-bar-track {
-    border-color: rgba(5, 213, 250, 0.15) !important; /* Reduced opacity on border */
-    background: rgba(255, 255, 255, 0.05) !important; /* More transparent internal background */
+    border-color: rgba(5, 213, 250, 0.15) !important;
+    /* Reduced opacity on border */
+    background: rgba(255, 255, 255, 0.05) !important;
+    /* More transparent internal background */
 }
 
 .achievement-bar-fill {
-    opacity: 0.8 !important; /* Slightly transparent fill */
+    opacity: 0.8 !important;
+    /* Slightly transparent fill */
 }
 
 
@@ -2501,7 +2514,8 @@ body {
    ACHIEVEMENT BAR FILL TRANSPARENCY ADJUSTMENT
    =========================================== */
 .achievement-bar-fill {
-    opacity: 0.6 !important; /* Increased transparency (was 0.8) */
+    opacity: 0.6 !important;
+    /* Increased transparency (was 0.8) */
 }
 
 
@@ -2512,3 +2526,26 @@ body {
     border: none !important;
 }
 
+
+/* ===========================================
+   USER SPECIFIC BACKGROUNDS
+   =========================================== */
+.container.manguerazo-bg {
+    background:
+        /* Capa superior: Gradiente oscuro suave */
+        linear-gradient(180deg, rgba(10, 10, 18, 0.65), rgba(10, 10, 18, 0.75)),
+        /* Capa media: Imagen limitada al 65% inferior, desplazada 35px abajo */
+        url('../img/manguerazo.jpg') center calc(100% + 35px) / 100% 65% no-repeat,
+        /* Capa inferior: Fondo base */
+        #0a0a0f !important;
+
+    /* Sin borde extra */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Ocultar fondo en la cabecera para manguerazo */
+.container.manguerazo-bg .status-bar,
+.container.manguerazo-bg .header {
+    background: #0a0a0f !important;
+    z-index: 2;
+}

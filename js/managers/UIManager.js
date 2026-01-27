@@ -83,6 +83,7 @@ class UIManager {
             this.dom.container.classList.remove('takeru-bg');
             this.dom.container.classList.remove('x1lenz-bg');
             this.dom.container.classList.remove('chandalf-bg');
+            this.dom.container.classList.remove('manguerazo-bg');
 
             // Determinar tipo de animación
             const now = Date.now();
@@ -230,6 +231,11 @@ class UIManager {
             // Custom Background for chandalf
             if (['chandalf', 'c_h_a_n_d_a_l_f'].includes(username.toLowerCase())) {
                 this.dom.container.classList.add('chandalf-bg');
+            }
+
+            // Custom Background for manguerazo
+            if (username.toLowerCase() === 'manguerazo') {
+                this.dom.container.classList.add('manguerazo-bg');
             }
 
             // Procesar y mostrar mensaje
