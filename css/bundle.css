@@ -671,8 +671,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: 10px;
-    margin-right: auto;
+    margin-left: auto;
+    margin-right: 0;
     gap: 2px;
     flex: 0 0 auto;
     min-width: max-content;

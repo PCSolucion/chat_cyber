@@ -15,7 +15,8 @@ class SessionStatsService {
         this.achievementService = achievementService;
 
         // Timestamp de inicio de sesión
-        this.sessionStart = Date.now();
+        this.sessionStart = null;
+        this.isLive = false;
 
         // Contadores de sesión
         this.stats = {
@@ -270,7 +271,11 @@ class SessionStatsService {
      * @returns {Object} Estadísticas resumidas
      */
     getDisplayStats() {
-        const sessionDuration = Date.now() - this.sessionStart;
+        // Si no estamos en directo, la duración es 0
+        const sessionDuration = (this.isLive && this.sessionStart)
+            ? Date.now() - this.sessionStart
+            : 0;
+
         const sessionMinutes = Math.floor(sessionDuration / 60000);
         const sessionHours = Math.floor(sessionMinutes / 60);
 
@@ -487,6 +492,8 @@ class SessionStatsService {
 
     /**
      * Resetea estadísticas de sesión
+     * NOTA: Esto solo reinicia los contadores visuales de LA SESIÓN ACTUAL.
+     * NO borra niveles, logros ni rachas persistentes de la base de datos (ExperienceService).
      */
     reset() {
         this.sessionStart = Date.now();
@@ -508,6 +515,49 @@ class SessionStatsService {
 
         this.lastMinuteMessages = 0;
         this.lastMinuteUsers = new Set();
+    }
+
+    /**
+     * Actualiza el estado del stream para controlar la sesión
+     * @param {boolean} isOnline 
+     */
+    setStreamStatus(isOnline) {
+        if (isOnline) {
+            // Si pasamos a ONLINE y no estábamos trackeando, iniciamos sesión
+            if (!this.isLive) {
+                console.log('🔴 Stream ONLINE detector: Starting session stats...');
+                this.startSession();
+            }
+        } else {
+            // Si pasamos a OFFLINE y estábamos trackeando, paramos
+            if (this.isLive) {
+                console.log('⚫ Stream OFFLINE detector: Stopping session stats...');
+                this.stopSession();
+            }
+        }
+    }
+
+    /**
+     * Inicia una nueva sesión de estadísticas
+     */
+    startSession() {
+        // Solo resetear si venimos de un estado offline y hay datos viejos
+        // Esto previene reinicios accidentales si hay micro-cortes
+        if (!this.isLive) {
+            this.reset();
+        }
+        this.isLive = true;
+        this.sessionStart = Date.now();
+    }
+
+    /**
+     * Detiene la sesión actual
+     */
+    stopSession() {
+        this.isLive = false;
+        this.sessionStart = null;
+        // NO reseteamos las stats (mensajes, usuarios, etc) para mantener los datos visibles
+        // hasta el próximo directo o reinicio manual
     }
 
     /**

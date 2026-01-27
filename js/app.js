@@ -287,10 +287,14 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
     }
 
     /**
-     * Inicia el ciclo de actualización de categoría del stream
-     * Se actualiza cada 5 minutos
+     * Inicia el ciclo de actualización de categoría y estado del stream
+     * - OFFLINE: Comprueba cada 1 min para detectar inicio rápido
+     * - ONLINE: Comprueba cada 10 min para reducir carga
      */
     startStreamCategoryUpdate() {
+        // Variable para controlar el timer
+        this.categoryTimer = null;
+
         const updateMetadata = async () => {
             if (!this.twitchService) return;
 
@@ -307,19 +311,28 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
                     if (category) uiManager.updateStreamCategory(category);
                     uiManager.updateSystemStatus(isOnline);
                 }
+
+                // Actualizar lógica de sesión
+                this.processor.updateStreamStatus(isOnline);
             }
+
+            // Calcular próximo intervalo
+            // Offline -> 1 minuto (60000ms)
+            // Online -> 10 minutos (600000ms)
+            const nextInterval = isOnline ? 600000 : 60000;
+
+            // Programar siguiente ejecución
+            if (this.categoryTimer) clearTimeout(this.categoryTimer);
+            this.categoryTimer = setTimeout(updateMetadata, nextInterval);
         };
 
         // Primera llamada inmediata (con un pequeño delay para asegurar carga de UI)
-        setTimeout(updateMetadata, 2000);
-
-        // Actualizar según configuración (default 5 min)
-        const interval = this.config.STREAM_CATEGORY_UPDATE_INTERVAL || 300000;
-        this.categoryInterval = setInterval(updateMetadata, interval);
+        this.categoryTimer = setTimeout(updateMetadata, 2000);
     }
 
     async destroy() {
         console.log('🛑 Shutting down...');
+        if (this.categoryTimer) clearTimeout(this.categoryTimer);
         if (this.categoryInterval) clearInterval(this.categoryInterval);
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();

@@ -445,6 +445,15 @@ class MessageProcessor {
         return true;
     }
 
+    /**
+     * Actualiza el estado del stream (Delegado desde App)
+     */
+    updateStreamStatus(isOnline) {
+        if (this.services.sessionStats) {
+            this.services.sessionStats.setStreamStatus(isOnline);
+        }
+    }
+
     async save() {
         if (this.services.xp) {
             console.log('💾 Saving XP data...');
