@@ -18,3 +18,4 @@ Thumbs.db
 
 # Configuration files with secrets
 js/config.js
+achievements-viewer/js/config.js

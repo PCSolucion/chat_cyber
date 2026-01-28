@@ -1,0 +1,21 @@
+# .htaccess para achievements-viewer
+# Permite conexiones a GitHub API para cargar datos
+
+<IfModule mod_headers.c>
+    # CSP personalizado para esta carpeta
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; frame-src 'none'; object-src 'none'; base-uri 'self';"
+</IfModule>
+
+# Asegurar que los archivos .js se sirvan correctamente
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+</IfModule>
+
+# Permitir acceso a esta carpeta
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # No aplicar reglas de WordPress a esta carpeta
+    RewriteRule .* - [L]
+</IfModule>

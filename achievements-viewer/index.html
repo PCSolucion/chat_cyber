@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Night City Achievements Hub - Cyberpunk Chat</title>
+    <meta name="description"
+        content="Consulta los logros desbloqueados por los usuarios del chat de Twitch. Leaderboard, estadísticas y más.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Scanlines Overlay -->
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <!-- Sidebar -->
+        <aside class="main-sidebar">
+            <div class="sidebar-header">
+                <a href="." class="logo-link" onclick="window.location.reload(); return false;">
+                    <div class="logo">
+                        <h1 class="logo-text">Liiukiin <span class="accent">Logros<br>Twitch</span></h1>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="main-nav">
+                <a href="#leaderboard" class="nav-link active" data-section="leaderboard">
+                    <span>LEADERBOARD</span>
+                </a>
+                <a href="#catalog" class="nav-link" data-section="catalog">
+                    <span>CATÁLOGO</span>
+                </a>
+
+                <div class="nav-search">
+                    <div class="search-box-sidebar">
+                        <input type="text" id="user-search" placeholder="Buscar viewer..." autocomplete="off">
+                        <button id="search-btn" title="Buscar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="search-suggestions" class="search-suggestions"></div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-led" id="status-indicator">●</span>
+                    <span class="status-text" id="status-text">CHECKING...</span>
+                </div>
+                <div class="api-info">
+                    <div class="footer-ver">v1.0.0</div>
+                    <div class="footer-credits">By <a href="https://twitch.tv/liiukiin" target="_blank">liiukiin</a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Leaderboard Section -->
+            <section id="leaderboard" class="section active">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        LEADERBOARD
+                        <span class="title-tag">TOP VIEWERS</span>
+                    </h2>
+                    <p class="section-subtitle">Los mejores espectadores del canal clasificados por XP Total</p>
+                </div>
+
+                <div class="leaderboard-container">
+                    <!-- Top 3 Podium -->
+                    <div class="podium" id="podium">
+                        <div class="podium-loading">
+                            <div class="cyber-loader"></div>
+                            <span>CARGANDO DATOS...</span>
+                        </div>
+                    </div>
+
+                    <!-- Full Ranking Table -->
+                    <div class="ranking-table-container">
+                        <table class="ranking-table" id="ranking-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-rank">#</th>
+                                    <th class="col-user">ESPECTADOR</th>
+                                    <th class="col-rank-title">RANGO</th>
+                                    <th class="col-level sortable" data-sort="level" title="Click para ordenar">LVL</th>
+                                    <th class="col-achievements sortable" data-sort="achievements"
+                                        title="Click para ordenar">LOGROS</th>
+                                    <th class="col-xp sortable" data-sort="xp" title="Click para ordenar">XP TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ranking-body">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Catalog Section -->
+            <section id="catalog" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        LISTA DE LOGROS
+                        <span class="title-tag" id="total-achievements-tag">120 LOGROS</span>
+                    </h2>
+                    <p class="section-subtitle">Todos los logros disponibles clasificados por categoría</p>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="category-filters" id="category-filters">
+                    <button class="filter-btn active" data-category="all">
+                        TODOS
+                    </button>
+                </div>
+
+                <!-- Achievements Grid -->
+                <div class="achievements-grid" id="achievements-grid">
+                    <div class="grid-loading">
+                        <div class="cyber-loader"></div>
+                        <span>CARGANDO CATÁLOGO...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search Section -->
+            <section id="search" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        BUSCAR USUARIO
+                        <span class="title-tag">NETRUNNER SEARCH</span>
+                    </h2>
+                    <p class="section-subtitle">Busca un usuario para ver su perfil completo y logros desbloqueados</p>
+                </div>
+
+                <!-- Search Box moved to Sidebar -->
+
+                <!-- User Profile Card -->
+                <div class="user-profile" id="user-profile" style="display: none;">
+                    <!-- Dynamic content -->
+                </div>
+
+                <!-- User Not Found -->
+                <div class="not-found" id="not-found" style="display: none;">
+                    <h3>USUARIO NO ENCONTRADO</h3>
+                    <p>No se encontraron datos para este usuario en Night City</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Achievement Modal -->
+        <div class="modal-overlay" id="achievement-modal" style="display: none;">
+            <div class="modal-content">
+                <button class="modal-close" id="modal-close">×</button>
+                <div class="modal-body" id="modal-body">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Scripts -->
+    <!-- Load achievements data -->
+    <script src="data/AchievementsData.js"></script>
+
+    <!-- App modules -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

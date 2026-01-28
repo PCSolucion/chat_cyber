@@ -312,6 +312,13 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
                     uiManager.updateSystemStatus(isOnline);
                 }
 
+                // Actualizar categoría y estado en AchievementService
+                const achievementService = this.processor.getService('achievements');
+                if (achievementService) {
+                    if (category) achievementService.setStreamCategory(category);
+                    achievementService.setStreamStatus(isOnline);
+                }
+
                 // Actualizar lógica de sesión
                 this.processor.updateStreamStatus(isOnline);
             }

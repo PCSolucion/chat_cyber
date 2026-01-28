@@ -34,6 +34,9 @@ class AchievementService {
         // Cache de estadísticas adicionales por usuario
         this.userStats = new Map();
 
+        // Categoría actual del stream (para logros de juegos específicos)
+        this.currentStreamCategory = null;
+
         // Cargar logros desde el módulo global
         this._loadAchievementsFromModule();
 
@@ -255,7 +258,15 @@ class AchievementService {
                 primeTimeMessages: savedStats.primeTimeMessages || 0,
 
                 // Festivos
-                holidays: savedStats.holidays || []
+                holidays: savedStats.holidays || [],
+
+                // Game-specific message counters
+                cyberpunk2077Messages: savedStats.cyberpunk2077Messages || 0,
+                witcher3Messages: savedStats.witcher3Messages || 0,
+
+                // Game-specific stream attendance
+                witcher3Streams: savedStats.witcher3Streams || 0,
+                lastWitcher3Date: savedStats.lastWitcher3Date || null
             });
         }
 
@@ -340,6 +351,32 @@ class AchievementService {
 
         // ===== FECHAS FESTIVAS =====
         this._updateHolidayStats(stats, now);
+
+        // ===== GAME-SPECIFIC TRACKING =====
+        // Track messages when in specific game categories (ONLY WHEN LIVE)
+        if (this.currentStreamCategory && this.isStreamOnline) {
+            const category = this.currentStreamCategory.toLowerCase();
+
+            // Cyberpunk 2077
+            if (category.includes('cyberpunk 2077') || category === 'cyberpunk 2077') {
+                stats.cyberpunk2077Messages = (stats.cyberpunk2077Messages || 0) + 1;
+            }
+
+            // The Witcher 3: Wild Hunt
+            if (category.includes('witcher 3') || category.includes('the witcher 3')) {
+                stats.witcher3Messages = (stats.witcher3Messages || 0) + 1;
+
+                // Track attendance (Unique streams/days)
+                const todayStr = now.toDateString();
+                if (stats.lastWitcher3Date !== todayStr) {
+                    stats.witcher3Streams = (stats.witcher3Streams || 0) + 1;
+                    stats.lastWitcher3Date = todayStr;
+                    if (this.config.DEBUG) {
+                        console.log(`🐺 ${username} asistió a un nuevo directo de TW3. Total: ${stats.witcher3Streams}`);
+                    }
+                }
+            }
+        }
 
         this.userStats.set(lowerUser, stats);
 
@@ -568,6 +605,35 @@ class AchievementService {
     async reloadAchievements() {
         await this.loadAchievementsAsync();
         console.log(`🔄 Logros recargados: ${Object.keys(this.achievements).length}`);
+    }
+
+    /**
+     * Establece la categoría actual del stream
+     * @param {string} category - Nombre de la categoría (juego)
+     */
+    setStreamCategory(category) {
+        const previousCategory = this.currentStreamCategory;
+        this.currentStreamCategory = category;
+
+        if (this.config.DEBUG && previousCategory !== category) {
+            console.log(`🎮 Stream category updated: ${previousCategory || 'none'} -> ${category || 'none'}`);
+        }
+    }
+
+    /**
+     * Obtiene la categoría actual del stream
+     * @returns {string|null}
+     */
+    getStreamCategory() {
+        return this.currentStreamCategory;
+    }
+
+    /**
+     * Actualiza el estado online/offline del stream
+     * @param {boolean} isOnline 
+     */
+    setStreamStatus(isOnline) {
+        this.isStreamOnline = isOnline;
     }
 }
 
