@@ -267,7 +267,76 @@ const API = (function () {
         return Object.keys(data.achievements).length;
     }
 
-    // Public API
+    /**
+     * Get global server statistics
+     * @returns {Promise<Object>}
+     */
+    async function getGlobalStats() {
+        const data = await fetchXPData();
+        if (!data || !data.users) return null;
+
+        let totalXP = 0;
+        let totalUnlocks = 0;
+        const achievementCounts = {};
+        const achievementHolders = {};
+        let activeUsers = 0;
+
+        // Iterate all users
+        Object.entries(data.users).forEach(([username, user]) => {
+            // Count active users (level > 1 or has xp)
+            if ((user.xp && user.xp > 0) || (user.level && user.level > 1)) {
+                activeUsers++;
+            }
+
+            // Sum XP
+            totalXP += (user.xp || 0);
+
+            // Count achievements
+            if (user.achievements && Array.isArray(user.achievements)) {
+                totalUnlocks += user.achievements.length;
+                user.achievements.forEach(achId => {
+                    achievementCounts[achId] = (achievementCounts[achId] || 0) + 1;
+
+                    // Track holders for "Rare Owner"
+                    if (!achievementHolders[achId]) achievementHolders[achId] = [];
+                    achievementHolders[achId].push({
+                        username,
+                        unlockedAt: null // Timestamp not available in current schema
+                    });
+                });
+            }
+        });
+
+        // Find rarest achievement
+        // Only consider achievements that have at least 1 unlock to avoid showing unreleased ones (or show 0%)
+        let rarest = null;
+        let minCount = Infinity;
+        const allAchievements = getAchievementsData().achievements || {};
+
+        Object.entries(achievementCounts).forEach(([id, count]) => {
+            if (allAchievements[id] && count < minCount) {
+                minCount = count;
+                rarest = {
+                    id,
+                    count,
+                    details: allAchievements[id],
+                    percentage: ((count / activeUsers) * 100).toFixed(1),
+                    holders: achievementHolders[id] || []
+                };
+            }
+        });
+
+        // In case no achievements are unlocked yet
+        if (minCount === Infinity) rarest = null;
+
+        return {
+            totalXP,
+            totalUnlocks,
+            activeUsers,
+            rarestAchievement: rarest
+        };
+    }
+
     return {
         fetchXPData,
         getLeaderboard,
@@ -276,6 +345,7 @@ const API = (function () {
         getAchievementsData,
         getAchievementsByCategory,
         getAchievement,
-        getTotalAchievements
+        getTotalAchievements,
+        getGlobalStats
     };
 })();

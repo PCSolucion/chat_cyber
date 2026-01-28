@@ -20,6 +20,9 @@
         achievementsGrid: document.getElementById('achievements-grid'),
         totalAchievementsTag: document.getElementById('total-achievements-tag'),
 
+        // Stats
+        statsContainer: document.getElementById('stats-container'),
+
         // Search
         searchInput: document.getElementById('user-search'),
         searchBtn: document.getElementById('search-btn'),
@@ -99,8 +102,8 @@
             // Render catalog
             renderCatalog();
 
-            // Render catalog
-            renderCatalog();
+            // Render stats
+            renderStats();
 
             // Initial sort (now defaults to XP)
             sortLeaderboard();
@@ -177,7 +180,7 @@
         const hash = window.location.hash.slice(1);
 
         // Check if it's a valid section
-        const validSections = ['leaderboard', 'catalog', 'search'];
+        const validSections = ['leaderboard', 'catalog', 'search', 'stats'];
         if (validSections.includes(hash)) {
             navigateToSection(hash);
             return;
@@ -393,6 +396,19 @@
 
         // Setup card clicks
         setupCardClicks();
+    }
+
+    /**
+     * Render global stats
+     */
+    async function renderStats() {
+        try {
+            const stats = await API.getGlobalStats();
+            elements.statsContainer.innerHTML = Components.createStatsDashboard(stats);
+        } catch (error) {
+            console.error('Error rendering stats:', error);
+            elements.statsContainer.innerHTML = '<div class="error-message">Error cargando estadísticas</div>';
+        }
     }
 
     /**

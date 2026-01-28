@@ -1735,3 +1735,186 @@ a:hover {
     display: block;
     margin: 0 auto;
 }
+/* ========================================
+   GLOBAL STATS (NETRUNNER DATA)
+   ======================================== */
+.stats-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.dashboard-stat-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    overflow: hidden;
+    transition: var(--transition-normal);
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 59, 69, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--cyber-red);
+    opacity: 0.5;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 59, 69, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--cyber-red);
+}
+
+.stat-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-deco {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.1);
+    letter-spacing: 2px;
+}
+
+/* Rarest Achievement Card */
+.rarest-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(10, 10, 20, 0.9) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.rarest-card::before {
+    background: linear-gradient(to bottom, #FFD700, #FFA500);
+}
+
+.rarest-card:hover {
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.rarest-achievement-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+}
+
+.rarest-icon-wrapper {
+    flex-shrink: 0;
+}
+
+.rarest-icon-wrapper .achievement-mini {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+}
+
+.rarest-info {
+    flex: 1;
+}
+
+.rarest-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: #FFD700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.rarest-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.rarest-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.rarest-pct {
+    color: var(--cyber-cyan);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .dashboard-stat-card.rarest-card {
+        grid-column: span 1 !important;
+    }
+}
+
+/* Achievement Mini Rarity Glow */
+.achievement-mini:not(.locked) {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-mini:not(.locked)[data-rarity]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    border: 1px solid var(--rarity-color, rgba(255, 255, 255, 0.2));
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.achievement-mini:not(.locked)[data-rarity="common"] { --rarity-color: var(--rarity-common); }
+.achievement-mini:not(.locked)[data-rarity="uncommon"] { --rarity-color: var(--rarity-uncommon); }
+.achievement-mini:not(.locked)[data-rarity="rare"] { --rarity-color: var(--rarity-rare); }
+.achievement-mini:not(.locked)[data-rarity="epic"] { --rarity-color: var(--rarity-epic); }
+.achievement-mini:not(.locked)[data-rarity="legendary"] { --rarity-color: var(--rarity-legendary); box-shadow: 0 0 5px rgba(255, 128, 0, 0.3); }
+
+/* Rarest Stat Item */
+.rarest-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

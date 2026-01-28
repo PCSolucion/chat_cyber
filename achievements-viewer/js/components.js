@@ -219,6 +219,18 @@ const Components = (function () {
             }
         });
 
+        // Find rarest unlocked achievement
+        let rarestUnlocked = null;
+        const rarityOrder = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+
+        for (const rarity of rarityOrder) {
+            const found = unlockedDetails.find(a => a.rarity === rarity);
+            if (found) {
+                rarestUnlocked = found;
+                break;
+            }
+        }
+
         return `
             <!-- Profile Header -->
             <div class="profile-header">
@@ -267,6 +279,11 @@ const Components = (function () {
                             <span class="label">Progreso Nivel</span>
                             <span class="value">${progress.percentage}%</span>
                         </li>
+                        ${rarestUnlocked ? `
+                        <li class="rarest-stat-item" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem; margin-top: 0.5rem;">
+                            <span class="label" style="color: var(--rarity-${rarestUnlocked.rarity});">Logro más Raro</span>
+                            <span class="value" style="font-size: 0.9em;">${Utils.escapeHTML(rarestUnlocked.name)}</span>
+                        </li>` : ''}
                     </ul>
                 </div>
                 
@@ -368,7 +385,71 @@ const Components = (function () {
         `;
     }
 
-    // Public API
+    /**
+     * Create global stats dashboard
+     * @param {Object} stats
+     * @returns {string}
+     */
+    function createStatsDashboard(stats) {
+        if (!stats) return '';
+
+        let rarestContent = '<div class="stat-empty">No hay datos</div>';
+
+        if (stats.rarestAchievement) {
+            const ach = stats.rarestAchievement.details;
+            const iconContent = ach.image
+                ? `<img src="${ach.image}" alt="${Utils.escapeHTML(ach.name)}">`
+                : (ach.icon || '🏆');
+
+            rarestContent = `
+                <div class="rarest-achievement-content">
+                    <div class="rarest-icon-wrapper">
+                         <div class="achievement-mini" data-rarity="${ach.rarity}">
+                            ${iconContent}
+                        </div>
+                    </div>
+                    <div class="rarest-info">
+                        <div class="rarest-label">LOGRO MÁS RARO</div>
+                        <div class="rarest-name">${Utils.escapeHTML(ach.name)}</div>
+                        <div class="rarest-meta">
+                            <span class="rarest-pct">${stats.rarestAchievement.percentage}% de jugadores</span>
+                            <span class="rarest-count">(${stats.rarestAchievement.count} desbloqueos)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="stats-dashboard">
+                <!-- Total XP Card -->
+                <div class="dashboard-stat-card cyber-card">
+                    <div class="stat-icon">💾</div>
+                    <div class="stat-data">
+                        <h3 class="stat-value">${Utils.formatNumberFull(stats.totalXP)}</h3>
+                        <span class="stat-label">TOTAL XP GENERADA</span>
+                    </div>
+                    <div class="stat-deco">DATAMINED</div>
+                </div>
+
+                <!-- Rarest Achievement -->
+                <div class="dashboard-stat-card cyber-card rarest-card" style="grid-column: span 2;">
+                    ${rarestContent}
+                </div>
+
+                <!-- Total Unlocks -->
+                <div class="dashboard-stat-card cyber-card">
+                    <div class="stat-icon">🔓</div>
+                    <div class="stat-data">
+                        <h3 class="stat-value">${Utils.formatNumberFull(stats.totalUnlocks)}</h3>
+                        <span class="stat-label">LOGROS DESBLOQUEADOS</span>
+                    </div>
+                    <div class="stat-deco">SYSTEM WIDE</div>
+                </div>
+            </div>
+        `;
+    }
+
     return {
         createPodium,
         createRankingRows,
@@ -377,6 +458,7 @@ const Components = (function () {
         createAchievementDetail,
         createUserProfile,
         createAchievementMini,
-        createSuggestionItem
+        createSuggestionItem,
+        createStatsDashboard
     };
 })();

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="img/favicon.png">
     <title>Night City Achievements Hub - Cyberpunk Chat</title>
     <meta name="description"
         content="Consulta los logros desbloqueados por los usuarios del chat de Twitch. Leaderboard, estadísticas y más.">
@@ -40,6 +41,9 @@
                 </a>
                 <a href="#catalog" class="nav-link" data-section="catalog">
                     <span>CATÁLOGO</span>
+                </a>
+                <a href="#stats" class="nav-link" data-section="stats">
+                    <span>NETRUNNER DATA</span>
                 </a>
 
                 <div class="nav-search">
@@ -137,6 +141,25 @@
                     <div class="grid-loading">
                         <div class="cyber-loader"></div>
                         <span>CARGANDO CATÁLOGO...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section id="stats" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        NETRUNNER DATA
+                        <span class="title-tag">GLOBAL STATS</span>
+                    </h2>
+                    <p class="section-subtitle">Estadísticas globales del servidor y rareza de logros</p>
+                </div>
+
+                <div id="stats-container" class="stats-container">
+                    <div class="grid-loading">
+                        <div class="cyber-loader"></div>
+                        <span>ANALIZANDO DATOS DEL SERVIDOR...</span>
                     </div>
                 </div>
             </section>
