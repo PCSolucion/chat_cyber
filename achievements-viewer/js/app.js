@@ -405,6 +405,11 @@
 
         // Setup card clicks
         setupCardClicks();
+
+        // Initialize Holo Effect
+        if (typeof HoloEffect !== 'undefined') {
+            HoloEffect.init();
+        }
     }
 
     /**
@@ -659,7 +664,11 @@
      * Show achievement details in modal
      * @param {string} achievementId
      */
-    function showAchievementModal(achievementId) {
+    /**
+     * Show achievement details in modal
+     * @param {string} achievementId
+     */
+    async function showAchievementModal(achievementId) {
         const achievement = API.getAchievement(achievementId);
 
         if (!achievement) {
@@ -667,11 +676,27 @@
             return;
         }
 
-        elements.modalBody.innerHTML = Components.createAchievementDetail(achievement);
+        // Show simplified loading first
+        elements.modalBody.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div class="cyber-loader"></div>
+            </div>
+        `;
         elements.modal.style.display = 'flex';
 
         // Prevent body scroll
         document.body.style.overflow = 'hidden';
+
+        try {
+            // Fetch holders
+            const holders = await API.getAchievementHolders(achievementId);
+
+            // Render full detail
+            elements.modalBody.innerHTML = Components.createAchievementDetail(achievement, holders);
+        } catch (error) {
+            console.error('Error loading achievement details:', error);
+            elements.modalBody.innerHTML = '<div class="error-message">Error cargando detalles</div>';
+        }
     }
 
     /**

@@ -679,6 +679,8 @@ a:hover {
     position: relative;
     background: var(--bg-card);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--card-rarity-color, var(--rarity-common));
+    /* Moved from ::before */
     border-radius: 8px;
     padding: var(--spacing-md);
     transition: var(--transition-normal);
@@ -686,16 +688,7 @@ a:hover {
     overflow: hidden;
 }
 
-.achievement-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--card-rarity-color, var(--rarity-common));
-    opacity: 0.8;
-}
+/* .achievement-card::before removed to allow holo effect */
 
 .achievement-card:hover {
     transform: translateY(-3px);

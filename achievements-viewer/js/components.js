@@ -134,8 +134,8 @@ const Components = (function () {
         // Determine if this is a game-specific achievement
         let gameBadge = '';
         if (achievement.gameCategory) {
-            const gameLabel = achievement.gameCategory.includes('Cyberpunk') ? '🌃 CP2077' :
-                achievement.gameCategory.includes('Witcher') ? '🐺 TW3' : '';
+            const gameLabel = achievement.gameCategory.includes('Cyberpunk') ? 'CP2077' :
+                achievement.gameCategory.includes('Witcher') ? 'TW3' : '';
             gameBadge = `<div class="card-game-badge">${gameLabel}</div>`;
         }
 
@@ -161,9 +161,10 @@ const Components = (function () {
     /**
      * Create achievement detail for modal
      * @param {Object} achievement
+     * @param {Array} holders - List of users who unlocked it
      * @returns {string}
      */
-    function createAchievementDetail(achievement) {
+    function createAchievementDetail(achievement, holders = []) {
         const iconContent = achievement.image
             ? `<img src="${achievement.image}" alt="${Utils.escapeHTML(achievement.name)}">`
             : (achievement.icon || '🏆');
@@ -175,6 +176,36 @@ const Components = (function () {
             gameRequirement = `
                 <div class="achievement-detail-game-req">
                     ${gameIcon} Requiere: <strong>${Utils.escapeHTML(achievement.gameCategory)}</strong>
+                </div>
+            `;
+        }
+
+        // Holders List
+        let holdersHtml = '';
+        if (holders && holders.length > 0) {
+            holdersHtml = `
+                <div class="achievement-holders-section" style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                    <h4 class="holders-title" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+                        DESBLOQUEADO POR (${holders.length})
+                    </h4>
+                    <div class="holders-grid" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+                        ${holders.map(user => `
+                            <div class="holder-item" title="${Utils.escapeHTML(user.username)} - Nivel ${user.level}" 
+                                 style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer;"
+                                 onclick="window.location.hash = 'user/${encodeURIComponent(user.username)}'; document.querySelector('#achievement-modal').style.display='none';">
+                                <div class="holder-avatar" style="width: 20px; height: 20px; border-radius: 50%; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">
+                                    ${Utils.getInitial(user.username)}
+                                </div>
+                                <span class="holder-name" style="font-size: 0.8rem; font-family: 'Share Tech Mono', monospace; color: var(--text-dim);">${Utils.escapeHTML(user.username)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            holdersHtml = `
+                <div class="achievement-holders-section" style="margin-top: 1.5rem; text-align: center;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">NADIE HA DESBLOQUEADO ESTO AÚN</span>
                 </div>
             `;
         }
@@ -191,6 +222,7 @@ const Components = (function () {
                 <p class="achievement-detail-description">${Utils.escapeHTML(achievement.description)}</p>
                 <div class="achievement-detail-condition">${Utils.escapeHTML(achievement.condition)}</div>
                 ${gameRequirement}
+                ${holdersHtml}
             </div>
         `;
     }
@@ -322,9 +354,6 @@ const Components = (function () {
                         <div class="rarest-highlight" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
                             <div class="label" style="display:block; margin-bottom:5px; font-size: 0.8rem;">💎 LOGRO MÁS RARO</div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="achievement-mini-static" data-rarity="${rarestUnlocked.rarity}" style="width: 32px; height: 32px; font-size: 1.2rem;">
-                                    ${rarestUnlocked.image ? `<img src="${rarestUnlocked.image}">` : (rarestUnlocked.icon || '🏆')}
-                                </div>
                                 <div class="value" style="color: var(--text-bright); font-size: 0.9rem;">${Utils.escapeHTML(rarestUnlocked.name)}</div>
                             </div>
                         </div>` : ''}

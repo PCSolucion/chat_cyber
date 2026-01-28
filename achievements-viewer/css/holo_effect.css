@@ -1,0 +1,231 @@
+/* ===========================================
+   3D HOLOGRAPHIC CARD EFFECT
+   Inspired by: https://codepen.io/simeydotme/pen/PrQKgo
+   =========================================== */
+
+/* Add this class to cards via JS when they are hovered */
+.achievement-card {
+    /* Define color defaults (can be overridden by rarity) */
+    --holo-color1: var(--cyber-cyan);
+    /* Default blue/cyan */
+    --holo-color2: var(--cyber-magenta);
+    /* Default magenta/pink */
+
+    /* REMOVED 3D Perspective */
+    /* transform-style: preserve-3d; */
+    /* transform: perspective(800px) rotateX(0deg) rotateY(0deg); */
+
+    /* Smooth transition for returning to rest state */
+    /* transition: transform 0.5s ease, box-shadow 0.2s ease; */
+    transition: box-shadow 0.2s ease;
+    /* Keep only box-shadow transition */
+    will-change: filter;
+    /* Removed transform */
+
+    /* Relative positioning for pseudos */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Specific Rarity Colors for Holo Effect */
+.achievement-card[data-rarity="common"] {
+    --holo-color1: #8A8A8A;
+    --holo-color2: #B0B0B0;
+}
+
+.achievement-card[data-rarity="uncommon"] {
+    --holo-color1: #4CAF50;
+    --holo-color2: #8BC34A;
+}
+
+.achievement-card[data-rarity="rare"] {
+    --holo-color1: #2196F3;
+    --holo-color2: #03A9F4;
+}
+
+.achievement-card[data-rarity="epic"] {
+    --holo-color1: #9C27B0;
+    --holo-color2: #E040FB;
+}
+
+.achievement-card[data-rarity="legendary"] {
+    --holo-color1: #FF8000;
+    --holo-color2: #FFD700;
+}
+
+/* The Holo Gradient Overlay */
+.achievement-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    /* Default visibility for idle state */
+    mix-blend-mode: color-dodge;
+    transition: all 0.33s ease;
+    z-index: 2;
+    /* Above content */
+    pointer-events: none;
+
+    /* Gradient Pattern */
+    background-image: linear-gradient(115deg,
+            transparent 0%,
+            var(--holo-color1) 25%,
+            transparent 47%,
+            transparent 53%,
+            var(--holo-color2) 75%,
+            transparent 100%);
+    background-position: var(--grad-pos, 50% 50%);
+    background-size: 300% 300%;
+    filter: brightness(0.5) contrast(1);
+
+    /* Idle Animation */
+    animation: holoGradient 15s ease infinite alternate;
+}
+
+/* The Sparkles/Texture Overlay */
+.achievement-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    opacity: 0.5;
+    /* Default visibility for idle state */
+    mix-blend-mode: color-dodge;
+    transition: all 0.33s ease;
+    z-index: 3;
+    pointer-events: none;
+
+    /* Textures */
+    background-image:
+        url("https://assets.codepen.io/13471/sparkles.gif"),
+        url("https://assets.codepen.io/13471/holo.png"),
+        linear-gradient(125deg, #ff008450 15%, #fca40040 30%, #ffff0030 40%, #00ff8a20 60%, #00cfff40 70%, #cc4cfa50 85%);
+
+    background-position: var(--sprk-pos, 50% 50%);
+    background-size: 160%;
+    background-blend-mode: overlay;
+    filter: brightness(1) contrast(1);
+
+    /* Idle Animation */
+    animation: holoSparkle 15s ease infinite alternate;
+}
+
+/* Hover State */
+.achievement-card:hover {
+    box-shadow:
+        0 -15px 25px -10px var(--holo-color1),
+        /* Top glow */
+        0 -15px 25px -10px var(--holo-color2);
+    /* Layered top glow */
+
+    /* Remove default animation when hovering to let JS take control smoothly */
+    animation: none;
+}
+
+.achievement-card:hover::before,
+.achievement-card:hover::after {
+    opacity: 1;
+    /* When hovering, pause the background animation so JS can move it, OR keep it if JS doesn't set bg-pos */
+    /* animation-play-state: paused; */
+}
+
+/* When active (being moved by JS), stop animation completely and follow mouse */
+.achievement-card.active {
+    transition: none;
+    /* Remove transition for instant response */
+    animation: none;
+}
+
+.achievement-card.active::before,
+.achievement-card.active::after {
+    transition: none;
+    opacity: 1;
+    /* Force visible during interaction */
+    animation: none;
+    /* Stop the idle animation */
+}
+
+/* Standard Hover Lift Effect (Non-3D) */
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Keyframes from CodePen */
+@keyframes holoSparkle {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        background-position: 50% 50%;
+        filter: brightness(1.2) contrast(1.25);
+    }
+
+    5%,
+    8% {
+        opacity: 0.8;
+        background-position: 40% 40%;
+        filter: brightness(0.8) contrast(1.2);
+    }
+
+    13%,
+    16% {
+        opacity: 0.5;
+        background-position: 50% 50%;
+        filter: brightness(1.2) contrast(0.8);
+    }
+
+    35%,
+    38% {
+        opacity: 0.8;
+        background-position: 60% 60%;
+        filter: brightness(1) contrast(1);
+    }
+
+    55% {
+        opacity: 0.33;
+        background-position: 45% 45%;
+        filter: brightness(1.2) contrast(1.25);
+    }
+}
+
+@keyframes holoGradient {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        background-position: 50% 50%;
+        filter: brightness(0.5) contrast(1);
+    }
+
+    5%,
+    9% {
+        background-position: 100% 100%;
+        opacity: 0.6;
+        filter: brightness(0.75) contrast(1.25);
+    }
+
+    13%,
+    17% {
+        background-position: 0% 0%;
+        opacity: 0.4;
+    }
+
+    35%,
+    39% {
+        background-position: 100% 100%;
+        opacity: 0.6;
+        filter: brightness(0.5) contrast(1);
+    }
+
+    55% {
+        background-position: 0% 0%;
+        opacity: 0.6;
+        filter: brightness(0.75) contrast(1.25);
+    }
+}

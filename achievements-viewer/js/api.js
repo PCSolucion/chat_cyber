@@ -348,6 +348,41 @@ const API = (function () {
         };
     }
 
+    /**
+     * Get users who have unlocked a specific achievement
+     * @param {string} achievementId
+     * @returns {Promise<Array>}
+     */
+    async function getAchievementHolders(achievementId) {
+        const data = await fetchXPData();
+        if (!data || !data.users) return [];
+
+        const holders = [];
+
+        Object.entries(data.users).forEach(([username, userData]) => {
+            // Check for achievements array
+            if (userData.achievements && Array.isArray(userData.achievements)) {
+                // Check if user has the achievement (comparing IDs)
+                const hasUnlocked = userData.achievements.some(ach =>
+                    (typeof ach === 'string' ? ach : ach.id) === achievementId
+                );
+
+                if (hasUnlocked) {
+                    holders.push({
+                        username,
+                        level: userData.level || 1,
+                        xp: userData.xp || 0
+                    });
+                }
+            }
+        });
+
+        // Sort by level/xp desc
+        holders.sort((a, b) => b.level - a.level || b.xp - a.xp);
+
+        return holders;
+    }
+
     return {
         fetchXPData,
         getLeaderboard,
@@ -357,6 +392,7 @@ const API = (function () {
         getAchievementsByCategory,
         getAchievement,
         getTotalAchievements,
-        getGlobalStats
+        getGlobalStats,
+        getAchievementHolders
     };
 })();
