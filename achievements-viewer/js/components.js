@@ -351,6 +351,9 @@ const Components = (function () {
             }
                 </div>
             </div>
+            
+            <!-- Advanced Profile Features (Heatmap, Radar Chart, Predictions) -->
+            ${typeof ProfileFeatures !== 'undefined' ? ProfileFeatures.createAdvancedProfileSections(user) : ''}
         `;
     }
 

@@ -161,17 +161,28 @@ const API = (function () {
 
         const [name, userData] = entry;
 
+        // Normalize achievements: handle both old format (string ID) and new format (object)
+        const rawAchievements = userData.achievements || [];
+        const normalizedAchievements = rawAchievements.map(ach => {
+            if (typeof ach === 'string') {
+                return { id: ach, unlockedAt: null };
+            }
+            return ach;
+        });
+
         return {
             username: name,
-            achievementCount: userData.achievements ? userData.achievements.length : 0,
+            achievementCount: normalizedAchievements.length,
             level: userData.level || 1,
             xp: userData.xp || 0,
             rankTitle: Utils.getLevelTitle(userData.level || 1),
             bestStreak: userData.bestStreak || userData.streakDays || 0,
             totalMessages: userData.totalMessages || 0,
             streakDays: userData.streakDays || 0,
-            achievements: userData.achievements || [],
+            achievements: normalizedAchievements.map(a => a.id), // Keep IDs for backwards compat
+            achievementsWithDates: normalizedAchievements, // Full data with timestamps
             achievementStats: userData.achievementStats || {},
+            activityHistory: userData.activityHistory || {}, // Daily activity for heatmap
             lastSeen: userData.lastMessageTimestamp || userData.lastActiveDay || null
         };
     }

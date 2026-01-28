@@ -471,19 +471,29 @@ class AchievementService {
         // Lista de logros desbloqueados en esta verificación
         const unlockedNow = [];
 
-        // Obtener logros ya desbloqueados
-        const existingAchievements = userData.achievements || [];
+        // Obtener logros ya desbloqueados (puede ser array de IDs o array de objetos)
+        let existingAchievements = userData.achievements || [];
+
+        // Normalizar: obtener lista de IDs ya desbloqueados
+        const unlockedIds = existingAchievements.map(ach =>
+            typeof ach === 'string' ? ach : ach.id
+        );
 
         // Verificar TODOS los logros de TODAS las categorías
         for (const [achievementId, achievement] of Object.entries(this.achievements)) {
             // Saltar si ya está desbloqueado
-            if (existingAchievements.includes(achievementId)) continue;
+            if (unlockedIds.includes(achievementId)) continue;
 
             // Verificar si cumple la condición
             try {
                 if (achievement.check(userData, userStats)) {
-                    // ¡Logro desbloqueado!
-                    existingAchievements.push(achievementId);
+                    // ¡Logro desbloqueado! Guardar con timestamp
+                    const unlockedAchievement = {
+                        id: achievementId,
+                        unlockedAt: new Date().toISOString()
+                    };
+
+                    existingAchievements.push(unlockedAchievement);
                     unlockedNow.push(achievement);
 
                     if (this.config.DEBUG) {
@@ -547,9 +557,21 @@ class AchievementService {
      */
     getUserAchievements(username) {
         const userData = this.experienceService.getUserData(username.toLowerCase());
-        const achievementIds = userData.achievements || [];
+        const achievementData = userData.achievements || [];
 
-        return achievementIds.map(id => this.achievements[id]).filter(Boolean);
+        // Normalize: handle both old format (string ID) and new format (object with id/unlockedAt)
+        return achievementData.map(ach => {
+            const id = typeof ach === 'string' ? ach : ach.id;
+            const unlockedAt = typeof ach === 'object' ? ach.unlockedAt : null;
+            const achievement = this.achievements[id];
+
+            if (!achievement) return null;
+
+            return {
+                ...achievement,
+                unlockedAt
+            };
+        }).filter(Boolean);
     }
 
     /**

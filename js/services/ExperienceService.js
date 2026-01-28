@@ -178,10 +178,12 @@ class ExperienceService {
                         level: userData.level || 1,
                         lastActivity: userData.lastActivity || null,
                         streakDays: userData.streakDays || 0,
+                        bestStreak: userData.bestStreak || userData.streakDays || 0,
                         lastStreakDate: userData.lastStreakDate || null,
                         totalMessages: userData.totalMessages || 0,
                         achievements: userData.achievements || [],
-                        achievementStats: userData.achievementStats || {}
+                        achievementStats: userData.achievementStats || {},
+                        activityHistory: userData.activityHistory || {}
                     });
                 });
             }
@@ -397,6 +399,18 @@ class ExperienceService {
         userData.lastActivity = Date.now();
         userData.streakDays = streakResult.streakDays;
         userData.lastStreakDate = streakResult.lastStreakDate;
+        userData.bestStreak = streakResult.bestStreak || userData.bestStreak || 0;
+
+        // Registrar actividad diaria para heatmap
+        const today = this.getCurrentDay();
+        if (!userData.activityHistory) {
+            userData.activityHistory = {};
+        }
+        if (!userData.activityHistory[today]) {
+            userData.activityHistory[today] = { messages: 0, xp: 0 };
+        }
+        userData.activityHistory[today].messages += 1;
+        userData.activityHistory[today].xp += totalXP;
 
         // Recalcular nivel
         const newLevel = this.calculateLevel(userData.xp);
@@ -443,14 +457,25 @@ class ExperienceService {
                 level: 1,
                 lastActivity: null,
                 streakDays: 0,
+                bestStreak: 0,
                 lastStreakDate: null,
                 totalMessages: 0,
                 achievements: [],
-                achievementStats: {}
+                achievementStats: {},
+                activityHistory: {} // { "YYYY-MM-DD": { messages: N, xp: N } }
             });
         }
 
-        return this.usersXP.get(lowerUser);
+        // Ensure activityHistory and bestStreak exist for older users
+        const userData = this.usersXP.get(lowerUser);
+        if (!userData.activityHistory) {
+            userData.activityHistory = {};
+        }
+        if (userData.bestStreak === undefined) {
+            userData.bestStreak = userData.streakDays || 0;
+        }
+
+        return userData;
     }
 
     /**
@@ -610,11 +635,12 @@ class ExperienceService {
         const lastDate = userData.lastStreakDate;
 
         let streakDays = userData.streakDays || 0;
+        let bestStreak = userData.bestStreak || 0;
         let bonusAwarded = false;
 
         if (lastDate === today) {
             // Ya participó hoy, no cambiar racha
-            return { streakDays, lastStreakDate: today, bonusAwarded: false };
+            return { streakDays, lastStreakDate: today, bonusAwarded: false, bestStreak };
         }
 
         const yesterday = this.getYesterday();
@@ -622,6 +648,11 @@ class ExperienceService {
         if (lastDate === yesterday) {
             // Racha continúa
             streakDays += 1;
+
+            // Actualizar mejor racha si es nueva marca
+            if (streakDays > bestStreak) {
+                bestStreak = streakDays;
+            }
 
             // Bonus si alcanza el umbral
             if (streakDays >= this.xpConfig.sources.STREAK_BONUS.streakDays &&
@@ -633,7 +664,7 @@ class ExperienceService {
             streakDays = 1;
         }
 
-        return { streakDays, lastStreakDate: today, bonusAwarded };
+        return { streakDays, lastStreakDate: today, bonusAwarded, bestStreak };
     }
 
     /**

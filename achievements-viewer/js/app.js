@@ -36,7 +36,15 @@
         modalClose: document.getElementById('modal-close'),
 
         // Status
-        statusIndicator: document.getElementById('status-indicator')
+        statusIndicator: document.getElementById('status-indicator'),
+
+        // Face Off
+        faceOffInput1: document.getElementById('faceoff-input-1'),
+        faceOffInput2: document.getElementById('faceoff-input-2'),
+        faceOffSuggestions1: document.getElementById('faceoff-suggestions-1'),
+        faceOffSuggestions2: document.getElementById('faceoff-suggestions-2'),
+        faceOffBtn: document.getElementById('faceoff-btn'),
+        faceOffResult: document.getElementById('faceoff-result')
     };
 
     // State
@@ -55,6 +63,7 @@
         // Setup event listeners
         setupNavigation();
         setupSearch();
+        setupFaceOff();
         setupModal();
         setupCardClicks();
         setupTableSorting();
@@ -180,7 +189,7 @@
         const hash = window.location.hash.slice(1);
 
         // Check if it's a valid section
-        const validSections = ['leaderboard', 'catalog', 'search', 'stats'];
+        const validSections = ['leaderboard', 'catalog', 'search', 'stats', 'faceoff'];
         if (validSections.includes(hash)) {
             navigateToSection(hash);
             return;
@@ -472,6 +481,95 @@
     }
 
     /**
+     * Setup Face-off functionality
+     */
+    function setupFaceOff() {
+        // Helper to setup suggestions for an input
+        const setupInput = (input, suggestionsBox) => {
+            const debouncedSuggest = Utils.debounce(async (query) => {
+                if (query.length < 2) {
+                    suggestionsBox.classList.remove('active');
+                    return;
+                }
+
+                const suggestions = await API.searchUsers(query);
+                if (suggestions.length > 0) {
+                    suggestionsBox.innerHTML = suggestions.map(user =>
+                        Components.createSuggestionItem(user)
+                    ).join('');
+                    suggestionsBox.classList.add('active');
+
+                    // Click listeners
+                    suggestionsBox.querySelectorAll('.suggestion-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            input.value = item.dataset.username;
+                            suggestionsBox.classList.remove('active');
+                        });
+                    });
+                } else {
+                    suggestionsBox.classList.remove('active');
+                }
+            }, 300);
+
+            input.addEventListener('input', (e) => debouncedSuggest(e.target.value.trim()));
+
+            // Hide on blur/click outside is handled globally or we add specific here
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-box-faceoff')) {
+                    suggestionsBox.classList.remove('active');
+                }
+            });
+        };
+
+        setupInput(elements.faceOffInput1, elements.faceOffSuggestions1);
+        setupInput(elements.faceOffInput2, elements.faceOffSuggestions2);
+
+        elements.faceOffBtn.addEventListener('click', () => {
+            const u1 = elements.faceOffInput1.value.trim();
+            const u2 = elements.faceOffInput2.value.trim();
+            performFaceOff(u1, u2);
+        });
+    }
+
+    /**
+     * Perform Face-off
+     * @param {string} user1
+     * @param {string} user2
+     */
+    async function performFaceOff(user1, user2) {
+        if (!user1 || !user2) return;
+
+        elements.faceOffResult.style.display = 'block';
+        elements.faceOffResult.innerHTML = `
+            <div class="grid-loading">
+                <div class="cyber-loader"></div>
+                <span>CALCULANDO PROBABILIDADES DE VICTORIA...</span>
+            </div>
+        `;
+
+        try {
+            const [u1Data, u2Data] = await Promise.all([
+                API.getUser(user1),
+                API.getUser(user2)
+            ]);
+
+            if (u1Data && u2Data) {
+                elements.faceOffResult.innerHTML = Components.createFaceOff(u1Data, u2Data);
+            } else {
+                elements.faceOffResult.innerHTML = `
+                    <div class="not-found" style="display:block">
+                        <h3>ERROR DE DATOS</h3>
+                        <p>Uno o ambos usuarios no fueron encontrados en la base de datos de Night City.</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Faceoff error:', error);
+            elements.faceOffResult.innerHTML = '<div class="error-message">Error al procesar la comparación</div>';
+        }
+    }
+
+    /**
      * Perform user search
      * @param {string} query
      */
@@ -508,6 +606,11 @@
                         showAchievementModal(mini.dataset.id);
                     });
                 });
+
+                // Initialize advanced profile features (heatmap tooltips, etc.)
+                if (typeof ProfileFeatures !== 'undefined' && ProfileFeatures.initializeFeatures) {
+                    ProfileFeatures.initializeFeatures();
+                }
             } else {
                 elements.userProfile.style.display = 'none';
                 elements.notFound.style.display = 'block';
