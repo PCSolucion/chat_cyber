@@ -242,7 +242,9 @@ class MessageProcessor {
                         const start = parseInt(pos[0]);
                         const end = parseInt(pos[1]);
                         const emoteName = message.substring(start, end + 1);
-                        emoteNames.push({ name: emoteName, provider: 'twitch', url: null });
+                        // Generar URL del emote de Twitch
+                        const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/1.0`;
+                        emoteNames.push({ name: emoteName, provider: 'twitch', url: emoteUrl });
                     }
                 });
             }

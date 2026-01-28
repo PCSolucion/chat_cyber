@@ -700,3 +700,81 @@
     text-shadow: 0 0 15px rgba(255, 215, 0, 0.8) !important;
     margin-top: 5px;
 }
+
+/* ===========================================
+   TRENDING EMOTES SCREEN (Centered Display)
+   =========================================== */
+.trending-emotes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 0;
+    flex: 1;
+}
+
+.trending-emote-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 2px solid rgba(0, 246, 255, 0.3);
+    padding: 10px 12px;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.trending-emote-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(0, 246, 255, 0.6);
+}
+
+.trending-emote-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+}
+
+.trending-emote-img {
+    max-height: 36px;
+    max-width: 36px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(0, 246, 255, 0.3));
+}
+
+.trending-emote-text {
+    font-size: 1.2rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.trending-emote-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+    position: relative;
+}
+
+.trending-emote-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trending-emote-count {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--cyber-cyan, #00f6ff);
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(0, 246, 255, 0.4);
+    min-width: 50px;
+    text-align: right;
+}

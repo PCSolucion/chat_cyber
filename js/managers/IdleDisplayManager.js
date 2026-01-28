@@ -17,14 +17,18 @@ class IdleDisplayManager {
 
         // Configuración de idle
         this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || 30000;  // 30 segundos sin actividad
-        this.screenRotationMs = config.IDLE_ROTATION_MS || 8000;  // 8 segundos por pantalla
+        this.screenRotationMs = config.IDLE_ROTATION_MS || 12000;  // 12 segundos por pantalla
+        this.totalScreensInCycle = 5;  // Número de pantallas diferentes en el ciclo
+        this.maxCycles = 2;  // Número de ciclos completos antes de ocultar
 
         // Estado
         this.isIdle = false;
         this.idleTimeout = null;
         this.rotationInterval = null;
         this.currentCycleIndex = 0;
+        this.screensShown = 0;  // Contador de pantallas mostradas
         this.lastMessageTime = Date.now();
+        this.isHiddenAfterCycles = false;  // Flag para saber si está oculto tras completar ciclos
 
         // Referencias DOM (se crearán dinámicamente)
         this.idleContainer = null;
@@ -72,6 +76,11 @@ class IdleDisplayManager {
     onActivity() {
         this.lastMessageTime = Date.now();
 
+        // Si estaba oculto después de completar ciclos, mostrar de nuevo
+        if (this.isHiddenAfterCycles) {
+            this._showWidgetAfterHidden();
+        }
+
         // Si estaba en modo idle, salir
         if (this.isIdle) {
             this._exitIdleMode();
@@ -104,6 +113,7 @@ class IdleDisplayManager {
 
         this.isIdle = true;
         this.currentCycleIndex = 0;
+        this.screensShown = 0;  // Resetear contador de pantallas
 
         console.log('💤 Entering idle mode - showing stats');
 
@@ -176,6 +186,16 @@ class IdleDisplayManager {
         // Iniciar rotación
         this.rotationInterval = setInterval(() => {
             this.currentCycleIndex++;
+            this.screensShown++;
+
+            // Verificar si hemos completado los ciclos máximos
+            const maxScreens = this.totalScreensInCycle * this.maxCycles;
+            if (this.screensShown >= maxScreens) {
+                // Ocultar widget después de completar los ciclos
+                this._hideAfterCycles();
+                return;
+            }
+
             this._updateIdleDisplay();
         }, this.screenRotationMs);
     }
@@ -246,6 +266,54 @@ class IdleDisplayManager {
         if (achCounter) {
             // Restaurar visualización original (block por defecto si no estaba guardada)
             achCounter.style.display = this._savedAchCounterDisplay !== undefined ? this._savedAchCounterDisplay : '';
+        }
+    }
+
+    /**
+     * Oculta el widget después de completar los ciclos máximos
+     * @private
+     */
+    _hideAfterCycles() {
+        console.log('💤 Hiding widget after completing max cycles');
+
+        this.isHiddenAfterCycles = true;
+
+        // Detener rotación
+        if (this.rotationInterval) {
+            clearInterval(this.rotationInterval);
+            this.rotationInterval = null;
+        }
+
+        // Ocultar el widget completamente
+        const container = document.querySelector('.container');
+        if (container) {
+            container.classList.add('hidden');
+            container.classList.remove('idle-mode');
+        }
+
+        // Ocultar container de idle
+        if (this.idleContainer) {
+            this.idleContainer.style.display = 'none';
+        }
+
+        // Mantener isIdle en true para que no se reinicie el timer
+        // hasta que llegue un nuevo mensaje
+    }
+
+    /**
+     * Muestra el widget de nuevo cuando llega un mensaje después de estar oculto
+     * @private
+     */
+    _showWidgetAfterHidden() {
+        console.log('🔔 Showing widget again after new message');
+
+        this.isHiddenAfterCycles = false;
+        this.screensShown = 0;  // Resetear contador
+
+        // Mostrar el widget
+        const container = document.querySelector('.container');
+        if (container) {
+            container.classList.remove('hidden');
         }
     }
 
@@ -399,73 +467,45 @@ class IdleDisplayManager {
     }
 
     /**
-     * Renderiza pantalla de trending (palabras y emotes populares)
-     * @private
-     */
-    /**
-     * Renderiza pantalla de trending (palabras y emotes populares)
+     * Renderiza pantalla de trending (solo emotes populares)
      * @private
      */
     _renderTrendingScreen(screenData) {
         const { data } = screenData;
-        const { topWords, topEmotes, totalEmotes, uniqueWords } = data;
+        const { topEmotes, totalEmotes } = data;
 
-        // PALABRAS
-        let wordsHtml = '';
-        if (topWords && topWords.length > 0) {
-            // Tomamos solo top 3 para que quepa bien
-            topWords.slice(0, 3).forEach((item, index) => {
-                const percent = Math.min(100, (item.count / (topWords[0].count || 1)) * 100);
-                wordsHtml += `
-                    <div class="trend-item">
-                        <div class="trend-info">
-                            <span class="trend-name">${item.word.toUpperCase()}</span>
-                            <span class="trend-count">${item.count}</span>
-                        </div>
-                        <div class="trend-bar-bg"><div class="trend-bar-fill" style="width: ${percent}%"></div></div>
-                    </div>
-                `;
-            });
-        } else {
-            wordsHtml = '<div class="empty-message small">---</div>';
-        }
-
-        // EMOTES
+        // EMOTES - Mostrar hasta 5 emotes
         let emotesHtml = '';
         if (topEmotes && topEmotes.length > 0) {
-            // Tomamos solo top 3
-            topEmotes.slice(0, 3).forEach((item, index) => {
+            // Tomamos hasta 5 emotes
+            topEmotes.slice(0, 5).forEach((item, index) => {
                 const percent = Math.min(100, (item.count / (topEmotes[0].count || 1)) * 100);
                 const emoteDisplay = item.url
-                    ? `<img src="${item.url}" alt="${item.name}" class="mini-emote" />`
-                    : `<span class="mini-emote-text">${item.name}</span>`;
+                    ? `<img src="${item.url}" alt="${item.name}" class="trending-emote-img" />`
+                    : `<span class="trending-emote-text">${item.name}</span>`;
 
                 emotesHtml += `
-                    <div class="trend-item">
-                        <div class="trend-info">
-                            <div class="trend-name-flex">${emoteDisplay}</div>
-                            <span class="trend-count">${item.count}</span>
+                    <div class="trending-emote-item">
+                        <div class="trending-emote-display">${emoteDisplay}</div>
+                        <div class="trending-emote-info">
+                            <span class="trending-emote-name">${item.name}</span>
+                            <span class="trending-emote-count">${item.count}x</span>
                         </div>
                         <div class="trend-bar-bg"><div class="trend-bar-fill fill-cyan" style="width: ${percent}%"></div></div>
                     </div>
                 `;
             });
         } else {
-            emotesHtml = '<div class="empty-message small">---</div>';
+            emotesHtml = '<div class="empty-message">SIN EMOTES AÚN</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">TENDENCIAS</div>
-            <div class="idle-split-view">
-                <div class="split-col">
-                    <div class="col-header">PALABRAS <span class="col-count">(${uniqueWords})</span></div>
-                    <div class="col-list">${wordsHtml}</div>
-                </div>
-                <div class="split-divider"></div>
-                <div class="split-col">
-                    <div class="col-header">EMOTES <span class="col-count">(${totalEmotes})</span></div>
-                    <div class="col-list">${emotesHtml}</div>
-                </div>
+            <div class="idle-screen-title">EMOTES MÁS USADOS</div>
+            <div class="trending-emotes-container">
+                ${emotesHtml}
+            </div>
+            <div class="idle-footer-info">
+                <span class="pulse-dot"></span> TOTAL: ${totalEmotes} emotes
             </div>
         `;
     }
