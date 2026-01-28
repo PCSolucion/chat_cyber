@@ -1,0 +1,379 @@
+/* ========================================
+   FACE-OFF SECTION
+   ======================================== */
+.faceoff-controls {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+    background: var(--bg-card);
+    padding: var(--spacing-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.faceoff-search-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+}
+
+.faceoff-search-group label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--cyber-cyan);
+    letter-spacing: 2px;
+}
+
+.search-box-faceoff {
+    position: relative;
+    width: 100%;
+}
+
+.search-box-faceoff input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    transition: var(--transition-fast);
+}
+
+.search-box-faceoff input:focus {
+    outline: none;
+    border-color: var(--cyber-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+.faceoff-vs {
+    font-family: 'Black Ops One', cursive, 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    color: var(--cyber-red);
+    text-shadow: var(--glow-red);
+    font-style: italic;
+    padding: 0 var(--spacing-sm);
+    animation: pulse 2s infinite;
+}
+
+.action-btn {
+    padding: 0.8rem 2rem;
+    background: rgba(255, 59, 69, 0.1);
+    border: 1px solid var(--cyber-red);
+    color: var(--cyber-red);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    height: 48px;
+    /* Match input height roughly */
+}
+
+.action-btn:hover {
+    background: var(--cyber-red);
+    color: white;
+    box-shadow: var(--glow-red);
+    transform: translateY(-2px);
+}
+
+/* Face-off Results */
+.faceoff-comparison {
+    display: grid;
+    grid-template-columns: 1fr 100px 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+}
+
+.comparison-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.comparison-card.winner {
+    border-color: var(--cyber-yellow);
+    box-shadow: 0 0 20px rgba(252, 238, 9, 0.2);
+}
+
+.comparison-avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto var(--spacing-md);
+    border-radius: 50%;
+    border: 4px solid var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-family: 'Orbitron', sans-serif;
+    background: var(--bg-dark);
+}
+
+.winner .comparison-avatar {
+    border-color: var(--cyber-yellow);
+    box-shadow: var(--glow-yellow);
+}
+
+.comparison-username {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-bright);
+}
+
+.comparison-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.comp-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.comp-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text-muted);
+}
+
+.comp-stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.val-win {
+    color: var(--cyber-green);
+}
+
+.val-loss {
+    color: var(--cyber-red);
+    opacity: 0.7;
+}
+
+.comparison-center {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    padding-top: 150px;
+    /* Align with stats */
+    text-align: center;
+}
+
+.stat-diff-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+}
+
+.stat-diff-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.stat-diff-fill {
+    height: 100%;
+    background: var(--cyber-cyan);
+    position: absolute;
+    top: 0;
+}
+
+/* ========================================
+   WIDGET XP BAR STYLE PORT (Cyberpunk)
+   ======================================== */
+.profile-xp-section {
+    grid-column: 1 / -1;
+    margin-top: var(--spacing-sm);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 59, 69, 0.3);
+    border-radius: 6px;
+}
+
+.xp-bar-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Level Container */
+.xp-level-container {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    background: linear-gradient(135deg, #cc0000, #ff3a3a);
+    padding: 3px 10px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+    min-width: 58px;
+    transform: translateY(0);
+    /* Reset transform */
+}
+
+.xp-level-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 1px;
+}
+
+.xp-level-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 24px;
+    /* Slightly smaller than widget */
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    line-height: 1;
+}
+
+/* Progress Container */
+.xp-progress-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+}
+
+.xp-progress-bar {
+    position: relative;
+    height: 12px;
+    /* Adjustable */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 58, 58, 0.3);
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.xp-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #cc0000 0%, #ff3a3a 40%, #ff6666 60%, #ff3a3a 100%);
+    background-size: 200% 100%;
+    animation: liquidFlow 4s ease-in-out infinite;
+    transition: width 1s ease-in-out;
+    box-shadow: 0 0 8px rgba(255, 58, 58, 0.4);
+}
+
+.xp-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, transparent 100%);
+}
+
+.xp-progress-text {
+    display: flex;
+    gap: 5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    justify-content: flex-end;
+}
+
+.xp-current {
+    color: #ff6666;
+    font-weight: 600;
+}
+
+.xp-divider {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.xp-next {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.xp-suffix {
+    color: #ff3a3a;
+    font-weight: 600;
+    margin-left: 2px;
+}
+
+/* Motivational Text */
+.xp-motivational {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--cyber-cyan);
+    margin-top: 8px;
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+@keyframes liquidFlow {
+
+    0%,
+    100% {
+        background-position: 100% 50%;
+    }
+
+    50% {
+        background-position: 0% 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .faceoff-comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-center {
+        padding: 0;
+        flex-direction: row;
+        justify-content: space-around;
+        order: -1;
+    }
+
+    .profile-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Updated Profile Grid */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.small-text li {
+    font-size: 0.9em;
+    padding: 0.3rem 0;
+}
+
+.small-text .label {
+    font-size: 0.8em;
+}
+
+.small-text .value {
+    font-size: 0.9em;
+}

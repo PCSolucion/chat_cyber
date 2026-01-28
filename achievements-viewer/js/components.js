@@ -240,18 +240,28 @@ const Components = (function () {
                     <div class="profile-rank">
                         Rango: <span class="rank-name">${Utils.escapeHTML(user.rankTitle)}</span>
                     </div>
-                    <div class="profile-meta">
-                        <div class="profile-stat">
-                            <span class="stat-value">${user.level}</span>
-                            <span class="stat-label">NIVEL</span>
+                    
+                    <!-- XP Bar inside Header (Widget Style) -->
+                    <div class="profile-xp-section" style="margin-top: 1rem; max-width: 600px;">
+                        <div class="xp-bar-inline">
+                            <div class="xp-level-container">
+                                <span class="xp-level-label">LVL</span>
+                                <span class="xp-level-value">${user.level}</span>
+                            </div>
+                            <div class="xp-progress-container">
+                                <div class="xp-progress-bar">
+                                    <div class="xp-progress-fill" style="width: ${progress.percentage}%"></div>
+                                </div>
+                                <div class="xp-progress-text">
+                                    <span class="xp-current">${Utils.formatNumberFull(progress.current)}</span>
+                                    <span class="xp-divider">/</span>
+                                    <span class="xp-next">${Utils.formatNumberFull(progress.required)}</span>
+                                    <span class="xp-suffix">XP</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="profile-stat">
-                            <span class="stat-value">${Utils.formatNumberFull(user.xp)}</span>
-                            <span class="stat-label">XP TOTAL</span>
-                        </div>
-                        <div class="profile-stat">
-                            <span class="stat-value">${user.achievementCount}</span>
-                            <span class="stat-label">LOGROS</span>
+                        <div class="xp-motivational">
+                            ⚠ NECESITAS ${Utils.formatNumberFull(progress.required - progress.current)} XP MÁS PARA EL NIVEL ${user.level + 1}
                         </div>
                     </div>
                 </div>
@@ -261,10 +271,14 @@ const Components = (function () {
             <div class="profile-stats-grid">
                 <!-- General Stats -->
                 <div class="stats-card">
-                    <h4 class="stats-card-title">Estadísticas Generales</h4>
+                    <h4 class="stats-card-title">General</h4>
                     <ul class="stats-list">
+                         <li>
+                            <span class="label">XP Total</span>
+                            <span class="value">${Utils.formatNumberFull(user.xp)}</span>
+                        </li>
                         <li>
-                            <span class="label">Mensajes Totales</span>
+                            <span class="label">Mensajes</span>
                             <span class="value">${Utils.formatNumberFull(user.totalMessages)}</span>
                         </li>
                         <li>
@@ -275,22 +289,13 @@ const Components = (function () {
                             <span class="label">Mejor Racha</span>
                             <span class="value">${user.bestStreak} días</span>
                         </li>
-                        <li>
-                            <span class="label">Progreso Nivel</span>
-                            <span class="value">${progress.percentage}%</span>
-                        </li>
-                        ${rarestUnlocked ? `
-                        <li class="rarest-stat-item" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem; margin-top: 0.5rem;">
-                            <span class="label" style="color: var(--rarity-${rarestUnlocked.rarity});">Logro más Raro</span>
-                            <span class="value" style="font-size: 0.9em;">${Utils.escapeHTML(rarestUnlocked.name)}</span>
-                        </li>` : ''}
                     </ul>
                 </div>
                 
-                <!-- Achievement Stats -->
+                 <!-- Achievement Stats -->
                 <div class="stats-card">
-                    <h4 class="stats-card-title">Logros por Rareza</h4>
-                    <ul class="stats-list">
+                    <h4 class="stats-card-title">Logros (${user.achievementCount})</h4>
+                    <ul class="stats-list small-text">
                         <li>
                             <span class="label" style="color: var(--rarity-legendary);">Legendarios</span>
                             <span class="value">${rarityCounts.legendary}</span>
@@ -304,38 +309,40 @@ const Components = (function () {
                             <span class="value">${rarityCounts.rare}</span>
                         </li>
                         <li>
-                            <span class="label" style="color: var(--rarity-uncommon);">Poco Comunes</span>
-                            <span class="value">${rarityCounts.uncommon}</span>
-                        </li>
-                        <li>
-                            <span class="label" style="color: var(--rarity-common);">Comunes</span>
-                            <span class="value">${rarityCounts.common}</span>
+                            <span class="label">Comunes/Poco</span>
+                            <span class="value">${rarityCounts.common + rarityCounts.uncommon}</span>
                         </li>
                     </ul>
                 </div>
-                
-                <!-- Top Emotes -->
+
+                <!-- Rarest & Emotes Combined -->
                 <div class="stats-card">
-                    <h4 class="stats-card-title">Emotes Favoritos</h4>
-                    <ul class="stats-list">
-                        ${topEmotes.length > 0
-                ? topEmotes.map(e => `
-                                <li>
-                                    <span class="label">${Utils.escapeHTML(e.emote)}</span>
-                                    <span class="value">${e.count}x</span>
-                                </li>
-                            `).join('')
-                : '<li><span class="label" style="opacity: 0.5;">Sin datos de emotes</span></li>'
-            }
-                    </ul>
+                    <h4 class="stats-card-title">Destacados</h4>
+                     ${rarestUnlocked ? `
+                        <div class="rarest-highlight" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div class="label" style="display:block; margin-bottom:5px; font-size: 0.8rem;">💎 LOGRO MÁS RARO</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="achievement-mini-static" data-rarity="${rarestUnlocked.rarity}" style="width: 32px; height: 32px; font-size: 1.2rem;">
+                                    ${rarestUnlocked.image ? `<img src="${rarestUnlocked.image}">` : (rarestUnlocked.icon || '🏆')}
+                                </div>
+                                <div class="value" style="color: var(--text-bright); font-size: 0.9rem;">${Utils.escapeHTML(rarestUnlocked.name)}</div>
+                            </div>
+                        </div>` : ''}
+                    
+                    <div class="label" style="display:block; margin-bottom:5px; font-size: 0.8rem;">📺 TOP EMOTE</div>
+                     ${topEmotes.length > 0 ? `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="value" style="color: var(--cyber-cyan);">${Utils.escapeHTML(topEmotes[0].emote)}</span>
+                            <span class="label">${topEmotes[0].count} usos</span>
+                        </div>
+                     `: '<span class="label">Sin datos</span>'}
                 </div>
             </div>
             
             <!-- Unlocked Achievements -->
             <div class="profile-achievements">
                 <h4 class="profile-achievements-title">
-                    Logros Desbloqueados
-                    <span class="count">${user.achievementCount} / ${API.getTotalAchievements()}</span>
+                    Galería de Logros
                 </h4>
                 <div class="achievements-mini-grid">
                     ${unlockedDetails.length > 0
@@ -450,6 +457,77 @@ const Components = (function () {
         `;
     }
 
+    /**
+     * Create Face-Off Comparison
+     * @param {Object} u1 User 1 object
+     * @param {Object} u2 User 2 object
+     */
+    function createFaceOff(u1, u2) {
+        if (!u1 || !u2) return '';
+
+        // Calculate differences
+        const diffXP = u1.xp - u2.xp;
+        const diffLevel = u1.level - u2.level;
+        const diffAch = u1.achievementCount - u2.achievementCount;
+
+        // Helper for row
+        const createRow = (label, val1, val2, diff, isWinner1) => {
+            const c1 = isWinner1 ? 'val-win' : 'val-loss';
+            const c2 = !isWinner1 ? 'val-win' : 'val-loss';
+
+            // Bar calculation
+            const max = Math.max(val1, val2) || 1;
+            const p1 = (val1 / max) * 100;
+            const p2 = (val2 / max) * 100;
+
+            return `
+                <div class="comp-stat-row">
+                    <div class="comp-val left ${c1}">${Utils.formatNumberFull(val1)}</div>
+                    <div class="comparison-center-stat" style="flex: 1; padding: 0 1rem; text-align: center;">
+                        <div class="stat-diff-label">${label}</div>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <div class="stat-diff-bar" style="transform: scaleX(-1);"><div class="stat-diff-fill" style="width: ${p1}%"></div></div>
+                            <div class="stat-diff-bar"><div class="stat-diff-fill" style="width: ${p2}%"></div></div>
+                        </div>
+                    </div>
+                    <div class="comp-val right ${c2}">${Utils.formatNumberFull(val2)}</div>
+                </div>
+            `;
+        };
+
+        const winner1 = u1.xp > u2.xp;
+
+        return `
+            <div class="faceoff-comparison">
+                <!-- User 1 -->
+                <div class="comparison-card ${winner1 ? 'winner' : ''}">
+                    <div class="comparison-avatar">${Utils.getInitial(u1.username)}</div>
+                    <h3 class="comparison-username">${Utils.escapeHTML(u1.username)}</h3>
+                    <div class="profile-rank">${Utils.escapeHTML(u1.rankTitle)}</div>
+                </div>
+
+                <!-- Stats Center -->
+                <div class="comparison-center">
+                   
+                </div>
+
+                <!-- User 2 -->
+                <div class="comparison-card ${!winner1 ? 'winner' : ''}">
+                    <div class="comparison-avatar">${Utils.getInitial(u2.username)}</div>
+                    <h3 class="comparison-username">${Utils.escapeHTML(u2.username)}</h3>
+                    <div class="profile-rank">${Utils.escapeHTML(u2.rankTitle)}</div>
+                </div>
+                
+                <!-- Full Width Stats -->
+                <div class="comparison-stats" style="grid-column: 1 / -1;">
+                     ${createRow('TOTAL XP', u1.xp, u2.xp, diffXP, u1.xp >= u2.xp)}
+                     ${createRow('NIVEL', u1.level, u2.level, diffLevel, u1.level >= u2.level)}
+                     ${createRow('LOGROS', u1.achievementCount, u2.achievementCount, diffAch, u1.achievementCount >= u2.achievementCount)}
+                </div>
+            </div>
+        `;
+    }
+
     return {
         createPodium,
         createRankingRows,
@@ -459,6 +537,7 @@ const Components = (function () {
         createUserProfile,
         createAchievementMini,
         createSuggestionItem,
-        createStatsDashboard
+        createStatsDashboard,
+        createFaceOff
     };
 })();

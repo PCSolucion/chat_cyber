@@ -111,33 +111,55 @@ const Utils = (function () {
      * @param {number} level
      * @returns {Object}
      */
+    /**
+     * Calculate XP progress for level
+     * MATCHES EXACTLY ExperienceService.js logic (Formula-based, not cumulative steps)
+     * @param {number} xp
+     * @param {number} level
+     * @returns {Object}
+     */
     function calculateLevelProgress(xp, level) {
         const baseXP = 100;
         const exponent = 1.5;
-        const hardModeMultiplier = 1.3;
+        const difficultyThreshold = 50;
+        const difficultyMultiplier = 1.3;
 
         function getXPForLevel(lvl) {
             if (lvl <= 1) return 0;
-            let total = 0;
-            for (let i = 2; i <= lvl; i++) {
-                let required = Math.floor(baseXP * Math.pow(i, exponent));
-                if (i > 50) {
-                    required = Math.floor(required * hardModeMultiplier);
-                }
-                total += required;
+
+            // Normal Formula: baseXP * (level - 1) ^ exponent
+            if (lvl <= difficultyThreshold) {
+                return Math.floor(baseXP * Math.pow(lvl - 1, exponent));
             }
-            return total;
+
+            // High Level Formula (>50)
+            const xpAtThreshold = baseXP * Math.pow(difficultyThreshold - 1, exponent);
+            const xpTargetNormal = baseXP * Math.pow(lvl - 1, exponent);
+            const xpDifference = xpTargetNormal - xpAtThreshold;
+            const finalXP = xpAtThreshold + (xpDifference * difficultyMultiplier);
+
+            return Math.floor(finalXP);
         }
 
-        const currentLevelXP = getXPForLevel(level);
-        const nextLevelXP = getXPForLevel(level + 1);
-        const xpInCurrentLevel = xp - currentLevelXP;
-        const xpRequiredForLevel = nextLevelXP - currentLevelXP;
-        const percentage = Math.min(100, Math.max(0, (xpInCurrentLevel / xpRequiredForLevel) * 100));
+        const xpAtCurrentLevelStart = getXPForLevel(level);
+        const xpAtNextLevelStart = getXPForLevel(level + 1);
+
+        // XP gained towards next level
+        // Since we are trusting the 'level' passed in, xp MUST be >= xpAtCurrentLevelStart
+        // If it's slightly lower due to precision issues, clamp to 0.
+        let currentXPInLevel = xp - xpAtCurrentLevelStart;
+        if (currentXPInLevel < 0) currentXPInLevel = 0;
+
+        const xpRequiredForNextLevel = xpAtNextLevelStart - xpAtCurrentLevelStart;
+
+        // Safety for division by zero (unlikely)
+        const totalReq = xpRequiredForNextLevel > 0 ? xpRequiredForNextLevel : 1;
+
+        const percentage = Math.min(100, Math.max(0, (currentXPInLevel / totalReq) * 100));
 
         return {
-            current: xpInCurrentLevel,
-            required: xpRequiredForLevel,
+            current: currentXPInLevel,
+            required: xpRequiredForNextLevel,
             percentage: percentage.toFixed(1)
         };
     }

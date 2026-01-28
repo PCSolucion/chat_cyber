@@ -18,6 +18,7 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/custom_additions.css">
 </head>
 
 <body>
@@ -36,16 +37,6 @@
             </div>
 
             <nav class="main-nav">
-                <a href="#leaderboard" class="nav-link active" data-section="leaderboard">
-                    <span>LEADERBOARD</span>
-                </a>
-                <a href="#catalog" class="nav-link" data-section="catalog">
-                    <span>CATÁLOGO</span>
-                </a>
-                <a href="#stats" class="nav-link" data-section="stats">
-                    <span>NETRUNNER DATA</span>
-                </a>
-
                 <div class="nav-search">
                     <div class="search-box-sidebar">
                         <input type="text" id="user-search" placeholder="Buscar viewer..." autocomplete="off">
@@ -59,6 +50,19 @@
                     </div>
                     <div id="search-suggestions" class="search-suggestions"></div>
                 </div>
+
+                <a href="#leaderboard" class="nav-link active" data-section="leaderboard">
+                    <span>LEADERBOARD</span>
+                </a>
+                <a href="#catalog" class="nav-link" data-section="catalog">
+                    <span>CATÁLOGO</span>
+                </a>
+                <a href="#stats" class="nav-link" data-section="stats">
+                    <span>NETRUNNER DATA</span>
+                </a>
+                <a href="#faceoff" class="nav-link" data-section="faceoff">
+                    <span>FACE-OFF</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -161,6 +165,41 @@
                         <div class="cyber-loader"></div>
                         <span>ANALIZANDO DATOS DEL SERVIDOR...</span>
                     </div>
+                </div>
+            </section>
+
+            <!-- Face-off Section -->
+            <section id="faceoff" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        FACE-OFF
+                        <span class="title-tag">COMPARISON PROTOCOL</span>
+                    </h2>
+                    <p class="section-subtitle">Compara estadísticas y logros entre dos Netrunners</p>
+                </div>
+
+                <div class="faceoff-controls">
+                    <div class="faceoff-search-group">
+                        <label>NETRUNNER 01</label>
+                        <div class="search-box-faceoff">
+                            <input type="text" id="faceoff-input-1" placeholder="Usuario 1..." autocomplete="off">
+                            <div id="faceoff-suggestions-1" class="search-suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="faceoff-vs">VS</div>
+                    <div class="faceoff-search-group">
+                        <label>NETRUNNER 02</label>
+                        <div class="search-box-faceoff">
+                            <input type="text" id="faceoff-input-2" placeholder="Usuario 2..." autocomplete="off">
+                            <div id="faceoff-suggestions-2" class="search-suggestions"></div>
+                        </div>
+                    </div>
+                    <button id="faceoff-btn" class="action-btn">COMPARAR</button>
+                </div>
+
+                <div id="faceoff-result" class="faceoff-result" style="display: none;">
+                    <!-- Dynamic Content -->
                 </div>
             </section>
 
