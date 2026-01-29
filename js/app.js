@@ -65,6 +65,9 @@ class App {
 
         // Iniciar actualización de categoría
         this.startStreamCategoryUpdate();
+
+        // Iniciar Tracker de Watch Time
+        this.startWatchTimeTracker();
     }
 
     /**
@@ -337,10 +340,78 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
         this.categoryTimer = setTimeout(updateMetadata, 2000);
     }
 
+    /**
+     * Inicia el tracker de tiempo de visualización
+     * - Obtiene lista de espectadores cada 10 minutos
+     * - Asigna 10 minutos de watchtime y 5 XP pasivos
+     */
+    startWatchTimeTracker() {
+        const INTERVAL_MS = 600000; // 10 minutos
+
+        const trackTime = async () => {
+            if (!this.twitchService || !this.processor) return;
+
+            // Verificar estado del stream (opcional, pero recomendado solo trackear si está online)
+            // Usamos el estado del processor si está disponible
+            const isOnline = this.processor.isStreamOnline;
+            // Si no tenemos estado fidedigno, asumimos true para pruebas o consultamos servicio
+            // Para evitar problemas de CORS/API en local, permitimos trackeo siempre si config lo permite
+            // pero idealmente solo si isOnline.
+
+            // if (!isOnline) return; 
+
+            console.log('⏱️ Iniciando ciclo de Watch Time Tracker...');
+
+            try {
+                // 1. Obtener lista de chatters
+                const chatters = await this.twitchService.fetchChatters();
+
+                if (!chatters || chatters.length === 0) {
+                    console.log('⏱️ No se encontraron chatters o API falló silenciosamente.');
+                    return;
+                }
+
+                console.log(`⏱️ Procesando Watch Time para ${chatters.length} usuarios...`);
+
+                // 2. Procesar usuarios
+                // Acceso directo a servicios (MessageProcessor no tiene getService)
+                const xpService = this.processor.services ? this.processor.services.xp : null;
+                const sessionStats = this.processor.services ? this.processor.services.sessionStats : null;
+
+                if (!xpService) return;
+
+                let processed = 0;
+                for (const username of chatters) {
+                    // Ignorar bots conocidos si es necesario (el servicio ya lo maneja para XP bonus, aquí tmb)
+                    xpService.addWatchTime(username, 10);
+
+                    // Trackear en sesión actual
+                    if (sessionStats) {
+                        sessionStats.trackSessionWatchTime(username, 10);
+                    }
+
+                    processed++;
+                }
+
+                console.log(`✅ Watch Time asignado a ${processed} usuarios.`);
+
+            } catch (error) {
+                console.error('❌ Error en Watch Time Tracker:', error);
+            }
+        };
+
+        // Iniciar ciclo
+        this.watchTimeInterval = setInterval(trackTime, INTERVAL_MS);
+
+        // Ejecución inicial diferida (10s) para dar tiempo a conectar y poblar lista
+        setTimeout(trackTime, 10000);
+    }
+
     async destroy() {
         console.log('🛑 Shutting down...');
         if (this.categoryTimer) clearTimeout(this.categoryTimer);
         if (this.categoryInterval) clearInterval(this.categoryInterval);
+        if (this.watchTimeInterval) clearInterval(this.watchTimeInterval);
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();
     }

@@ -123,6 +123,7 @@ const API = (function () {
                 bestStreak,
                 totalMessages: userData.totalMessages || 0,
                 streakDays: userData.streakDays || 0,
+                watchTimeMinutes: userData.watchTimeMinutes || 0,
                 achievements: userData.achievements || [],
                 achievementStats: userData.achievementStats || {}
             };
@@ -159,15 +160,7 @@ const API = (function () {
 
         if (!entry) return null;
 
-        // ================= TEST DATA FOR LIIUKIIN =================
-        // Inject mock watch time to match main widget testing
-        if (normalizedSearch === 'liiukiin') {
-            const [_, uData] = entry;
-            if (!uData.watchTimeMinutes || uData.watchTimeMinutes < 5) {
-                uData.watchTimeMinutes = 450; // 7h 30m
-            }
-        }
-        // ==========================================================
+
 
         const [name, userData] = entry;
 
@@ -189,6 +182,7 @@ const API = (function () {
             bestStreak: userData.bestStreak || userData.streakDays || 0,
             totalMessages: userData.totalMessages || 0,
             streakDays: userData.streakDays || 0,
+            watchTimeMinutes: userData.watchTimeMinutes || 0,
             achievements: normalizedAchievements.map(a => a.id), // Keep IDs for backwards compat
             achievementsWithDates: normalizedAchievements, // Full data with timestamps
             achievementStats: userData.achievementStats || {},

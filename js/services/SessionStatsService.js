@@ -49,7 +49,10 @@ class SessionStatsService {
             wordFrequency: new Map(),  // { word: count }
 
             // Historial de actividad por minuto (para gráfico)
-            activityHistory: []  // { timestamp, messages, users }
+            activityHistory: [],  // { timestamp, messages, users }
+
+            // Tiempo de visualización en sesión
+            sessionWatchTime: new Map() // { username: minutes }
         };
 
         // Iniciar tracking de actividad por minuto
@@ -171,6 +174,17 @@ class SessionStatsService {
                 // Ignorar errores
             }
         }
+    }
+
+    /**
+     * Trackea tiempo de visualización para la sesión actual
+     * @param {string} username 
+     * @param {number} minutes 
+     */
+    trackSessionWatchTime(username, minutes) {
+        const lowerUser = username.toLowerCase();
+        const current = this.stats.sessionWatchTime.get(lowerUser) || 0;
+        this.stats.sessionWatchTime.set(lowerUser, current + minutes);
     }
 
     /**
@@ -392,6 +406,41 @@ class SessionStatsService {
     }
 
     /**
+     * Obtiene los top N usuarios por tiempo de visualización
+     * @param {string} period 'session', 'week', 'month', 'total'
+     * @param {number} n 
+     */
+    _getTopWatchTime(period, n) {
+        let users = [];
+
+        if (period === 'session') {
+            users = Array.from(this.stats.sessionWatchTime.entries())
+                .map(([username, minutes]) => ({ username, minutes }));
+        } else if (this.experienceService) {
+            // Iterar sobre todos los usuarios conocidos por XP service
+            // NOTA: Esto acceso a propiedad interna usersXP, idealmente debería haber un método público
+            // pero por simplicidad accedemos al Map si está accesible
+            if (this.experienceService.usersXP) {
+                users = Array.from(this.experienceService.usersXP.keys()).map(username => ({
+                    username,
+                    minutes: this.experienceService.getWatchTimeStats(username, period)
+                }));
+            }
+        }
+
+        // Sort y slice
+        return users
+            .sort((a, b) => b.minutes - a.minutes)
+            .filter(u => u.minutes > 0)
+            .slice(0, n)
+            .map(u => ({
+                username: u.username.charAt(0).toUpperCase() + u.username.slice(1),
+                minutes: u.minutes,
+                formatted: this._formatDuration(u.minutes * 60000) // Convert back to ms for format
+            }));
+    }
+
+    /**
      * Obtiene información sobre la última actividad
      * @private
      */
@@ -482,6 +531,18 @@ class SessionStatsService {
                     highestStreak: displayStats.highestStreak,
                     totalActive: displayStats.activeStreaksCount
                 }
+            },
+            // Pantalla 6: Watch Time Sesión
+            {
+                type: 'watchtime_session',
+                title: 'TIEMPO EN DIRECTO',
+                data: this._getTopWatchTime('session', 20)
+            },
+            // Pantalla 7: Watch Time Total
+            {
+                type: 'watchtime_total',
+                title: 'TIEMPO TOTAL (HISTÓRICO)',
+                data: this._getTopWatchTime('total', 20)
             }
         ];
 
@@ -510,7 +571,10 @@ class SessionStatsService {
             currentActiveStreaks: new Map(),
             commandsUsed: new Map(),
             wordFrequency: new Map(),
-            activityHistory: []
+            commandsUsed: new Map(),
+            wordFrequency: new Map(),
+            activityHistory: [],
+            sessionWatchTime: new Map()
         };
 
         this.lastMinuteMessages = 0;

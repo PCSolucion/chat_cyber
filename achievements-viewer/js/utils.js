@@ -222,7 +222,7 @@ const Utils = (function () {
      * @returns {string}
      */
     function formatTime(minutes) {
-        if (!minutes) return '0m';
+        if (!minutes) return '0h';
         if (minutes < 60) return `${minutes}m`;
         const h = Math.floor(minutes / 60);
         const m = minutes % 60;

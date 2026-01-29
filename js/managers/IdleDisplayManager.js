@@ -183,22 +183,50 @@ class IdleDisplayManager {
         // Iniciar primera pantalla
         this._updateIdleDisplay();
 
-        // Iniciar rotación
-        this.rotationInterval = setInterval(() => {
+        // Iniciar rotación (usamos setTimeout recursivo para permitir tiempos variables)
+        this._scheduleNextRotation();
+    }
+
+    /**
+     * Programa la siguiente rotación de pantalla
+     * @private
+     */
+    _scheduleNextRotation() {
+        if (this.rotationInterval) clearTimeout(this.rotationInterval);
+
+        // Obtener la pantalla actual para determinar cuánto tiempo mostrarla
+        // NOTA: currentCycleIndex ya se ha incrementado o es el inicial
+        const currentScreenData = this.statsService.getIdleDisplayData(this.currentCycleIndex);
+
+        let delay = this.screenRotationMs;
+
+        // Si es 'watchtime_total', añadir 6 segundos extra
+        if (currentScreenData && currentScreenData.type === 'watchtime_total') {
+            delay += 6000;
+        }
+
+        this.rotationInterval = setTimeout(() => {
+            if (!this.isIdle) return;
+
             this.currentCycleIndex++;
             this.screensShown++;
 
             // Verificar si hemos completado los ciclos máximos
-            const maxScreens = this.totalScreensInCycle * this.maxCycles;
-            if (this.screensShown >= maxScreens) {
-                // Ocultar widget después de completar los ciclos
+            // NOTA: totalScreensInCycle en SessionStatsService son 7 ahora
+            const maxScreens = (this.statsService.getIdleDisplayData(0).totalScreens || 7) * this.maxCycles;
+
+            // Hardcode 7 como fallback seguro si no podemos obtenerlo dinámicamente fácil
+            if (this.screensShown >= (7 * this.maxCycles)) {
                 this._hideAfterCycles();
                 return;
             }
 
             this._updateIdleDisplay();
-        }, this.screenRotationMs);
+            this._scheduleNextRotation();
+
+        }, delay);
     }
+
 
     /**
      * Sale del modo idle
@@ -213,7 +241,7 @@ class IdleDisplayManager {
 
         // Detener rotación
         if (this.rotationInterval) {
-            clearInterval(this.rotationInterval);
+            clearTimeout(this.rotationInterval);
             this.rotationInterval = null;
         }
 
@@ -354,6 +382,10 @@ class IdleDisplayManager {
             case 'streaks':
                 this._renderStreaksScreen(screenData);
                 break;
+            case 'watchtime_session':
+            case 'watchtime_total':
+                this._renderWatchTimeList(screenData);
+                break;
             default:
                 this._renderSummaryScreen(screenData);
         }
@@ -363,6 +395,58 @@ class IdleDisplayManager {
         setTimeout(() => {
             this.idleContainer.classList.remove('idle-screen-enter');
         }, 500);
+    }
+
+
+
+    /**
+     * Renderiza pantalla de Top Tiempo de Visualización
+     * @private
+     */
+    /**
+     * Renderiza pantalla de Watch Time como lista (estilo Leaderboard)
+     * @private
+     */
+    _renderWatchTimeList(screenData) {
+        const users = screenData.data || [];
+        const title = screenData.title || 'TIEMPO DE VISUALIZACIÓN';
+
+        let usersHtml = '';
+        users.forEach((user, index) => {
+            const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
+            usersHtml += `
+                <div class="modern-list-item ${rankClass}">
+                    <div class="list-rank">#${index + 1}</div>
+                    <div class="list-content">
+                        <span class="list-name">${user.username}</span>
+                    </div>
+                    <div class="list-stat">
+                        <span class="stat-num" style="color: var(--cyber-cyan); font-family: 'Share Tech Mono';">${user.formatted}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (users.length === 0) {
+            usersHtml = '<div class="empty-message">ESPERANDO DATOS...</div>';
+        }
+
+        // Wrapper for animation scroll
+        const shouldScroll = users.length > 5;
+        const animationDuration = Math.max(10, users.length * 2.5);
+
+        const content = `
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
+                ${usersHtml}
+            </div>
+        `;
+
+        this._currentScreenContent.innerHTML = `
+            <div class="idle-screen-title">${title}</div>
+            <div class="idle-list-container">
+                ${content}
+            </div>
+        `;
     }
 
     /**
