@@ -55,6 +55,7 @@ class UIManager {
             streamCategory: document.getElementById('stream-category'),
             systemStatus: document.getElementById('system-status-text'),
             liveBadge: document.querySelector('.live-badge'),
+            watchTimeContainer: document.getElementById('watch-time-container'), // NEW
             root: document.documentElement
         };
     }
@@ -192,13 +193,11 @@ class UIManager {
             }
 
             // Gestionar icono de admin (Arasaka) o Rangos Especiales
-            // Gestionar icono de admin (Arasaka) o Rangos Especiales
             if (this.dom.adminIcon) {
                 const isAdmin = username.toLowerCase() === (this.config.SPECIAL_USER?.username || 'liiukiin').toLowerCase();
                 const rankTitle = userRole.rankTitle ? userRole.rankTitle.title : '';
 
                 // Obtener configuración de iconos
-                // Se usa fallback por seguridad si el config es antiguo
                 const uiConfig = this.config.UI || { RANK_ICONS: {}, SPECIAL_ICONS: {} };
                 const rankIcons = uiConfig.RANK_ICONS || {};
                 const specialIcons = uiConfig.SPECIAL_ICONS || {};
@@ -220,6 +219,50 @@ class UIManager {
                     this.dom.adminIcon.style.display = 'none';
                 }
             }
+
+            // ================= WATCH TIME DISPLAY (HEADER INLINE) =================
+            // Se muestra ENTRE el rango y la racha: [RANK] [LURK] [STREAK]
+            if (this.dom.watchTimeContainer && this.experienceService) {
+                // Reset inicial
+                this.dom.watchTimeContainer.innerHTML = '';
+                this.dom.watchTimeContainer.style.display = 'none';
+
+                const userData = this.experienceService.getUserData(username);
+
+                if (userData && userData.watchTimeMinutes > 0) {
+                    const minutes = userData.watchTimeMinutes;
+                    let timeText = '';
+
+                    // Formato: 7H
+                    if (minutes >= 60) {
+                        timeText = `${Math.floor(minutes / 60)}H`;
+                    } else {
+                        timeText = `${minutes}m`;
+                    }
+
+                    // Estilo inline (como si fuera otro elemento .xp-streak)
+                    this.dom.watchTimeContainer.style.display = 'flex';
+                    this.dom.watchTimeContainer.style.alignItems = 'center';
+                    this.dom.watchTimeContainer.style.gap = '4px';
+                    // Al estar en el header inline, usamos margin-right para separar de la racha si existe
+                    this.dom.watchTimeContainer.style.marginRight = '8px';
+
+                    // Limpiamos estilos extra
+                    this.dom.watchTimeContainer.className = 'xp-streak'; // Reutilizar clase base para alineación
+                    this.dom.watchTimeContainer.style.background = 'none';
+                    this.dom.watchTimeContainer.style.border = 'none';
+                    this.dom.watchTimeContainer.style.boxShadow = 'none';
+                    this.dom.watchTimeContainer.style.padding = '0';
+
+                    // Renderizamos con los estilos solicitados: Igualar "RACHA"
+                    // (Sin overrides de font-size, dejar que CSS/Clases manejen el estilo)
+                    this.dom.watchTimeContainer.innerHTML = `
+                        <span class="streak-label">LURK:</span>
+                        <span class="streak-days">${timeText}</span>
+                    `;
+                }
+            }
+            // ====================================================================
 
             // Custom Background for Takeru_xiii
             if (username.toLowerCase() === 'takeru_xiii') {
@@ -285,10 +328,43 @@ class UIManager {
             }
         }
 
-        // Aplicar badge
+        // Aplicar badge (Streak)
         if (userRole.badgeClass) {
             this.dom.userBadge.classList.add(userRole.badgeClass);
-            this.dom.userBadge.textContent = userRole.badge;
+
+            // REMOVE "BONUS" TEXT logic
+            // El badge suele venir como "🔥 x2 BONUS" o algo así.
+            // Vamos a limpiar la palabra "BONUS" y dejar solo el icono y valor.
+            // Usamos 'gi' para case-insensitive
+            let cleanBadge = userRole.badge.replace(/bonus/gi, '').trim();
+            this.dom.userBadge.textContent = cleanBadge;
+        }
+
+        // ================= WATCH TIME BADGE INJECTION =================
+        // Inyectamos el badge de tiempo ANTES del badge de racha.
+        // Como userBadge es un span dentro de un container, lo ideal es manipular el container.
+        // El container es .user-identity-stack (ver index.html)
+        // Pero no tenemos referencia directa en this.dom, solo userBadge.
+        // userBadge.parentElement es .user-identity-stack
+
+        if (this.dom.userBadge && this.dom.userBadge.parentElement) {
+            // Eliminar badge de tiempo anterior si existe
+            const existingTimeBadge = this.dom.userBadge.parentElement.querySelector('.time-badge');
+            if (existingTimeBadge) {
+                existingTimeBadge.remove();
+            }
+
+            // Crear nuevo badge si tenemos datos
+            // Necesitamos los datos del usuario. Como no los tenemos pasados aquí explícitamente,
+            // pero sí en revealMessage, deberíamos haberlos pasado o obtenerlos de nuevo.
+            // FIX: applyRoleStyles se llama desde revealMessage.
+            // Vamos a acceder al ExperienceService para obtener el tiempo.
+            // Necesitamos el username, pero applyRoleStyles recibe userRole.
+            // userRole no tiene username necesariamente (depende de RankingSystem).
+            // Vamos a asumir que podemos obtener el username del DOM o que modificamos applyRoleStyles.
+
+            // Mejor enfoque: Hacer esto en revealMessage, no aquí.
+            // Revertimos cambio aquí y lo hacemos en revealMessage donde tenemos el username.
         }
     }
 

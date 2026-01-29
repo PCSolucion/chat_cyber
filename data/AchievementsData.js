@@ -52,6 +52,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "🗣️",
+            image: "img/logros/chatterbox.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 50 }
         },
         talkative: {
@@ -61,6 +62,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "📢",
+            image: "img/logros/talkative.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 100 }
         },
         motormouth: {
@@ -80,6 +82,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "uncommon",
             icon: "🔊",
+            image: "img/logros/choom speaker.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 500 }
         },
         voice_of_night_city: {
@@ -89,6 +92,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "rare",
             icon: "🌃",
+            image: "img/logros/voice of night city.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 1000 }
         },
         legendary_talker: {
@@ -136,6 +140,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "🐦",
+            image: "img/logros/Early Bird.png",
             rule: { field: "stats.firstMessageDays", operator: ">=", value: 3 }
         },
         morning_regular: {
@@ -145,6 +150,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "uncommon",
             icon: "🌅",
+            image: "img/logros/morning regular.png",
             rule: { field: "stats.firstMessageDays", operator: ">=", value: 10 }
         },
         dawn_patrol: {
@@ -154,6 +160,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "rare",
             icon: "🌄",
+            image: "img/logros/dawn patrol.png",
             rule: { field: "stats.firstMessageDays", operator: ">=", value: 30 }
         },
 
@@ -165,6 +172,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "😀",
+            image: "img/logros/emote user.png",
             rule: { field: "stats.messagesWithEmotes", operator: ">=", value: 25 }
         },
         emote_spammer: {
@@ -194,6 +202,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "common",
             icon: "👋",
+            image: "img/logros/Mention Someone.png",
             rule: { field: "stats.mentionCount", operator: ">=", value: 10 }
         },
         social_butterfly: {
@@ -203,6 +212,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "uncommon",
             icon: "🦋",
+            image: "img/logros/social butterfly.png",
             rule: { field: "stats.mentionCount", operator: ">=", value: 50 }
         },
         connector: {
@@ -223,6 +233,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "uncommon",
             icon: "🦉",
+            image: "img/logros/Night Owl.png",
             rule: { field: "stats.nightMessages", operator: ">=", value: 5 }
         },
 
@@ -234,6 +245,7 @@ const ACHIEVEMENTS_DATA = {
             category: "streaks",
             rarity: "common",
             icon: "🔥",
+            image: "img/logros/streakstarted.png",
             rule: { field: "userData.streakDays", operator: ">=", value: 2 }
         },
         consistency: {
@@ -243,6 +255,7 @@ const ACHIEVEMENTS_DATA = {
             category: "streaks",
             rarity: "common",
             icon: "📆",
+            image: "img/logros/consistency.png",
             rule: { field: "userData.streakDays", operator: ">=", value: 3 }
         },
         dedicated: {
@@ -252,6 +265,7 @@ const ACHIEVEMENTS_DATA = {
             category: "streaks",
             rarity: "uncommon",
             icon: "💪",
+            image: "img/logros/dedicated.png",
             rule: { field: "userData.streakDays", operator: ">=", value: 5 }
         },
         week_warrior: {
@@ -261,6 +275,7 @@ const ACHIEVEMENTS_DATA = {
             category: "streaks",
             rarity: "uncommon",
             icon: "🗓️",
+            image: "img/logros/week warrior.png",
             rule: { field: "userData.streakDays", operator: ">=", value: 7 }
         },
         fortnight_fighter: {
@@ -270,6 +285,7 @@ const ACHIEVEMENTS_DATA = {
             category: "streaks",
             rarity: "rare",
             icon: "⚔️",
+            image: "img/logros/fortnight Fighter.png",
             rule: { field: "userData.streakDays", operator: ">=", value: 14 }
         },
         monthly_devotion: {
@@ -371,6 +387,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "common",
             icon: "⬆️",
+            image: "img/logros/First Level Up.png",
             rule: { field: "userData.level", operator: ">=", value: 2 }
         },
         street_kid: {
@@ -380,6 +397,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "common",
             icon: "🛹",
+            image: "img/logros/Street Kid.png",
             rule: { field: "userData.level", operator: ">=", value: 5 }
         },
         mercenary_rank: {
@@ -389,6 +407,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "uncommon",
             icon: "🎖️",
+            image: "img/logros/Mercenary Rank.png",
             rule: { field: "userData.level", operator: ">=", value: 10 }
         },
         solo_status: {
@@ -398,6 +417,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "uncommon",
             icon: "🔫",
+            image: "img/logros/Solo Status.png",
             rule: { field: "userData.level", operator: ">=", value: 15 }
         },
         netrunner_tier: {
@@ -407,6 +427,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "rare",
             icon: "💻",
+            image: "img/logros/netrunner tier.png",
             rule: { field: "userData.level", operator: ">=", value: 20 }
         },
         level_milestone_25: {
@@ -416,6 +437,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "rare",
             icon: "🎯",
+            image: "img/logros/quarter century.png",
             rule: { field: "userData.level", operator: ">=", value: 25 }
         },
         fixer_class: {
@@ -425,6 +447,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "rare",
             icon: "🤝",
+            image: "img/logros/fixer class.png",
             rule: { field: "userData.level", operator: ">=", value: 30 }
         },
         corpo_elite: {
@@ -434,6 +457,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "epic",
             icon: "🏢",
+            image: "img/logros/corpo elite.png",
             rule: { field: "userData.level", operator: ">=", value: 40 }
         },
         night_city_legend: {
@@ -553,6 +577,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "common",
             icon: "✨",
+            image: "img/logros/First XP.png",
             rule: { field: "userData.xp", operator: ">=", value: 50 }
         },
         hundred_xp: {
@@ -562,6 +587,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "common",
             icon: "💯",
+            image: "img/logros/Hundred XP.png",
             rule: { field: "userData.xp", operator: ">=", value: 100 }
         },
         thousand_xp: {
@@ -571,6 +597,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "common",
             icon: "🔢",
+            image: "img/logros/Thousand XP.png",
             rule: { field: "userData.xp", operator: ">=", value: 1000 }
         },
         xp_collector: {
@@ -580,6 +607,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "uncommon",
             icon: "📦",
+            image: "img/logros/XP Collector.png",
             rule: { field: "userData.xp", operator: ">=", value: 5000 }
         },
         xp_hoarder: {
@@ -589,6 +617,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "uncommon",
             icon: "🏦",
+            image: "img/logros/xp hoarder.png",
             rule: { field: "userData.xp", operator: ">=", value: 10000 }
         },
         xp_magnate: {
@@ -598,6 +627,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "rare",
             icon: "💰",
+            image: "img/logros/xp magnate.png",
             rule: { field: "userData.xp", operator: ">=", value: 25000 }
         },
         xp_tycoon: {
@@ -652,6 +682,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "uncommon",
             icon: "✖️",
+            image: "img/logros/multiplier active.png",
             rule: { field: "stats.usedMultiplier15", operator: "==", value: true }
         },
         double_power: {
@@ -661,6 +692,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "rare",
             icon: "2️⃣",
+            image: "img/logros/double power.png",
             rule: { field: "stats.usedMultiplier2", operator: "==", value: true }
         },
         triple_threat: {
@@ -679,6 +711,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "rare",
             icon: "🎯",
+            image: "img/logros/Bonus Hunter.png",
             rule: { field: "stats.streakBonusCount", operator: ">=", value: 10 }
         },
 
@@ -845,6 +878,7 @@ const ACHIEVEMENTS_DATA = {
             category: "stream",
             rarity: "uncommon",
             icon: "📺",
+            image: "img/logros/live regular.png",
             rule: { field: "stats.liveMessages", operator: ">=", value: 100 }
         },
         live_devotee: {
@@ -854,6 +888,7 @@ const ACHIEVEMENTS_DATA = {
             category: "stream",
             rarity: "rare",
             icon: "🎥",
+            image: "img/logros/live devotee.png",
             rule: { field: "stats.liveMessages", operator: ">=", value: 200 }
         },
         stream_marathoner: {
@@ -908,6 +943,7 @@ const ACHIEVEMENTS_DATA = {
             category: "stream",
             rarity: "uncommon",
             icon: "⏰",
+            image: "img/logros/prime time.png",
             rule: { field: "stats.primeTimeMessages", operator: ">=", value: 20 }
         },
 
@@ -1056,6 +1092,7 @@ const ACHIEVEMENTS_DATA = {
             category: "special",
             rarity: "rare",
             icon: "🏹",
+            image: "img/logros/achievement hunter.png",
             rule: { field: "userData.achievements.length", operator: ">=", value: 25 }
         },
         completionist: {
@@ -1103,6 +1140,7 @@ const ACHIEVEMENTS_DATA = {
             category: "bro",
             rarity: "common",
             icon: "🤜",
+            image: "img/logros/bro initiate.png",
             rule: { field: "stats.broCount", operator: ">=", value: 1 }
         },
         bro_regular: {
@@ -1159,6 +1197,7 @@ const ACHIEVEMENTS_DATA = {
             category: "messages",
             rarity: "rare",
             icon: "🌙",
+            image: "img/logros/trasnochador.png",
             rule: { field: "stats.earlyMorningMessages", operator: ">=", value: 1 }
         },
 

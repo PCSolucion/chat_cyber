@@ -159,6 +159,41 @@ class TwitchService {
     }
 
     /**
+     * Obtiene la lista de usuarios conectados al chat (TMI API)
+     * @returns {Promise<Array<string>>} Lista de usernames
+     */
+    async fetchChatters() {
+        try {
+            // Nota: Este endpoint puede tener problemas de CORS en navegadores estándar.
+            // En OBS Browser Source suele funcionar bien.
+            const response = await fetch(`https://tmi.twitch.tv/group/user/${this.channel}/chatters`);
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const chatters = data.chatters;
+
+            // Aplanar todas las categorías de usuarios en una sola lista
+            const allChatters = [
+                ...(chatters.broadcaster || []),
+                ...(chatters.vips || []),
+                ...(chatters.moderators || []),
+                ...(chatters.staff || []),
+                ...(chatters.admins || []),
+                ...(chatters.global_mods || []),
+                ...(chatters.viewers || [])
+            ];
+
+            return allChatters;
+        } catch (error) {
+            console.warn('⚠️ No se pudo obtener lista de chatters (Posible bloqueo CORS):', error);
+            return [];
+        }
+    }
+
+    /**
      * Desconecta del canal de Twitch
      */
     disconnect() {

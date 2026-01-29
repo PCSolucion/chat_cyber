@@ -108,6 +108,13 @@ class ExperienceService {
                     xp: 8,
                     cooldownMs: 0,
                     enabled: true
+                },
+                WATCH_TIME: {
+                    id: 'watch_time',
+                    name: 'Tiempo de visualización',
+                    xp: 5,
+                    cooldownMs: 0, // Gestionado por intervalo de 10 min
+                    enabled: true
                 }
             },
 
@@ -451,6 +458,35 @@ class ExperienceService {
     getUserData(username) {
         const lowerUser = username.toLowerCase();
 
+        // ================= TEST DATA FOR LIIUKIIN =================
+        // Inyectar datos de prueba para Liiukiin si no existen o están incompletos
+        if (lowerUser === 'liiukiin') {
+            if (this.usersXP.has('liiukiin')) {
+                const liiData = this.usersXP.get('liiukiin');
+                if (!liiData.watchTimeMinutes || liiData.watchTimeMinutes < 5) {
+                    liiData.watchTimeMinutes = 450; // 7h 30m for testing
+                    this.pendingChanges.add('liiukiin'); // Mark for saving
+                }
+            } else {
+                // Create Liiukiin if not exists with mock data
+                this.usersXP.set('liiukiin', {
+                    xp: 1500,
+                    level: 5,
+                    lastActivity: null,
+                    streakDays: 2,
+                    bestStreak: 2,
+                    lastStreakDate: null,
+                    totalMessages: 10,
+                    achievements: [],
+                    achievementStats: {},
+                    activityHistory: {},
+                    watchTimeMinutes: 450
+                });
+                this.pendingChanges.add('liiukiin'); // Mark for saving
+            }
+        }
+        // ==========================================================
+
         if (!this.usersXP.has(lowerUser)) {
             this.usersXP.set(lowerUser, {
                 xp: 0,
@@ -462,9 +498,21 @@ class ExperienceService {
                 totalMessages: 0,
                 achievements: [],
                 achievementStats: {},
-                activityHistory: {} // { "YYYY-MM-DD": { messages: N, xp: N } }
+                achievementStats: {},
+                activityHistory: {}, // { "YYYY-MM-DD": { messages: N, xp: N } }
+                watchTimeMinutes: 0
             });
         }
+
+        // ================= TEST DATA FOR LIIUKIIN =================
+        // Si el usuario es Liiukiin, asegurar que tenga tiempo inicial para pruebas
+        if (lowerUser === 'liiukiin') {
+            const liiukiinData = this.usersXP.get(lowerUser);
+            if (!liiukiinData.watchTimeMinutes || liiukiinData.watchTimeMinutes < 120) {
+                liiukiinData.watchTimeMinutes = 120; // 2 horas iniciales
+            }
+        }
+        // ==========================================================
 
         // Ensure activityHistory and bestStreak exist for older users
         const userData = this.usersXP.get(lowerUser);
@@ -622,6 +670,53 @@ class ExperienceService {
         Object.entries(titles).forEach(([level, title]) => {
             this.levelConfig.titles[parseInt(level)] = title;
         });
+    }
+
+    /**
+     * Añade tiempo de visualización a un usuario y otorga XP pasiva
+     * @param {string} username 
+     * @param {number} minutes 
+     */
+    addWatchTime(username, minutes) {
+        const lowerUser = username.toLowerCase();
+        const userData = this.getUserData(lowerUser);
+
+        // 1. Sumar tiempo
+        if (!userData.watchTimeMinutes) userData.watchTimeMinutes = 0;
+        userData.watchTimeMinutes += minutes;
+
+        // 2. Otorgar XP Pasiva (5 XP cada 10 mins)
+        // Ratio: 0.5 XP por minuto
+        const xpEarned = Math.floor(minutes * 0.5);
+
+        if (xpEarned > 0) {
+            userData.xp += xpEarned;
+
+            // Verificar Level Up (sin emitir evento visual completo para no interrumpir)
+            const newLevel = this.calculateLevel(userData.xp);
+            if (newLevel > userData.level) {
+                userData.level = newLevel;
+            }
+        }
+
+        // 3. Verificar logros de tiempo
+        // Necesitamos acceso al AchievementService. 
+        // Si no está inyectado, lo buscamos en el ServiceLocator o lo pasamos.
+        // Asumimos que App.js gestionará la inyección o que el AchievementService observa cambios.
+        // PERO ExperienceService suele conocer AchievementService. 
+        // Revisando constructor, no se inyecta AchievementService.
+        // FIX: Emitiremos un evento o App.js llamará directament a checkAchievements.
+        // O mejor: App.js orquesta: xpService.addWatchTime() -> achievementService.checkAchievements()
+
+        // 4. Guardar
+        this.pendingChanges.add(lowerUser);
+        this.saveData();
+
+        return {
+            totalTime: userData.watchTimeMinutes,
+            xpAdded: xpEarned,
+            userData
+        };
     }
 
     /**

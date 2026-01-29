@@ -175,8 +175,7 @@ class XPDisplayManager {
             streakContainer.innerHTML = `
                 <span class="streak-label">RACHA:</span>
                 <span class="streak-days">${streakDays}d</span>
-                <span class="streak-label">BONUS:</span>
-                <span class="streak-mult" style="${multiplier <= 1 ? 'opacity: 0.5;' : ''}">x${multDisplay}</span>
+                <span class="streak-mult" style="font-size: 0.75em; ${multiplier <= 1 ? 'opacity: 0.5;' : ''}">x${multDisplay}</span>
             `;
             streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
         }

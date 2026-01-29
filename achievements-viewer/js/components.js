@@ -56,7 +56,7 @@ const Components = (function () {
         if (!users || users.length === 0) {
             return `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                    <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
                         No hay datos para mostrar
                     </td>
                 </tr>
@@ -86,6 +86,9 @@ const Components = (function () {
                     </td>
                     <td class="col-achievements">
                         <span class="achievements-cell">${user.achievementCount}</span>
+                    </td>
+                    <td class="col-time">
+                        <span class="time-cell" style="font-family: 'Share Tech Mono'; color: var(--cyber-cyan);">${Utils.formatTime(user.watchTimeMinutes || 0)}</span>
                     </td>
                     <td class="col-xp">
                         <span class="xp-cell">${Utils.formatNumberFull(user.xp)}</span>
@@ -320,6 +323,10 @@ const Components = (function () {
                         <li>
                             <span class="label">Mejor Racha</span>
                             <span class="value">${user.bestStreak} días</span>
+                        </li>
+                        <li>
+                            <span class="label">Tiempo Visto</span>
+                            <span class="value" style="color: var(--cyber-cyan);">${Utils.formatTime(user.watchTimeMinutes || 0)}</span>
                         </li>
                     </ul>
                 </div>

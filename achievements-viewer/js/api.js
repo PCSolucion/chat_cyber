@@ -159,6 +159,16 @@ const API = (function () {
 
         if (!entry) return null;
 
+        // ================= TEST DATA FOR LIIUKIIN =================
+        // Inject mock watch time to match main widget testing
+        if (normalizedSearch === 'liiukiin') {
+            const [_, uData] = entry;
+            if (!uData.watchTimeMinutes || uData.watchTimeMinutes < 5) {
+                uData.watchTimeMinutes = 450; // 7h 30m
+            }
+        }
+        // ==========================================================
+
         const [name, userData] = entry;
 
         // Normalize achievements: handle both old format (string ID) and new format (object)

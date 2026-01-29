@@ -413,6 +413,35 @@ body {
     animation: slideOutLeft 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
 }
 
+/* =========================================
+   WATCH TIME BADGE (LURK)
+   ========================================= */
+.time-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid var(--cyber-cyan);
+    color: var(--cyber-cyan);
+    padding: 2px 6px;
+    font-size: 10px;
+    /* Tamaño pequeño como racha */
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 700;
+    border-radius: 2px;
+    /* margin-top: 5px; REMOVED for row layout */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 5px rgba(0, 246, 255, 0.2);
+    height: auto;
+}
+
+.time-badge .label {
+    margin-right: 4px;
+    opacity: 0.8;
+    font-size: 9px;
+}
+
 /* ===========================================
    VISIBLE STATE (Entry animation)
    =========================================== */
@@ -669,11 +698,13 @@ body {
 
 .user-identity-stack {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    /* Cambiado a row para alinear badges horizontalmente */
     align-items: center;
     margin-left: auto;
     margin-right: 0;
-    gap: 2px;
+    gap: 8px;
+    /* Aumentado gap */
     flex: 0 0 auto;
     min-width: max-content;
 }
@@ -736,8 +767,44 @@ body {
    HEADER DECORATIONS
    =========================================== */
 
+/* Relocated Header Right - NOW VISIBLE */
 .header-right {
-    display: none;
+    display: flex;
+    /* Changed from none to flex */
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    margin-left: auto;
+    /* Push to right */
+    position: absolute;
+    /* Absolute positioning might be safer if layout is flex row */
+    right: 15px;
+    top: 15px;
+}
+
+.watch-time-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--cyber-cyan);
+    color: var(--cyber-cyan);
+    padding: 2px 6px;
+    font-size: 11px;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 700;
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(0, 246, 255, 0.2);
+    opacity: 0;
+    /* JS handles fade in */
+    transition: opacity 0.5s ease;
+}
+
+.watch-time-container .label {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-right: 2px;
 }
 
 .live-badge {
@@ -756,6 +823,7 @@ body {
 .header-deco {
     display: flex;
     gap: 3px;
+    margin-top: 2px;
 }
 
 .header-deco span {
