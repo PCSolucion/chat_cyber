@@ -699,6 +699,21 @@ class ExperienceService {
             }
         }
 
+        // Registrar tiempo visualizado en el historial diario
+        const today = this.getCurrentDay();
+        if (!userData.activityHistory) {
+            userData.activityHistory = {};
+        }
+        if (!userData.activityHistory[today]) {
+            userData.activityHistory[today] = { messages: 0, xp: 0, watchTime: 0 };
+        }
+        if (!userData.activityHistory[today].watchTime) {
+            userData.activityHistory[today].watchTime = 0;
+        }
+        userData.activityHistory[today].watchTime += minutes;
+        // También sumar el XP ganado al historial diario
+        userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + xpEarned;
+
         // 3. Verificar logros de tiempo
         // Necesitamos acceso al AchievementService. 
         // Si no está inyectado, lo buscamos en el ServiceLocator o lo pasamos.

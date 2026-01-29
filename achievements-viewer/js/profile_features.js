@@ -5,31 +5,64 @@
 const ProfileFeatures = (function () {
     'use strict';
 
+    // State
+    let _currentUser = null;
+    let _activeYear = new Date().getFullYear();
+
     // ========================================
     // ACTIVITY HEATMAP
     // ========================================
 
     /**
-     * Generate activity heatmap data for the last 52 weeks
-     * Uses REAL data from activityHistory and achievementsWithDates
-     * @param {Object} user - User data with activityHistory and achievementsWithDates
+     * Get available years from user activity
+     * @param {Object} user 
+     * @returns {Array<number>} Sorted years (descending)
+     */
+    function getAvailableYears(user) {
+        const years = new Set();
+        const currentYear = new Date().getFullYear();
+        years.add(currentYear); // Always include current
+
+        if (user.activityHistory) {
+            Object.keys(user.activityHistory).forEach(date => {
+                const y = parseInt(date.split('-')[0]);
+                if (!isNaN(y)) years.add(y);
+            });
+        }
+
+        // Also check achievements
+        if (user.achievementsWithDates) {
+            user.achievementsWithDates.forEach(ach => {
+                if (ach.unlockedAt) {
+                    const y = new Date(ach.unlockedAt).getFullYear();
+                    if (!isNaN(y)) years.add(y);
+                }
+            });
+        }
+
+        return Array.from(years).sort((a, b) => b - a);
+    }
+
+    /**
+     * Generate activity heatmap data for a specific calendar year
+     * @param {Object} user - User data
+     * @param {number} year - Year to generate
      * @returns {Array} - Array of week columns with day cells
      */
-    function generateHeatmapData(user) {
-        const weeks = 52;
-        const today = new Date();
+    function generateHeatmapData(user, year) {
+        year = year || new Date().getFullYear();
         const data = [];
 
         // Get real activity history from user data
         const activityHistory = user.activityHistory || {};
 
-        // Create a map of achievement unlock dates from real timestamps
+        // Create a map of achievement unlock dates
         const achievementDates = new Map();
         const achievementsWithDates = user.achievementsWithDates || [];
 
         achievementsWithDates.forEach(ach => {
             if (ach.unlockedAt) {
-                const dateKey = ach.unlockedAt.split('T')[0]; // Get date portion
+                const dateKey = ach.unlockedAt.split('T')[0];
                 if (!achievementDates.has(dateKey)) {
                     achievementDates.set(dateKey, []);
                 }
@@ -37,60 +70,76 @@ const ProfileFeatures = (function () {
             }
         });
 
-        // Calculate thresholds for activity levels based on user's average
+        // Calculate thresholds based on history
         const activityValues = Object.values(activityHistory).map(d => d.messages || 0);
         const avgActivity = activityValues.length > 0
             ? activityValues.reduce((a, b) => a + b, 0) / activityValues.length
-            : 5; // Default if no data
+            : 5;
 
-        // Find the start of the first week (Sunday)
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - (weeks * 7) + (7 - startDate.getDay()));
+        // Calendar Logic: Start from Jan 1st of requested year
+        // We want to align to Sunday as start of week row
+        const jan1 = new Date(year, 0, 1);
+        const dayOfWeek = jan1.getDay(); // 0 = Sunday
 
-        for (let week = 0; week < weeks; week++) {
+        // Start date is the Sunday before or on Jan 1
+        const startDate = new Date(year, 0, 1 - dayOfWeek);
+
+        const now = new Date();
+        // 53 weeks to cover full year
+        const weeks = 53;
+
+        for (let w = 0; w < weeks; w++) {
             const weekData = [];
-            for (let day = 0; day < 7; day++) {
+            let hasYearDays = false;
+
+            for (let d = 0; d < 7; d++) {
                 const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + (week * 7) + day);
+                currentDate.setDate(startDate.getDate() + (w * 7) + d);
 
-                const dateKey = currentDate.toISOString().split('T')[0];
+                // Format YYYY-MM-DD manually
+                const y = currentDate.getFullYear();
+                const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(currentDate.getDate()).padStart(2, '0');
+                const dateKey = `${y}-${m}-${dd}`;
 
-                // Skip future dates
-                if (currentDate > today) {
+                const isRequestedYear = (y === year);
+                const isFuture = currentDate > now;
+
+                if (isFuture) {
                     weekData.push({
                         date: dateKey,
-                        level: 0,
-                        activity: 0,
-                        xp: 0,
-                        achievements: [],
-                        isFuture: true
+                        level: 0, activity: 0, xp: 0, watchTime: 0, achievements: [],
+                        isFuture: true,
+                        inYear: isRequestedYear
                     });
                     continue;
                 }
 
-                // Get REAL activity from activityHistory
-                const dayActivity = activityHistory[dateKey] || { messages: 0, xp: 0 };
+                // Get REAL activity
+                const dayActivity = activityHistory[dateKey] || { messages: 0, xp: 0, watchTime: 0 };
                 const activity = dayActivity.messages || 0;
                 const xp = dayActivity.xp || 0;
+                const watchTime = dayActivity.watchTime || 0;
 
-                // Calculate level (0-4) based on relative activity
+                // Calculate level
                 let level = 0;
                 if (activity > 0) level = 1;
                 if (activity > avgActivity * 0.5) level = 2;
                 if (activity > avgActivity) level = 3;
                 if (activity > avgActivity * 2) level = 4;
 
-                // Get REAL achievements unlocked on this date
                 const achievements = achievementDates.get(dateKey) || [];
 
                 weekData.push({
                     date: dateKey,
-                    level,
-                    activity,
-                    xp,
-                    achievements,
-                    isFuture: false
+                    level: isRequestedYear ? level : 0,
+                    realLevel: level,
+                    activity, xp, watchTime, achievements,
+                    isFuture: false,
+                    inYear: isRequestedYear
                 });
+
+                if (isRequestedYear) hasYearDays = true;
             }
             data.push(weekData);
         }
@@ -99,38 +148,39 @@ const ProfileFeatures = (function () {
     }
 
     /**
-     * Create activity heatmap HTML
-     * @param {Object} user - User data
-     * @returns {string} - HTML string
+     * Generate HTML for the grid part only
      */
-    function createActivityHeatmap(user) {
-        const heatmapData = generateHeatmapData(user);
+    function generateHeatmapGridHTML(user, year) {
+        const heatmapData = generateHeatmapData(user, year);
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         const days = ['Dom', '', 'Mar', '', 'Jue', '', 'Sáb'];
 
         // Calculate month labels positions
         const monthLabels = [];
         let currentMonth = -1;
+
         heatmapData.forEach((week, weekIndex) => {
-            const firstDayOfWeek = new Date(week[0].date);
-            const month = firstDayOfWeek.getMonth();
-            if (month !== currentMonth) {
+            const firstDay = new Date(week[0].date);
+            const month = firstDay.getMonth();
+
+            if (month !== currentMonth && week[0].inYear) {
                 currentMonth = month;
                 monthLabels.push({ month: months[month], weekIndex });
             }
         });
 
-        // Calculate total activity
+        // Calculate stats for this year
         let totalActivity = 0;
         let activeDays = 0;
         let achievementDays = 0;
+
         heatmapData.forEach(week => {
             week.forEach(day => {
-                if (!day.isFuture && day.level > 0) {
+                if (!day.isFuture && day.realLevel > 0 && day.inYear) {
                     totalActivity += day.activity;
                     activeDays++;
                 }
-                if (day.achievements.length > 0) {
+                if (day.achievements.length > 0 && day.inYear) {
                     achievementDays++;
                 }
             });
@@ -143,14 +193,19 @@ const ProfileFeatures = (function () {
             week.forEach(day => {
                 const hasAch = day.achievements.length > 0 ? 'has-achievement' : '';
                 const futureClass = day.isFuture ? 'future' : '';
+                const dimClass = !day.inYear ? 'dimmed' : '';
+
                 weekHTML += `
-                    <div class="heatmap-cell ${hasAch} ${futureClass}" 
-                         data-level="${day.level}" 
+                    <div class="heatmap-cell ${hasAch} ${futureClass} ${dimClass}" 
+                         data-level="${day.realLevel}" 
                          data-date="${day.date}"
                          data-activity="${day.activity}"
                          data-xp="${day.xp || 0}"
+                         data-watch-time="${day.watchTime || 0}"
                          data-achievements="${day.achievements.join(',')}"
-                         title="${day.date}"></div>
+                         title="${day.date}"
+                         style="${!day.inYear ? 'opacity: 0.1; background: transparent; border: none;' : ''}"
+                         ></div>
                 `;
             });
             weekHTML += '</div>';
@@ -158,41 +213,102 @@ const ProfileFeatures = (function () {
         });
 
         return `
+            <div class="stats-summary-row">
+                <div class="summary-stat-box">
+                    <span class="summary-stat-value">${activeDays}</span>
+                    <span class="summary-stat-label">Días Activos (${year})</span>
+                </div>
+                <div class="summary-stat-box">
+                    <span class="summary-stat-value">${achievementDays}</span>
+                    <span class="summary-stat-label">Días con Logros (${year})</span>
+                </div>
+                <div class="summary-stat-box">
+                    <span class="summary-stat-value">${user.streakDays || 0}</span>
+                    <span class="summary-stat-label">Racha Actual</span>
+                </div>
+                <div class="summary-stat-box">
+                    <span class="summary-stat-value">${user.bestStreak || 0}</span>
+                    <span class="summary-stat-label">Mejor Racha</span>
+                </div>
+            </div>
+
+            <div class="activity-heatmap-container">
+                <div class="heatmap-months">
+                    ${monthLabels.map(m => `<span class="heatmap-month-label" style="left: ${m.weekIndex * 12}px">${m.month}</span>`).join('')}
+                </div>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-days">
+                        ${days.map(d => `<span class="heatmap-day-label">${d}</span>`).join('')}
+                    </div>
+                    <div class="activity-heatmap" id="activity-heatmap">
+                        ${cellsHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Public method to switch year
+     */
+    function switchYear(year) {
+        if (!_currentUser) return;
+        _activeYear = year;
+
+        // Update Tabs
+        document.querySelectorAll('.heatmap-tab').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.year) === year);
+        });
+
+        // Update Content
+        const container = document.getElementById('heatmap-container-dynamic');
+        if (container) {
+            container.innerHTML = generateHeatmapGridHTML(_currentUser, year);
+            // Re-bind tooltips after DOM update
+            if (typeof ProfileFeatures !== 'undefined' && ProfileFeatures.initializeFeatures) {
+                // We just need to re-run tooltip setup, not everything
+                setupHeatmapTooltips();
+            } else {
+                setupHeatmapTooltips();
+            }
+        }
+    }
+
+    /**
+     * Create activity heatmap HTML
+     * @param {Object} user - User data
+     * @returns {string} - HTML string
+     */
+    function createActivityHeatmap(user) {
+        _currentUser = user;
+        _activeYear = new Date().getFullYear(); // Default
+
+        const years = getAvailableYears(user);
+
+        // Tabs
+        const tabsHTML = years.map(y => `
+            <button class="heatmap-tab ${y === _activeYear ? 'active' : ''}" 
+                    data-year="${y}" onclick="ProfileFeatures.switchYear(${y})">
+                ${y}
+            </button>
+        `).join('');
+
+        const contentHTML = generateHeatmapGridHTML(user, _activeYear);
+
+        return `
             <div class="profile-advanced-section" id="activity-heatmap-section">
-                <h3 class="advanced-section-title">Actividad en el Tiempo</h3>
-                <p class="advanced-section-subtitle">Tu historial de participación en el chat (últimas 52 semanas)</p>
-                
-                <div class="stats-summary-row">
-                    <div class="summary-stat-box">
-                        <span class="summary-stat-value">${activeDays}</span>
-                        <span class="summary-stat-label">Días Activos</span>
+                <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <h3 class="advanced-section-title">Actividad en el Tiempo</h3>
+                        <p class="advanced-section-subtitle">Tu historial de participación por año</p>
                     </div>
-                    <div class="summary-stat-box">
-                        <span class="summary-stat-value">${achievementDays}</span>
-                        <span class="summary-stat-label">Días con Logros</span>
-                    </div>
-                    <div class="summary-stat-box">
-                        <span class="summary-stat-value">${user.streakDays || 0}</span>
-                        <span class="summary-stat-label">Racha Actual</span>
-                    </div>
-                    <div class="summary-stat-box">
-                        <span class="summary-stat-value">${user.bestStreak || 0}</span>
-                        <span class="summary-stat-label">Mejor Racha</span>
+                    <div class="heatmap-tabs">
+                        ${tabsHTML}
                     </div>
                 </div>
                 
-                <div class="activity-heatmap-container">
-                    <div class="heatmap-months">
-                        ${monthLabels.map(m => `<span class="heatmap-month-label" style="margin-left: ${m.weekIndex * 15}px">${m.month}</span>`).join('')}
-                    </div>
-                    <div class="heatmap-wrapper">
-                        <div class="heatmap-days">
-                            ${days.map(d => `<span class="heatmap-day-label">${d}</span>`).join('')}
-                        </div>
-                        <div class="activity-heatmap" id="activity-heatmap">
-                            ${cellsHTML}
-                        </div>
-                    </div>
+                <div id="heatmap-container-dynamic">
+                    ${contentHTML}
                 </div>
                 
                 <div class="heatmap-legend">
@@ -231,6 +347,7 @@ const ProfileFeatures = (function () {
                 const date = cell.dataset.date;
                 const activity = parseInt(cell.dataset.activity) || 0;
                 const xp = parseInt(cell.dataset.xp) || 0;
+                const watchTime = parseInt(cell.dataset.watchTime) || 0;
                 const achievements = cell.dataset.achievements ? cell.dataset.achievements.split(',').filter(Boolean) : [];
 
                 const formattedDate = new Date(date).toLocaleDateString('es-ES', {
@@ -241,11 +358,19 @@ const ProfileFeatures = (function () {
                 });
 
                 let html = `<span class="date">${formattedDate}</span>`;
-                if (activity > 0 || xp > 0) {
-                    html += `<span class="activity">${activity} mensajes | +${xp} XP</span>`;
+
+                // Build activity string
+                const parts = [];
+                if (activity > 0) parts.push(`${activity} mensajes`);
+                if (watchTime > 0) parts.push(Utils.formatTime(watchTime));
+                if (xp > 0) parts.push(`+${xp} XP`);
+
+                if (parts.length > 0) {
+                    html += `<span class="activity">${parts.join(' | ')}</span>`;
                 } else {
                     html += `<span class="activity" style="opacity: 0.5">Sin actividad</span>`;
                 }
+
                 if (achievements.length > 0) {
                     html += `<span class="achievements">🏆 ${achievements.length} logro(s)</span>`;
                 }
@@ -714,8 +839,12 @@ const ProfileFeatures = (function () {
     /**
      * Initialize all interactive features
      */
+    /**
+     * Initialize all interactive features
+     */
     function initializeFeatures() {
         setupHeatmapTooltips();
+        // Heatmap now uses tabs/year view, no auto-scroll needed
     }
 
     return {
@@ -724,6 +853,7 @@ const ProfileFeatures = (function () {
         createNextAchievements,
         createAdvancedProfileSections,
         initializeFeatures,
+        switchYear, // Exposed for tabs
         // Expose individual functions for testing
         generateHeatmapData,
         calculateCategoryDistribution,
