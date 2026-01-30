@@ -131,7 +131,11 @@ class SessionStatsService {
      */
     trackMessage(username, message, context = {}) {
         const lowerUser = username.toLowerCase();
-        if (lowerUser === 'wizebot') return;
+
+        // Verificar blacklist
+        if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) {
+            return;
+        }
 
         // Contadores básicos
         this.stats.totalMessages++;

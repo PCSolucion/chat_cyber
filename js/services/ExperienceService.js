@@ -300,6 +300,24 @@ class ExperienceService {
     trackMessage(username, context = {}) {
         const lowerUser = username.toLowerCase();
 
+        // Verificar blacklist global (no trackear nada)
+        if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) {
+            return {
+                username: lowerUser,
+                xpGained: 0,
+                xpBeforeMultiplier: 0,
+                xpSources: [],
+                totalXP: 0,
+                level: 1,
+                previousLevel: 1,
+                leveledUp: false,
+                levelProgress: 0,
+                levelTitle: 'BLACKLISTED',
+                streakDays: 0,
+                streakMultiplier: 0
+            };
+        }
+
         // Resetear día si cambió
         this.checkDayReset();
 
