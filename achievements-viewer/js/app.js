@@ -418,7 +418,12 @@
     async function renderStats() {
         try {
             const stats = await API.getGlobalStats();
-            elements.statsContainer.innerHTML = Components.createStatsDashboard(stats);
+            elements.statsContainer.innerHTML = await Components.createStatsDashboard(stats);
+
+            // Initialize Stream Tooltips
+            if (typeof StreamFeatures !== 'undefined') {
+                StreamFeatures.setupTooltips();
+            }
         } catch (error) {
             console.error('Error rendering stats:', error);
             elements.statsContainer.innerHTML = '<div class="error-message">Error cargando estadísticas</div>';
@@ -528,6 +533,22 @@
 
         setupInput(elements.faceOffInput1, elements.faceOffSuggestions1);
         setupInput(elements.faceOffInput2, elements.faceOffSuggestions2);
+
+        // Random Buttons Logic
+        const setRandomUser = (inputId) => {
+            if (leaderboardData.length > 0) {
+                const randomUser = leaderboardData[Math.floor(Math.random() * leaderboardData.length)];
+                if (randomUser) {
+                    document.getElementById(inputId).value = randomUser.username;
+                }
+            }
+        };
+
+        const rBtn1 = document.getElementById('random-btn-1');
+        const rBtn2 = document.getElementById('random-btn-2');
+
+        if (rBtn1) rBtn1.addEventListener('click', () => setRandomUser('faceoff-input-1'));
+        if (rBtn2) rBtn2.addEventListener('click', () => setRandomUser('faceoff-input-2'));
 
         elements.faceOffBtn.addEventListener('click', () => {
             const u1 = elements.faceOffInput1.value.trim();

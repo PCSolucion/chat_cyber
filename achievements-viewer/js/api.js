@@ -173,6 +173,10 @@ const API = (function () {
             return ach;
         });
 
+        // Calculate last seen from activity history if not explicitly set
+        const activities = Object.keys(userData.activityHistory || {});
+        const latestActivity = activities.length > 0 ? activities.sort().pop() : null;
+
         return {
             username: name,
             achievementCount: normalizedAchievements.length,
@@ -187,7 +191,7 @@ const API = (function () {
             achievementsWithDates: normalizedAchievements, // Full data with timestamps
             achievementStats: userData.achievementStats || {},
             activityHistory: userData.activityHistory || {}, // Daily activity for heatmap
-            lastSeen: userData.lastMessageTimestamp || userData.lastActiveDay || null
+            lastSeen: userData.lastMessageTimestamp || userData.lastActiveDay || latestActivity || null
         };
     }
 

@@ -61,6 +61,25 @@
     letter-spacing: 2px;
 }
 
+.random-user-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.random-user-btn:hover {
+    color: var(--cyber-yellow);
+    border-color: var(--cyber-yellow);
+    box-shadow: 0 0 5px rgba(252, 238, 9, 0.4);
+    transform: scale(1.1);
+}
+
 .search-box-faceoff {
     position: relative;
     width: 100%;
@@ -119,46 +138,57 @@
 /* Face-off Results */
 .faceoff-comparison {
     display: grid;
-    grid-template-columns: 1fr 100px 1fr;
+    grid-template-columns: 1fr 160px 1fr;
     gap: var(--spacing-lg);
     align-items: start;
 }
 
 .comparison-card {
     background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    /* Explicit Grey */
     border-radius: 8px;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     text-align: center;
+    max-height: 200px;
+    /* Limit height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
 }
 
 .comparison-card.winner {
-    border-color: var(--cyber-yellow);
-    box-shadow: 0 0 20px rgba(252, 238, 9, 0.2);
+    border-color: #00b894;
+    box-shadow: 0 0 15px rgba(0, 184, 148, 0.3);
 }
 
 .comparison-avatar {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto var(--spacing-md);
+    width: 80px;
+    height: 80px;
+    min-width: 80px;
+    min-height: 80px;
+    flex-shrink: 0;
+    margin: 0 auto var(--spacing-sm);
     border-radius: 50%;
-    border: 4px solid var(--text-dim);
+    border: 3px solid rgba(128, 128, 128, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 2rem;
     font-family: 'Orbitron', sans-serif;
     background: var(--bg-dark);
 }
 
 .winner .comparison-avatar {
-    border-color: var(--cyber-yellow);
-    box-shadow: var(--glow-yellow);
+    border-color: #00b894;
+    box-shadow: 0 0 10px rgba(0, 184, 148, 0.5);
 }
 
 .comparison-username {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
     color: var(--text-bright);
 }
 
@@ -200,33 +230,110 @@
 .comparison-center {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
-    padding-top: 150px;
-    /* Align with stats */
+    gap: 0.5rem;
+    padding-top: 40px;
+    /* Align with avatar center roughly */
     text-align: center;
+    justify-content: center;
 }
 
 .stat-diff-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-dim);
+    font-size: 0.75rem;
+    color: var(--cyber-cyan);
     margin-bottom: 5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
 }
 
 .stat-diff-bar {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    /* Darker background for contrast */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%, 0 80%);
     position: relative;
     width: 100%;
 }
 
 .stat-diff-fill {
     height: 100%;
-    background: var(--cyber-cyan);
+    background: var(--text-muted);
+    /* Default for ties/empty */
     position: absolute;
     top: 0;
+    transition: width 0.5s ease-out;
+    animation: fillBar 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    background-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%);
+    background-size: 20px 100%;
+}
+
+.stat-diff-fill.bar-win {
+    background: linear-gradient(90deg, #00b894, #55efc4);
+    box-shadow: 0 0 8px rgba(0, 184, 148, 0.6);
+}
+
+.stat-diff-fill.bar-loss {
+    background: linear-gradient(90deg, #d63031, #ff7675);
+    opacity: 0.6;
+    filter: none;
+}
+
+.comp-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    animation: slideInUp 0.5s ease-out forwards;
+}
+
+.comp-stat-row:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.comp-stat-row:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.comp-stat-row:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.comp-stat-row:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.comp-stat-row:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.comp-stat-row:nth-child(6) {
+    animation-delay: 0.6s;
+}
+
+.comp-stat-row:nth-child(7) {
+    animation-delay: 0.7s;
+}
+
+@keyframes fillBar {
+    from {
+        width: 0 !important;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ========================================

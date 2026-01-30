@@ -436,7 +436,12 @@ const Components = (function () {
      * @param {Object} stats
      * @returns {string}
      */
-    function createStatsDashboard(stats) {
+    /**
+     * Create global stats dashboard
+     * @param {Object} stats
+     * @returns {Promise<string>}
+     */
+    async function createStatsDashboard(stats) {
         if (!stats) return '';
 
         let rarestContent = '<div class="stat-empty">No hay datos</div>';
@@ -466,6 +471,12 @@ const Components = (function () {
             `;
         }
 
+        // Get Stream Heatmap HTML
+        let streamHeatmapHTML = '';
+        if (typeof StreamFeatures !== 'undefined') {
+            streamHeatmapHTML = await StreamFeatures.createStreamHeatmap();
+        }
+
         return `
             <div class="stats-dashboard">
                 <!-- Total XP Card -->
@@ -493,6 +504,9 @@ const Components = (function () {
                     <div class="stat-deco">SYSTEM WIDE</div>
                 </div>
             </div>
+            
+            <!-- Stream Data Section -->
+            ${streamHeatmapHTML}
         `;
     }
 
@@ -504,15 +518,65 @@ const Components = (function () {
     function createFaceOff(u1, u2) {
         if (!u1 || !u2) return '';
 
+        // Get Achievement Data for Rarity Calculation
+        const allAch = API.getAchievementsData().achievements || {};
+
+        const countLegendary = (user) => {
+            if (!user.achievements) return 0;
+            return user.achievements.filter(id => allAch[id] && allAch[id].rarity === 'legendary').length;
+        };
+
+        const u1Legendary = countLegendary(u1);
+        const u2Legendary = countLegendary(u2);
+
         // Calculate differences
-        const diffXP = u1.xp - u2.xp;
         const diffLevel = u1.level - u2.level;
         const diffAch = u1.achievementCount - u2.achievementCount;
+        const diffTime = (u1.watchTimeMinutes || 0) - (u2.watchTimeMinutes || 0);
+        const diffMsg = (u1.totalMessages || 0) - (u2.totalMessages || 0);
+        const diffStreak = (u1.bestStreak || 0) - (u2.bestStreak || 0);
+        const diffLegendary = u1Legendary - u2Legendary;
+        const diffCurrentStreak = (u1.streakDays || 0) - (u2.streakDays || 0);
+
+        // Date comparison (Newer is better)
+        const t1 = u1.lastSeen ? new Date(u1.lastSeen).getTime() : 0;
+        const t2 = u2.lastSeen ? new Date(u2.lastSeen).getTime() : 0;
+        const diffLink = t1 - t2;
+
+        // Calculate Score (Best of 7)
+        let s1 = 0, s2 = 0;
+
+        // 1. Level
+        if (u1.level > u2.level) s1++; else if (u2.level > u1.level) s2++;
+
+        // 2. Achievements
+        if (u1.achievementCount > u2.achievementCount) s1++; else if (u2.achievementCount > u1.achievementCount) s2++;
+
+        // 3. Watch Time
+        if ((u1.watchTimeMinutes || 0) > (u2.watchTimeMinutes || 0)) s1++; else if ((u2.watchTimeMinutes || 0) > (u1.watchTimeMinutes || 0)) s2++;
+
+        // 4. Messages
+        if ((u1.totalMessages || 0) > (u2.totalMessages || 0)) s1++; else if ((u2.totalMessages || 0) > (u1.totalMessages || 0)) s2++;
+
+        // 5. Best Streak
+        if ((u1.bestStreak || 0) > (u2.bestStreak || 0)) s1++; else if ((u2.bestStreak || 0) > (u1.bestStreak || 0)) s2++;
+
+        // 6. Legendary Achievements
+        if (u1Legendary > u2Legendary) s1++; else if (u2Legendary > u1Legendary) s2++;
+
+        // 7. Current Streak
+        if ((u1.streakDays || 0) > (u2.streakDays || 0)) s1++; else if ((u2.streakDays || 0) > (u1.streakDays || 0)) s2++;
+
+        // 8. Last Active
+        if (t1 > t2) s1++; else if (t2 > t1) s2++;
 
         // Helper for row
-        const createRow = (label, val1, val2, diff, isWinner1) => {
+        const createRow = (label, val1, val2, diff, isWinner1, formatter = Utils.formatNumberFull) => {
             const c1 = isWinner1 ? 'val-win' : 'val-loss';
             const c2 = !isWinner1 ? 'val-win' : 'val-loss';
+
+            const b1 = isWinner1 ? 'bar-win' : 'bar-loss';
+            const b2 = !isWinner1 ? 'bar-win' : 'bar-loss';
 
             // Bar calculation
             const max = Math.max(val1, val2) || 1;
@@ -521,20 +585,21 @@ const Components = (function () {
 
             return `
                 <div class="comp-stat-row">
-                    <div class="comp-val left ${c1}">${Utils.formatNumberFull(val1)}</div>
+                    <div class="comp-val left ${c1}">${formatter(val1)}</div>
                     <div class="comparison-center-stat" style="flex: 1; padding: 0 1rem; text-align: center;">
                         <div class="stat-diff-label">${label}</div>
                         <div style="display: flex; gap: 5px; align-items: center;">
-                            <div class="stat-diff-bar" style="transform: scaleX(-1);"><div class="stat-diff-fill" style="width: ${p1}%"></div></div>
-                            <div class="stat-diff-bar"><div class="stat-diff-fill" style="width: ${p2}%"></div></div>
+                            <div class="stat-diff-bar" style="transform: scaleX(-1);"><div class="stat-diff-fill ${b1}" style="width: ${p1}%"></div></div>
+                            <div class="stat-diff-bar"><div class="stat-diff-fill ${b2}" style="width: ${p2}%"></div></div>
                         </div>
                     </div>
-                    <div class="comp-val right ${c2}">${Utils.formatNumberFull(val2)}</div>
+                    <div class="comp-val right ${c2}">${formatter(val2)}</div>
                 </div>
             `;
         };
 
-        const winner1 = u1.xp > u2.xp;
+        const winner1 = s1 > s2;
+        const winner2 = s2 > s1;
 
         return `
             <div class="faceoff-comparison">
@@ -546,12 +611,16 @@ const Components = (function () {
                 </div>
 
                 <!-- Stats Center -->
-                <div class="comparison-center">
-                   
+                <div class="comparison-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="vs-badge" style="font-size: 1.5rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.5rem;">VS</div>
+                    <div class="final-score" style="font-size: 2.5rem; font-weight: bold; font-family: 'Share Tech Mono', monospace; color: var(--cyber-yellow); text-shadow: 0 0 10px rgba(255, 238, 0, 0.5); white-space: nowrap;">
+                        ${s1} - ${s2}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">(MEJOR DE 8)</div>
                 </div>
 
                 <!-- User 2 -->
-                <div class="comparison-card ${!winner1 ? 'winner' : ''}">
+                <div class="comparison-card ${winner2 ? 'winner' : ''}">
                     <div class="comparison-avatar">${Utils.getInitial(u2.username)}</div>
                     <h3 class="comparison-username">${Utils.escapeHTML(u2.username)}</h3>
                     <div class="profile-rank">${Utils.escapeHTML(u2.rankTitle)}</div>
@@ -559,9 +628,14 @@ const Components = (function () {
                 
                 <!-- Full Width Stats -->
                 <div class="comparison-stats" style="grid-column: 1 / -1;">
-                     ${createRow('TOTAL XP', u1.xp, u2.xp, diffXP, u1.xp >= u2.xp)}
                      ${createRow('NIVEL', u1.level, u2.level, diffLevel, u1.level >= u2.level)}
-                     ${createRow('LOGROS', u1.achievementCount, u2.achievementCount, diffAch, u1.achievementCount >= u2.achievementCount)}
+                     ${createRow('LOGROS TOTALES', u1.achievementCount, u2.achievementCount, diffAch, u1.achievementCount >= u2.achievementCount)}
+                     ${createRow('LOGROS LEGENDARIOS', u1Legendary, u2Legendary, diffLegendary, u1Legendary >= u2Legendary)}
+                     ${createRow('TIEMPO VISTO', u1.watchTimeMinutes || 0, u2.watchTimeMinutes || 0, diffTime, (u1.watchTimeMinutes || 0) >= (u2.watchTimeMinutes || 0), Utils.formatTime)}
+                     ${createRow('MENSAJES', u1.totalMessages || 0, u2.totalMessages || 0, diffMsg, (u1.totalMessages || 0) >= (u2.totalMessages || 0))}
+                     ${createRow('RACHA ACTUAL', u1.streakDays || 0, u2.streakDays || 0, diffCurrentStreak, (u1.streakDays || 0) >= (u2.streakDays || 0))}
+                     ${createRow('MEJOR RACHA', u1.bestStreak || 0, u2.bestStreak || 0, diffStreak, (u1.bestStreak || 0) >= (u2.bestStreak || 0))}
+                     ${createRow('ÚLTIMA ACTIVIDAD', t1, t2, diffLink, t1 > t2, Utils.formatRelativeTime)}
                 </div>
             </div>
         `;
