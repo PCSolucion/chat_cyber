@@ -13,7 +13,7 @@ const API = (function () {
      */
     function getHeaders() {
         return {
-            'Authorization': `Bearer ${VIEWER_CONFIG.GIST_TOKEN}`,
+            // 'Authorization': `Bearer ${VIEWER_CONFIG.GIST_TOKEN}`, // Token removed to avoid 401 errors on public gist
             'Accept': 'application/vnd.github.v3+json',
             'Content-Type': 'application/json',
             'X-GitHub-Api-Version': '2022-11-28'
