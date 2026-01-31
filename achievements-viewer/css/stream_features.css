@@ -1,0 +1,194 @@
+/* Stream Features Styles */
+
+.stream-stats-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Stream Highlights (Top Cards) */
+.stream-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stream-stat-card {
+    background: rgba(16, 24, 32, 0.6);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stream-stat-card:hover {
+    border-color: var(--cyber-cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 243, 255, 0.1);
+}
+
+.stream-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--cyber-cyan), transparent);
+    opacity: 0.5;
+}
+
+.stream-stat-card .stat-icon {
+    font-size: 2rem;
+    background: rgba(0, 243, 255, 0.1);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--cyber-cyan);
+}
+
+.stream-stat-card .stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stream-stat-card .label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.stream-stat-card .value {
+    font-size: 1.5rem;
+    color: var(--white);
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    line-height: 1.2;
+}
+
+.stream-stat-card .sub {
+    font-size: 0.8rem;
+    color: var(--cyber-cyan);
+    margin-top: 0.2rem;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Heatmap Adjustments */
+/* Heatmap Adjustments */
+.stream-heatmap-section .heatmap-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.stream-heatmap-section .heatmap-cell.level-1 {
+    background: rgba(255, 59, 69, 0.2);
+    border: 1px solid rgba(255, 59, 69, 0.3);
+}
+
+.stream-heatmap-section .heatmap-cell.level-2 {
+    background: rgba(255, 59, 69, 0.4);
+    border: 1px solid rgba(255, 59, 69, 0.5);
+}
+
+.stream-heatmap-section .heatmap-cell.level-3 {
+    background: rgba(255, 59, 69, 0.7);
+    box-shadow: 0 0 5px rgba(255, 59, 69, 0.5);
+    border: 1px solid rgba(255, 59, 69, 0.8);
+}
+
+.stream-heatmap-section .heatmap-cell.level-4 {
+    background: var(--cyber-red);
+    box-shadow: 0 0 8px var(--cyber-red), 0 0 12px rgba(255, 59, 69, 0.5);
+    border: 1px solid var(--cyber-red);
+}
+
+.stream-heatmap-section .heatmap-cell:hover {
+    transform: scale(1.4);
+    z-index: 10;
+    border: 1px solid var(--white);
+}
+
+/* Legend Colors (Inherits structure from profile heatmap but needs colors overrides) */
+.stream-heatmap-section .legend-cell[data-level="1"] {
+    background: rgba(255, 59, 69, 0.2);
+    border: 1px solid rgba(255, 59, 69, 0.3);
+}
+
+.stream-heatmap-section .legend-cell[data-level="2"] {
+    background: rgba(255, 59, 69, 0.4);
+    border: 1px solid rgba(255, 59, 69, 0.5);
+}
+
+.stream-heatmap-section .legend-cell[data-level="3"] {
+    background: rgba(255, 59, 69, 0.7);
+    border: 1px solid rgba(255, 59, 69, 0.8);
+}
+
+.stream-heatmap-section .legend-cell[data-level="4"] {
+    background: var(--cyber-red);
+    border: 1px solid var(--cyber-red);
+}
+
+/* Tooltip Customization */
+.stream-tooltip-content {
+    text-align: left;
+    white-space: normal;
+    /* Allow wrapping */
+}
+
+.stream-tooltip-content .date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.25rem;
+}
+
+.stream-tooltip-content .stream-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    max-width: 300px;
+    /* Increased slightly */
+    line-height: 1.4;
+    white-space: normal !important;
+    /* Force wrap */
+    word-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    /* Limit roughly 3 lines */
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.stream-tooltip-content .stream-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.stream-tooltip-content .duration {
+    color: var(--cyber-pink);
+}
+
+.stream-tooltip-content .category {
+    color: var(--cyber-yellow);
+}

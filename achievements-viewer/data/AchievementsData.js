@@ -1558,3 +1558,8 @@ if (typeof Object.freeze === 'function') {
     Object.freeze(ACHIEVEMENTS_DATA);
     Object.freeze(ACHIEVEMENTS_DATA.achievements);
 }
+
+// Export for Node.js (converters etc)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ACHIEVEMENTS_DATA;
+}

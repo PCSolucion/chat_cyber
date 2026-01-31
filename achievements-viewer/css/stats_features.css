@@ -1,0 +1,79 @@
+/* Rarity Chart */
+.rarity-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.rarity-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.rarity-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Live Ticker */
+.ticker-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid var(--border-dim);
+    height: 30px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.ticker-label {
+    background: var(--cyber-yellow);
+    color: #000;
+    padding: 0 1rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    z-index: 2;
+}
+
+.ticker-content {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: ticker-scroll 30s linear infinite;
+    padding-left: 100%;
+    /* Start off screen */
+}
+
+.ticker-item {
+    margin-right: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ticker-user {
+    color: var(--cyber-cyan);
+}
+
+.ticker-ach {
+    color: var(--text-bright);
+}
+
+@keyframes ticker-scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

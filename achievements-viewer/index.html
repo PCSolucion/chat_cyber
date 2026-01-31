@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="css/custom_additions.css">
     <link rel="stylesheet" href="css/profile_features.css">
     <link rel="stylesheet" href="css/stream_features.css">
+    <link rel="stylesheet" href="css/heatmap.css">
+    <link rel="stylesheet" href="css/stats_features.css">
     <link rel="stylesheet" href="css/holo_effect.css">
 </head>
 
@@ -170,6 +172,12 @@
                         <span>ANALIZANDO DATOS DEL SERVIDOR...</span>
                     </div>
                 </div>
+
+                <!-- Stream History Heatmap -->
+                <div class="stream-history-section" style="margin-top: 2rem;">
+                    <h3 class="subsection-title">ACTIVITY PROTOCOL</h3>
+                    <div id="stream-heatmap" class="stream-heatmap"></div>
+                </div>
             </section>
 
             <!-- Face-off Section -->
@@ -264,6 +272,9 @@
     <script src="js/profile_features.js"></script>
     <script src="js/holo_effect.js"></script>
     <script src="js/stream_features.js"></script>
+    <script src="js/services/GistStorageService.js"></script>
+    <script src="js/services/SessionStatsService.js"></script>
+    <script src="js/services/StreamHistoryService.js"></script>
     <script src="js/app.js"></script>
 </body>
 

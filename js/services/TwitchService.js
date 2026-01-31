@@ -22,6 +22,7 @@ class TwitchService {
         this.isConnected = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        this.activeChatters = new Set(); // Fallback para tracking local
     }
 
     /**
@@ -59,20 +60,32 @@ class TwitchService {
 
             // Event: Mensaje recibido
             this.client.on('message', (channel, tags, message, self) => {
-                // Procesar todos los mensajes, incluidos los del propio usuario si fuera el caso
+                // Registrar usuario como activo
+                const username = tags['display-name'] || tags.username;
+                if (username) {
+                    this.activeChatters.add(username.toLowerCase());
+                }
 
-                // Ejecutar callback con la información del mensaje
+                // Procesar todos los mensajes
                 if (this.onMessageCallback) {
                     this.onMessageCallback(tags, message);
                 }
+            });
+
+            // Event: Usuario se une al chat (JOIN)
+            this.client.on('join', (channel, username, self) => {
+                this.activeChatters.add(username.toLowerCase());
+            });
+
+            // Event: Usuario sale del chat (PART)
+            this.client.on('part', (channel, username, self) => {
+                this.activeChatters.delete(username.toLowerCase());
             });
 
             // Event: Desconectado
             this.client.on('disconnected', (reason) => {
                 this.isConnected = false;
                 console.warn('⚠️ Desconectado de Twitch IRC:', reason);
-
-                // Intentar reconectar
                 this.handleReconnect();
             });
 
@@ -120,15 +133,11 @@ class TwitchService {
      */
     async fetchChannelCategory() {
         try {
-            // Usamos decapi.me como proxy público para evitar necesidad de tokens OAuth complejos
-            // para una funcionalidad visual simple
             const response = await fetch(`https://decapi.me/twitch/game/${this.channel}`);
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status}`);
             }
-
             const category = await response.text();
-            // Retornamos la categoría limpia (trim)
             return category ? category.trim() : null;
         } catch (error) {
             console.warn('⚠️ No se pudo obtener la categoría del stream:', error);
@@ -144,12 +153,9 @@ class TwitchService {
         try {
             const response = await fetch(`https://decapi.me/twitch/uptime/${this.channel}`);
             if (!response.ok) {
-                return false; // Asumir offline en error
+                return false;
             }
-
             const text = await response.text();
-            // La API devuelve "Channel is offline" o similar si no está en directo
-            // Si está en directo devuelve el tiempo ej: "1 hour, 30 mins"
             const isOffline = text.toLowerCase().includes('offline');
             return !isOffline;
         } catch (error) {
@@ -159,38 +165,47 @@ class TwitchService {
     }
 
     /**
-     * Obtiene la lista de usuarios conectados al chat (TMI API)
+     * Obtiene la lista de usuarios conectados al chat
+     * Intenta usar la API TMI, si falla (CORS), usa la lista local construida por eventos
      * @returns {Promise<Array<string>>} Lista de usernames
      */
     async fetchChatters() {
+        let apiChatters = [];
+        let apiSuccess = false;
+
         try {
-            // Nota: Este endpoint puede tener problemas de CORS en navegadores estándar.
-            // En OBS Browser Source suele funcionar bien.
+            // Intento principal: API TMI
             const response = await fetch(`https://tmi.twitch.tv/group/user/${this.channel}/chatters`);
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
+            if (response.ok) {
+                const data = await response.json();
+                const chatters = data.chatters;
+                apiChatters = [
+                    ...(chatters.broadcaster || []),
+                    ...(chatters.vips || []),
+                    ...(chatters.moderators || []),
+                    ...(chatters.staff || []),
+                    ...(chatters.admins || []),
+                    ...(chatters.global_mods || []),
+                    ...(chatters.viewers || [])
+                ];
+                apiSuccess = true;
+
+                // Actualizar nuestro set local con la verdad de la API
+                apiChatters.forEach(u => this.activeChatters.add(u.toLowerCase()));
             }
-
-            const data = await response.json();
-            const chatters = data.chatters;
-
-            // Aplanar todas las categorías de usuarios en una sola lista
-            const allChatters = [
-                ...(chatters.broadcaster || []),
-                ...(chatters.vips || []),
-                ...(chatters.moderators || []),
-                ...(chatters.staff || []),
-                ...(chatters.admins || []),
-                ...(chatters.global_mods || []),
-                ...(chatters.viewers || [])
-            ];
-
-            return allChatters;
         } catch (error) {
-            console.warn('⚠️ No se pudo obtener lista de chatters (Posible bloqueo CORS):', error);
-            return [];
+            console.warn('⚠️ API Chatters falló (posiblemente CORS). Usando lista local de eventos Join/Part.');
         }
+
+        // Si la API falló, o para complementar, usamos el Set local
+        // El Set local se alimenta de eventos JOIN/PART/MESSAGE
+        if (!apiSuccess && this.activeChatters.size > 0) {
+            console.log(`ℹ️ Usando fallback local de chatters: ${this.activeChatters.size} usuarios detectados.`);
+            return Array.from(this.activeChatters);
+        }
+
+        return apiSuccess ? apiChatters : [];
     }
 
     /**

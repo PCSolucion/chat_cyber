@@ -79,6 +79,9 @@
         handleHashChange();
         window.addEventListener('hashchange', handleHashChange);
 
+        // Initialize Live Ticker
+        initTicker();
+
         console.log('✅ Application initialized');
     }
 
@@ -91,16 +94,8 @@
             elements.statusIndicator.textContent = '◌';
             elements.statusIndicator.classList.remove('status-online');
 
-            // Load leaderboard data
-            const rawData = await API.getLeaderboard();
-
-            // Filter excluded users
-            const excludedUsers = ['liiukiin', 'wizebot', 'tester', 'system'];
-            // Add user1 through user10
-            for (let i = 1; i <= 10; i++) {
-                excludedUsers.push(`user${i}`);
-            }
-            leaderboardData = rawData.filter(user => !excludedUsers.includes(user.username.toLowerCase()));
+            // Load leaderboard data (already filtered by API)
+            leaderboardData = await API.getLeaderboard();
 
             // Load achievements catalog
             achievementsData = API.getAchievementsByCategory();
@@ -424,10 +419,80 @@
             if (typeof StreamFeatures !== 'undefined') {
                 StreamFeatures.setupTooltips();
             }
+
+            // Render Stream Heatmap
+            renderStreamHeatmap();
+
         } catch (error) {
             console.error('Error rendering stats:', error);
             elements.statsContainer.innerHTML = '<div class="error-message">Error cargando estadísticas</div>';
         }
+    }
+
+    /**
+     * Render Stream History Heatmap
+     */
+    function renderStreamHeatmap() {
+        // Use merged history from StreamFeatures if available for consistency
+        let history = window.STREAM_HISTORY;
+        if (typeof StreamFeatures !== 'undefined' && StreamFeatures.getHistory) {
+            const merged = StreamFeatures.getHistory();
+            if (merged && Object.keys(merged).length > 0) {
+                history = merged;
+            }
+        }
+        const container = document.getElementById('stream-heatmap');
+
+        if (!container) return;
+        if (!history || Object.keys(history).length === 0) {
+            container.innerHTML = '<div style="opacity: 0.5;">No hay datos de historial disponibles</div>';
+            return;
+        }
+
+        // Convert to array and sort
+        const days = Object.values(history).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Simple visualization: Last 60 days
+        const lastDays = days.slice(-60); // Show last 2 months approx
+
+        // Determine max duration for intensity
+        const maxDuration = Math.max(...lastDays.map(d => d.duration));
+
+        let html = '<div class="heatmap-grid">';
+
+        lastDays.forEach(day => {
+            const intensity = Math.min(100, Math.round((day.duration / maxDuration) * 100));
+            // Color scale from dim to bright cyan/yellow
+            // We'll use CSS variable opacity or lightness
+
+            const dateObj = new Date(day.date);
+            const dateStr = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+            html += `
+                <div class="heatmap-day" 
+                     data-date="${day.date}" 
+                     data-duration="${day.duration}"
+                     title="${dateStr}: ${day.title} (${Math.floor(day.duration / 60)}h ${day.duration % 60}m)"
+                     style="--intensity: ${intensity}%">
+                </div>
+            `;
+        });
+
+        html += '</div>';
+
+        // Add legend/info
+        html += `
+            <div class="heatmap-meta">
+                <span>Últimos ${lastDays.length} días activos</span>
+                <span class="heatmap-legend">
+                    <span style="opacity:0.2">Less</span>
+                    <div class="legend-gradient"></div>
+                    <span style="opacity:1">More</span>
+                </span>
+            </div>
+        `;
+
+        container.innerHTML = html;
     }
 
     /**
@@ -726,6 +791,52 @@
     function closeModal() {
         elements.modal.style.display = 'none';
         document.body.style.overflow = '';
+    }
+
+    /**
+     * Initialize Live Ticker
+     */
+    function initTicker() {
+        const ticker = document.getElementById('ticker-container');
+        const content = document.getElementById('ticker-content');
+
+        if (!ticker || !content) return;
+
+        // Wait for data to load
+        if (leaderboardData.length === 0) {
+            setTimeout(initTicker, 1000);
+            return;
+        }
+
+        // Generate mock "recent" activity based on real data
+        const activities = [];
+        const allAchievements = API.getAchievementsData().achievements || {};
+
+        // Pick 20 random events
+        for (let i = 0; i < 20; i++) {
+            const user = leaderboardData[Math.floor(Math.random() * leaderboardData.length)];
+            if (user && user.achievements && user.achievements.length > 0) {
+                const achId = user.achievements[Math.floor(Math.random() * user.achievements.length)];
+                const ach = allAchievements[achId];
+                if (ach) {
+                    activities.push({ user: user.username, ach: ach.name, icon: ach.icon || '🏆' });
+                }
+            }
+        }
+
+        if (activities.length === 0) return;
+
+        // Render
+        content.innerHTML = activities.map(act => `
+            <div class="ticker-item">
+                <span class="ticker-icon">${act.icon}</span>
+                <span class="ticker-user">${Utils.escapeHTML(act.user)}</span>
+                <span style="opacity:0.7">unlocked</span>
+                <span class="ticker-ach">${Utils.escapeHTML(act.ach)}</span>
+            </div>
+        `).join('');
+
+        ticker.style.display = 'flex';
     }
 
     // Initialize on DOM ready

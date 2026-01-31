@@ -208,8 +208,19 @@ class UIManager {
                     iconFilename = specialIcons.ADMIN || 'arasaka.png';
                 } else if (username === 'SYSTEM') {
                     iconFilename = specialIcons.SYSTEM || 'netrunner.png';
-                } else if (rankIcons[rankTitle]) {
-                    iconFilename = rankIcons[rankTitle];
+                } else {
+                    // Búsqueda case-insensitive robusta para rangos
+                    const normalizedTitle = (rankTitle || '').trim().toUpperCase();
+                    // Buscar clave que coincida (ej: 'FIXER' === 'FIXER')
+                    const matchingKey = Object.keys(rankIcons).find(k => k.toUpperCase() === normalizedTitle);
+
+                    if (this.config.DEBUG || username.toLowerCase() === 'takeru') {
+                        console.log(`🔍 Icon Lookup for ${username}: Title="${rankTitle}", Normalized="${normalizedTitle}", Match="${matchingKey}"`);
+                    }
+
+                    if (matchingKey) {
+                        iconFilename = rankIcons[matchingKey];
+                    }
                 }
 
                 if (iconFilename) {
@@ -220,8 +231,8 @@ class UIManager {
                 }
             }
 
-            // ================= WATCH TIME DISPLAY (HEADER INLINE) =================
-            // Se muestra ENTRE el rango y la racha: [RANK] [LURK] [STREAK]
+            // ================= WATCH TIME DISPLAY (FOOTER BOTTOM-RIGHT) =================
+            // Se muestra abajo a la derecha, pegado al borde.
             if (this.dom.watchTimeContainer && this.experienceService) {
                 // Reset inicial
                 this.dom.watchTimeContainer.innerHTML = '';
@@ -229,8 +240,9 @@ class UIManager {
 
                 const userData = this.experienceService.getUserData(username);
 
-                if (userData && userData.watchTimeMinutes > 0) {
-                    const minutes = userData.watchTimeMinutes;
+                if (userData) {
+                    // Default to 0 if undefined
+                    const minutes = userData.watchTimeMinutes || 0;
                     let timeText = '';
 
                     // Formato: 7H
@@ -240,22 +252,25 @@ class UIManager {
                         timeText = `${minutes}m`;
                     }
 
-                    // Estilo inline (como si fuera otro elemento .xp-streak)
+                    // Estilo: Absolute Bottom Right
                     this.dom.watchTimeContainer.style.display = 'flex';
                     this.dom.watchTimeContainer.style.alignItems = 'center';
                     this.dom.watchTimeContainer.style.gap = '4px';
-                    // Al estar en el header inline, usamos margin-right para separar de la racha si existe
-                    this.dom.watchTimeContainer.style.marginRight = '8px';
+
+                    // Posicionamiento absoluto relativo al contenedor del footer
+                    this.dom.watchTimeContainer.style.position = 'absolute';
+                    this.dom.watchTimeContainer.style.right = '5px'; // Más pegado al borde (antes 15px)
+                    this.dom.watchTimeContainer.style.bottom = '30px';  // Flotando ENCIMA de los logros
 
                     // Limpiamos estilos extra
-                    this.dom.watchTimeContainer.className = 'xp-streak'; // Reutilizar clase base para alineación
+                    this.dom.watchTimeContainer.className = 'xp-streak';
                     this.dom.watchTimeContainer.style.background = 'none';
                     this.dom.watchTimeContainer.style.border = 'none';
                     this.dom.watchTimeContainer.style.boxShadow = 'none';
                     this.dom.watchTimeContainer.style.padding = '0';
+                    this.dom.watchTimeContainer.style.margin = '0';
 
-                    // Renderizamos con los estilos solicitados: Igualar "RACHA"
-                    // (Sin overrides de font-size, dejar que CSS/Clases manejen el estilo)
+                    // Renderizamos con estilo "LURK" igual a "RACHA"
                     this.dom.watchTimeContainer.innerHTML = `
                         <span class="streak-label">LURK:</span>
                         <span class="streak-days">${timeText}</span>

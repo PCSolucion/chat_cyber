@@ -82,10 +82,12 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
 
-    /* Subtle gradient background */
+    /* Cyberpunk Gradient Background - Restored & Enhanced */
+    /* CRITICAL: DO NOT REMOVE THIS GRADIENT OR REDUCE OPACITY. USER REQUESTED PRESERVATION. */
     background-image:
-        radial-gradient(ellipse at 20% 20%, rgba(255, 59, 69, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 15% 50%, rgba(255, 59, 69, 0.15) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.15) 0%, transparent 25%),
+        radial-gradient(circle at 50% 15%, rgba(217, 0, 255, 0.1) 0%, transparent 30%),
         linear-gradient(180deg, var(--bg-dark) 0%, #0D0D15 100%);
     background-attachment: fixed;
 }

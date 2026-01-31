@@ -1,0 +1,68 @@
+/* Stream History Heatmap */
+.stream-history-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-dim);
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stream-history-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--cyber-yellow);
+    box-shadow: 0 0 10px var(--cyber-yellow);
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 1rem;
+    justify-content: flex-start;
+}
+
+.heatmap-day {
+    width: 12px;
+    height: 12px;
+    background-color: var(--cyber-cyan);
+    opacity: calc(0.2 + (var(--intensity) / 100) * 0.8);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.heatmap-day:hover {
+    transform: scale(1.5);
+    z-index: 10;
+    box-shadow: 0 0 8px var(--cyber-cyan);
+    opacity: 1 !important;
+}
+
+.heatmap-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-gradient {
+    width: 60px;
+    height: 8px;
+    background: linear-gradient(to right, rgba(0, 243, 255, 0.2), rgba(0, 243, 255, 1));
+    border-radius: 4px;
+}

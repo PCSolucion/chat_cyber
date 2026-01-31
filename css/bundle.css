@@ -40,14 +40,19 @@
      FONDOS
      ======================================== */
     --bg-dark: #0a0a0f;
-    --bg-panel: rgba(10, 10, 18, 0.95);
+    --bg-panel: rgba(10, 10, 18, 1);
     --bg-overlay: rgba(0, 0, 0, 0.7);
+    --bg-solid: rgba(10, 10, 14, 0.95);
+    /* High Visibility Backplate */
 
     /* ========================================
      TEXTO
      ======================================== */
     --text-bright: #ffffff;
-    --text-dim: rgba(255, 255, 255, 0.6);
+    --text-dim: rgba(255, 255, 255, 0.9);
+    /* Increased from 0.6 for visibility */
+    --text-stroke: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+    /* Heavy outline */
 
     /* ========================================
      GLOWS (Efectos de brillo)
@@ -215,29 +220,7 @@ body {
     }
 }
 
-@keyframes liveFlicker {
 
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.7;
-    }
-
-    96% {
-        opacity: 1;
-    }
-
-    97% {
-        opacity: 0.3;
-    }
-
-    98% {
-        opacity: 1;
-    }
-}
 
 /* ===========================================
    CONTAINER BORDER ANIMATIONS
@@ -768,20 +751,6 @@ body {
    =========================================== */
 
 /* Relocated Header Right - NOW VISIBLE */
-.header-right {
-    display: flex;
-    /* Changed from none to flex */
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    margin-left: auto;
-    /* Push to right */
-    position: absolute;
-    /* Absolute positioning might be safer if layout is flex row */
-    right: 15px;
-    top: 15px;
-}
-
 .watch-time-container {
     display: flex;
     align-items: center;
@@ -805,39 +774,6 @@ body {
     font-size: 10px;
     opacity: 0.8;
     margin-right: 2px;
-}
-
-.live-badge {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 8px;
-    font-weight: 700;
-    color: var(--cyber-red);
-    letter-spacing: 2px;
-    padding: 2px 6px;
-    border: 1px solid var(--cyber-red);
-    background: rgba(255, 0, 60, 0.15);
-    box-shadow: var(--glow-red);
-    animation: liveFlicker 2s ease-in-out infinite;
-}
-
-.header-deco {
-    display: flex;
-    gap: 3px;
-    margin-top: 2px;
-}
-
-.header-deco span {
-    width: 6px;
-    height: 6px;
-    border: 1px solid var(--cyber-cyan);
-    opacity: 0.3;
-    transition: all 0.3s ease;
-}
-
-.header-deco span:nth-child(3) {
-    background: var(--cyber-cyan);
-    opacity: 1;
-    box-shadow: 0 0 8px var(--cyber-cyan);
 }
 
 /* ===========================================

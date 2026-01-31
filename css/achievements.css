@@ -25,7 +25,8 @@
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    background: rgba(14, 13, 22, 0.6);
+    background: var(--bg-solid);
+    /* Solid Background */
     border-left: 4px solid #ff4b4b;
     position: relative;
     transform: translateY(-10px);
@@ -99,8 +100,11 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 13px;
     /* Increased from 10px */
-    font-weight: 700;
+    font-weight: 800;
+    /* Extra Bold */
     color: var(--cyber-cyan, #00f0ff);
+    text-shadow: var(--text-stroke);
+    /* Heavy Outline */
     text-transform: uppercase;
     letter-spacing: 2px;
     display: flex;
@@ -117,13 +121,16 @@
 /* Achievement Name - Marquee Bounce */
 .achievement-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    /* Slight increase */
     /* Decreased from 1.05rem */
-    font-weight: 800;
+    font-weight: 900;
+    /* Max Boldness */
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    text-shadow: var(--text-stroke);
+    /* Heavy Outline */
     white-space: nowrap;
     overflow: hidden;
     max-width: 260px;
@@ -163,9 +170,12 @@
 /* Description Container - Mask for marquee */
 .achievement-desc {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    /* Increase */
+    font-weight: 700;
+    /* Bold */
+    color: #fff;
+    /* White instead of dim */
     white-space: nowrap;
     overflow: hidden;
     position: relative;
@@ -248,7 +258,7 @@
 
 .achievement-notification[data-rarity="uncommon"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: 0 0 5px var(--rarity-color);
+    text-shadow: var(--text-stroke), 0 0 5px var(--rarity-color);
 }
 
 /* Timer Override Removed */
@@ -261,7 +271,7 @@
 
 .achievement-notification[data-rarity="rare"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: 0 0 5px var(--rarity-color);
+    text-shadow: var(--text-stroke), 0 0 5px var(--rarity-color);
 }
 
 /* Timer Override Removed */
@@ -274,7 +284,8 @@
 
 .achievement-notification[data-rarity="epic"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: 0 0 5px var(--rarity-color);
+    text-shadow: var(--text-stroke), 0 0 10px var(--rarity-color);
+    /* Stronger glow + outline */
 }
 
 .achievement-notification[data-rarity="epic"] .achievement-name {
@@ -291,7 +302,7 @@
 
 .achievement-notification[data-rarity="legendary"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: 0 0 8px var(--rarity-color);
+    text-shadow: var(--text-stroke), 0 0 15px var(--rarity-color);
 }
 
 .achievement-notification[data-rarity="legendary"] .achievement-name {

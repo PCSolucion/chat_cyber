@@ -154,10 +154,6 @@
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 12px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -165,6 +161,9 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    /* High Visibility Update */
+    background: var(--bg-solid);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .stat-card:hover {
@@ -179,12 +178,15 @@
 
 .stat-value {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    /* +0.1rem */
+    font-weight: 800;
+    /* Extra Bold */
     color: #fff;
     line-height: 1.2;
     margin: 5px 0;
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-shadow: var(--text-stroke);
+    /* Heavy Outline */
     white-space: nowrap;
 }
 
@@ -239,7 +241,10 @@
 .modern-list-item {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    background: var(--bg-solid);
+    /* Solid BG */
     border-left: 2px solid rgba(255, 255, 255, 0.1);
     padding: 8px 12px;
     gap: 12px;
@@ -282,9 +287,12 @@
 
 .list-name {
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 800;
+    /* Bold */
+    font-size: 1.15rem;
     color: #fff;
+    text-shadow: var(--text-stroke);
+    /* Heavy Outline */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -465,7 +473,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-solid);
+    /* Solid BG */
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 10px 15px;
     border-radius: 4px;
@@ -474,10 +483,12 @@
 
 .big-stat-num {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.2rem;
+    /* Larger */
+    font-weight: 800;
     color: var(--cyber-cyan, #00f6ff);
-    text-shadow: 0 0 10px rgba(0, 246, 255, 0.4);
+    text-shadow: var(--text-stroke);
+    /* Heavy Outline */
 }
 
 .big-stat-label {

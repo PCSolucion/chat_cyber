@@ -53,6 +53,18 @@ class MessageProcessor {
                     this.config.XP_GIST_FILENAME
                 );
 
+                // 4a. Stream History Service (Depende de Gist)
+                try {
+                    this.services.streamHistory = new StreamHistoryService(
+                        this.config,
+                        this.services.gist
+                    );
+                    this.services.streamHistory.startMonitoring();
+                    console.log('📅 Stream History Service initialized');
+                } catch (e) {
+                    console.warn('⚠️ Stream History Service initialization failed:', e);
+                }
+
                 this.services.xp = new ExperienceService(
                     this.config,
                     this.services.gist

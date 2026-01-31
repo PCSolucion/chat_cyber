@@ -503,6 +503,25 @@ const Components = (function () {
                     </div>
                     <div class="stat-deco">SYSTEM WIDE</div>
                 </div>
+
+                <!-- Rarity Distribution Chart -->
+                <div class="dashboard-stat-card cyber-card" style="grid-column: span 3;">
+                    <h4 class="stats-card-title" style="margin-bottom: 1rem;">DISTRIBUCIÓN DE RAREZA</h4>
+                    <div class="rarity-chart">
+                        ${Object.entries(stats.rarityDistribution || {}).map(([rarity, count]) => {
+            const pct = stats.totalUnlocks > 0 ? (count / stats.totalUnlocks * 100).toFixed(1) : 0;
+            return `
+                                <div class="rarity-bar-row">
+                                    <div class="rarity-label" style="color: var(--rarity-${rarity}); width: 80px; text-transform: capitalize;">${Utils.getRarityName(rarity)}</div>
+                                    <div class="rarity-track" style="flex: 1; background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
+                                        <div class="rarity-fill" style="width: ${pct}%; background: var(--rarity-${rarity}); height: 100%;"></div>
+                                    </div>
+                                    <div class="rarity-value" style="width: 50px; text-align: right; font-family: 'Share Tech Mono'; font-size: 0.8rem;">${pct}%</div>
+                                </div>
+                            `;
+        }).join('')}
+                    </div>
+                </div>
             </div>
             
             <!-- Stream Data Section -->

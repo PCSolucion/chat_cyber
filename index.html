@@ -106,7 +106,6 @@
             <div class="xp-title-inline" id="xp-title-inline">
               <span class="xp-title-icon">◆</span>
               <span class="xp-title-text" id="xp-title">CIVILIAN</span>
-              <span id="watch-time-container" class="xp-streak" style="display: none; margin-left: 10px;"></span>
               <span class="xp-streak" id="xp-streak" style="display: none;"></span>
             </div>
           </div>
@@ -123,9 +122,7 @@
 
 
         </div>
-        <div class="header-right">
-          <div class="live-badge">LIVE</div>
-        </div>
+
       </div>
 
       <!-- Data stream indicator -->
@@ -162,6 +159,8 @@
         pointer-events: none;
       ">
         <span class="xp-achievements" id="xp-achievements" style="display: none;"></span>
+        <!-- Watch Time: Bottom Right Pegado al Borde -->
+        <div id="watch-time-container" style="display: none;"></div>
       </div>
 
       <!-- Footer tech info -->
@@ -198,6 +197,7 @@
   <script src="js/services/AchievementService.js"></script>
   <script src="js/services/ThirdPartyEmoteService.js"></script>
   <script src="js/services/SessionStatsService.js"></script>
+  <script src="js/services/StreamHistoryService.js"></script>
 
   <!-- Managers -->
   <script src="js/managers/UIManager.js"></script>
