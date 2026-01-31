@@ -113,16 +113,34 @@ class ThirdPartyEmoteService {
      * @private
      */
     async _getChannelId() {
+        // Try FFZ first (it works with username and returns ID)
         try {
-            // Usar 7TV para obtener el ID (es público y no requiere auth)
+            const ffzResponse = await fetch(this.apiUrls['ffz'].channel(this.channelName));
+            if (ffzResponse.ok) {
+                const data = await ffzResponse.json();
+                if (data.room && data.room.twitch_id) {
+                    this.channelId = data.room.twitch_id;
+                    console.log(`🎭 Channel ID found via FFZ: ${this.channelId}`);
+                    return; // Success, no need to try 7TV for ID
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ FFZ ID lookup failed:', e);
+        }
+
+        // Fallback to 7TV (legacy method, might 404 if user not on 7TV)
+        try {
             const response = await fetch(`https://7tv.io/v3/users/twitch/${this.channelName}`);
             if (response.ok) {
                 const data = await response.json();
                 this.channelId = data.user?.id || null;
-                console.log(`🎭 Channel ID for ${this.channelName}: ${this.channelId}`);
+                console.log(`🎭 Channel ID found via 7TV: ${this.channelId}`);
+            } else if (response.status === 404) {
+                console.warn(`⚠️ 7TV: El usuario '${this.channelName}' no está registrado en 7TV (ID lookup failed).`);
+                this.userExistsOn7TV = false;
             }
         } catch (e) {
-            console.warn('⚠️ Could not get channel ID:', e);
+            console.warn('⚠️ Could not get channel ID via 7TV:', e);
         }
     }
 
@@ -152,9 +170,11 @@ class ThirdPartyEmoteService {
         }
 
         // Channel emotes
-        if (this.channelName) {
+        if (this.channelName && this.userExistsOn7TV !== false) {
             try {
-                const response = await fetch(this.apiUrls['7tv'].channel(this.channelName));
+                // Use ID if available (preferred), otherwise Name
+                const param = this.channelId ? this.channelId : this.channelName;
+                const response = await fetch(this.apiUrls['7tv'].channel(param));
                 if (response.ok) {
                     const data = await response.json();
                     const emoteSet = data.emote_set;
@@ -169,6 +189,8 @@ class ThirdPartyEmoteService {
                             stats.channel++;
                         });
                     }
+                } else if (response.status === 404) {
+                    // Ya se advirtió en _getChannelId, no es necesario hacer spam
                 }
             } catch (e) {
                 stats.errors.push(`Channel: ${e.message}`);
@@ -214,6 +236,12 @@ class ThirdPartyEmoteService {
 
         // Channel emotes (requiere ID del canal)
         if (this.channelId) {
+            // Check if we already know the user has no BTTV account
+            if (localStorage.getItem('bttv_user_not_found') === 'true') {
+                console.log('ℹ️ BTTV: Skipped check (cached 404 state to prevent console errors)');
+                return;
+            }
+
             try {
                 const response = await fetch(this.apiUrls['bttv'].channel(this.channelId));
                 if (response.ok) {
@@ -241,6 +269,10 @@ class ThirdPartyEmoteService {
                         });
                         stats.channel++;
                     });
+                } else if (response.status === 404) {
+                    console.warn(`⚠️ BTTV: El usuario no tiene perfil en BetterTTV. (Esto es normal si no usas BTTV)`);
+                    // Cache this result to prevent red console errors on next reload
+                    localStorage.setItem('bttv_user_not_found', 'true');
                 }
             } catch (e) {
                 stats.errors.push(`Channel: ${e.message}`);
@@ -304,6 +336,8 @@ class ThirdPartyEmoteService {
                             stats.channel++;
                         });
                     });
+                } else if (response.status === 404) {
+                    console.warn(`⚠️ FFZ: El usuario '${this.channelName}' no está registrado en FrankerFaceZ. No se cargarán emotes específicos del canal de FFZ.`);
                 }
             } catch (e) {
                 stats.errors.push(`Channel: ${e.message}`);
