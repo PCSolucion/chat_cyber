@@ -187,6 +187,12 @@ class SessionStatsService {
      */
     trackSessionWatchTime(username, minutes) {
         const lowerUser = username.toLowerCase();
+
+        // Verificar blacklist y justinfan
+        if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
+            return;
+        }
+
         const current = this.stats.sessionWatchTime.get(lowerUser) || 0;
         this.stats.sessionWatchTime.set(lowerUser, current + minutes);
     }
@@ -362,6 +368,12 @@ class SessionStatsService {
      */
     _getTopUsers(n = 20) {
         return Array.from(this.stats.userMessageCounts.entries())
+            .filter(([username]) => {
+                // Filtrar usuarios blacklisted y justinfan (aunque trackMessage ya lo hace, doble seguridad)
+                if (username.startsWith('justinfan')) return false;
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return false;
+                return true;
+            })
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)
             .map(([username, count]) => {
@@ -398,6 +410,10 @@ class SessionStatsService {
         let highest = { username: null, days: 0 };
 
         this.stats.currentActiveStreaks.forEach((days, username) => {
+            // Filtrar bots
+            if (username.startsWith('justinfan')) return;
+            if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return;
+
             if (days > highest.days) {
                 highest = {
                     username: username.charAt(0).toUpperCase() + username.slice(1),
@@ -434,8 +450,14 @@ class SessionStatsService {
 
         // Sort y slice
         return users
+            .filter(u => {
+                const lowerUser = u.username.toLowerCase();
+                // Filtrar usuarios blacklisted y justinfan
+                if (lowerUser.startsWith('justinfan')) return false;
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) return false;
+                return u.minutes > 0;
+            })
             .sort((a, b) => b.minutes - a.minutes)
-            .filter(u => u.minutes > 0)
             .slice(0, n)
             .map(u => ({
                 username: u.username.charAt(0).toUpperCase() + u.username.slice(1),
