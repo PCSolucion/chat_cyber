@@ -28,6 +28,10 @@ export default class MessageProcessor {
         this.services = {};
         this.managers = {};
         this.isInitialized = false;
+        
+        // Estado del stream
+        this.isStreamOnline = false;
+        this.streamStartTime = null;
 
         // NotificationManager will be initialized in init()
         this.notificationManager = null;
@@ -343,10 +347,10 @@ export default class MessageProcessor {
         const xpContext = {
             hasEmotes: emoteCount > 0,
             emoteCount: emoteCount,
-            isStreamLive: true,
-            isStreamStart: false,
+            isStreamLive: this.isStreamOnline,
+            isStreamStart: this._checkIsStreamStart(),
             hasMention: message && message.includes('@'),
-            message: message // Pasamos el mensaje crudo para análisis de palabras (ej. "bro")
+            message: message 
         };
 
         const xpResult = this.services.xp.trackMessage(username, xpContext);
@@ -477,9 +481,30 @@ export default class MessageProcessor {
      * Actualiza el estado del stream (Delegado desde App)
      */
     updateStreamStatus(isOnline) {
+        // Detectar inicio de stream (offline -> online)
+        if (isOnline && !this.isStreamOnline) {
+            this.streamStartTime = Date.now();
+            console.log('📡 MessageProcessor: Stream detected as ONLINE at', new Date(this.streamStartTime).toLocaleTimeString());
+        } else if (!isOnline) {
+            this.streamStartTime = null;
+        }
+
+        this.isStreamOnline = isOnline;
+
         if (this.services.sessionStats) {
             this.services.sessionStats.setStreamStatus(isOnline);
         }
+    }
+
+    /**
+     * Verifica si estamos en la ventana de "inicio de stream" (ej. primeros 10 min)
+     * @private
+     */
+    _checkIsStreamStart() {
+        if (!this.isStreamOnline || !this.streamStartTime) return false;
+        
+        const windowMs = 10 * 60 * 1000; // 10 minutos
+        return (Date.now() - this.streamStartTime) < windowMs;
     }
 
     /**
