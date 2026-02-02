@@ -48,6 +48,7 @@ class ExperienceService {
         // Inicializar Gestores Especializados
         this.streakManager = new StreakManager(this.xpConfig);
         this.levelCalculator = new LevelCalculator();
+        this.xpEvaluator = new XPSourceEvaluator(this.xpConfig);
         
         this.currentDay = this.streakManager.getCurrentDay();
     }
@@ -318,56 +319,12 @@ class ExperienceService {
 
         const previousLevel = userData.level;
 
-        // Calcular XP ganado de cada fuente
-        let totalXP = 0;
-        const xpSources = [];
-
         // Verificar si el usuario está excluido de bonos (bots, admin, etc.)
         const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
             .map(u => u.toLowerCase())
             .includes(lowerUser);
 
-        // 1. XP base por mensaje
-        if (this.xpConfig.sources.MESSAGE.enabled) {
-            totalXP += this.xpConfig.sources.MESSAGE.xp;
-            xpSources.push({ source: 'MESSAGE', xp: this.xpConfig.sources.MESSAGE.xp });
-        }
-
-        // 2. Bonus primer mensaje del día
-        if (!ignoredForBonus && this.xpConfig.sources.FIRST_MESSAGE_DAY.enabled && !this.dailyFirstMessage.has(lowerUser)) {
-            totalXP += this.xpConfig.sources.FIRST_MESSAGE_DAY.xp;
-            xpSources.push({ source: 'FIRST_MESSAGE_DAY', xp: this.xpConfig.sources.FIRST_MESSAGE_DAY.xp });
-            this.dailyFirstMessage.set(lowerUser, true);
-        }
-
-        // 3. Bonus stream activo
-        if (this.xpConfig.sources.STREAM_ACTIVE.enabled && context.isStreamLive) {
-            totalXP += this.xpConfig.sources.STREAM_ACTIVE.xp;
-            xpSources.push({ source: 'STREAM_ACTIVE', xp: this.xpConfig.sources.STREAM_ACTIVE.xp });
-        }
-
-        // 4. XP por emotes
-        if (this.xpConfig.sources.EMOTE_USED.enabled && context.hasEmotes && context.emoteCount > 0) {
-            const emoteXP = Math.min(context.emoteCount, this.xpConfig.sources.EMOTE_USED.maxPerMessage)
-                * this.xpConfig.sources.EMOTE_USED.xp;
-            totalXP += emoteXP;
-            xpSources.push({ source: 'EMOTE_USED', xp: emoteXP });
-        }
-
-        // 5. Bonus inicio de stream
-        if (this.xpConfig.sources.STREAM_START.enabled && context.isStreamStart) {
-            totalXP += this.xpConfig.sources.STREAM_START.xp;
-            xpSources.push({ source: 'STREAM_START', xp: this.xpConfig.sources.STREAM_START.xp });
-        }
-
-        // 6. XP por mención
-        if (this.xpConfig.sources.MENTION_USER.enabled && context.hasMention) {
-            totalXP += this.xpConfig.sources.MENTION_USER.xp;
-            xpSources.push({ source: 'MENTION_USER', xp: this.xpConfig.sources.MENTION_USER.xp });
-        }
-
-        // 7. Verificar y actualizar racha
-        // Si es usuario ignorado, mantenemos los datos actuales sin cambios ni bonos
+        // 1. Determinar Racha (Necesario antes de evaluar XP para el multiplicador y el bono)
         let streakResult = {
             streakDays: userData.streakDays || 0,
             lastStreakDate: userData.lastStreakDate,
@@ -378,12 +335,23 @@ class ExperienceService {
             streakResult = this.streakManager.updateStreak(userData);
         }
 
-        if (streakResult.bonusAwarded) {
-            totalXP += this.xpConfig.sources.STREAK_BONUS.xp;
-            xpSources.push({ source: 'STREAK_BONUS', xp: this.xpConfig.sources.STREAK_BONUS.xp });
+        // 2. Evaluar XP ganado de cada fuente usando la Fábrica
+        const evaluationState = {
+            isIgnoredForBonus: ignoredForBonus,
+            isFirstMessageOfDay: !this.dailyFirstMessage.has(lowerUser),
+            streakBonusAwarded: streakResult.bonusAwarded
+        };
+
+        const evaluation = this.xpEvaluator.evaluateMessage(context, evaluationState);
+        let totalXP = evaluation.totalXP;
+        const xpSources = evaluation.sources;
+
+        // Registrar primer mensaje del día si fue otorgado
+        if (evaluationState.isFirstMessageOfDay && !ignoredForBonus) {
+            this.dailyFirstMessage.set(lowerUser, true);
         }
 
-        // 8. Calcular y aplicar multiplicador de racha
+        // 3. Aplicar multiplicador de racha
         const streakMultiplier = this.streakManager.getStreakMultiplier(streakResult.streakDays);
         const xpBeforeMultiplier = totalXP;
         totalXP = Math.floor(totalXP * streakMultiplier);
