@@ -1,0 +1,28 @@
+import BaseCommand from './BaseCommand.js';
+import EventManager from '../utils/EventEmitter.js';
+
+export default class EmotesCommand extends BaseCommand {
+    constructor() {
+        super('emotes', ['topemotes', 'trending']);
+    }
+
+    execute({ services }) {
+        if (!services.sessionStats) return;
+
+        const topEmotes = services.sessionStats.getTopEmotes(3);
+
+        if (topEmotes.length === 0) {
+            EventManager.emit('ui:systemMessage', '🤔 Aún no se han usado emotes en esta sesión.');
+            return;
+        }
+
+        const parts = topEmotes.map((e, i) => {
+            const medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+            return `${medal} ${e.name} (${e.count})`;
+        });
+        
+        const message = `🔥 Emotes Trending: ${parts.join(' | ')}`;
+        
+        EventManager.emit('ui:systemMessage', message);
+    }
+}

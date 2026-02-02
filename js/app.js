@@ -8,6 +8,11 @@ import AchievementsCommand from './commands/AchievementsCommand.js';
 import TopCommand from './commands/TopCommand.js';
 import StreakCommand from './commands/StreakCommand.js';
 import BroCommand from './commands/BroCommand.js';
+import HelpCommand from './commands/HelpCommand.js';
+import StatsCommand from './commands/StatsCommand.js';
+import UptimeCommand from './commands/UptimeCommand.js';
+import EmotesCommand from './commands/EmotesCommand.js';
+import ShoutoutCommand from './commands/ShoutoutCommand.js';
 import CommandManager from './managers/CommandManager.js';
 import AudioManager from './managers/AudioManager.js';
 
@@ -39,11 +44,16 @@ class App {
             this.commandManager = new CommandManager(this.processor.services, this.config);
             
             // Registrar comandos básicos
+            this.commandManager.registerCommand(new HelpCommand());
             this.commandManager.registerCommand(new LevelCommand());
             this.commandManager.registerCommand(new AchievementsCommand());
             this.commandManager.registerCommand(new TopCommand());
             this.commandManager.registerCommand(new StreakCommand());
             this.commandManager.registerCommand(new BroCommand());
+            this.commandManager.registerCommand(new StatsCommand());
+            this.commandManager.registerCommand(new UptimeCommand());
+            this.commandManager.registerCommand(new EmotesCommand());
+            this.commandManager.registerCommand(new ShoutoutCommand());
         }
 
         // 2. Instanciar Twitch Service

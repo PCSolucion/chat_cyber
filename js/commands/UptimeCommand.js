@@ -1,0 +1,27 @@
+import BaseCommand from './BaseCommand.js';
+import EventManager from '../utils/EventEmitter.js';
+
+export default class UptimeCommand extends BaseCommand {
+    constructor() {
+        super('uptime', ['on', 'tiempo', 'directo', 'livetime']);
+    }
+
+    execute({ services }) {
+        // We need to rely on SessionStatsService for session start time
+        if (!services.sessionStats) return;
+
+        if (!services.sessionStats.isLive || !services.sessionStats.sessionStart) {
+             EventManager.emit('ui:systemMessage', '🔴 El stream está OFFLINE (o no se han detectado datos aún).');
+             return;
+        }
+
+        const diff = Date.now() - services.sessionStats.sessionStart;
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        const timeStr = `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+        
+        EventManager.emit('ui:systemMessage', `⏱️ Stream en directo: ${timeStr}`);
+    }
+}
