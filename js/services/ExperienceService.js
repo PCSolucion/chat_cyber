@@ -27,7 +27,6 @@ class ExperienceService {
 
         // Registro de mensajes del día actual (para bonus primer mensaje)
         this.dailyFirstMessage = new Map();
-        this.currentDay = this.getCurrentDay();
 
         // Callbacks para eventos de level-up
         this.levelUpCallbacks = [];
@@ -46,6 +45,10 @@ class ExperienceService {
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
         this.levelConfig = this.initLevelConfig();
+
+        // Inicializar Gestor de Rachas
+        this.streakManager = new StreakManager(this.xpConfig);
+        this.currentDay = this.streakManager.getCurrentDay();
     }
 
     /**
@@ -167,6 +170,72 @@ class ExperienceService {
             // Título por defecto para niveles sin título específico
             defaultTitle: 'EDGE RUNNER LVL {level}'
         };
+    }
+
+    /**
+     * Calcula el nivel basado en XP total
+     * @param {number} xp - XP total del usuario
+     * @returns {number} Nivel calculado
+     */
+    calculateLevel(xp) {
+        if (xp < 0) return 1;
+
+        const { baseXP, exponent } = this.levelConfig;
+
+        // Inversa de la fórmula: xp = base * (level-1)^exp
+        // level-1 = (xp / base)^(1/exp)
+        // level = (xp / base)^(1/exp) + 1
+        return Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
+    }
+
+    /**
+     * Calcula la XP requerida para alcanzar un nivel específico
+     * @param {number} level - Nivel objetivo
+     * @returns {number} XP requerida
+     */
+    getXPForLevel(level) {
+        if (level <= 1) return 0;
+        const { baseXP, exponent } = this.levelConfig;
+        return Math.floor(baseXP * Math.pow(level - 1, exponent));
+    }
+
+    /**
+     * Calcula el progreso porcentual hacia el siguiente nivel
+     * Hacia nivel actual+1
+     * @param {number} xp - XP actual
+     * @param {number} level - Nivel actual
+     * @returns {number} Porcentaje 0-100
+     */
+    getLevelProgress(xp, level) {
+        const currentLevelXP = this.getXPForLevel(level);
+        const nextLevelXP = this.getXPForLevel(level + 1);
+
+        const needed = nextLevelXP - currentLevelXP;
+        if (needed === 0) return 100; // Edge case
+
+        const current = xp - currentLevelXP;
+        let percentage = (current / needed) * 100;
+
+        return Math.min(100, Math.max(0, percentage));
+    }
+
+    /**
+     * Obtiene el título correspondiente a un nivel
+     * @param {number} level 
+     * @returns {string}
+     */
+    getLevelTitle(level) {
+        const titles = this.levelConfig.titles;
+        // Ordenar claves numéricas de mayor a menor
+        const levels = Object.keys(titles).map(Number).sort((a, b) => b - a);
+
+        for (const lvl of levels) {
+            if (level >= lvl) {
+                return titles[lvl];
+            }
+        }
+
+        return this.levelConfig.defaultTitle.replace('{level}', level);
     }
 
     /**
@@ -340,7 +409,7 @@ class ExperienceService {
                 levelProgress: this.getLevelProgress(userData.xp, userData.level),
                 levelTitle: this.getLevelTitle(userData.level),
                 streakDays: userData.streakDays || 0,
-                streakMultiplier: this.getStreakMultiplier(userData.streakDays || 0)
+                streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0)
             };
         }
 
@@ -403,7 +472,7 @@ class ExperienceService {
         };
 
         if (!ignoredForBonus) {
-            streakResult = this.updateStreak(lowerUser, userData);
+            streakResult = this.streakManager.updateStreak(userData);
         }
 
         if (streakResult.bonusAwarded) {
@@ -412,7 +481,7 @@ class ExperienceService {
         }
 
         // 8. Calcular y aplicar multiplicador de racha
-        const streakMultiplier = this.getStreakMultiplier(streakResult.streakDays);
+        const streakMultiplier = this.streakManager.getStreakMultiplier(streakResult.streakDays);
         const xpBeforeMultiplier = totalXP;
         totalXP = Math.floor(totalXP * streakMultiplier);
 
@@ -428,7 +497,7 @@ class ExperienceService {
         userData.bestStreak = streakResult.bestStreak || userData.bestStreak || 0;
 
         // Registrar actividad diaria para heatmap
-        const today = this.getCurrentDay();
+        const today = this.streakManager.getCurrentDay();
         if (!userData.activityHistory) {
             userData.activityHistory = {};
         }
@@ -562,7 +631,7 @@ class ExperienceService {
         }
 
         // Registrar tiempo visualizado en el historial diario
-        const today = this.getCurrentDay();
+        const today = this.streakManager.getCurrentDay();
         if (!userData.activityHistory) {
             userData.activityHistory = {};
         }
@@ -588,96 +657,10 @@ class ExperienceService {
     }
 
     /**
-     * Actualiza la racha de participación
-     * @param {string} username - Nombre del usuario
-     * @param {Object} userData - Datos del usuario
-     * @returns {Object} Resultado de la racha
-     */
-    updateStreak(username, userData) {
-        const today = this.getCurrentDay();
-        const lastDate = userData.lastStreakDate;
-
-        let streakDays = userData.streakDays || 0;
-        let bestStreak = userData.bestStreak || 0;
-        let bonusAwarded = false;
-
-        if (lastDate === today) {
-            // Ya participó hoy, no cambiar racha
-            return { streakDays, lastStreakDate: today, bonusAwarded: false, bestStreak };
-        }
-
-        const yesterday = this.getYesterday();
-
-        if (lastDate === yesterday) {
-            // Racha continúa
-            streakDays += 1;
-
-            // Actualizar mejor racha si es nueva marca
-            if (streakDays > bestStreak) {
-                bestStreak = streakDays;
-            }
-
-            // Bonus si alcanza el umbral
-            if (streakDays >= this.xpConfig.sources.STREAK_BONUS.streakDays &&
-                streakDays % this.xpConfig.sources.STREAK_BONUS.streakDays === 0) {
-                bonusAwarded = true;
-            }
-        } else {
-            // Racha rota, reiniciar
-            streakDays = 1;
-        }
-
-        return { streakDays, lastStreakDate: today, bonusAwarded, bestStreak };
-    }
-
-    /**
-     * Calcula el multiplicador de XP basado en los días de racha
-     * @param {number} streakDays - Días de racha consecutivos
-     * @returns {number} Multiplicador (1.0, 1.5, 2.0, 3.0)
-     */
-    getStreakMultiplier(streakDays) {
-        const multipliers = this.xpConfig.streakMultipliers;
-
-        for (const tier of multipliers) {
-            if (streakDays >= tier.minDays) {
-                return tier.multiplier;
-            }
-        }
-
-        return 1.0; // Default
-    }
-
-    /**
-     * Obtiene la fecha actual en formato YYYY-MM-DD (Hora Local)
-     * @returns {string}
-     */
-    getCurrentDay() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    /**
-     * Obtiene la fecha de ayer en formato YYYY-MM-DD (Hora Local)
-     * @returns {string}
-     */
-    getYesterday() {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const year = yesterday.getFullYear();
-        const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-        const day = String(yesterday.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    /**
      * Verifica si el día cambió y resetea contadores diarios
      */
     checkDayReset() {
-        const today = this.getCurrentDay();
+        const today = this.streakManager.getCurrentDay();
         if (today !== this.currentDay) {
             this.currentDay = today;
             this.dailyFirstMessage.clear();
@@ -738,10 +721,24 @@ class ExperienceService {
             title: this.getLevelTitle(userData.level),
             progress,
             streakDays: userData.streakDays || 0,
-            streakMultiplier: this.getStreakMultiplier(userData.streakDays || 0),
+            streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0),
             totalMessages: userData.totalMessages,
             achievements: userData.achievements
         };
+    }
+
+    /**
+     * Obtiene estadísticas de tiempo de visualización de un usuario
+     * @param {string} username - Nombre del usuario
+     * @param {string} period - Periodo ('total', 'week', 'month') - Por ahora solo soporta 'total'
+     * @returns {number} Minutos visualizados
+     */
+    getWatchTimeStats(username, period = 'total') {
+        const userData = this.getUserData(username);
+
+        // Por ahora retornamos el total. 
+        // Implementar lógica de periodos si activityHistory se parsea correctamente.
+        return userData.watchTimeMinutes || 0;
     }
 
     /**
