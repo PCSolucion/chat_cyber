@@ -2,72 +2,115 @@ import EventManager from '../utils/EventEmitter.js';
 
 /**
  * AudioManager - Centralized Audio Management System
+ * 
+ * Unifies all sound logic (Chat, Level Up, Achievements) into a single manager.
+ * Removes dependencies on scattered "AudioService" instances.
  */
 export default class AudioManager {
     constructor(config) {
         this.config = config;
-        this.sounds = new Map();
         
-        // Define default sound mappings
-        this.eventSoundMap = {
-            'user:levelUp': 'levelup',
-            'user:achievementUnlocked': 'achievement',
-            'test:sound': 'notification'
+        // Cache for audio objects to avoid reloading
+        this.audioCache = new Map();
+        
+        // Default sounds
+        this.defaultSounds = {
+            notification: this.config.AUDIO_URL || 'sounds/cyberpunk-message.mp3',
+            achievement: 'sounds/logro.mp3'
         };
 
         this.initialized = false;
         
         // Setup listeners
-        this._setupEventListeners();
+        this.init();
     }
 
     /**
-     * Preload standard sounds
+     * Initialize listeners
      */
-    async init() {
+    init() {
         if (this.initialized) return;
 
-        // In a real scenario, we might iterate over a list of assets
-        // For now, we assume implicit loading or just manage the logic
-        // Browsers block audio context until user interaction usually.
-        // We will assume 'audio/levelup.mp3', etc. exist in the project structure
-        // If not, we should probably fail gracefully.
-        
+        this._setupEventListeners();
         this.initialized = true;
-        console.log('🔊 AudioManager initialized');
+        
+        if (this.config.DEBUG) {
+            console.log('🔊 AudioManager initialized and listening to events');
+        }
     }
 
     _setupEventListeners() {
-        // Listen to all mapped events
-        Object.keys(this.eventSoundMap).forEach(eventName => {
-            EventManager.on(eventName, () => {
-                const soundName = this.eventSoundMap[eventName];
-                this.playSound(soundName);
-            });
-        });
+        // 1. Chat Message
+        EventManager.on('chat:messageReceived', () => this.playChatMessage());
+        
+        // 2. Level Up (Data contains newLevel)
+        EventManager.on('user:levelUp', (data) => this.playLevelUp(data));
+        
+        // 3. Achievement
+        EventManager.on('user:achievementUnlocked', () => this.playAchievement());
+        
+        // 4. Test sound
+        EventManager.on('test:sound', () => this.playChatMessage());
     }
 
-    playSound(soundName) {
-        if (!this.config.SOUND_ENABLED) return;
+    /**
+     * Plays the standard chat notification sound
+     */
+    playChatMessage() {
+        this._playSoundFile(this.defaultSounds.notification);
+    }
 
-        // Path construction
-        // Mapeo nombres abstractos a archivos reales existentes en la carpeta 'sounds/'
-        // achievement -> logro.mp3
-        // levelup -> levelup.mp3 (asumido)
-        let fileName = soundName;
-        if (soundName === 'achievement') fileName = 'logro';
-        
-        const path = `sounds/${fileName}.mp3`;
+    /**
+     * Plays a level up sound based on the level reached
+     * @param {Object} data - Event data containing { newLevel }
+     */
+    playLevelUp(data) {
+        const level = data && data.newLevel ? data.newLevel : 1;
+        let soundFile = 'sounds/level10.mp3'; // Default
+
+        // Select sound based on level tiers
+        if (level <= 10) soundFile = 'sounds/level10.mp3';
+        else if (level <= 15) soundFile = 'sounds/level15.mp3';
+        else if (level <= 20) soundFile = 'sounds/level20.mp3';
+        else soundFile = 'sounds/level25.mp3'; // 21+
+
+        this._playSoundFile(soundFile);
+    }
+
+    /**
+     * Plays the achievement unlocked sound
+     */
+    playAchievement() {
+        this._playSoundFile(this.defaultSounds.achievement);
+    }
+
+    /**
+     * Internal method to play a sound file
+     * @param {string} path - Path to audio file
+     */
+    _playSoundFile(path) {
+        // strict volume check (0 volume = mute)
+        if (!this.config.AUDIO_VOLUME && this.config.AUDIO_VOLUME !== 0) return;
         
         try {
+            // Check cache first to reuse Audio objects (optional optimization)
+            // For now, new Audio() is safer for overlapping sounds
             const audio = new Audio(path);
-            audio.volume = this.config.SOUND_VOLUME || 0.5;
-            audio.play().catch(e => {
-                // Autoplay policy or missing file
-                console.warn(`⚠️ Could not play sound ${soundName}:`, e.message);
-            });
+            audio.volume = Math.max(0, Math.min(1, this.config.AUDIO_VOLUME)); // Clamp 0-1
+            
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Browsers block autoplay without interaction
+                    // We suppress the error to keep console clean, unless debugging
+                    if (this.config.DEBUG) {
+                        console.warn(`⚠️ AudioManager: Could not play ${path}`, error.message);
+                    }
+                });
+            }
         } catch (e) {
-            console.error('❌ Audio Error:', e);
+            console.error('❌ AudioManager Error:', e);
         }
     }
 }

@@ -295,8 +295,7 @@ export default class XPDisplayManager {
             }
         }
 
-        // Reproducir sonido (solo una vez)
-        this.playLevelUpSound(eventData.newLevel);
+        // Audio is now handled by AudioManager listening to the same event
     }
 
     /**
@@ -331,37 +330,6 @@ export default class XPDisplayManager {
         setTimeout(() => {
             this.isShowingLevelUp = false;
         }, 400);
-    }
-
-    /**
-     * Reproduce sonido de level up basado en el nivel alcanzado
-     * @param {number} level - Nivel alcanzado
-     */
-    playLevelUpSound(level = 1) {
-        let soundFile = 'sounds/level10.mp3'; // Default fallback
-
-        // Lógica de rangos solicitada
-        if (level <= 10) {
-            soundFile = 'sounds/level10.mp3';
-        } else if (level <= 15) {
-            soundFile = 'sounds/level15.mp3';
-        } else if (level <= 20) {
-            soundFile = 'sounds/level20.mp3';
-        } else {
-            // Nivel 21+ (incluye hasta 25 y más allá)
-            soundFile = 'sounds/level25.mp3';
-        }
-
-        try {
-            const audio = new Audio(soundFile);
-            audio.volume = this.config.AUDIO_VOLUME || 0.5;
-            audio.play().catch(() => {
-                // Si falla (ej. archivo no existe), intentar fallback o silenciar
-                if (this.config.DEBUG) console.warn(`Audio no encontrado: ${soundFile}`);
-            });
-        } catch (error) {
-            // Ignorar errores de audio
-        }
     }
 
     /**

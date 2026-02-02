@@ -1,4 +1,4 @@
-import AudioService from '../services/AudioService.js';
+
 import RankingSystem from '../services/RankingSystem.js';
 import GistStorageService from '../services/GistStorageService.js';
 import StreamHistoryService from '../services/StreamHistoryService.js';
@@ -45,15 +45,8 @@ export default class MessageProcessor {
     init() {
         console.log('⚙️ Inicializando procesador de mensajes...');
 
-        // 1. Audio Service
-        try {
-            this.services.audio = new AudioService(
-                this.config.AUDIO_URL,
-                this.config.AUDIO_VOLUME
-            );
-        } catch (e) {
-            console.warn('⚠️ Error initializing AudioService:', e);
-        }
+        // AudioService removed (Delegated to AudioManager via events)
+
 
         // 3. Ranking System
         try {
@@ -301,10 +294,8 @@ export default class MessageProcessor {
                 );
             }
 
-            // Proceso Audio
-            if (this.services.audio) {
-                this.services.audio.play();
-            }
+            // Audio handled by AudioManager via 'chat:messageReceived'
+
 
             // Trackear estadísticas de sesión (incluyendo nombres de emotes)
             if (this.services.sessionStats) {
@@ -442,9 +433,7 @@ export default class MessageProcessor {
         }
 
         // Limpiar recursos
-        if (this.services.audio) {
-            this.services.audio.stop();
-        }
+
 
         if (this.services.sessionStats) {
             this.services.sessionStats.destroy();
