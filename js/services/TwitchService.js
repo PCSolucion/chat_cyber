@@ -1,3 +1,5 @@
+import CONFIG from '../config.js';
+
 /**
  * TwitchService - Servicio de Conexión con Twitch IRC
  * 
@@ -9,7 +11,7 @@
  * 
  * @class TwitchService
  */
-class TwitchService {
+export default class TwitchService {
     /**
      * Constructor del servicio de Twitch
      * @param {string} channel - Canal de Twitch a conectar
@@ -170,42 +172,15 @@ class TwitchService {
      * @returns {Promise<Array<string>>} Lista de usernames
      */
     async fetchChatters() {
-        let apiChatters = [];
-        let apiSuccess = false;
+        // La API de TMI (http://tmi.twitch.tv/group/user/...) tiene problemas de CORS en navegadores
+        // y a menudo devuelve 404 o bloqueos.
+        // Por estabilidad, usamos exclusivamente el tracking local de eventos JOIN/PART/MESSAGE.
 
-        try {
-            // Intento principal: API TMI
-            const response = await fetch(`https://tmi.twitch.tv/group/user/${this.channel}/chatters`);
-
-            if (response.ok) {
-                const data = await response.json();
-                const chatters = data.chatters;
-                apiChatters = [
-                    ...(chatters.broadcaster || []),
-                    ...(chatters.vips || []),
-                    ...(chatters.moderators || []),
-                    ...(chatters.staff || []),
-                    ...(chatters.admins || []),
-                    ...(chatters.global_mods || []),
-                    ...(chatters.viewers || [])
-                ];
-                apiSuccess = true;
-
-                // Actualizar nuestro set local con la verdad de la API
-                apiChatters.forEach(u => this.activeChatters.add(u.toLowerCase()));
-            }
-        } catch (error) {
-            console.warn('⚠️ API Chatters falló (posiblemente CORS). Usando lista local de eventos Join/Part.');
+        if (CONFIG.DEBUG) {
+            console.log(`ℹ️ TwitchService: Usando tracker local de chatters (${this.activeChatters.size} usuarios) para evitar CORS.`);
         }
 
-        // Si la API falló, o para complementar, usamos el Set local
-        // El Set local se alimenta de eventos JOIN/PART/MESSAGE
-        if (!apiSuccess && this.activeChatters.size > 0) {
-            console.log(`ℹ️ Usando fallback local de chatters: ${this.activeChatters.size} usuarios detectados.`);
-            return Array.from(this.activeChatters);
-        }
-
-        return apiSuccess ? apiChatters : [];
+        return Array.from(this.activeChatters);
     }
 
     /**
@@ -223,9 +198,4 @@ class TwitchService {
                 });
         }
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TwitchService;
 }

@@ -8,7 +8,7 @@
  * 
  * @class XPDisplayManager
  */
-class XPDisplayManager {
+export default class XPDisplayManager {
     /**
      * Constructor del manager de display de XP
      * @param {Object} config - Configuración global
@@ -401,9 +401,4 @@ class XPDisplayManager {
             this.dom.xpSection.style.display = visible ? 'block' : 'none';
         }
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = XPDisplayManager;
 }

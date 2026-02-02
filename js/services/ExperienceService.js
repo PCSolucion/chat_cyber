@@ -1,3 +1,8 @@
+import StreakManager from './StreakManager.js';
+import LevelCalculator from './LevelCalculator.js';
+import XPSourceEvaluator from './XPSourceEvaluator.js';
+import PersistenceManager from './PersistenceManager.js';
+
 /**
  * ExperienceService - Sistema de Gestión de Experiencia (XP)
  * 
@@ -9,7 +14,7 @@
  * 
  * @class ExperienceService
  */
-class ExperienceService {
+export default class ExperienceService {
     /**
      * Constructor del servicio de experiencia
      * @param {Object} config - Configuración global
@@ -31,16 +36,8 @@ class ExperienceService {
         // Callbacks para eventos de level-up
         this.levelUpCallbacks = [];
 
-        // Flag de inicialización
+        // Queues y Locks (Ahora gestionados por PersistenceManager)
         this.isLoaded = false;
-
-        // Queue de cambios pendientes (para batch save)
-        this.pendingChanges = new Set();
-        this.saveTimeout = null;
-
-        // Control de Concurrencia (Cola de Guardado)
-        this.isSaving = false;
-        this.queuedSave = false;
 
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
@@ -50,6 +47,13 @@ class ExperienceService {
         this.levelCalculator = new LevelCalculator();
         this.xpEvaluator = new XPSourceEvaluator(this.xpConfig);
         
+        // Gestor de Persistencia
+        this.persistence = new PersistenceManager({
+            saveCallback: () => this._performSaveTask(),
+            debounceMs: this.xpConfig.settings.saveDebounceMs,
+            debug: this.config.DEBUG
+        });
+
         this.currentDay = this.streakManager.getCurrentDay();
     }
 
@@ -179,49 +183,10 @@ class ExperienceService {
     }
 
     /**
-     * Guarda los datos de XP en el storage
-     * Usa debounce para evitar demasiadas escrituras
-     * @param {boolean} force - Forzar guardado inmediato
-     * @returns {Promise<void>}
-     */
-    async saveData(force = false) {
-        if (force) {
-            clearTimeout(this.saveTimeout);
-            await this._performSave();
-            return;
-        }
-
-        // Debounce - guardar después de inactividad
-        clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(async () => {
-            await this._performSave();
-        }, this.xpConfig.settings.saveDebounceMs);
-    }
-
-    /**
-     * Ejecuta el guardado real con control de concurrencia
+     * Tarea de guardado real (llamada por PersistenceManager)
      * @private
      */
-    async _performSave() {
-        // Si no hay cambios y no se forzó cola, salir
-        if (this.pendingChanges.size === 0 && !this.queuedSave) return;
-
-        // Si ya está guardando, encolar para la siguiente vuelta
-        if (this.isSaving) {
-            if (this.config.DEBUG) console.log('⏳ Guardado en curso, encolando siguiente...');
-            this.queuedSave = true;
-            return;
-        }
-
-        // Bloquear
-        this.isSaving = true;
-        this.queuedSave = false;
-
-        // Snapshot de cambios para limpiar la lista principal ANTES del await
-        // Esto permite que nuevos cambios entren en pendingChanges mientras guardamos
-        const changesSnapshot = new Set(this.pendingChanges);
-        this.pendingChanges.clear();
-
+    async _performSaveTask() {
         try {
             // Convertir Map a objeto para JSON
             const usersData = {};
@@ -235,26 +200,9 @@ class ExperienceService {
                 version: '1.0'
             });
 
-            if (this.config.DEBUG) {
-                console.log('💾 XP data guardado exitosamente');
-            }
-
         } catch (error) {
-            console.error('❌ Error al guardar XP data:', error);
-            // Rollback: Restaurar cambios pendientes para reintentar
-            changesSnapshot.forEach(user => this.pendingChanges.add(user));
-        } finally {
-            this.isSaving = false;
-
-            // Procesar Cola
-            // Si hubo petición durante el guardado (queuedSave) o hay nuevos cambios (pendingChanges)
-            if (this.queuedSave || this.pendingChanges.size > 0) {
-                if (this.config.DEBUG) console.log('🔄 Procesando guardado encolado...');
-
-                // Ejecutar siguiente guardado (sin await para no bloquear stack, 
-                // aunque es async así que es promesa nueva)
-                this._performSave();
-            }
+            // El PersistenceManager se encarga de loguear y propagar si es necesario
+            throw error;
         }
     }
 
@@ -382,10 +330,9 @@ class ExperienceService {
         const newLevel = this.levelCalculator.calculateLevel(userData.xp);
         userData.level = newLevel;
 
-        // Guardar datos actualizados
+        // Guardar datos actualizados vía Gestor de Persistencia
         this.usersXP.set(lowerUser, userData);
-        this.pendingChanges.add(lowerUser);
-        this.saveData();
+        this.persistence.markDirty(lowerUser);
 
         // Detectar level-up
         const leveledUp = newLevel > previousLevel;
@@ -516,9 +463,8 @@ class ExperienceService {
         // También sumar el XP ganado al historial diario
         userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + xpEarned;
 
-        // 4. Guardar
-        this.pendingChanges.add(lowerUser);
-        this.saveData();
+        // 4. Guardar vía Gestor de Persistencia
+        this.persistence.markDirty(lowerUser);
 
         return {
             totalTime: userData.watchTimeMinutes,
@@ -660,13 +606,16 @@ class ExperienceService {
     }
 
     /**
-     * Añade tiempo de visualización a los usuarios activos
+     * Añade tiempo de visualización a los usuarios activos (Batch)
      * @param {Array} chatters - Lista de nombres de usuario
+     * @param {number} minutes - Minutos a añadir (default: 1)
      */
-    addWatchTime(chatters) {
+    addWatchTimeBatch(chatters, minutes = 1) {
         if (!chatters || !Array.isArray(chatters)) return;
 
         let updatedCount = 0;
+        const xpPerMinute = 0.5;
+        const totalXP = Math.floor(minutes * xpPerMinute);
 
         chatters.forEach(username => {
             const lowerUser = username.toLowerCase();
@@ -676,16 +625,42 @@ class ExperienceService {
 
             const userData = this.getUserData(lowerUser);
 
-            // Incrementar tiempo (1 minuto)
-            // IMPORTANTE: Se asume que esta función se llama cada 1 minuto desde el loop principal
-            userData.watchTimeMinutes = (userData.watchTimeMinutes || 0) + 1;
+            // Incrementar tiempo
+            userData.watchTimeMinutes = (userData.watchTimeMinutes || 0) + minutes;
 
-            this.pendingChanges.add(lowerUser);
+            // ACTUALIZAR ÚLTIMA ACTIVIDAD
+            userData.lastActivity = Date.now();
+
+            // Otorgar XP Pasiva
+            if (totalXP > 0) {
+                userData.xp += totalXP;
+
+                // Verificar Level Up silencioso
+                const newLevel = this.levelCalculator.calculateLevel(userData.xp);
+                if (newLevel > userData.level) {
+                   userData.level = newLevel;
+                }
+            }
+
+            // Registrar en historial diario
+            const today = this.streakManager.getCurrentDay();
+            if (!userData.activityHistory) userData.activityHistory = {};
+            if (!userData.activityHistory[today]) {
+                userData.activityHistory[today] = { messages: 0, xp: 0, watchTime: 0 };
+            }
+            if (!userData.activityHistory[today].watchTime) {
+                userData.activityHistory[today].watchTime = 0;
+            }
+            
+            userData.activityHistory[today].watchTime += minutes;
+            userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + totalXP;
+
+            this.persistence.markDirty(lowerUser);
             updatedCount++;
         });
 
         if (this.config.DEBUG && updatedCount > 0) {
-            console.log(`⏱️ Watch time updated for ${updatedCount} users`);
+            console.log(`⏱️ Watch time updated for ${updatedCount} users (+${minutes}m, +${totalXP}xp)`);
         }
     }
 
@@ -723,7 +698,7 @@ class ExperienceService {
         this.dailyFirstMessage.clear();
 
         // Forzar guardado de estado vacío
-        await this.saveData(true);
+        await this.persistence.saveImmediately();
         console.log('☢️ SYSTEM PURGE: ALL XP DATA CLEARED');
     }
 
@@ -742,9 +717,4 @@ class ExperienceService {
             version: '1.0'
         }, null, 2);
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ExperienceService;
 }

@@ -8,7 +8,7 @@
  * 
  * @class SessionStatsService
  */
-class SessionStatsService {
+export default class SessionStatsService {
     constructor(config, experienceService, achievementService) {
         this.config = config;
         this.experienceService = experienceService;
@@ -195,6 +195,19 @@ class SessionStatsService {
 
         const current = this.stats.sessionWatchTime.get(lowerUser) || 0;
         this.stats.sessionWatchTime.set(lowerUser, current + minutes);
+    }
+
+    /**
+     * Trackea tiempo de visualización para múltiples usuarios (Batch)
+     * @param {Array} chatters 
+     * @param {number} minutes 
+     */
+    trackSessionWatchTimeBatch(chatters, minutes) {
+        if (!chatters || !Array.isArray(chatters)) return;
+
+        chatters.forEach(username => {
+            this.trackSessionWatchTime(username, minutes);
+        });
     }
 
     /**
@@ -658,9 +671,4 @@ class SessionStatsService {
             clearInterval(this.minuteInterval);
         }
     }
-}
-
-// Exportar
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = SessionStatsService;
 }

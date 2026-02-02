@@ -9,7 +9,7 @@
  * 
  * @class RankingSystem
  */
-class RankingSystem {
+export default class RankingSystem {
     /**
      * Constructor del sistema de ranking
      * @param {Object} config - Configuración global
@@ -170,9 +170,4 @@ class RankingSystem {
     getTotalRankedUsers() {
         return this.userRankings.size;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = RankingSystem;
 }

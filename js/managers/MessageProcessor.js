@@ -1,3 +1,17 @@
+import AudioService from '../services/AudioService.js';
+import RankingSystem from '../services/RankingSystem.js';
+import GistStorageService from '../services/GistStorageService.js';
+import StreamHistoryService from '../services/StreamHistoryService.js';
+import ExperienceService from '../services/ExperienceService.js';
+import AchievementService from '../services/AchievementService.js';
+import ThirdPartyEmoteService from '../services/ThirdPartyEmoteService.js';
+import SessionStatsService from '../services/SessionStatsService.js';
+
+import XPDisplayManager from './XPDisplayManager.js';
+import UIManager from './UIManager.js';
+import IdleDisplayManager from './IdleDisplayManager.js';
+import NotificationManager from './NotificationManager.js';
+
 /**
  * MessageProcessor - Orquestador central de la lógica de mensajes
  * 
@@ -8,7 +22,7 @@
  * 
  * @class MessageProcessor
  */
-class MessageProcessor {
+export default class MessageProcessor {
     constructor(config) {
         this.config = config;
         this.services = {};
@@ -468,22 +482,38 @@ class MessageProcessor {
         }
     }
 
-    async save() {
-        if (this.services.xp) {
-            console.log('💾 Saving XP data...');
-            await this.services.xp.saveData(true);
+    /**
+     * Limpieza al cerrar
+     */
+    async destroy() {
+        console.log('🛑 MessageProcessor: Shutting down...');
+
+        // Guardar XP inmedianamente
+        if (this.services.xp && this.services.xp.persistence) {
+            console.log('💾 Saving XP data immediately...');
+            await this.services.xp.persistence.saveImmediately();
         }
+
+        // Limpiar recursos
         if (this.services.audio) {
             this.services.audio.stop();
+        }
+
+        if (this.services.sessionStats) {
+            this.services.sessionStats.destroy();
+        }
+
+        if (this.managers.idleDisplay) {
+            this.managers.idleDisplay.stop(); // Asumiendo que tiene stop, si no, verificar
+        }
+        
+        // Desconectar servicios
+        if (this.services.streamHistory) {
+            // this.services.streamHistory.stop(); // Si existe
         }
     }
 
     // Getters para testing access
     getService(name) { return this.services[name]; }
     getManager(name) { return this.managers[name]; }
-}
-
-// Exportar
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MessageProcessor;
 }

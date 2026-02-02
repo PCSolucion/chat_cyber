@@ -11,7 +11,7 @@
  * 
  * @class NotificationManager
  */
-class NotificationManager {
+export default class NotificationManager {
     /**
      * Constructor del NotificationManager
      * @param {Object} config - Configuración global
@@ -283,9 +283,4 @@ class NotificationManager {
     getQueueSize() {
         return this.queue.length;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = NotificationManager;
 }

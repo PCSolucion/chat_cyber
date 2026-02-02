@@ -1,3 +1,5 @@
+import CONFIG from '../config.js';
+
 /**
  * AudioService - Servicio de Gestión de Audio
  * 
@@ -9,7 +11,7 @@
  * 
  * @class AudioService
  */
-class AudioService {
+export default class AudioService {
     /**
      * Constructor del servicio de audio
      * @param {string} audioUrl - URL del archivo de audio
@@ -100,9 +102,4 @@ class AudioService {
             this.audioElement.currentTime = 0;
         }
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AudioService;
 }

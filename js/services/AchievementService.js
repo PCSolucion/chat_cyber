@@ -1,3 +1,5 @@
+import { ACHIEVEMENTS_DATA } from '../../data/AchievementsData.js';
+
 /**
  * AchievementService - Sistema de Logros (Refactorizado)
  * 
@@ -14,7 +16,7 @@
  * 
  * @class AchievementService
  */
-class AchievementService {
+export default class AchievementService {
     /**
      * Constructor del servicio de logros
      * @param {Object} config - Configuración global
@@ -508,9 +510,7 @@ class AchievementService {
         // Guardar logros actualizados si hay nuevos
         if (unlockedNow.length > 0) {
             userData.achievements = existingAchievements;
-            this.experienceService.usersXP.set(lowerUser, userData);
-            this.experienceService.pendingChanges.add(lowerUser);
-            this.experienceService.saveData();
+            this.experienceService.persistence.markDirty(lowerUser);
 
             // Emitir eventos para cada logro desbloqueado
             unlockedNow.forEach(achievement => {
@@ -657,9 +657,4 @@ class AchievementService {
     setStreamStatus(isOnline) {
         this.isStreamOnline = isOnline;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AchievementService;
 }

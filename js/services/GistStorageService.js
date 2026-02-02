@@ -11,7 +11,7 @@
  * 
  * @class GistStorageService
  */
-class GistStorageService {
+export default class GistStorageService {
     /**
      * Constructor del servicio de almacenamiento
      * @param {Object} config - Configuración global
@@ -379,9 +379,4 @@ class GistStorageService {
         this.cache = null;
         this.cacheTimestamp = null;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = GistStorageService;
 }

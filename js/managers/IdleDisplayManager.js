@@ -9,7 +9,7 @@
  * 
  * @class IdleDisplayManager
  */
-class IdleDisplayManager {
+export default class IdleDisplayManager {
     constructor(config, sessionStatsService, uiManager) {
         this.config = config;
         this.statsService = sessionStatsService;
@@ -705,9 +705,4 @@ class IdleDisplayManager {
             this.idleContainer.parentNode.removeChild(this.idleContainer);
         }
     }
-}
-
-// Exportar
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = IdleDisplayManager;
 }

@@ -1,3 +1,5 @@
+import CONFIG from '../config.js';
+
 /**
  * UIUtils - Utilidades para la Interfaz de Usuario
  * 
@@ -240,7 +242,4 @@ document.addEventListener('DOMContentLoaded', () => {
     UIUtils.initEqualizer('equalizer', 20);
 });
 
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UIUtils;
-}
+export default UIUtils;

@@ -1,3 +1,5 @@
+import UIUtils from '../utils/UIUtils.js';
+
 /**
  * UIManager - Gestor Principal de la Interfaz de Usuario
  * 
@@ -14,7 +16,7 @@
  * 
  * @class UIManager
  */
-class UIManager {
+export default class UIManager {
     /**
      * Constructor del UIManager
      * @param {Object} config - Configuración global
@@ -532,9 +534,4 @@ class UIManager {
         if (this.decryptTimeout) clearTimeout(this.decryptTimeout);
         if (this.fastRevealTimeout) clearTimeout(this.fastRevealTimeout);
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UIManager;
 }

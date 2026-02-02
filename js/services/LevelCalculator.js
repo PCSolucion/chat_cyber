@@ -7,7 +7,7 @@
  * - Gestionar títulos y rangos del sistema
  * - Calcular porcentajes de progreso UI
  */
-class LevelCalculator {
+export default class LevelCalculator {
     constructor() {
         this.levelConfig = this.initDefaultConfig();
     }
@@ -82,12 +82,26 @@ class LevelCalculator {
         const nextLevelXP = this.getXPForLevel(level + 1);
 
         const needed = nextLevelXP - currentLevelXP;
-        if (needed === 0) return 100;
+        // Evitar división por cero
+        if (needed === 0) {
+            return {
+                percentage: 100,
+                xpInCurrentLevel: 0,
+                xpNeededForNext: 0
+            };
+        }
 
         const current = xp - currentLevelXP;
         let percentage = (current / needed) * 100;
+        
+        // Clamp percentage
+        percentage = Math.min(100, Math.max(0, percentage));
 
-        return Math.min(100, Math.max(0, percentage));
+        return {
+            percentage: percentage,
+            xpInCurrentLevel: Math.floor(current),
+            xpNeededForNext: Math.floor(needed)
+        };
     }
 
     /**
@@ -107,9 +121,4 @@ class LevelCalculator {
 
         return this.levelConfig.defaultTitle.replace('{level}', level);
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = LevelCalculator;
 }

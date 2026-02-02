@@ -1,3 +1,7 @@
+import CONFIG from './config.js';
+import MessageProcessor from './managers/MessageProcessor.js';
+import TwitchService from './services/TwitchService.js';
+
 /**
  * App - Bootstrapper de la Aplicación
  * 
@@ -373,25 +377,22 @@ Sample emotes: ${emotes.slice(0, 10).join(', ')}...
 
                 console.log(`⏱️ Procesando Watch Time para ${chatters.length} usuarios...`);
 
-                // 2. Procesar usuarios
+                // 2. Procesar usuarios (Batch)
                 // Acceso directo a servicios (MessageProcessor no tiene getService)
                 const xpService = this.processor.services ? this.processor.services.xp : null;
                 const sessionStats = this.processor.services ? this.processor.services.sessionStats : null;
 
                 if (!xpService) return;
 
-                let processed = 0;
-                for (const username of chatters) {
-                    // Ignorar bots conocidos si es necesario (el servicio ya lo maneja para XP bonus, aquí tmb)
-                    xpService.addWatchTime(username, 10);
-
-                    // Trackear en sesión actual
-                    if (sessionStats) {
-                        sessionStats.trackSessionWatchTime(username, 10);
-                    }
-
-                    processed++;
+                // ACTUALIZACIÓN DE BATCH
+                // Usamos 10 minutos hardcoded porque el intervalo es de 10 minutos (INTERVAL_MS)
+                xpService.addWatchTimeBatch(chatters, 10);
+                
+                if (sessionStats) {
+                    sessionStats.trackSessionWatchTimeBatch(chatters, 10);
                 }
+
+                const processed = chatters.length;
 
                 console.log(`✅ Watch Time asignado a ${processed} usuarios.`);
 
@@ -422,4 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
     app.init();
     window.addEventListener('beforeunload', () => app.destroy());
+    
+    // Expose app instance for debugging if needed
+    window.APP_INSTANCE = app;
 });

@@ -6,7 +6,7 @@
  * - Determinar multiplicadores de XP basados en racha
  * - Manejar lógica de tiempo (hoy, ayer) para reseteos
  */
-class StreakManager {
+export default class StreakManager {
     /**
      * @param {Object} xpConfig - Configuración de XP (multiplicadores, bonus, etc)
      */
@@ -107,9 +107,4 @@ class StreakManager {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = StreakManager;
 }

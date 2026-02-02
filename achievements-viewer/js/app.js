@@ -14,6 +14,7 @@
         // Leaderboard
         podium: document.getElementById('podium'),
         rankingBody: document.getElementById('ranking-body'),
+        paginationControls: document.getElementById('pagination-controls'),
 
         // Catalog
         categoryFilters: document.getElementById('category-filters'),
@@ -53,6 +54,10 @@
     let leaderboardData = [];
     let achievementsData = {};
     let currentSort = { field: 'xp', direction: 'desc' };
+
+    // Pagination State
+    let currentPage = 1;
+    const itemsPerPage = 50;
 
     /**
      * Initialize the application
@@ -242,6 +247,9 @@
             } else if (currentSort.field === 'xp') {
                 valA = a.xp || 0;
                 valB = b.xp || 0;
+            } else if (currentSort.field === 'time') {
+                valA = a.watchTimeMinutes || 0;
+                valB = b.watchTimeMinutes || 0;
             } else {
                 // Default: achievements count
                 valA = a.achievements ? a.achievements.length : 0;
@@ -255,6 +263,8 @@
             }
         });
 
+        // Reset to first page on sort
+        currentPage = 1;
         renderLeaderboard();
     }
 
@@ -265,8 +275,16 @@
         // Render podium (top 3)
         elements.podium.innerHTML = Components.createPodium(leaderboardData.slice(0, 3));
 
+        // Calculate pagination slices
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageData = leaderboardData.slice(startIndex, endIndex);
+
         // Render full ranking table
-        elements.rankingBody.innerHTML = Components.createRankingRows(leaderboardData);
+        elements.rankingBody.innerHTML = Components.createRankingRows(pageData, startIndex + 1);
+
+        // Render pagination controls
+        renderPagination();
 
         // Add click listeners to rows
         elements.rankingBody.querySelectorAll('tr[data-username]').forEach(row => {
@@ -283,6 +301,69 @@
                 navigateToUser(username);
             });
         });
+    }
+
+    /**
+     * Render pagination controls
+     */
+    function renderPagination() {
+        const totalPages = Math.ceil(leaderboardData.length / itemsPerPage);
+
+        if (totalPages <= 1) {
+            elements.paginationControls.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = ``;
+
+        // Previous Button
+        paginationHTML += `
+            <button class="action-btn prev-btn" ${currentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                < PREV
+            </button>
+        `;
+
+        // Page info
+        paginationHTML += `
+            <span style="font-family: 'Share Tech Mono'; color: var(--text-dim);">
+                PÁGINA <span style="color: var(--cyber-cyan); font-weight: bold;">${currentPage}</span> DE ${totalPages}
+            </span>
+        `;
+
+        // Next Button
+        paginationHTML += `
+            <button class="action-btn next-btn" ${currentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                NEXT >
+            </button>
+        `;
+
+        elements.paginationControls.innerHTML = paginationHTML;
+
+        // Add Listeners
+        const prevBtn = elements.paginationControls.querySelector('.prev-btn');
+        const nextBtn = elements.paginationControls.querySelector('.next-btn');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderLeaderboard();
+                    // Scroll to top of table
+                    document.getElementById('ranking-table').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderLeaderboard();
+                    // Scroll to top of table
+                    document.getElementById('ranking-table').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
     }
 
     /**

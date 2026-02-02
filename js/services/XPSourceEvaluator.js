@@ -6,7 +6,7 @@
  * - Aplicar límites y bonos específicos por fuente
  * - Generar un desglose detallado de las fuentes de XP
  */
-class XPSourceEvaluator {
+export default class XPSourceEvaluator {
     /**
      * @param {Object} xpConfig - Configuración de fuentes y límites
      */
@@ -84,9 +84,4 @@ class XPSourceEvaluator {
     _isEnabled(sourceId) {
         return this.xpConfig.sources[sourceId] && this.xpConfig.sources[sourceId].enabled;
     }
-}
-
-// Exportar para uso en otros módulos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = XPSourceEvaluator;
 }

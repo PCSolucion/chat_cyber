@@ -13,7 +13,7 @@
  * 
  * @class ThirdPartyEmoteService
  */
-class ThirdPartyEmoteService {
+export default class ThirdPartyEmoteService {
     constructor(config) {
         this.config = config;
         this.channelName = config.TWITCH_CHANNEL || 'liiukiin';
@@ -482,9 +482,4 @@ class ThirdPartyEmoteService {
     listEmotes(limit = 50) {
         return Array.from(this.emoteCache.keys()).slice(0, limit);
     }
-}
-
-// Exportar
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ThirdPartyEmoteService;
 }
