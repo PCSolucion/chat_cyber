@@ -2,6 +2,14 @@ import CONFIG from './config.js';
 import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
+import EventManager from './utils/EventEmitter.js';
+import LevelCommand from './commands/LevelCommand.js';
+import AchievementsCommand from './commands/AchievementsCommand.js';
+import TopCommand from './commands/TopCommand.js';
+import StreakCommand from './commands/StreakCommand.js';
+import BroCommand from './commands/BroCommand.js';
+import CommandManager from './managers/CommandManager.js';
+import AudioManager from './managers/AudioManager.js';
 
 /**
  * App - Bootstrapper de la Aplicación
@@ -18,6 +26,24 @@ class App {
             this.processor.init();
         } catch (e) {
             console.error('❌ FATAL: MessageProcessor failed to initialize.', e);
+        }
+
+        // Inicializar AudioManager
+        this.audioManager = new AudioManager(this.config);
+        this.audioManager.init();
+
+        // Inicializar CommandManager después de que processor haya creado los servicios base
+        // (Processor crea XP y Achievements internamente, lo cual es deuda técnica, 
+        // pero por ahora accederemos a ellos a través del processor)
+        if (this.processor && this.processor.services) {
+            this.commandManager = new CommandManager(this.processor.services, this.config);
+            
+            // Registrar comandos básicos
+            this.commandManager.registerCommand(new LevelCommand());
+            this.commandManager.registerCommand(new AchievementsCommand());
+            this.commandManager.registerCommand(new TopCommand());
+            this.commandManager.registerCommand(new StreakCommand());
+            this.commandManager.registerCommand(new BroCommand());
         }
 
         // 2. Instanciar Twitch Service
@@ -91,20 +117,13 @@ class App {
             const statusChanged = isOnline !== this.isStreamOnline;
             this.isStreamOnline = isOnline;
 
-            if (this.processor) {
-                const uiManager = this.processor.getManager('ui');
-                if (uiManager) {
-                    if (category) uiManager.updateStreamCategory(category);
-                    uiManager.updateSystemStatus(isOnline);
-                }
+            // EventManager ya notifica a los componentes interesados (Processor, UI, Achievements)
+            if (statusChanged) {
+                EventManager.emit('stream:statusChanged', isOnline);
+            }
 
-                const achievementService = this.processor.getService('achievements');
-                if (achievementService) {
-                    if (category) achievementService.setStreamCategory(category);
-                    achievementService.setStreamStatus(isOnline);
-                }
-
-                this.processor.updateStreamStatus(isOnline);
+            if (category) {
+                EventManager.emit('stream:categoryUpdated', category);
             }
 
             // GESTIÓN DINÁMICA DEL WATCH TIME TRACKER

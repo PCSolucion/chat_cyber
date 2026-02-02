@@ -1,3 +1,5 @@
+import EventManager from '../utils/EventEmitter.js';
+
 /**
  * SessionStatsService - Estadísticas en Tiempo Real de la Sesión
  * 
@@ -102,25 +104,26 @@ export default class SessionStatsService {
      * @private
      */
     _bindToServices() {
-        // Suscribirse a level-ups
-        if (this.experienceService) {
-            this.experienceService.onLevelUp((eventData) => {
-                this.stats.levelUps.push({
-                    ...eventData,
-                    timestamp: Date.now()
-                });
+        // Suscribirse a level-ups vía EventManager
+        EventManager.on('user:levelUp', (eventData) => {
+            this.stats.levelUps.push({
+                ...eventData,
+                timestamp: Date.now()
             });
-        }
+        });
 
-        // Suscribirse a achievements
-        if (this.achievementService) {
-            this.achievementService.onAchievementUnlocked((eventData) => {
-                this.stats.achievementsUnlocked.push({
-                    ...eventData,
-                    timestamp: Date.now()
-                });
+        // Suscribirse a cambios de estado del stream
+        EventManager.on('stream:statusChanged', (isOnline) => {
+            this.setStreamStatus(isOnline);
+        });
+
+        // Suscribirse a achievements vía EventManager
+        EventManager.on('user:achievementUnlocked', (eventData) => {
+            this.stats.achievementsUnlocked.push({
+                ...eventData,
+                timestamp: Date.now()
             });
-        }
+        });
     }
 
     /**

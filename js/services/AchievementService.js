@@ -1,4 +1,5 @@
 import { ACHIEVEMENTS_DATA } from '../../data/AchievementsData.js';
+import EventManager from '../utils/EventEmitter.js';
 
 /**
  * AchievementService - Sistema de Logros (Refactorizado)
@@ -26,9 +27,6 @@ export default class AchievementService {
         this.config = config;
         this.experienceService = experienceService;
 
-        // Callbacks para eventos de logro desbloqueado
-        this.achievementCallbacks = [];
-
         // Los logros se cargarán desde ACHIEVEMENTS_DATA
         this.achievements = {};
         this.isLoaded = false;
@@ -45,6 +43,10 @@ export default class AchievementService {
         if (this.config.DEBUG) {
             console.log(`✅ AchievementService inicializado: ${Object.keys(this.achievements).length} logros definidos`);
         }
+
+        // Suscribirse a eventos de stream
+        EventManager.on('stream:statusChanged', (isOnline) => this.setStreamStatus(isOnline));
+        EventManager.on('stream:categoryUpdated', (category) => this.setStreamCategory(category));
     }
 
     /**
@@ -521,32 +523,15 @@ export default class AchievementService {
         return unlockedNow;
     }
 
-    /**
-     * Registra un callback para eventos de logro desbloqueado
-     * @param {Function} callback 
-     */
     onAchievementUnlocked(callback) {
-        this.achievementCallbacks.push(callback);
+        return EventManager.on('user:achievementUnlocked', callback);
     }
 
-    /**
-     * Emite evento de logro desbloqueado
-     * @param {string} username 
-     * @param {Object} achievement 
-     */
     emitAchievementUnlocked(username, achievement) {
-        const eventData = {
+        EventManager.emit('user:achievementUnlocked', {
             username,
             achievement,
             timestamp: Date.now()
-        };
-
-        this.achievementCallbacks.forEach(callback => {
-            try {
-                callback(eventData);
-            } catch (error) {
-                console.error('Error en callback de achievement:', error);
-            }
         });
     }
 

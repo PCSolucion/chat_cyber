@@ -1,3 +1,5 @@
+import EventManager from '../utils/EventEmitter.js';
+
 /**
  * NotificationManager - Gestor de Notificaciones
  * 
@@ -40,6 +42,29 @@ export default class NotificationManager {
         };
 
         console.log('📢 NotificationManager initialized');
+        this._setupEventListeners();
+    }
+
+    /**
+     * Configura los listeners de eventos centralizados
+     * @private
+     */
+    _setupEventListeners() {
+        // Escuchar logros desbloqueados
+        EventManager.on('user:achievementUnlocked', (eventData) => {
+            this.showAchievement(eventData);
+        });
+
+        // Escuchar progreso de "Bro"
+        EventManager.on('user:broProgress', ({ current, max }) => {
+            this.showBroProgress(current, max);
+        });
+
+        // Escuchar level ups para mostrarlos también como notificación (opcional, pero mejora UX)
+        EventManager.on('user:levelUp', (eventData) => {
+            // Podríamos añadir una notificación especial para level ups aquí si quisiéramos
+            // Por ahora, el XPDisplayManager ya lo maneja de forma visual directa.
+        });
     }
 
     /**
@@ -251,19 +276,12 @@ export default class NotificationManager {
      * Reproduce el sonido de logro
      * @private
      */
+    /**
+     * Reproduce el sonido de logro
+     * @private
+     */
     _playAchievementSound() {
-        // Delay para evitar solapamiento con sonido de mensaje
-        setTimeout(() => {
-            try {
-                const audio = new Audio('sounds/logro.mp3');
-                audio.volume = this.config.AUDIO_VOLUME || 0.5;
-                audio.play().catch(e => {
-                    if (this.config.DEBUG) console.warn('Audio logro.mp3 no encontrado o bloqueado', e);
-                });
-            } catch (e) {
-                console.warn('Error audio:', e);
-            }
-        }, 1000);
+        // Delegado a AudioManager vía evento user:achievementUnlocked
     }
 
     /**

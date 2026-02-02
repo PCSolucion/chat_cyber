@@ -1,3 +1,5 @@
+import EventManager from '../utils/EventEmitter.js';
+
 /**
  * IdleDisplayManager - Gestiona la visualización cuando no hay chat activo
  * 
@@ -35,6 +37,18 @@ export default class IdleDisplayManager {
 
         // Inicializar
         this._createIdleContainer();
+        this._setupEventListeners();
+    }
+
+    /**
+     * Configura los listeners de eventos
+     * @private
+     */
+    _setupEventListeners() {
+        // Escuchar actividad de usuarios para salir de modo idle
+        EventManager.on('user:activity', () => {
+            this.onActivity();
+        });
     }
 
     /**

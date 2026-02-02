@@ -11,6 +11,7 @@ import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
 import IdleDisplayManager from './IdleDisplayManager.js';
 import NotificationManager from './NotificationManager.js';
+import EventManager from '../utils/EventEmitter.js';
 
 /**
  * MessageProcessor - Orquestador central de la lógica de mensajes
@@ -88,38 +89,25 @@ export default class MessageProcessor {
                     this.services.gist
                 );
 
-                // 4b. Achievement Service (depende de XP Service)
+                // 4b. Achievement Service
                 this.services.achievements = new AchievementService(
                     this.config,
                     this.services.xp
                 );
-
-                // Suscribirse a eventos de logro desbloqueado
-                // (Se conectará al NotificationManager después de su inicialización)
-                this.services.achievements.onAchievementUnlocked((eventData) => {
-                    if (this.notificationManager) {
-                        this.notificationManager.showAchievement(eventData);
-                    }
-                });
 
                 this.managers.xpDisplay = new XPDisplayManager(
                     this.config,
                     this.services.xp,
                     this.services.achievements
                 );
-
-                // Suscribirse a eventos de Level Up para mostrar animación y sonido
-                this.services.xp.onLevelUp((eventData) => {
-                    if (this.managers.xpDisplay) {
-                        this.managers.xpDisplay.showLevelUp(eventData);
-                    }
-                });
             } catch (e) {
                 console.error('⚠️ XP System initialization failed:', e);
             }
         }
 
         // 5. Third Party Emote Service (7TV, BTTV, FFZ)
+        EventManager.on('stream:statusChanged', (isOnline) => this.updateStreamStatus(isOnline));
+
         // Inicializar antes que UI para inyectar dependencia
         if (this.config.THIRD_PARTY_EMOTES_ENABLED) {
             try {
@@ -247,14 +235,14 @@ export default class MessageProcessor {
             const username = tags['display-name'] || tags.username;
             const emotes = tags.emotes;
 
-            if (this.config.DEBUG) {
-                console.log('📨 Processor handling:', username);
-            }
+            // Emitir evento de mensaje recibido para que otros servicios reaccionen
+            EventManager.emit('chat:messageReceived', { username, message, tags });
 
-            // ============================================
-            // SISTEMA DE COMANDOS (!logros, !nivel)
-            // ============================================
-            if (this._handleCommands(message, username)) {
+            // Si es un comando, DETENER procesamiento visual aquí.
+            // El CommandManager se encargará de ejecutar la lógica y emitir respuestas de sistema si corresponde.
+            if (message.startsWith('!')) {
+                // Aún trackeamos actividad técnica (que el usuario está vivo), pero no mostramos el texto basura
+                EventManager.emit('user:activity', username);
                 return;
             }
 
@@ -326,10 +314,8 @@ export default class MessageProcessor {
                 });
             }
 
-            // Notificar actividad al Idle Manager
-            if (this.managers.idleDisplay) {
-                this.managers.idleDisplay.onActivity();
-            }
+            // Notificar actividad (vía evento)
+            EventManager.emit('user:activity', username);
 
         } catch (e) {
             console.error('❌ Error processing message:', e);
@@ -390,7 +376,7 @@ export default class MessageProcessor {
                     nextMilestone = Math.ceil((broCount + 1) / 100) * 100;
                 }
 
-                this.notificationManager.showBroProgress(broCount, nextMilestone);
+                EventManager.emit('user:broProgress', { current: broCount, max: nextMilestone });
             }
 
             // Inyectar la lista actualizada de logros en xpResult
@@ -414,68 +400,8 @@ export default class MessageProcessor {
      * Limpieza al cerrar
      */
     /**
-     * Procesa comandos de chat (!comando)
-     * @private
-     * @returns {boolean} true si el comando fue procesado y debe detener el flujo normal
+     * Actualiza el estado del stream (Delegado desde App)
      */
-    _handleCommands(message, username) {
-        if (!message.startsWith('!')) return false;
-
-        const command = message.toLowerCase().trim();
-
-        if (['!logros', '!achievements'].includes(command)) {
-            return this._handleAchievementsCommand(username);
-        }
-
-        if (['!nivel', '!level', '!stats'].includes(command)) {
-            return this._handleLevelCommand(username);
-        }
-
-        return false;
-    }
-
-    /**
-     * Maneja el comando !logros
-     * @private
-     */
-    _handleAchievementsCommand(username) {
-        if (!this.services.xp || !this.services.achievements || !this.managers.ui) return false;
-
-        const userData = this.services.xp.getUserData(username);
-        const unlockedCount = (userData.achievements || []).length;
-
-        // Usar método getTotalAchievements si existe, sino fallback al objeto
-        const totalAchievements = this.services.achievements.getTotalAchievements
-            ? this.services.achievements.getTotalAchievements()
-            : (this.services.achievements.achievements ? Object.keys(this.services.achievements.achievements).length : 0);
-
-        const level = userData.level || 1;
-        const title = this.services.xp.getLevelTitle(level);
-
-        if (this.managers.xpDisplay) this.managers.xpDisplay.setVisible(false);
-
-        const systemMsg = `@${username} -> Progreso: ${unlockedCount}/${totalAchievements} Logros | Nivel ${level} (${title})`;
-        this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
-
-        return true;
-    }
-
-    /**
-     * Maneja el comando !nivel
-     * @private
-     */
-    _handleLevelCommand(username) {
-        if (!this.services.xp || !this.managers.ui) return false;
-
-        const info = this.services.xp.getUserXPInfo(username);
-
-        if (this.managers.xpDisplay) this.managers.xpDisplay.setVisible(false);
-
-        const systemMsg = `@${username} -> Nivel ${info.level} | ${info.title} | XP: ${Math.floor(info.progress.xpInCurrentLevel)}/${info.progress.xpNeededForNext}`;
-        this.managers.ui.displayMessage('SYSTEM', systemMsg, {}, 99, 'system');
-
-        return true;
-    }
 
     /**
      * Actualiza el estado del stream (Delegado desde App)
@@ -490,10 +416,6 @@ export default class MessageProcessor {
         }
 
         this.isStreamOnline = isOnline;
-
-        if (this.services.sessionStats) {
-            this.services.sessionStats.setStreamStatus(isOnline);
-        }
     }
 
     /**

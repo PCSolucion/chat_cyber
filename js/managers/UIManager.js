@@ -1,4 +1,5 @@
 import UIUtils from '../utils/UIUtils.js';
+import EventManager from '../utils/EventEmitter.js';
 
 /**
  * UIManager - Gestor Principal de la Interfaz de Usuario
@@ -40,6 +41,29 @@ export default class UIManager {
 
         // Control de cooldown para animaciones
         this.lastMessageTime = 0;
+
+        // Suscribirse a eventos
+        this._setupEventListeners();
+    }
+
+    /**
+     * Configura los listeners de eventos
+     * @private
+     */
+    _setupEventListeners() {
+        EventManager.on('stream:statusChanged', (isOnline) => {
+            this.updateSystemStatus(isOnline);
+        });
+
+        EventManager.on('stream:categoryUpdated', (category) => {
+            this.updateStreamCategory(category);
+        });
+
+        EventManager.on('ui:systemMessage', (data) => {
+            // data puede ser un string directo o un objeto { text, style... }
+            const text = typeof data === 'string' ? data : data.text;
+            this.displayMessage('SYSTEM', text, {}, 99, 'system');
+        });
     }
 
     /**

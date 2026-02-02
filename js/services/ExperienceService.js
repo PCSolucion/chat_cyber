@@ -2,6 +2,7 @@ import StreakManager from './StreakManager.js';
 import LevelCalculator from './LevelCalculator.js';
 import XPSourceEvaluator from './XPSourceEvaluator.js';
 import PersistenceManager from './PersistenceManager.js';
+import EventManager from '../utils/EventEmitter.js';
 
 /**
  * ExperienceService - Sistema de Gestión de Experiencia (XP)
@@ -32,9 +33,6 @@ export default class ExperienceService {
 
         // Registro de mensajes del día actual (para bonus primer mensaje)
         this.dailyFirstMessage = new Map();
-
-        // Callbacks para eventos de level-up
-        this.levelUpCallbacks = [];
 
         // Queues y Locks (Ahora gestionados por PersistenceManager)
         this.isLoaded = false;
@@ -337,7 +335,14 @@ export default class ExperienceService {
         // Detectar level-up
         const leveledUp = newLevel > previousLevel;
         if (leveledUp) {
-            this.emitLevelUp(username, previousLevel, newLevel, userData.xp);
+            EventManager.emit('user:levelUp', {
+                username,
+                oldLevel: previousLevel,
+                newLevel,
+                totalXP: userData.xp,
+                title: this.levelCalculator.getLevelTitle(newLevel),
+                timestamp: Date.now()
+            });
         }
 
         return {
@@ -484,43 +489,12 @@ export default class ExperienceService {
         }
     }
 
-    /**
-     * Registra un callback para eventos de level-up
-     * @param {Function} callback - Función a ejecutar en level-up
-     */
     onLevelUp(callback) {
-        this.levelUpCallbacks.push(callback);
+        return EventManager.on('user:levelUp', callback);
     }
 
-    /**
-     * Emite evento de level-up a todos los listeners
-     * @param {string} username - Nombre del usuario
-     * @param {number} oldLevel - Nivel anterior
-     * @param {number} newLevel - Nuevo nivel
-     * @param {number} totalXP - XP total
-     */
-    emitLevelUp(username, oldLevel, newLevel, totalXP) {
-        const eventData = {
-            username,
-            oldLevel,
-            newLevel,
-            totalXP,
-            title: this.levelCalculator.getLevelTitle(newLevel),
-            timestamp: Date.now()
-        };
-
-        this.levelUpCallbacks.forEach(callback => {
-            try {
-                callback(eventData);
-            } catch (error) {
-                console.error('Error en callback de level-up:', error);
-            }
-        });
-
-        if (this.config.DEBUG) {
-            console.log(`🎉 LEVEL UP: ${username} ${oldLevel} → ${newLevel}`);
-        }
-    }
+    // Método depreciado en favor de EventManager.emit directo en trackMessage
+    emitLevelUp() {}
 
     /**
      * Obtiene información completa de XP de un usuario
