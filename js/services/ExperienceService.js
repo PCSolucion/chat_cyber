@@ -44,10 +44,11 @@ class ExperienceService {
 
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
-        this.levelConfig = this.initLevelConfig();
-
-        // Inicializar Gestor de Rachas
+        
+        // Inicializar Gestores Especializados
         this.streakManager = new StreakManager(this.xpConfig);
+        this.levelCalculator = new LevelCalculator();
+        
         this.currentDay = this.streakManager.getCurrentDay();
     }
 
@@ -139,104 +140,6 @@ class ExperienceService {
         };
     }
 
-    /**
-     * Inicializa la configuración de niveles
-     * Sistema infinito con fórmula exponencial
-     * @returns {Object}
-     */
-    initLevelConfig() {
-        return {
-            // Fórmula: XP_requerido = baseXP * (level ^ exponent)
-            baseXP: 100,
-            exponent: 1.5,
-
-            // Títulos por nivel exacto o rango inicial
-            titles: {
-                1: 'CIVILIAN',
-                5: 'ROOKIE',
-                10: 'MERCENARY',
-                15: 'SOLO',
-                20: 'NETRUNNER',
-                30: 'FIXER',
-                40: 'CORPO',
-                50: 'NIGHT CITY LEGEND',
-                60: 'CYBERPSYCHO',
-                70: 'MAXTAC',
-                80: 'TRAUMA TEAM',
-                90: 'AFTERLIFE LEGEND',
-                100: 'CHOOMBA SUPREME'
-            },
-
-            // Título por defecto para niveles sin título específico
-            defaultTitle: 'EDGE RUNNER LVL {level}'
-        };
-    }
-
-    /**
-     * Calcula el nivel basado en XP total
-     * @param {number} xp - XP total del usuario
-     * @returns {number} Nivel calculado
-     */
-    calculateLevel(xp) {
-        if (xp < 0) return 1;
-
-        const { baseXP, exponent } = this.levelConfig;
-
-        // Inversa de la fórmula: xp = base * (level-1)^exp
-        // level-1 = (xp / base)^(1/exp)
-        // level = (xp / base)^(1/exp) + 1
-        return Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
-    }
-
-    /**
-     * Calcula la XP requerida para alcanzar un nivel específico
-     * @param {number} level - Nivel objetivo
-     * @returns {number} XP requerida
-     */
-    getXPForLevel(level) {
-        if (level <= 1) return 0;
-        const { baseXP, exponent } = this.levelConfig;
-        return Math.floor(baseXP * Math.pow(level - 1, exponent));
-    }
-
-    /**
-     * Calcula el progreso porcentual hacia el siguiente nivel
-     * Hacia nivel actual+1
-     * @param {number} xp - XP actual
-     * @param {number} level - Nivel actual
-     * @returns {number} Porcentaje 0-100
-     */
-    getLevelProgress(xp, level) {
-        const currentLevelXP = this.getXPForLevel(level);
-        const nextLevelXP = this.getXPForLevel(level + 1);
-
-        const needed = nextLevelXP - currentLevelXP;
-        if (needed === 0) return 100; // Edge case
-
-        const current = xp - currentLevelXP;
-        let percentage = (current / needed) * 100;
-
-        return Math.min(100, Math.max(0, percentage));
-    }
-
-    /**
-     * Obtiene el título correspondiente a un nivel
-     * @param {number} level 
-     * @returns {string}
-     */
-    getLevelTitle(level) {
-        const titles = this.levelConfig.titles;
-        // Ordenar claves numéricas de mayor a menor
-        const levels = Object.keys(titles).map(Number).sort((a, b) => b - a);
-
-        for (const lvl of levels) {
-            if (level >= lvl) {
-                return titles[lvl];
-            }
-        }
-
-        return this.levelConfig.defaultTitle.replace('{level}', level);
-    }
 
     /**
      * Carga los datos de XP desde el storage
@@ -406,8 +309,8 @@ class ExperienceService {
                 level: userData.level,
                 previousLevel: userData.level,
                 leveledUp: false,
-                levelProgress: this.getLevelProgress(userData.xp, userData.level),
-                levelTitle: this.getLevelTitle(userData.level),
+                levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+                levelTitle: this.levelCalculator.getLevelTitle(userData.level),
                 streakDays: userData.streakDays || 0,
                 streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0)
             };
@@ -508,7 +411,7 @@ class ExperienceService {
         userData.activityHistory[today].xp += totalXP;
 
         // Recalcular nivel
-        const newLevel = this.calculateLevel(userData.xp);
+        const newLevel = this.levelCalculator.calculateLevel(userData.xp);
         userData.level = newLevel;
 
         // Guardar datos actualizados
@@ -531,8 +434,8 @@ class ExperienceService {
             level: newLevel,
             previousLevel,
             leveledUp,
-            levelProgress: this.getLevelProgress(userData.xp, newLevel),
-            levelTitle: this.getLevelTitle(newLevel),
+            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, newLevel),
+            levelTitle: this.levelCalculator.getLevelTitle(newLevel),
             streakDays: userData.streakDays || 0,
             streakMultiplier
         };
@@ -624,7 +527,7 @@ class ExperienceService {
             userData.xp += xpEarned;
 
             // Verificar Level Up (sin emitir evento visual completo para no interrumpir)
-            const newLevel = this.calculateLevel(userData.xp);
+            const newLevel = this.levelCalculator.calculateLevel(userData.xp);
             if (newLevel > userData.level) {
                 userData.level = newLevel;
             }
@@ -688,7 +591,7 @@ class ExperienceService {
             oldLevel,
             newLevel,
             totalXP,
-            title: this.getLevelTitle(newLevel),
+            title: this.levelCalculator.getLevelTitle(newLevel),
             timestamp: Date.now()
         };
 
@@ -712,13 +615,13 @@ class ExperienceService {
      */
     getUserXPInfo(username) {
         const userData = this.getUserData(username.toLowerCase());
-        const progress = this.getLevelProgress(userData.xp, userData.level);
+        const progress = this.levelCalculator.getLevelProgress(userData.xp, userData.level);
 
         return {
             username: username.toLowerCase(),
             xp: userData.xp,
             level: userData.level,
-            title: this.getLevelTitle(userData.level),
+            title: this.levelCalculator.getLevelTitle(userData.level),
             progress,
             streakDays: userData.streakDays || 0,
             streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0),
@@ -752,7 +655,7 @@ class ExperienceService {
                 username,
                 xp: data.xp,
                 level: data.level,
-                title: this.getLevelTitle(data.level)
+                title: this.levelCalculator.getLevelTitle(data.level)
             }))
             .sort((a, b) => b.xp - a.xp)
             .slice(0, limit);
