@@ -585,6 +585,12 @@ export default class SessionStatsService {
                 type: 'watchtime_total',
                 title: 'TIEMPO TOTAL (HISTÓRICO)',
                 data: this._getTopWatchTime('total', 20)
+            },
+            // Pantalla 8: Último Logro
+            {
+                type: 'last_achievement',
+                title: 'ÚLTIMO LOGRO DESBLOQUEADO',
+                data: displayStats.recentAchievements.length > 0 ? displayStats.recentAchievements[0] : null
             }
         ];
 
