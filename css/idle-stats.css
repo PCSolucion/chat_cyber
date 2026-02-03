@@ -42,7 +42,6 @@
 }
 
 /* Título especial en el header */
-/* Título especial en el header */
 .idle-stats-title {
     color: var(--cyber-red, #ff003c) !important;
     text-shadow: 0 0 10px rgba(255, 0, 60, 0.5) !important;
@@ -144,13 +143,13 @@
 }
 
 /* ========================================
-   SUMMARY SCREEN (GRID DASHBOARD)
+   SUMMARY SCREEN (NEW LAYOUT WITH SPEEDOMETER)
    ======================================== */
-.idle-dashboard-grid {
+.idle-dashboard-top-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: auto;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 0px;
 }
 
 .stat-card {
@@ -161,9 +160,11 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    /* High Visibility Update */
-    background: var(--bg-solid);
+    background: var(--bg-solid, rgba(16, 20, 20, 0.95)); /* Darker solid background to fix 'cut off' look on overlays */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid transparent; 
+    border-radius: 4px; /* Slight radius */
+    background-clip: padding-box;
 }
 
 .stat-card:hover {
@@ -171,22 +172,164 @@
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.stat-card.highlight-card {
-    background: linear-gradient(135deg, rgba(0, 246, 255, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
-    border-color: rgba(0, 246, 255, 0.3);
+/* Mini Stats (Top Row) */
+.stat-card.mini-stat {
+    flex-direction: row;
+    padding: 10px 8px;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.mini-stat .stat-icon {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 0;
+    opacity: 0.8;
+}
+
+.mini-stat .stat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.mini-stat .stat-value.small {
+    font-size: 1.0rem;
+    margin: 0;
+    line-height: 1;
+}
+
+.mini-stat .stat-label {
+    font-size: 0.55rem;
+    margin-top: 2px;
+}
+
+/* Full Width Hero (Speedometer) */
+.stat-card.full-width-hero {
+    width: 100%;
+    margin-top: 10px;
+    padding: 15px 10px;
+    background: linear-gradient(180deg, rgba(0, 10, 20, 0.8) 0%, rgba(0, 246, 255, 0.05) 100%);
+    border: 1px solid rgba(0, 246, 255, 0.2);
+    min-height: 140px; 
+}
+
+/* Speedometer Component */
+.speedometer-wrapper {
+    position: relative;
+    width: 200px;
+    height: 100px; /* Half circle */
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.speedometer-gauge {
+    position: relative;
+    width: 100%;
+    height: 200px; /* Full circle logic invisible bottom */
+}
+
+/* Background Arc */
+.gauge-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 15px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
+}
+
+/* Fill Arc + Needle Logic */
+.gauge-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transform-origin: center center;
+    transform: rotate(0deg); /* Initial */
+    transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Needle Design */
+.gauge-fill::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%; /* Length of needle */
+    height: 4px;
+    background: var(--cyber-red, #ff003c);
+    transform-origin: left center; /* Pivot at center of circle */
+    transform: rotate(180deg); /* Point left (9 o'clock) if outer makes 0deg at 3 o'clock */
+    box-shadow: 0 0 5px var(--cyber-red);
+}
+
+/* Center pivot cap */
+.speedometer-gauge::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(0,246,255,0.8);
+}
+
+
+.gauge-cover {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 160px;
+    bottom: -15px; /* Adjust text position */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    text-align: center;
+    z-index: 20;
+}
+
+.gauge-value-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(0, 246, 255, 0.5);
+}
+
+.gauge-label-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 5px;
+}
+
+
+/* Common Styles */
 .stat-value {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
-    /* +0.1rem */
     font-weight: 800;
-    /* Extra Bold */
     color: #fff;
     line-height: 1.2;
     margin: 5px 0;
     text-shadow: var(--text-stroke);
-    /* Heavy Outline */
     white-space: nowrap;
 }
 

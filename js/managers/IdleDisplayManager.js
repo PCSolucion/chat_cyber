@@ -480,28 +480,46 @@ export default class IdleDisplayManager {
 
         this._currentScreenContent.innerHTML = `
             <div class="idle-screen-title">RESUMEN DE SESIÓN</div>
-            <div class="idle-dashboard-grid">
-                <div class="stat-card">
+            
+            <!-- Fila Superior: 3 Estadísticas -->
+            <div class="idle-dashboard-top-row">
+                <div class="stat-card mini-stat">
                     <div class="stat-icon timer-icon"></div>
-                    <div class="stat-value">${data.duration}</div>
-                    <div class="stat-label">TIEMPO</div>
+                    <div class="stat-info">
+                        <div class="stat-value small">${data.duration}</div>
+                        <div class="stat-label">TIEMPO</div>
+                    </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card mini-stat">
                     <div class="stat-icon msg-icon"></div>
-                    <div class="stat-value mobile-highlight">${data.messages}</div>
-                    <div class="stat-label">MENSAJES</div>
+                    <div class="stat-info">
+                        <div class="stat-value small mobile-highlight">${data.messages}</div>
+                        <div class="stat-label">MSGS</div>
+                    </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card mini-stat">
                     <div class="stat-icon user-icon"></div>
-                    <div class="stat-value">${data.users}</div>
-                    <div class="stat-label">USUARIOS</div>
-                </div>
-                <div class="stat-card highlight-card">
-                    <div class="stat-icon speed-icon"></div>
-                    <div class="stat-value cyan-glow">${data.avgMpm}</div>
-                    <div class="stat-label">MSG/MIN</div>
+                    <div class="stat-info">
+                        <div class="stat-value small">${data.users}</div>
+                        <div class="stat-label">USERS</div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Fila Inferior: Speedometer MSG/MIN -->
+            <div class="stat-card full-width-hero">
+                <div class="speedometer-wrapper">
+                    <div class="speedometer-gauge">
+                        <div class="gauge-bg"></div>
+                        <div class="gauge-fill" style="transform: rotate(${Math.min(180, (parseFloat(data.avgMpm) || 0) * 3)}deg)"></div>
+                        <div class="gauge-cover">
+                            <div class="gauge-value-text cyan-glow">${data.avgMpm}</div>
+                            <div class="gauge-label-text">MSG/MIN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="idle-footer-info">
                 <span class="pulse-dot"></span> INICIO: ${startTimeStr}h
             </div>
