@@ -106,10 +106,12 @@ const UIUtils = {
      * @param {string} finalText - Texto final a mostrar
      * @param {number} speed - Velocidad del efecto (ms entre frames)
      */
-    scrambleText(element, finalText, speed = 30) {
+    scrambleText(element, finalText, speed = 30, addQuotes = true) {
+        const quote = addQuotes ? '"' : '';
+
         // Si el texto es muy corto, mostrarlo directamente
         if (finalText.length < 2) {
-            element.innerHTML = `"${finalText}"`;
+            element.innerHTML = `${quote}${finalText}${quote}`;
             return;
         }
 
@@ -122,7 +124,7 @@ const UIUtils = {
         }
 
         element.interval = setInterval(() => {
-            element.innerText = '"' + finalText
+            element.innerText = quote + finalText
                 .split("")
                 .map((letter, index) => {
                     if (index < iteration) {
@@ -130,11 +132,11 @@ const UIUtils = {
                     }
                     return chars[Math.floor(Math.random() * chars.length)];
                 })
-                .join("") + '"';
+                .join("") + quote;
 
             if (iteration >= finalText.length) {
                 clearInterval(element.interval);
-                element.innerHTML = `"${finalText}"`;
+                element.innerHTML = `${quote}${finalText}${quote}`;
             }
 
             iteration += 1 / 2; // Velocidad de revelado

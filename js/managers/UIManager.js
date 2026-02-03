@@ -287,6 +287,13 @@ export default class UIManager {
                    // Nota: El borde, la barra de XP y lo demas se manejan por CSS 
                    // gracias a la clase .gold-mode-active en el contenedor padre.
 
+                   // CAMBIAR RANGO A EXCELSIOR USER (Visual Glitch)
+                   // Solo visual, no cambia el Gist
+                   const xpTitleEl = this.dom.container.querySelector('#xp-title');
+                   if (xpTitleEl) {
+                       UIUtils.scrambleText(xpTitleEl, 'EXCELSIOR USER', 30, false);
+                   }
+
                 }, 4000); // 4 segundos de delay (ajustable)
             }
 
