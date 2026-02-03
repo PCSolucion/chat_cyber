@@ -1084,3 +1084,55 @@
     font-size: 0.8rem;
     opacity: 0.7;
 }
+
+/* ===========================================
+   KINETIC TYPOGRAPHY & ANIMATIONS
+   =========================================== */
+
+/* 1. Monospaced Styling & Tabular Nums */
+.tabular-nums {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: 'tnum';
+    letter-spacing: 0.5px;
+}
+
+/* 2. Selective Kerning (Authority Headers) */
+.wide-spacing {
+    letter-spacing: 4px !important;
+    text-transform: uppercase;
+}
+
+.video-spacing {
+    letter-spacing: 6px !important;
+}
+
+/* 3. Staggered Animation Classes */
+.animate-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+}
+
+.animate-in {
+    animation: kineticFadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+@keyframes kineticFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+        filter: blur(4px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}

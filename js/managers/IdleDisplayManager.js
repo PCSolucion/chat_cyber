@@ -41,6 +41,31 @@ export default class IdleDisplayManager {
     }
 
     /**
+     * Anima un valor numérico contando hacia arriba
+     * @private
+     */
+    _animateValue(elementId, start, end, duration) {
+        const obj = document.getElementById(elementId);
+        if (!obj) return;
+        
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // Easing easeOutExpo
+            const ease = (progress === 1) ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            obj.textContent = Math.floor(ease * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                 obj.textContent = end; // Ensure final value
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    /**
      * Configura los listeners de eventos
      * @private
      */
@@ -431,21 +456,24 @@ export default class IdleDisplayManager {
         let usersHtml = '';
         users.forEach((user, index) => {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
+            // Stagger delay based on index (max 10 items to prevent huge delays)
+            const delayClass = index < 10 ? `animate-hidden animate-in delay-${Math.min(index + 1, 5)}` : 'animate-hidden animate-in';
+            
             usersHtml += `
-                <div class="modern-list-item ${rankClass}">
+                <div class="modern-list-item ${rankClass} ${delayClass}" style="animation-delay: ${index * 0.1}s">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
                         <span class="list-name">${user.username}</span>
                     </div>
                     <div class="list-stat">
-                        <span class="stat-num" style="color: var(--cyber-cyan); font-family: 'Share Tech Mono';">${user.formatted}</span>
+                        <span class="stat-num tabular-nums" style="color: var(--cyber-cyan);">${user.formatted}</span>
                     </div>
                 </div>
             `;
         });
 
         if (users.length === 0) {
-            usersHtml = '<div class="empty-message">ESPERANDO DATOS...</div>';
+            usersHtml = '<div class="empty-message animate-hidden animate-in">ESPERANDO DATOS...</div>';
         }
 
         // Wrapper for animation scroll
@@ -459,7 +487,7 @@ export default class IdleDisplayManager {
         `;
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">${title}</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">${title}</div>
             <div class="idle-list-container">
                 ${content}
             </div>
@@ -482,51 +510,59 @@ export default class IdleDisplayManager {
         const startTimeStr = startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">RESUMEN DE SESIÓN</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">RESUMEN DE SESIÓN</div>
             
             <!-- Fila Superior: 3 Estadísticas -->
             <div class="idle-dashboard-top-row">
-                <div class="stat-card mini-stat">
+                <div class="stat-card mini-stat animate-hidden animate-in delay-1">
                     <div class="stat-icon timer-icon"></div>
                     <div class="stat-info">
-                        <div class="stat-value small">${data.duration}</div>
+                        <div class="stat-value small tabular-nums">${data.duration}</div>
                         <div class="stat-label">TIEMPO</div>
                     </div>
                 </div>
-                <div class="stat-card mini-stat">
+                <div class="stat-card mini-stat animate-hidden animate-in delay-2">
                     <div class="stat-icon msg-icon"></div>
                     <div class="stat-info">
-                        <div class="stat-value small mobile-highlight">${data.messages}</div>
+                        <div class="stat-value small mobile-highlight tabular-nums" id="stat-msgs">0</div>
                         <div class="stat-label">MSGS</div>
                     </div>
                 </div>
-                <div class="stat-card mini-stat">
+                <div class="stat-card mini-stat animate-hidden animate-in delay-3">
                     <div class="stat-icon user-icon"></div>
                     <div class="stat-info">
-                        <div class="stat-value small">${data.users}</div>
+                        <div class="stat-value small tabular-nums" id="stat-users">0</div>
                         <div class="stat-label">USERS</div>
                     </div>
                 </div>
             </div>
 
             <!-- Fila Inferior: Speedometer MSG/MIN -->
-            <div class="stat-card full-width-hero">
+            <div class="stat-card full-width-hero animate-hidden animate-in delay-4">
                 <div class="speedometer-wrapper">
                     <div class="speedometer-gauge">
                         <div class="gauge-bg"></div>
                         <div class="gauge-fill" style="transform: rotate(${Math.min(180, (parseFloat(data.avgMpm) || 0) * 3)}deg)"></div>
                         <div class="gauge-cover">
-                            <div class="gauge-value-text cyan-glow">${data.avgMpm}</div>
+                            <div class="gauge-value-text cyan-glow tabular-nums" id="stat-mpm">${data.avgMpm}</div>
                             <div class="gauge-label-text">MSG/MIN</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="idle-footer-info">
+            <div class="idle-footer-info animate-hidden animate-in delay-5">
                 <span class="pulse-dot"></span> INICIO: ${startTimeStr}h
             </div>
         `;
+
+        // Animate Numbers
+        // Small delay to ensure DOM is ready? synchronous innerHTML is enough usually.
+        this._animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 1500);
+        this._animateValue('stat-users', 0, parseInt(data.users) || 0, 1500);
+        // MPM is a float usually, let's keep it static or handle float anim properly?
+        // _animateValue handles Math.floor, so it doesn't work well for floats unless adapted.
+        // For now, let's leave MPM static as the needle animates.
     }
 
     /**
@@ -547,15 +583,19 @@ export default class IdleDisplayManager {
         let usersHtml = '';
         users.forEach((user, index) => {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
+            // Stagger animations
+            const delayClass = index < 10 ? `animate-hidden animate-in` : 'animate-hidden animate-in';
+            const delayStyle = `animation-delay: ${index * 0.05}s`; // Faster staggered
+            
             usersHtml += `
-                <div class="modern-list-item ${rankClass}">
+                <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
                         <span class="list-name">${user.username}</span>
-                        <span class="list-sub">NIVEL ${user.level}</span>
+                        <span class="list-sub tabular-nums">NIVEL ${user.level}</span>
                     </div>
                     <div class="list-stat">
-                        <span class="stat-num">${user.messages}</span>
+                        <span class="stat-num tabular-nums">${user.messages}</span>
                         <span class="stat-unit">msg</span>
                     </div>
                 </div>
@@ -563,7 +603,7 @@ export default class IdleDisplayManager {
         });
 
         if (users.length === 0) {
-            usersHtml = '<div class="empty-message">ESPERANDO ACTIVIDAD...</div>';
+            usersHtml = '<div class="empty-message animate-hidden animate-in">ESPERANDO ACTIVIDAD...</div>';
         }
 
         // Wrapper for animation
@@ -578,7 +618,7 @@ export default class IdleDisplayManager {
         `;
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">TOP ACTIVOS (${users.length})</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">TOP ACTIVOS (${users.length})</div>
             <div class="idle-list-container">
                 ${content}
             </div>
@@ -603,28 +643,31 @@ export default class IdleDisplayManager {
                     ? `<img src="${item.url}" alt="${item.name}" class="trending-emote-img" />`
                     : `<span class="trending-emote-text">${item.name}</span>`;
 
+                // Stagger delay
+                const delayClass = `animate-hidden animate-in delay-${Math.min(index + 1, 5)}`;
+
                 emotesHtml += `
-                    <div class="trending-emote-item">
+                    <div class="trending-emote-item ${delayClass}">
                         <div class="trending-emote-display">${emoteDisplay}</div>
                         <div class="trending-emote-info">
                             <span class="trending-emote-name">${item.name}</span>
-                            <span class="trending-emote-count">${item.count}x</span>
+                            <span class="trending-emote-count tabular-nums">${item.count}x</span>
                         </div>
                         <div class="trend-bar-bg"><div class="trend-bar-fill fill-cyan" style="width: ${percent}%"></div></div>
                     </div>
                 `;
             });
         } else {
-            emotesHtml = '<div class="empty-message">SIN EMOTES AÚN</div>';
+            emotesHtml = '<div class="empty-message animate-hidden animate-in">SIN EMOTES AÚN</div>';
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">EMOTES MÁS USADOS</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">EMOTES MÁS USADOS</div>
             <div class="trending-emotes-container">
                 ${emotesHtml}
             </div>
-            <div class="idle-footer-info">
-                <span class="pulse-dot"></span> TOTAL: ${totalEmotes} emotes
+            <div class="idle-footer-info animate-hidden animate-in delay-5">
+                <span class="pulse-dot"></span> TOTAL: <span class="tabular-nums">${totalEmotes}</span> emotes
             </div>
         `;
     }
@@ -657,20 +700,24 @@ export default class IdleDisplayManager {
         this._currentScreenContent.innerHTML = `
             <div class="idle-screen-title">PROGRESO GLOBAL</div>
             <div class="idle-stats-row">
-                <div class="big-stat-box">
-                    <span class="big-stat-num">${data.levelUps}</span>
+                <div class="big-stat-box animate-hidden animate-in delay-2">
+                    <span class="big-stat-num tabular-nums" id="stat-levels">${data.levelUps}</span>
                     <span class="big-stat-label">NIVELES</span>
                 </div>
-                <div class="big-stat-box">
-                    <span class="big-stat-num">${data.achievements}</span>
+                <div class="big-stat-box animate-hidden animate-in delay-3">
+                    <span class="big-stat-num tabular-nums" id="stat-achievements">${data.achievements}</span>
                     <span class="big-stat-label">LOGROS</span>
                 </div>
             </div>
-            <div class="recent-section">
-                <div class="section-label">ÚLTIMOS ASCENSOS</div>
+            <div class="recent-section animate-hidden animate-in delay-4">
+                <div class="section-label wide-spacing">ÚLTIMOS ASCENSOS</div>
                 ${recentHtml}
             </div>
         `;
+
+        // Animate count up
+        this._animateValue('stat-levels', 0, parseInt(data.levelUps) || 0, 1500);
+        this._animateValue('stat-achievements', 0, parseInt(data.achievements) || 0, 1500);
     }
 
     /**
@@ -734,9 +781,9 @@ export default class IdleDisplayManager {
         let streakContent = '';
         if (data.highestStreak) {
             streakContent = `
-                <div class="hero-streak-card">
-                    <div class="streak-days">${data.highestStreak.days}</div>
-                    <div class="streak-label">DÍAS CONSECUTIVOS</div>
+                <div class="hero-streak-card animate-hidden animate-in delay-2">
+                    <div class="streak-days tabular-nums" id="stat-days">${data.highestStreak.days}</div>
+                    <div class="streak-label wide-spacing">DÍAS CONSECUTIVOS</div>
                     <div class="streak-owner-badge">
                          ${data.highestStreak.username}
                     </div>
@@ -747,14 +794,18 @@ export default class IdleDisplayManager {
         }
 
         this._currentScreenContent.innerHTML = `
-            <div class="idle-screen-title">MAYOR RACHA</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">MAYOR RACHA</div>
             <div class="idle-hero-container">
                 ${streakContent}
-                <div class="sub-stat">
-                    <span class="highlight">${data.totalActive}</span> RACHAS ACTIVAS
+                <div class="sub-stat animate-hidden animate-in delay-3">
+                    <span class="highlight tabular-nums">${data.totalActive}</span> RACHAS ACTIVAS
                 </div>
             </div>
         `;
+        
+        if (data.highestStreak) {
+             this._animateValue('stat-days', 0, parseInt(data.highestStreak.days) || 0, 2000);
+        }
     }
 
     /**

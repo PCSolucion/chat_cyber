@@ -227,6 +227,13 @@ export default class MessageProcessor {
         try {
             const username = tags['display-name'] || tags.username;
             const emotes = tags.emotes;
+            const lowerUser = username.toLowerCase();
+
+            // Verificar usuarios bloqueados (BLACKLIST)
+            // No procesar nada de estos usuarios: ni UI, ni XP, ni Stats
+            if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) {
+                return;
+            }
 
             // Emitir evento de mensaje recibido para que otros servicios reaccionen
             EventManager.emit('chat:messageReceived', { username, message, tags });
