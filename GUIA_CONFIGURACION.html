@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Implementación - Cyberpunk Twitch Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyber-yellow: #fcee0a;
+            --cyber-blue: #00f0ff;
+            --cyber-red: #ff003c;
+            --cyber-black: #050a0e;
+            --cyber-gray: #1a1c23;
+            --text-main: #f0f0f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--cyber-black);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(255, 0, 60, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 4px solid var(--cyber-yellow);
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: var(--cyber-yellow);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 2px 2px var(--cyber-red);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: var(--cyber-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section {
+            background: var(--cyber-gray);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 30px;
+            padding: 30px;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+
+        .section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--cyber-blue);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--cyber-blue);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 span {
+            color: var(--cyber-yellow);
+            margin-right: 15px;
+            font-size: 2.2rem;
+        }
+
+        .step-content {
+            margin-left: 10px;
+        }
+
+        code {
+            background: #000;
+            color: var(--cyber-yellow);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        pre {
+            background: #000;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px dashed var(--cyber-blue);
+            margin: 15px 0;
+        }
+
+        .highlight {
+            color: var(--cyber-yellow);
+            font-weight: bold;
+        }
+
+        .note {
+            background: rgba(255, 0, 60, 0.1);
+            border-left: 4px solid var(--cyber-red);
+            padding: 15px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .img-placeholder {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cyber-blue);
+            border: 1px solid var(--cyber-blue);
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .section {
+                border: 1px solid #ccc;
+                background: white;
+                clip-path: none;
+            }
+            header h1 {
+                color: black;
+                text-shadow: none;
+            }
+            .section::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GUÍA DE INSTALACIÓN</h1>
+            <p>CHROME-SYNC TWITCH WIDGET // V2.0</p>
+        </header>
+
+        <div class="section">
+            <h2><span>01</span> CONFIGURACIÓN DEL CANAL</h2>
+            <div class="step-content">
+                <p>Para conectar el widget a tu canal de Twitch, debes editar el archivo de configuración principal.</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Navega a la carpeta <code class="highlight">js/</code>.</li>
+                    <li>Abre el archivo <code class="highlight">config.js</code> con un editor de texto (VS Code, Notepad++, etc).</li>
+                    <li>Busca la línea que dice <code>TWITCH_CHANNEL: 'nombre_actual'</code>.</li>
+                    <li>Cambia <code>'nombre_actual'</code> por tu nombre de usuario de Twitch (en minúsculas).</li>
+                </ol>
+                <pre>
+// Ejemplo en js/config.js
+const CONFIG = {
+  TWITCH_CHANNEL: 'tu_usuario_aqui',
+  // ... resto de la configuración
+};</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span>02</span> SISTEMA DE XP Y LOGROS</h2>
+            <div class="step-content">
+                <p>Este widget guarda el progreso de tus espectadores en un <span class="highlight">GitHub Gist</span>. Es necesario configurar tus propias credenciales para que los datos se guarden correctamente.</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Crea un Gist en <a href="https://gist.github.com" style="color: var(--cyber-blue);">gist.github.com</a> (puedes dejarlo vacío con un archivo llamado <code>xp_data.json</code>).</li>
+                    <li>Copia el <span class="highlight">ID del Gist</span> (es la cadena de caracteres al final de la URL).</li>
+                    <li>Genera un <span class="highlight">Personal Access Token (classic)</span> en GitHub con permisos de <code>gist</code>.</li>
+                    <li>En el mismo archivo <code class="highlight">js/config.js</code>, actualiza los campos:</li>
+                </ol>
+                <pre>
+XP_GIST_ID: 'tu_id_de_gist_aqui',
+XP_GIST_TOKEN: 'tu_token_de_github_aqui',</pre>
+                <div class="note">
+                    ADVERTENCIA: No compartas tu Token con nadie. Si planeas subir este código a un repositorio público, usa variables de entorno o asegúrate de excluir el archivo de configuración.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span>03</span> IMPLEMENTACIÓN EN OBS</h2>
+            <div class="step-content">
+                <p>Una vez configurado, es hora de llevarlo a tu stream:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Carga el widget en un servidor local (puedes usar la extensión "Live Server" de VS Code o simplemente abrir el archivo <code class="highlight">index.html</code> en tu navegador).</li>
+                    <li>En OBS, añade una nueva fuente de tipo <span class="highlight">"Navegador" (Browser Source)</span>.</li>
+                    <li>En "URL", pega la dirección local (ej: <code>http://127.0.0.1:5500/index.html</code>) o marca "Archivo local" y busca el <code>index.html</code>.</li>
+                    <li>Configura el tamaño:
+                        <ul style="margin-left: 20px;">
+                            <li>Ancho: <code>450</code> (ajustable)</li>
+                            <li>Alto: <code>800</code> (ajustable)</li>
+                        </ul>
+                    </li>
+                    <li>¡Listo! El chat empezará a aparecer cuando alguien escriba.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span>04</span> COMANDOS DEL CHAT</h2>
+            <div class="step-content">
+                <p>Tus espectadores pueden interactuar con el widget usando estos comandos:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <tr style="border-bottom: 1px solid var(--cyber-blue); color: var(--cyber-yellow);">
+                        <th style="text-align: left; padding: 10px;">Comando</th>
+                        <th style="text-align: left; padding: 10px;">Descripción</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><code>!level</code></td>
+                        <td style="padding: 10px;">Muestra tu nivel actual y XP necesario.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><code>!stats</code></td>
+                        <td style="padding: 10px;">Resumen de tus estadísticas en el canal.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><code>!top</code></td>
+                        <td style="padding: 10px;">Muestra el ranking de los mejores usuarios.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><code>!logros</code></td>
+                        <td style="padding: 10px;">Lista tus logros desbloqueados.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p>SISTEMA GENERADO POR ANTIGRAVITY AI // NIGHT CITY TECH</p>
+        </footer>
+    </div>
+</body>
+</html>
