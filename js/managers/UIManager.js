@@ -104,7 +104,11 @@ export default class UIManager {
             this.clearAllTimers();
 
             // Mostrar container
-            this.dom.container.classList.remove('hidden');
+            if (this.dom.container.classList.contains('hidden')) {
+                this.dom.container.classList.remove('hidden');
+                // Force reflow/repaint to ensure transition plays
+                void this.dom.container.offsetWidth; 
+            }
 
             // Limpiar clases de animación
             this.dom.username.classList.remove('decrypting');
@@ -141,14 +145,26 @@ export default class UIManager {
      * @private
      */
     fastTransition(username, message, emotes, subscriberInfo) {
+        // En lugar de ocultar todo (blink), usamos una transición de opacidad suave
+        // sobre el contenido existente, o intercambiamos directamente si es preferencia.
+        
+        // 1. Fade out content only
+        this.dom.username.style.transition = 'opacity 0.2s ease-out';
+        this.dom.message.style.transition = 'opacity 0.2s ease-out';
+        
         this.dom.username.style.opacity = '0';
         this.dom.message.style.opacity = '0';
 
         this.fastRevealTimeout = setTimeout(() => {
+            // 2. Swap content (hidden)
             this.revealMessage(username, message, emotes, subscriberInfo);
-            this.dom.username.style.opacity = '1';
-            this.dom.message.style.opacity = '1';
-        }, 100);
+            
+            // 3. Fade in new content
+            requestAnimationFrame(() => {
+                 this.dom.username.style.opacity = '1';
+                 this.dom.message.style.opacity = '1';
+            });
+        }, 200); // 200ms wait for fade out
     }
 
     /**
@@ -160,6 +176,9 @@ export default class UIManager {
         this.dom.container.className = 'container';
 
         // Texto "Incoming"
+        this.dom.username.style.opacity = '1';
+        this.dom.message.style.opacity = '1';
+
         this.dom.username.textContent = "SIGNAL DETECTED";
         this.dom.username.classList.add('decrypting');
 
@@ -246,9 +265,13 @@ export default class UIManager {
                    // ACTIVAR MODO ORO
                    this.dom.container.classList.add('gold-mode-active');
 
-                   // Cambiar Caja de Nivel -> Meses
+                   // Mantener LVL y Valor Original (Solicitud de usuario)
+                   // No sobrescribimos xpLevelLabel ni xpLevelValue con meses de sub.
+                   
+                   /* REMOVED:
                    if (xpLevelLabel) xpLevelLabel.textContent = 'SUB';
                    if (xpLevelValue) xpLevelValue.textContent = subValue;
+                   */
 
                    // Cambiar Badge -> SUB
                    if (userBadge) {
@@ -585,6 +608,7 @@ export default class UIManager {
             if (window.KEEP_WIDGET_VISIBLE === true) return;
 
             this.dom.container.classList.add('hidden');
+            EventManager.emit('ui:messageHidden');
             if (this.config.DEBUG) {
                 console.log('🔒 Widget ocultado automáticamente');
             }

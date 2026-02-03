@@ -74,6 +74,31 @@ export default class IdleDisplayManager {
         EventManager.on('user:activity', () => {
             this.onActivity();
         });
+
+        // Escuchar cuando se oculta el mensaje para entrar en idle inmediatamente
+        EventManager.on('ui:messageHidden', () => {
+            this._forceIdleMode();
+        });
+    }
+
+    /**
+     * Fuerza la entrada al modo idle inmediatamente
+     * @private
+     */
+    _forceIdleMode() {
+        // Si ya estamos idle, nada que hacer
+        if (this.isIdle) return;
+
+        console.log('⚡ Forcing idle mode immediately');
+        
+        // Limpiar timer de espera normal
+        if (this.idleTimeout) {
+            clearTimeout(this.idleTimeout);
+            this.idleTimeout = null;
+        }
+        
+        // Entrar en modo idle
+        this._enterIdleMode();
     }
 
     /**
@@ -141,6 +166,73 @@ export default class IdleDisplayManager {
         this.idleTimeout = setTimeout(() => {
             this._enterIdleMode();
         }, this.idleTimeoutMs);
+    }
+
+    /**
+     * Ejecuta la secuencia de arranque tipo BIOS
+     * @private
+     */
+    _runBootSequence() {
+        if (!this.idleContainer) return;
+
+        // Limpiar contenedor
+        this.idleContainer.innerHTML = '';
+        
+        // Crear overlay de boot
+        const bootOverlay = document.createElement('div');
+        bootOverlay.className = 'boot-sequence-overlay boot-glitch-effect';
+        this.idleContainer.appendChild(bootOverlay);
+        
+        // Líneas de texto para la secuencia
+        const lines = [
+            '> SYSTEM_INIT...',
+            '> MEMORY_CHECK... OK',
+            '> NET_INTERFACE... ONLINE', 
+            '> LOADING_MODULES... DONE',
+            '> EXECUTING_UI...'
+        ];
+
+        let delay = 100;
+        const lineDelay = 600; // ms entre líneas (halved from 1200)
+
+        lines.forEach((text, index) => {
+            setTimeout(() => {
+                // Si salimos de idle mientras esto corre, abortar
+                if (!this.isIdle) return;
+
+                const line = document.createElement('div');
+                line.className = 'boot-line typing';
+                line.textContent = text;
+                
+                bootOverlay.appendChild(line);
+                
+                // Scroll to bottom
+                bootOverlay.scrollTop = bootOverlay.scrollHeight;
+
+            }, delay);
+            
+            delay += lineDelay;
+        });
+
+        // Finalizar secuencia y mostrar stats
+        setTimeout(() => {
+            if (!this.isIdle) return;
+
+            // Fade out overlay
+            bootOverlay.style.transition = 'opacity 0.5s ease-out';
+            bootOverlay.style.opacity = '0';
+            
+            // Iniciar visualización real
+            this._updateIdleDisplay();
+            
+            // Eliminar overlay del DOM después del fade
+            setTimeout(() => {
+                if(bootOverlay.parentNode) {
+                    bootOverlay.parentNode.removeChild(bootOverlay);
+                }
+            }, 500);
+            
+        }, delay + 400); 
     }
 
     /**
@@ -220,8 +312,8 @@ export default class IdleDisplayManager {
             this.idleContainer.style.display = 'block';
         }
 
-        // Iniciar primera pantalla
-        this._updateIdleDisplay();
+        // Iniciar secuencia de arranque
+        this._runBootSequence();
 
         // Iniciar rotación (usamos setTimeout recursivo para permitir tiempos variables)
         this._scheduleNextRotation();
@@ -238,12 +330,11 @@ export default class IdleDisplayManager {
         // NOTA: currentCycleIndex ya se ha incrementado o es el inicial
         const currentScreenData = this.statsService.getIdleDisplayData(this.currentCycleIndex);
 
-        let delay = this.screenRotationMs;
+        // Calcular delay dinámico
+        const delay = this._calculateScreenDuration(currentScreenData);
 
-        // Si es 'watchtime_total', añadir 6 segundos extra
-        if (currentScreenData && currentScreenData.type === 'watchtime_total') {
-            delay += 6000;
-        }
+        // Log para depuración
+        // console.log(`⏱️ Next rotation in ${delay}ms for screen ${currentScreenData.type}`);
 
         this.rotationInterval = setTimeout(() => {
             if (!this.isIdle) return;
@@ -265,6 +356,40 @@ export default class IdleDisplayManager {
             this._scheduleNextRotation();
 
         }, delay);
+    }
+    
+    /**
+     * Calcula la duración óptima para una pantalla basada en su contenido
+     * @private
+     */
+    _calculateScreenDuration(screenData) {
+        let duration = this.screenRotationMs;
+
+        // Si es una lista con scroll, calcular tiempo basado en items
+        if (['leaderboard', 'top_subscribers', 'watchtime_total', 'watchtime_session'].includes(screenData.type)) {
+            const itemCount = (screenData.data || []).length;
+            
+            // Si hay scroll (más de 5 items)
+            if (itemCount > 5) {
+                // El CSS de autoScroll tarda aprox 2s por item extra o tiene una duración fija
+                // En idle-stats.css definimos scrollUpList a 15s.
+                // Lo ideal es sincronizar con esa animación o dar tiempo suficiente.
+                
+                // Cálculo: Tiempo base + tiempo por item extra
+                // Damos 3 segundos por item para asegurar lectura cómoda
+                const calculatedTime = Math.max(duration, itemCount * 2500);
+                
+                // Cap a un máximo razonable (ej. 45s) para no aburrir
+                duration = Math.min(calculatedTime, 45000);
+                
+                // Si es Top Subscribers, ser un poco más generosos
+                if (screenData.type === 'top_subscribers') {
+                    duration = Math.max(duration, 20000); // Mínimo 20s para subs si hay lista
+                }
+            }
+        }
+
+        return duration;
     }
 
 
@@ -461,10 +586,12 @@ export default class IdleDisplayManager {
         users.forEach((user, index) => {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
             // Stagger delay based on index (max 10 items to prevent huge delays)
-            const delayClass = index < 10 ? `animate-hidden animate-in delay-${Math.min(index + 1, 5)}` : 'animate-hidden animate-in';
+            // Manual delay calculation for finer control
+            const delayStyle = `animation-delay: ${index * 0.3}s`; // Halved from 0.6s
+            const delayClass = 'animate-hidden animate-in';
             
             usersHtml += `
-                <div class="modern-list-item ${rankClass} ${delayClass}" style="animation-delay: ${index * 0.1}s">
+                <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
                         <span class="list-name">${user.username}</span>
@@ -480,12 +607,14 @@ export default class IdleDisplayManager {
             usersHtml = '<div class="empty-message animate-hidden animate-in">ESPERANDO DATOS...</div>';
         }
 
-        // Wrapper for animation scroll
-        const shouldScroll = users.length > 5;
-        const animationDuration = Math.max(10, users.length * 2.5);
+
+        // Wrapper for animation scroll - DISABLED SCROLL to prevent "appear/disappear" loop.
+        // Showing top items statically.
+        const shouldScroll = false; // forced off
+        const animationDuration = 0; 
 
         const content = `
-            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
+            <div class="idle-list-scroll-wrapper" style="">
                 ${usersHtml}
             </div>
         `;
@@ -589,7 +718,7 @@ export default class IdleDisplayManager {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
             // Stagger animations
             const delayClass = index < 10 ? `animate-hidden animate-in` : 'animate-hidden animate-in';
-            const delayStyle = `animation-delay: ${index * 0.05}s`; // Faster staggered
+            const delayStyle = `animation-delay: ${index * 0.3}s`; // Faster stagger (0.3s)
             
             usersHtml += `
                 <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
@@ -610,13 +739,11 @@ export default class IdleDisplayManager {
             usersHtml = '<div class="empty-message animate-hidden animate-in">ESPERANDO ACTIVIDAD...</div>';
         }
 
-        // Wrapper for animation
-        // Solo animar si hay más de 5 usuarios (que es lo que cabe aprox sin scroll)
-        const shouldScroll = users.length > 5;
-        const animationDuration = Math.max(10, users.length * 2.5); // Min 10s, 2.5s per item
+        // Wrapper for animation - DISABLED SCROLL
+        const shouldScroll = false; 
 
         const content = `
-            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
+            <div class="idle-list-scroll-wrapper" style="">
                 ${usersHtml}
             </div>
         `;
@@ -640,7 +767,7 @@ export default class IdleDisplayManager {
         users.forEach((user, index) => {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
             const delayClass = index < 10 ? `animate-hidden animate-in` : 'animate-hidden animate-in';
-            const delayStyle = `animation-delay: ${index * 0.05}s`;
+            const delayStyle = `animation-delay: ${index * 0.25}s`; // Slower stagger for subs
             
             // Icono de corona o medalla para el top
             let rankIcon = '';
@@ -667,11 +794,10 @@ export default class IdleDisplayManager {
             usersHtml = '<div class="empty-message animate-hidden animate-in">SIN EXPERTOS EN RED AUN</div>';
         }
 
-        const shouldScroll = users.length > 5;
-        const animationDuration = Math.max(10, users.length * 2.5);
+        const shouldScroll = false; // DISABLED SCROLL
 
         const content = `
-            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
+            <div class="idle-list-scroll-wrapper" style="">
                 ${usersHtml}
             </div>
         `;
