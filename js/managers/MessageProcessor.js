@@ -294,10 +294,35 @@ export default class MessageProcessor {
 
             // Proceso UI
             if (this.managers.ui) {
+                // Extract subscriber info
+                const isSubscriber = tags.subscriber === true || tags.subscriber === '1';
+                const subscriberInfo = {
+                    isSubscriber: isSubscriber,
+                    badges: tags.badges || {},
+                    badgeInfo: tags['badge-info'] || {}
+                };
+
+                // Actualizar datos de suscripción si XP está habilitado
+                if (isSubscriber && this.services.xp) {
+                    try {
+                        let months = 0;
+                         if (subscriberInfo.badgeInfo && subscriberInfo.badgeInfo.subscriber) {
+                            months = parseInt(subscriberInfo.badgeInfo.subscriber);
+                        }
+                        // Si es sub pero no tenemos meses (ej. badge-info vacío), asumimos al menos 1
+                        if (months === 0) months = 1;
+                        
+                        this.services.xp.updateSubscription(username, months);
+                    } catch (e) {
+                        console.warn('Error updating subscription info:', e);
+                    }
+                }
+
                 this.managers.ui.displayMessage(
                     username,
                     message,
-                    emotes
+                    emotes,
+                    subscriberInfo
                 );
             }
 

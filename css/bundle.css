@@ -650,6 +650,8 @@ body {
     text-shadow: var(--glow-red);
 }
 
+
+
 /* === SOURCE: css/components/header.css === */
 /* ===========================================
    HEADER - Username Display (PROMINENT)
@@ -2590,4 +2592,67 @@ body {
 
     /* Sin borde extra */
     box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* ===========================================
+   GLOBAL SUBSCRIBER GOLD MODE (Metallic)
+   =========================================== */
+
+/* 1. Container Border */
+.container.gold-mode-active {
+    border-color: #d4af37 !important; /* Metallic Gold */
+    box-shadow: 
+        inset 0 0 40px rgba(0, 0, 0, 0.9),
+        0 0 25px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* 2. XP Level Box (Premium Metallic Gold Gradient) */
+.container.gold-mode-active .xp-level-container {
+    background: linear-gradient(135deg, #aa771c, #d4af37, #f1e3a6, #aa771c) !important;
+    border-color: #f1e3a6 !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6) !important;
+    opacity: 1 !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.container.gold-mode-active .xp-level-label {
+    color: #3b2a05 !important; /* Dark brown for contrast */
+    text-shadow: none !important;
+    font-weight: 900 !important;
+}
+
+.container.gold-mode-active .xp-level-value {
+    color: #1a1200 !important; /* Almost black brown */
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5) !important;
+    font-weight: 900 !important;
+}
+
+/* 3. XP Progress Bar (Liquid Metallic Gold) */
+.container.gold-mode-active .xp-progress-fill {
+    background: linear-gradient(90deg, #aa771c 0%, #d4af37 40%, #fff 50%, #d4af37 60%, #aa771c 100%) !important;
+    background-size: 200% 100% !important;
+    box-shadow: 0 0 10px #d4af37 !important;
+}
+
+/* 4. User Badge (Refined Gold) */
+.container.gold-mode-active .user-badge {
+    background: rgba(212, 175, 55, 0.15) !important;
+    border: 1px solid #d4af37 !important;
+    color: #d4af37 !important;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+    transition: all 0.5s ease;
+    
+    /* REAJUSTE DE ESPACIO */
+    margin-left: 2px !important; 
+    margin-right: 2px !important;
+    padding: 0 4px !important; /* Menor padding interno */
+    min-width: unset !important; /* Permitir que se encoja si es necesario */
+}
+
+/* 5. Status Text Color Shift (Metallic) */
+.container.gold-mode-active .status-text,
+.container.gold-mode-active .xp-title-text {
+    color: #d4af37 !important;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
 }

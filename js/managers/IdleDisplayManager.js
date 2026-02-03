@@ -161,6 +161,7 @@ export default class IdleDisplayManager {
         if (container) {
             container.classList.remove('hidden');
             container.classList.add('idle-mode');
+            container.classList.remove('gold-mode-active'); // Ensure Gold Mode is OFF in idle
             container.classList.remove('takeru-bg'); // Limpiar fondo personalizado de Takeru al entrar en modo idle
             container.classList.remove('x1lenz-bg');
             container.classList.remove('chandalf-bg');
@@ -428,6 +429,9 @@ export default class IdleDisplayManager {
             case 'last_achievement':
                 this._renderLastAchievementScreen(screenData);
                 break;
+            case 'top_subscribers':
+                this._renderTopSubsScreen(screenData);
+                break;
             default:
                 this._renderSummaryScreen(screenData);
         }
@@ -619,6 +623,61 @@ export default class IdleDisplayManager {
 
         this._currentScreenContent.innerHTML = `
             <div class="idle-screen-title wide-spacing animate-hidden animate-in">TOP ACTIVOS (${users.length})</div>
+            <div class="idle-list-container">
+                ${content}
+            </div>
+        `;
+    }
+
+    /**
+     * Renderiza pantalla de Top Suscriptores
+     * @private
+     */
+    _renderTopSubsScreen(screenData) {
+        const users = screenData.data || [];
+        
+        let usersHtml = '';
+        users.forEach((user, index) => {
+            const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
+            const delayClass = index < 10 ? `animate-hidden animate-in` : 'animate-hidden animate-in';
+            const delayStyle = `animation-delay: ${index * 0.05}s`;
+            
+            // Icono de corona o medalla para el top
+            let rankIcon = '';
+            // if (index === 0) rankIcon = '👑 '; // Ya se distingue por color
+            // else if (index === 1) rankIcon = '🥈 ';
+            // else if (index === 2) rankIcon = '🥉 ';
+
+            usersHtml += `
+                <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
+                    <div class="list-rank">${rankIcon}#${index + 1}</div>
+                    <div class="list-content">
+                        <span class="list-name" style="${index === 0 ? 'color: #ffd700;' : ''}">${user.username}</span>
+                        <span class="list-sub tabular-nums">NIVEL ${user.level}</span>
+                    </div>
+                    <div class="list-stat">
+                        <span class="stat-num tabular-nums" style="color: #ffd700;">${user.months}</span>
+                        <span class="stat-unit" style="color: #aa771c;">meses</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (users.length === 0) {
+            usersHtml = '<div class="empty-message animate-hidden animate-in">SIN EXPERTOS EN RED AUN</div>';
+        }
+
+        const shouldScroll = users.length > 5;
+        const animationDuration = Math.max(10, users.length * 2.5);
+
+        const content = `
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" style="animation-duration: ${animationDuration}s">
+                ${usersHtml}
+            </div>
+        `;
+
+        this._currentScreenContent.innerHTML = `
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in" style="border-bottom-color: #ffd700;">TOP SUSCRIPTORES</div>
             <div class="idle-list-container">
                 ${content}
             </div>

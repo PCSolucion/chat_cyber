@@ -442,6 +442,28 @@ export default class SessionStatsService {
     }
 
     /**
+     * Obtiene los top N suscriptores por meses
+     * @private
+     */
+    _getTopSubscribers(n = 10) {
+        if (!this.experienceService || !this.experienceService.usersXP) return [];
+
+        return Array.from(this.experienceService.usersXP.entries())
+            .filter(([username, data]) => {
+                // Excluir al streamer (liiukiin) y filtrar por meses > 0
+                if (username === 'liiukiin') return false;
+                return data.subMonths && data.subMonths > 0;
+            })
+            .sort((a, b) => b[1].subMonths - a[1].subMonths)
+            .slice(0, n)
+            .map(([username, data]) => ({
+                username: username.charAt(0).toUpperCase() + username.slice(1),
+                months: data.subMonths,
+                level: data.level
+            }));
+    }
+
+    /**
      * Obtiene los top N usuarios por tiempo de visualización
      * @param {string} period 'session', 'week', 'month', 'total'
      * @param {number} n 
@@ -591,6 +613,12 @@ export default class SessionStatsService {
                 type: 'last_achievement',
                 title: 'ÚLTIMO LOGRO DESBLOQUEADO',
                 data: displayStats.recentAchievements.length > 0 ? displayStats.recentAchievements[0] : null
+            },
+            // Pantalla 9: Top Suscriptores
+            {
+                type: 'top_subscribers',
+                title: 'SUSCRIPTORES VETERANOS',
+                data: this._getTopSubscribers(10)
             }
         ];
 

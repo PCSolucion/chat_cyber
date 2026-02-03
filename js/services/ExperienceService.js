@@ -3,6 +3,7 @@ import LevelCalculator from './LevelCalculator.js';
 import XPSourceEvaluator from './XPSourceEvaluator.js';
 import PersistenceManager from './PersistenceManager.js';
 import EventManager from '../utils/EventEmitter.js';
+import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
 /**
  * ExperienceService - Sistema de Gestión de Experiencia (XP)
@@ -173,10 +174,15 @@ export default class ExperienceService {
 
             this.isLoaded = true;
             console.log(`✅ XP Data cargado: ${this.usersXP.size} usuarios`);
+            
+            // Cargar datos importados de sub
+            this._mergeInitialSubscribers();
 
         } catch (error) {
             console.error('❌ Error al cargar XP data:', error);
             this.isLoaded = true; // Continuar sin datos previos
+            // Intentar cargar subs incluso si falló la carga remota
+            this._mergeInitialSubscribers();
         }
     }
 
@@ -390,7 +396,8 @@ export default class ExperienceService {
                 achievementStats: {},
                 activityHistory: {}, // { "YYYY-MM-DD": { messages: N, xp: N } }
                 watchTimeMinutes: 0,
-                watchTimeLog: {}
+                watchTimeLog: {},
+                subMonths: 0 // New field for subscription tracking
             });
         }
 
@@ -414,6 +421,23 @@ export default class ExperienceService {
         }
 
         return userData;
+    }
+
+    /**
+     * Actualiza el tiempo de suscripción de un usuario
+     * @param {string} username 
+     * @param {number} months 
+     */
+    updateSubscription(username, months) {
+        const lowerUser = username.toLowerCase();
+        const userData = this.getUserData(lowerUser);
+
+        // Si el valor es nuevo o mayor, actualizar y guardar
+        // (A veces la API devuelve 0 o null si es gift sub reciente, pero si tenemos un valor mayor guardado, lo mantenemos)
+        if (months > (userData.subMonths || 0)) {
+            userData.subMonths = months;
+            this.persistence.markDirty(lowerUser);
+        }
     }
 
     /**
@@ -690,5 +714,29 @@ export default class ExperienceService {
             lastUpdated: new Date().toISOString(),
             version: '1.0'
         }, null, 2);
+    }
+
+    /**
+     * Fusiona los datos iniciales de suscriptores (Importación CSV)
+     * @private
+     */
+    _mergeInitialSubscribers() {
+        if (!INITIAL_SUBSCRIBERS) return;
+
+        let updatedCount = 0;
+        Object.entries(INITIAL_SUBSCRIBERS).forEach(([username, months]) => {
+            const lowerUser = username.toLowerCase();
+            const userData = this.getUserData(lowerUser); // Creates if not exists
+
+            if (!userData.subMonths || userData.subMonths < months) {
+                userData.subMonths = months;
+                this.persistence.markDirty(lowerUser);
+                updatedCount++;
+            }
+        });
+
+        if (updatedCount > 0) {
+            console.log(`📥 Importados datos de suscripción para ${updatedCount} usuarios.`);
+        }
     }
 }

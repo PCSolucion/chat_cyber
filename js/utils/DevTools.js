@@ -19,9 +19,13 @@ export default class DevTools {
         console.log('🛠️ DevTools: Inyectando herramientas de testing...');
 
         // 1. Simulación de Mensajes
-        window.simularMensaje = (usuario, mensaje) => {
-            console.log('🧪 Simulando mensaje de:', usuario);
-            const tags = { 'display-name': usuario, emotes: {} };
+        window.simularMensaje = (usuario, mensaje, extraTags = {}) => {
+            console.log('🧪 Simulando mensaje de:', usuario, extraTags);
+            const tags = { 
+                'display-name': usuario, 
+                emotes: {},
+                ...extraTags 
+            };
             this.app.onMessageReceived(tags, mensaje);
         };
 

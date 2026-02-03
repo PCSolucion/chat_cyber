@@ -369,47 +369,105 @@
         const widgetFrame = document.getElementById('widget-frame');
         const previewContainer = document.getElementById('preview-container');
 
-        // AUTO-SCALE FUNCTION: Hace que el iframe 1920x1080 quepa en el contenedor
+        // AUTO-SCALE FUNCTION
         function fitPreview() {
             if (!widgetFrame || !previewContainer) return;
-
-            // El contenedor tiene width variable pero 16:9 aspect ratio
             const containerWidth = previewContainer.getBoundingClientRect().width;
-
-            // Calculamos la escala necesaria (ancho actual / 1920)
             const scale = containerWidth / 1920;
-
-            // Aplicamos la escala
             widgetFrame.style.transform = `scale(${scale})`;
-
             console.log(`🖥️ Preview rescaled: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
         }
 
-        // Ajustar al cargar y al redimensionar ventana
         window.addEventListener('load', fitPreview);
         window.addEventListener('resize', fitPreview);
 
-        // Esperar a que el iframe cargue
         widgetFrame.addEventListener('load', () => {
             console.log('✅ Widget iframe loaded');
-            fitPreview(); // Re-check scale
+            fitPreview();
         });
 
-        // Obtener la ventana del widget
         function getWidgetWindow() {
             return widgetFrame.contentWindow;
         }
 
-        // Simular mensaje de usuario
-        function testUser(username) {
+        // --- REAL TIME TWITCH API CHECKER ---
+        
+        async function checkSubStatus(channel, username) {
+            try {
+                // Normalizar entrada
+                const cleanChannel = channel.replace('#', '').trim();
+                const cleanUser = username.trim();
+
+                // Usamos IVR API (alternativa robusta a DecAPI) que devuelve JSON
+                // Endpoint: https://api.ivr.fi/v2/twitch/subage/{user}/{channel}
+                const url = `https://api.ivr.fi/v2/twitch/subage/${cleanUser}/${cleanChannel}`;
+                console.log(`📡 GET ${url}`);
+                
+                const response = await fetch(url);
+                
+                if (response.status === 404) {
+                    // Usuario o canal no existen
+                    return 0;
+                }
+
+                if (!response.ok) {
+                    console.warn(`⚠️ API Error ${response.status}:`, response.statusText);
+                    return 0;
+                }
+
+                const data = await response.json();
+                console.log(`📥 API Response for ${cleanUser}:`, data);
+
+                // IVR API devuelve un objeto JSON claro
+                // { subscribed: boolean, cumulative: { months: number } }
+                
+                if (data.subscribed === true) {
+                    const months = data.cumulative ? data.cumulative.months : 0;
+                    // Si está suscrito pero retorna 0 meses (recién sub), devolvemos al menos 1
+                    return months > 0 ? months : 1;
+                }
+
+                return 0;
+
+            } catch (e) {
+                console.warn('⚠️ Error consultando API de subs (IVR):', e);
+                return 0; 
+            }
+        }
+
+        // Simular mensaje con DATOS REALES
+        async function testUser(username) {
             const message = document.getElementById('test-message').value || 'Mensaje de prueba';
             const win = getWidgetWindow();
 
-            if (win && win.simularMensaje && username) {
-                win.simularMensaje(username, message);
-            } else {
+            if (!win || !win.simularMensaje) {
                 console.log('Esperando a que cargue el widget...');
+                return;
             }
+
+            // Intentar obtener el canal configurado en el widget
+            let channel = 'liiukiin'; // Fallback
+            if (win.APP_INSTANCE && win.APP_INSTANCE.config) {
+                channel = win.APP_INSTANCE.config.TWITCH_CHANNEL;
+            }
+
+            console.log(`🔍 Consultando estado real de ${username} en el canal ${channel}...`);
+            
+            // Feedback visual temporal en el botón (opcional, pero buena UX)
+            // Como no tenemos referencia al botón presionado fácil, usamos log
+            
+            const realMonths = await checkSubStatus(channel, username);
+            const extraTags = {};
+
+            if (realMonths > 0) {
+                console.log(`✅ ¡CONFIRMADO! ${username} es suscriptor (${realMonths} meses)`);
+                extraTags.subscriber = true;
+                extraTags['badge-info'] = { subscriber: realMonths.toString() };
+            } else {
+                console.log(`👤 ${username} no parece estar suscrito (o API error)`);
+            }
+
+            win.simularMensaje(username, message, extraTags);
         }
 
         // Test streak

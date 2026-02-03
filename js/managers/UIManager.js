@@ -95,7 +95,7 @@ export default class UIManager {
      * @param {string} message - Mensaje a mostrar
      * @param {Object} emotes - Emotes de Twitch
      */
-    displayMessage(username, message, emotes) {
+    displayMessage(username, message, emotes, subscriberInfo = {}) {
         try {
             // Verificar si el widget está visible
             const isVisible = !this.dom.container.classList.contains('hidden');
@@ -114,6 +114,7 @@ export default class UIManager {
             this.dom.container.classList.remove('chandalf-bg');
             this.dom.container.classList.remove('manguerazo-bg');
             this.dom.container.classList.remove('duckcris-bg');
+            this.dom.container.classList.remove('subscriber-user'); // Limpiar clase subscriber
 
             // Determinar tipo de animación
             const now = Date.now();
@@ -124,10 +125,10 @@ export default class UIManager {
 
             if (!shouldShowIncoming) {
                 // TRANSICIÓN RÁPIDA (conversación continua)
-                this.fastTransition(username, message, emotes);
+                this.fastTransition(username, message, emotes, subscriberInfo);
             } else {
                 // ANIMACIÓN COMPLETA DE ENTRADA (> 30s de silencio)
-                this.fullIncomingSequence(username, message, emotes);
+                this.fullIncomingSequence(username, message, emotes, subscriberInfo);
             }
 
         } catch (error) {
@@ -139,12 +140,12 @@ export default class UIManager {
      * Transición rápida entre mensajes (sin animación de "incoming")
      * @private
      */
-    fastTransition(username, message, emotes) {
+    fastTransition(username, message, emotes, subscriberInfo) {
         this.dom.username.style.opacity = '0';
         this.dom.message.style.opacity = '0';
 
         this.fastRevealTimeout = setTimeout(() => {
-            this.revealMessage(username, message, emotes);
+            this.revealMessage(username, message, emotes, subscriberInfo);
             this.dom.username.style.opacity = '1';
             this.dom.message.style.opacity = '1';
         }, 100);
@@ -154,7 +155,7 @@ export default class UIManager {
      * Secuencia completa de animación de entrada
      * @private
      */
-    fullIncomingSequence(username, message, emotes) {
+    fullIncomingSequence(username, message, emotes, subscriberInfo) {
         // Reset clases
         this.dom.container.className = 'container';
 
@@ -173,11 +174,11 @@ export default class UIManager {
         this.decryptTimeout = setTimeout(() => {
             this.dom.username.classList.remove('decrypting');
             this.dom.message.classList.remove('decrypting');
-            this.revealMessage(username, message, emotes);
+            this.revealMessage(username, message, emotes, subscriberInfo);
         }, 800);
     }
 
-    revealMessage(username, message, emotes) {
+    revealMessage(username, message, emotes, subscriberInfo = {}) {
         try {
             // Procesar nombre de usuario
             const displayUsername = UIUtils.cleanUsername(username);
@@ -204,6 +205,88 @@ export default class UIManager {
 
             // Aplicar estilos de rol
             this.applyRoleStyles(userRole);
+
+            // Aplicar estilos de rol
+            this.applyRoleStyles(userRole);
+
+            // Aplicar estilos de rol
+            this.applyRoleStyles(userRole);
+
+            // ================= SUBSCRIBER GOLD MODE LOGIC =================
+            // 1. Limpiar timers previos
+            if (this.goldModeTimeout) {
+                clearTimeout(this.goldModeTimeout);
+                this.goldModeTimeout = null;
+            }
+
+            // 2. Resetear estado visual (Quitar Gold Mode del mensaje anterior)
+            this.dom.container.classList.remove('gold-mode-active');
+            
+            const xpLevelContainer = this.dom.container.querySelector('.xp-level-container');
+            const xpLevelLabel = this.dom.container.querySelector('.xp-level-label');
+            const xpLevelValue = this.dom.container.querySelector('#xp-level');
+            const userBadge = this.dom.userBadge;
+
+            // Resetear textos a originales (LVL y Rol)
+            // LVL ya se resetea por el flujo del XPDisplayManager, pero aseguramos las etiquetas
+            if (xpLevelLabel) xpLevelLabel.textContent = 'LVL';
+            
+            // Si hay rol, el badge ya se puso en applyRoleStyles, pero si estaba en SUB hay que asegurarnos
+            if (userBadge.textContent.startsWith('SUB')) {
+                 // Recuperar el texto original del rol si es posible, o dejar que applyRoleStyles lo haya hecho
+                 // Como applyRoleStyles se llamó arriba, userBadge tiene el texto correcto (ej: TOP 1)
+            }
+
+            // 3. Programar transición si es Sub
+            if (subscriberInfo.isSubscriber) {
+                const months = subscriberInfo.badgeInfo ? subscriberInfo.badgeInfo.subscriber : 0;
+                const subValue = months > 0 ? months : '1'; 
+
+                this.goldModeTimeout = setTimeout(() => {
+                   // ACTIVAR MODO ORO
+                   this.dom.container.classList.add('gold-mode-active');
+
+                   // Cambiar Caja de Nivel -> Meses
+                   if (xpLevelLabel) xpLevelLabel.textContent = 'SUB';
+                   if (xpLevelValue) xpLevelValue.textContent = subValue;
+
+                   // Cambiar Badge -> SUB
+                   if (userBadge) {
+                       userBadge.textContent = `SUB ${subValue} MESES`;
+                   }
+                   
+                   // OCULTAR ICONO DE RANGO/ADMIN (Para ganar espacio)
+                   // El icono se restaurará automáticamente en el próximo mensaje por la lógica de revealMessage
+                   if (this.dom.adminIcon) {
+                       this.dom.adminIcon.style.display = 'none';
+                   }
+
+                   // Nota: El borde, la barra de XP y lo demas se manejan por CSS 
+                   // gracias a la clase .gold-mode-active en el contenedor padre.
+
+                }, 4000); // 4 segundos de delay (ajustable)
+            }
+
+            // Eliminar elementos antiguos de sub (Limpieza de versiones anteriores)
+            const oldSubDisplay = this.dom.container.querySelector('#subscriber-status-display');
+            if (oldSubDisplay) oldSubDisplay.remove();
+            
+            const streamCategoryEl = this.dom.container.querySelector('#stream-category');
+            if (streamCategoryEl && streamCategoryEl.textContent.includes('SUB //')) {
+                streamCategoryEl.textContent = 'CHAT.STREAM';
+                streamCategoryEl.style.color = '';
+                streamCategoryEl.style.textShadow = '';
+                streamCategoryEl.style.fontWeight = '';
+            }
+
+            // Eliminar badge anterior si quedó alguno (Limpieza)
+            if (this.dom.username.parentElement) {
+                const stack = this.dom.username.parentElement.querySelector('.user-identity-stack');
+                if (stack) {
+                    const existingSubBadge = stack.querySelector('.sub-badge');
+                    if (existingSubBadge) existingSubBadge.remove();
+                }
+            }
 
             // Actualizar nombre de usuario
             this.dom.username.textContent = displayUsername;
@@ -234,8 +317,13 @@ export default class UIManager {
                     iconFilename = specialIcons.ADMIN || 'arasaka.png';
                 } else if (username === 'SYSTEM') {
                     iconFilename = specialIcons.SYSTEM || 'netrunner.png';
-                } else {
-                    // Búsqueda case-insensitive robusta para rangos
+                } else if (subscriberInfo.isSubscriber) {
+                     // Icono especial para suscriptores si no tienen otro
+                     // Usamos 'samurai.png' como placeholder de suscriptor si existe, o mantenemos lógica de rango
+                }
+
+                if (!iconFilename) {
+                     // Búsqueda case-insensitive robusta para rangos
                     const normalizedTitle = (rankTitle || '').trim().toUpperCase();
                     // Buscar clave que coincida (ej: 'FIXER' === 'FIXER')
                     const matchingKey = Object.keys(rankIcons).find(k => k.toUpperCase() === normalizedTitle);
