@@ -445,7 +445,7 @@ export default class SessionStatsService {
      * Obtiene los top N suscriptores por meses
      * @private
      */
-    _getTopSubscribers(n = 10) {
+    _getTopSubscribers(n = 20) {
         if (!this.experienceService || !this.experienceService.usersXP) return [];
 
         return Array.from(this.experienceService.usersXP.entries())
@@ -606,7 +606,7 @@ export default class SessionStatsService {
             {
                 type: 'watchtime_total',
                 title: 'TIEMPO TOTAL (HISTÓRICO)',
-                data: this._getTopWatchTime('total', 20)
+                data: this._getTopWatchTime('total', 15)
             },
             // Pantalla 8: Último Logro
             {
@@ -618,7 +618,7 @@ export default class SessionStatsService {
             {
                 type: 'top_subscribers',
                 title: 'SUSCRIPTORES VETERANOS',
-                data: this._getTopSubscribers(10)
+                data: this._getTopSubscribers(20)
             }
         ];
 

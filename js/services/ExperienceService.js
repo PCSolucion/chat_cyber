@@ -120,8 +120,8 @@ export default class ExperienceService {
                 WATCH_TIME: {
                     id: 'watch_time',
                     name: 'Tiempo de visualización',
-                    xp: 5,
-                    cooldownMs: 0, // Gestionado por intervalo de 10 min
+                    xp: 10,
+                    cooldownMs: 0, // Gestionado por intervalo de 10 min (1 XP/min)
                     enabled: true
                 }
             },
@@ -463,9 +463,9 @@ export default class ExperienceService {
         // Esto corrige el problema de "datos antiguos" en Face Off para lurkers
         userData.lastActivity = Date.now();
 
-        // 2. Otorgar XP Pasiva (5 XP cada 10 mins)
-        // Ratio: 0.5 XP por minuto
-        const xpEarned = Math.floor(minutes * 0.5);
+        // 2. Otorgar XP Pasiva (10 XP cada 10 mins)
+        // Ratio: 1.0 XP por minuto
+        const xpEarned = Math.floor(minutes * 1.0);
 
         if (xpEarned > 0) {
             userData.xp += xpEarned;
@@ -612,7 +612,7 @@ export default class ExperienceService {
         if (!chatters || !Array.isArray(chatters)) return;
 
         let updatedCount = 0;
-        const xpPerMinute = 0.5;
+        const xpPerMinute = 1.0;
         const totalXP = Math.floor(minutes * xpPerMinute);
 
         chatters.forEach(username => {

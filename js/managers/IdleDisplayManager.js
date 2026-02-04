@@ -168,72 +168,7 @@ export default class IdleDisplayManager {
         }, this.idleTimeoutMs);
     }
 
-    /**
-     * Ejecuta la secuencia de arranque tipo BIOS
-     * @private
-     */
-    _runBootSequence() {
-        if (!this.idleContainer) return;
 
-        // Limpiar contenedor
-        this.idleContainer.innerHTML = '';
-        
-        // Crear overlay de boot
-        const bootOverlay = document.createElement('div');
-        bootOverlay.className = 'boot-sequence-overlay boot-glitch-effect';
-        this.idleContainer.appendChild(bootOverlay);
-        
-        // Líneas de texto para la secuencia
-        const lines = [
-            '> SYSTEM_INIT...',
-            '> MEMORY_CHECK... OK',
-            '> NET_INTERFACE... ONLINE', 
-            '> LOADING_MODULES... DONE',
-            '> EXECUTING_UI...'
-        ];
-
-        let delay = 100;
-        const lineDelay = 600; // ms entre líneas (halved from 1200)
-
-        lines.forEach((text, index) => {
-            setTimeout(() => {
-                // Si salimos de idle mientras esto corre, abortar
-                if (!this.isIdle) return;
-
-                const line = document.createElement('div');
-                line.className = 'boot-line typing';
-                line.textContent = text;
-                
-                bootOverlay.appendChild(line);
-                
-                // Scroll to bottom
-                bootOverlay.scrollTop = bootOverlay.scrollHeight;
-
-            }, delay);
-            
-            delay += lineDelay;
-        });
-
-        // Finalizar secuencia y mostrar stats
-        setTimeout(() => {
-            if (!this.isIdle) return;
-
-            // Fade out overlay
-            bootOverlay.style.transition = 'opacity 0.5s ease-out';
-            bootOverlay.style.opacity = '0';
-            
-            // Iniciar visualización real
-            this._updateIdleDisplay();
-            
-            // Eliminar overlay del DOM después del fade
-            setTimeout(() => {
-                if(bootOverlay.parentNode) {
-                    bootOverlay.parentNode.removeChild(bootOverlay);
-                }
-            }, 500);
-            
-        }, delay + 400); 
-    }
 
     /**
      * Entra en modo idle (sin actividad)
@@ -312,8 +247,8 @@ export default class IdleDisplayManager {
             this.idleContainer.style.display = 'block';
         }
 
-        // Iniciar secuencia de arranque
-        this._runBootSequence();
+        // Iniciar visualización real inmediatamente (sin secuencia de arranque)
+        this._updateIdleDisplay();
 
         // Iniciar rotación (usamos setTimeout recursivo para permitir tiempos variables)
         this._scheduleNextRotation();
@@ -608,13 +543,13 @@ export default class IdleDisplayManager {
         }
 
 
-        // Wrapper for animation scroll - DISABLED SCROLL to prevent "appear/disappear" loop.
-        // Showing top items statically.
-        const shouldScroll = false; // forced off
-        const animationDuration = 0; 
+        // Wrapper for animation scroll
+        const shouldScroll = users.length > 5;
+        const scrollDuration = this._calculateScreenDuration(screenData) / 1000;
 
         const content = `
-            <div class="idle-list-scroll-wrapper" style="">
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 
+                 style="${shouldScroll ? `animation-duration: ${scrollDuration}s;` : ''}">
                 ${usersHtml}
             </div>
         `;
@@ -675,7 +610,7 @@ export default class IdleDisplayManager {
                 <div class="speedometer-wrapper">
                     <div class="speedometer-gauge">
                         <div class="gauge-bg"></div>
-                        <div class="gauge-fill" style="transform: rotate(${Math.min(180, (parseFloat(data.avgMpm) || 0) * 3)}deg)"></div>
+                        <div class="gauge-fill" id="gauge-needle" style="transform: rotate(0deg)"></div>
                         <div class="gauge-cover">
                             <div class="gauge-value-text cyan-glow tabular-nums" id="stat-mpm">${data.avgMpm}</div>
                             <div class="gauge-label-text">MSG/MIN</div>
@@ -689,13 +624,20 @@ export default class IdleDisplayManager {
             </div>
         `;
 
-        // Animate Numbers
-        // Small delay to ensure DOM is ready? synchronous innerHTML is enough usually.
-        this._animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 1500);
-        this._animateValue('stat-users', 0, parseInt(data.users) || 0, 1500);
-        // MPM is a float usually, let's keep it static or handle float anim properly?
-        // _animateValue handles Math.floor, so it doesn't work well for floats unless adapted.
-        // For now, let's leave MPM static as the needle animates.
+        // Wait for screen fade-in (500ms) before starting animations
+        setTimeout(() => {
+            // Animate Numbers (Slower to match needle)
+            this._animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 2500);
+            this._animateValue('stat-users', 0, parseInt(data.users) || 0, 2500);
+            
+            // Animate Needle
+            const targetRotation = Math.min(180, (parseFloat(data.avgMpm) || 0) * 18);
+            const needle = document.getElementById('gauge-needle');
+            if (needle) {
+                // Sutil rebote antes de ir a su posición (opcional, pero queda premium)
+                needle.style.transform = `rotate(${targetRotation}deg)`;
+            }
+        }, 800);
     }
 
     /**
@@ -739,11 +681,13 @@ export default class IdleDisplayManager {
             usersHtml = '<div class="empty-message animate-hidden animate-in">ESPERANDO ACTIVIDAD...</div>';
         }
 
-        // Wrapper for animation - DISABLED SCROLL
-        const shouldScroll = false; 
+        // Wrapper for animation 
+        const shouldScroll = users.length > 5;
+        const scrollDuration = this._calculateScreenDuration(screenData) / 1000;
 
         const content = `
-            <div class="idle-list-scroll-wrapper" style="">
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 
+                 style="${shouldScroll ? `animation-duration: ${scrollDuration}s;` : ''}">
                 ${usersHtml}
             </div>
         `;
@@ -794,10 +738,12 @@ export default class IdleDisplayManager {
             usersHtml = '<div class="empty-message animate-hidden animate-in">SIN EXPERTOS EN RED AUN</div>';
         }
 
-        const shouldScroll = false; // DISABLED SCROLL
+        const shouldScroll = users.length > 5;
+        const scrollDuration = this._calculateScreenDuration(screenData) / 1000;
 
         const content = `
-            <div class="idle-list-scroll-wrapper" style="">
+            <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 
+                 style="${shouldScroll ? `animation-duration: ${scrollDuration}s;` : ''}">
                 ${usersHtml}
             </div>
         `;
