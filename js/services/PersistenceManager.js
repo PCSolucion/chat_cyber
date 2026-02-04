@@ -44,10 +44,14 @@ export default class PersistenceManager {
             clearTimeout(this.saveTimeout);
         }
 
+        // Añadir un pequeño jitter (0-1s) para evitar que múltiples instancias
+        // intenten guardar exactamente al mismo tiempo después de un evento
+        const jitter = Math.random() * 1000;
+        
         this.saveTimeout = setTimeout(() => {
             this.saveTimeout = null;
             this.saveImmediately();
-        }, this.debounceMs);
+        }, this.debounceMs + jitter);
     }
 
     /**

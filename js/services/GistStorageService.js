@@ -130,10 +130,14 @@ export default class GistStorageService {
      * Guarda un archivo JSON en el Gist
      * @param {string} fileName - Nombre del archivo
      * @param {Object} data - Datos JSON a guardar
+     * @param {number} retryCount - Contador de reintentos
      * @returns {Promise<boolean>}
      */
-    async saveFile(fileName, data) {
+    async saveFile(fileName, data, retryCount = 0) {
         if (!this.checkConfiguration()) return false;
+
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1 segundo base
 
         try {
             const content = JSON.stringify(data, null, 2);
@@ -150,7 +154,19 @@ export default class GistStorageService {
 
             this.updateRateLimitInfo(response);
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            // Manejar Conflictos (409) o Unprocessable Entity (422) con reintentos
+            if ((response.status === 409 || response.status === 422) && retryCount < maxRetries) {
+                const delay = retryDelay * Math.pow(2, retryCount) + (Math.random() * 1000);
+                console.warn(`⚠️ Conflicto (409/422) al guardar ${fileName}. Reintentando en ${Math.round(delay)}ms... (Intento ${retryCount + 1}/${maxRetries})`);
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return await this.saveFile(fileName, data, retryCount + 1);
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => 'No error body');
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
 
             if (this.config.DEBUG) console.log(`💾 ${fileName} guardado en Gist`);
             EventManager.emit('gist:dataSaved');
@@ -158,7 +174,8 @@ export default class GistStorageService {
 
         } catch (error) {
             console.error(`❌ Error al guardar ${fileName}:`, error);
-            return false;
+            // Propagar el error para que el PersistenceManager sepa que falló
+            throw error;
         }
     }
 

@@ -150,22 +150,22 @@ export default class StreamHistoryService {
     /**
      * Guarda el historial en Gist
      */
-    saveHistory(final = false) {
+    async saveHistory(final = false) {
         if (!this.sessionStartTime) return;
 
-        // Calcular duración de esta sesión en minutos
-        const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / 60000);
-        if (sessionMinutes < 1 && !this.DEBUG) return; // Ignorar sesiones < 1 min
+        try {
+            // Calcular duración de esta sesión en minutos
+            const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / 60000);
+            if (sessionMinutes < 1 && !this.DEBUG) return; // Ignorar sesiones < 1 min
 
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-        console.log(`💾 Guardando historial de stream... (Duración actual: ${sessionMinutes}m)`);
+            if (this.DEBUG) console.log(`💾 Guardando historial de stream... (Duración actual: ${sessionMinutes}m)`);
 
-        this.gistService.loadFile(this.fileName).then(history => {
-             if (!history) history = {};
-             
-             // Lógica simplificada de actualización
-             if (this.initialDayDuration === undefined) {
+            const history = await this.gistService.loadFile(this.fileName) || {};
+            
+            // Lógica simplificada de actualización
+            if (this.initialDayDuration === undefined) {
                 if (history[today]) {
                     this.initialDayDuration = history[today].duration || 0;
                     this.dayCount = history[today].count || 0;
@@ -186,12 +186,13 @@ export default class StreamHistoryService {
                 count: this.dayCount
             };
 
-            this.gistService.saveFile(this.fileName, history).then(success => {
-                if (success) {
-                    console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m`);
-                    if (window) window.STREAM_HISTORY = history;
-                }
-            });
-        });
+            const success = await this.gistService.saveFile(this.fileName, history);
+            if (success) {
+                console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m`);
+                if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
+            }
+        } catch (error) {
+            console.error('❌ Error al guardar historial de stream:', error);
+        }
     }
 }
