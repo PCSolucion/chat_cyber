@@ -64,6 +64,14 @@ export default class UIManager {
             const text = typeof data === 'string' ? data : data.text;
             this.displayMessage('SYSTEM', text, {}, 99, 'system');
         });
+
+        EventManager.on('chat:messageReceived', () => {
+            this.flashLED('ledRx');
+        });
+
+        EventManager.on('gist:dataSaved', () => {
+            this.flashLED('ledTx');
+        });
     }
 
     /**
@@ -82,6 +90,8 @@ export default class UIManager {
             systemStatus: document.getElementById('system-status-text'),
             liveBadge: document.querySelector('.live-badge'),
             watchTimeContainer: document.getElementById('watch-time-container'), // NEW
+            ledRx: document.getElementById('led-rx'),
+            ledTx: document.getElementById('led-tx'),
             root: document.documentElement
         };
     }
@@ -376,7 +386,8 @@ export default class UIManager {
             }
 
             // ================= WATCH TIME DISPLAY (FOOTER BOTTOM-RIGHT) =================
-            // Se muestra abajo a la derecha, pegado al borde.
+            // HIDDEN - User request: No mostrar LURK visualmente
+            /*
             if (this.dom.watchTimeContainer && this.experienceService) {
                 // Reset inicial
                 this.dom.watchTimeContainer.innerHTML = '';
@@ -421,6 +432,7 @@ export default class UIManager {
                     `;
                 }
             }
+            */
             // ====================================================================
 
             // Custom Background for Takeru_xiii
@@ -676,5 +688,24 @@ export default class UIManager {
         if (this.hideTimeout) clearTimeout(this.hideTimeout);
         if (this.decryptTimeout) clearTimeout(this.decryptTimeout);
         if (this.fastRevealTimeout) clearTimeout(this.fastRevealTimeout);
+    }
+
+    /**
+     * Hace parpadear un LED de actividad
+     * @param {string} ledKey - 'ledRx' o 'ledTx'
+     */
+    flashLED(ledKey) {
+        const led = this.dom[ledKey];
+        if (!led) return;
+
+        // Force restart animation if already active
+        led.classList.remove('active');
+        void led.offsetWidth; 
+        led.classList.add('active');
+
+        // Turn off after 200ms
+        setTimeout(() => {
+            led.classList.remove('active');
+        }, 200);
     }
 }

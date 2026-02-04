@@ -1,3 +1,5 @@
+import EventManager from '../utils/EventEmitter.js';
+
 /**
  * GistStorageService - Servicio de Persistencia con GitHub Gist
  * 
@@ -151,6 +153,7 @@ export default class GistStorageService {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             if (this.config.DEBUG) console.log(`💾 ${fileName} guardado en Gist`);
+            EventManager.emit('gist:dataSaved');
             return true;
 
         } catch (error) {
