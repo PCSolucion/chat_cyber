@@ -884,6 +884,10 @@
                 <span class="nav-icon">›</span>
                 Servicios y Managers
             </a>
+            <a href="#idle" class="nav-link">
+                <span class="nav-icon">›</span>
+                Modo Inactivo
+            </a>
         </div>
 
         <div class="nav-section">
@@ -891,6 +895,14 @@
             <a href="#xp" class="nav-link">
                 <span class="nav-icon">›</span>
                 Sistema de XP
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Instalación</div>
+            <a href="#guia" class="nav-link">
+                <span class="nav-icon">›</span>
+                Guía de Configuración
             </a>
         </div>
 
@@ -927,15 +939,15 @@
                     </tr>
                     <tr>
                         <td>Total de Archivos JS</td>
-                        <td>15 archivos (~150KB)</td>
+                        <td>21 archivos (~180KB)</td>
                     </tr>
                     <tr>
                         <td>Archivos CSS</td>
-                        <td>3 archivos (~76KB)</td>
+                        <td>5 archivos (~95KB)</td>
                     </tr>
                     <tr>
                         <td>Logros Definidos</td>
-                        <td>120 logros en 9 categorías</td>
+                        <td>143 logros en 11 categorías</td>
                     </tr>
                     <tr>
                         <td>Servicios de Emotes</td>
@@ -1114,13 +1126,13 @@
                     </tr>
                     <tr>
                         <td>4. Servicios</td>
-                        <td>ExperienceService, AchievementService, etc.</td>
-                        <td>Lógica de negocio (XP, logros, estadísticas)</td>
+                        <td>Experience, Achievement, SessionStats, StreamHistory</td>
+                        <td>Lógica de negocio (XP, logros, estadísticas en vivo)</td>
                     </tr>
                     <tr>
                         <td>5. Managers</td>
-                        <td>UIManager, XPDisplayManager, etc.</td>
-                        <td>Gestión de interfaz y animaciones</td>
+                        <td>UIManager, XPDisplay, IdleDisplay, Notification</td>
+                        <td>Gestión de interfaz, notificaciones y animaciones</td>
                     </tr>
                     <tr>
                         <td>6. Persistencia</td>
@@ -1163,10 +1175,10 @@
                     </div>
                     <span class="tag service">Service</span>
                     <ul>
-                        <li><strong>795 líneas</strong> - El servicio más grande del sistema</li>
-                        <li>Sistema de XP con múltiples fuentes</li>
-                        <li>7 rangos: CIVILIAN → CORPO</li>
-                        <li>Sistema de rachas con multiplicadores</li>
+                        <li><strong>743 líneas</strong> - Gestión central de XP y niveles</li>
+                        <li>Fuentes: Mensajes, Emotes, Menciones, Watch Time, etc.</li>
+                        <li>Rangos dinámicos desde <strong>CIVILIAN</strong> hasta <strong>CHOOMBA SUPREME</strong></li>
+                        <li>Sistema de rachas persistente con multiplicadores hasta x3.0</li>
                     </ul>
                 </div>
 
@@ -1180,25 +1192,25 @@
                     </div>
                     <span class="tag service">Service</span>
                     <ul>
-                        <li>Motor de reglas dinámico desde JSON</li>
-                        <li><strong>120 logros</strong> en 9 categorías</li>
-                        <li>5 niveles de rareza</li>
+                        <li>Motor de reglas dinámico que separa lógica de datos</li>
+                        <li><strong>143 logros</strong> definidos en un archivo externo</li>
+                        <li>Evaluación en tiempo real tras cada mensaje recibido</li>
                     </ul>
                 </div>
 
                 <div class="card service">
                     <div class="component-header">
-                        <div class="component-icon">G</div>
+                        <div class="component-icon">S</div>
                         <div>
-                            <div class="component-title">GistStorageService</div>
-                            <div class="component-file">js/services/GistStorageService.js</div>
+                            <div class="component-title">SessionStatsService</div>
+                            <div class="component-file">js/services/SessionStatsService.js</div>
                         </div>
                     </div>
                     <span class="tag service">Service</span>
                     <ul>
-                        <li>Persistencia en <strong>GitHub Gist</strong></li>
-                        <li>Cache local con TTL de 5 minutos</li>
-                        <li>Fallback a localStorage</li>
+                        <li>Trackea métricas efímeras de la sesión en directo</li>
+                        <li>Analiza palabras populares, emotes más usados y MPM</li>
+                        <li>Provee los datos para el <strong>Modo Inactivo (Idle)</strong></li>
                     </ul>
                 </div>
             </div>
@@ -1247,24 +1259,25 @@
                     </div>
                     <span class="tag manager">Manager</span>
                     <ul>
-                        <li>Se activa después de <strong>30 segundos sin mensajes</strong></li>
-                        <li>Rota entre 4 pantallas de estadísticas</li>
+                        <li>Se activa tras <strong>30 segundos</strong> de inactividad de chat</li>
+                        <li>Rota entre <strong>9 pantallas</strong> diferentes de estadísticas</li>
+                        <li>Diseño Dashboard con animaciones premium y conteos</li>
                     </ul>
                 </div>
 
                 <div class="card manager">
                     <div class="component-header">
-                        <div class="component-icon">M</div>
+                        <div class="component-icon">N</div>
                         <div>
-                            <div class="component-title">MessageProcessor</div>
-                            <div class="component-file">js/managers/MessageProcessor.js</div>
+                            <div class="component-title">NotificationManager</div>
+                            <div class="component-file">js/managers/NotificationManager.js</div>
                         </div>
                     </div>
-                    <span class="tag manager">Orchestrator</span>
+                    <span class="tag manager">Manager</span>
                     <ul>
-                        <li><strong>Orquestador central</strong> - Coordina todo</li>
-                        <li>Procesa: XP → Logros → UI → Audio</li>
-                        <li>Maneja comandos (!logros, !nivel)</li>
+                        <li>Gestión centralizada de popups y alertas visuales</li>
+                        <li>Maneja notificaciones de logros y el sistema <strong>"Bro"</strong></li>
+                        <li>Cola de notificaciones para evitar solapamientos</li>
                     </ul>
                 </div>
             </div>
@@ -1284,33 +1297,33 @@
                     </tr>
                     <tr>
                         <td>Mensaje Base</td>
-                        <td>10 XP</td>
+                        <td>5 XP</td>
                         <td>Por cada mensaje enviado</td>
                     </tr>
                     <tr>
                         <td>Emotes</td>
                         <td>2 XP c/u</td>
-                        <td>Por cada emote (máx 10)</td>
+                        <td>Hasta 5 emotes por mensaje permiten ganar XP</td>
                     </tr>
                     <tr>
-                        <td>Mensaje Largo</td>
-                        <td>5 XP</td>
-                        <td>Si mensaje > 50 caracteres</td>
-                    </tr>
-                    <tr>
-                        <td>Primer Mensaje del Día</td>
-                        <td>25 XP</td>
-                        <td>Bonus diario</td>
+                        <td>Primer Mensaje (Día)</td>
+                        <td>20 XP</td>
+                        <td>Bonus por la primera interacción del día</td>
                     </tr>
                     <tr>
                         <td>Mención</td>
-                        <td>3 XP</td>
-                        <td>Si menciona a otro usuario</td>
+                        <td>8 XP</td>
+                        <td>Si menciona a otro usuario (@usuario)</td>
                     </tr>
                     <tr>
-                        <td>Primer Mensaje del Stream</td>
-                        <td>15 XP</td>
-                        <td>Bonus por iniciar conversación</td>
+                        <td>Inicio de Stream</td>
+                        <td>25 XP</td>
+                        <td>Primeros 5 minutos del directo</td>
+                    </tr>
+                    <tr>
+                        <td>Watch Time</td>
+                        <td>10 XP</td>
+                        <td>XP Pasiva otorgada cada 10 minutos de visualización continua.</td>
                     </tr>
                 </table>
             </div>
@@ -1323,15 +1336,19 @@
                         <th>Multiplicador XP</th>
                     </tr>
                     <tr>
-                        <td>2-6 días</td>
+                        <td>3-4 días</td>
+                        <td>×1.2</td>
+                    </tr>
+                    <tr>
+                        <td>5-9 días</td>
                         <td>×1.5</td>
                     </tr>
                     <tr>
-                        <td>7-13 días</td>
+                        <td>10-19 días</td>
                         <td>×2.0</td>
                     </tr>
                     <tr>
-                        <td>14+ días</td>
+                        <td>20+ días</td>
                         <td>×3.0</td>
                     </tr>
                 </table>
@@ -1376,14 +1393,186 @@
                         <td>16,062+</td>
                     </tr>
                     <tr>
-                        <td>40+</td>
+                        <td>40-49</td>
                         <td>CORPO</td>
                         <td>25,000+</td>
+                    </tr>
+                    <tr>
+                        <td>50-99</td>
+                        <td>LEGEND / AFTERLIFE</td>
+                        <td>35,000+</td>
+                    </tr>
+                    <tr>
+                        <td>100</td>
+                        <td>CHOOMBA SUPREME</td>
+                        <td>100,000+</td>
                     </tr>
                 </table>
                 <p style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
                     <strong>Fórmula:</strong> XP requerido = 100 × (nivel-1)<sup>1.5</sup>
                 </p>
+            </div>
+        </section>
+
+        <!-- ============== MODO INACTIVO ============== -->
+        <section id="idle">
+            <h2>Modo Inactivo (Estadísticas)</h2>
+            <div class="highlight-box">
+                El widget entra en <strong>Modo Idle</strong> automáticamente tras 30 segundos sin mensajes en el chat.
+                En este modo, el widget rota entre diferentes pantallas de estadísticas en tiempo real.
+            </div>
+
+            <div class="card">
+                <h3>Ciclo de Pantallas (9 Estadios)</h3>
+                <p>Cada pantalla se muestra durante un tiempo proporcional a su contenido (Scroll inteligente).</p>
+                <div class="component-grid">
+                    <div class="card mini">
+                        <strong>01. Resumen</strong>
+                        <p>MPM, Mensajes totales, Usuarios únicos y Duración.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>02. Más Activos</strong>
+                        <p>Leaderboard de usuarios con más mensajes hoy.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>03. Trending</strong>
+                        <p>Top palabras y emotes más usados en la sesión.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>04. Progreso</strong>
+                        <p>Conteo de Level-ups y logros desbloqueados hoy.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>05. Rachas</strong>
+                        <p>Duelo de rachas activas más altas del chat.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>06. Live Watchtime</strong>
+                        <p>Top usuarios por tiempo de visualización hoy.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>07. Total Watchtime</strong>
+                        <p>Ranking histórico de tiempo de visualización.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>08. Último Logro</strong>
+                        <p>Pantalla dedicada al último hito conseguido.</p>
+                    </div>
+                    <div class="card mini">
+                        <strong>09. Veteranos</strong>
+                        <p>Ranking de los suscriptores más antiguos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== GUÍA DE INSTALACIÓN ============== -->
+        <section id="guia">
+            <h2>Guía de Configuración</h2>
+
+            <div class="card">
+                <div class="component-header">
+                    <div class="component-icon">⚙️</div>
+                    <div class="component-title">01. Configuración del Canal</div>
+                </div>
+                <p>Para conectar el widget a tu canal de Twitch, debes editar el archivo de configuración principal.</p>
+                <ul style="margin-top: 10px;">
+                    <li>Navega a la carpeta <strong>js/</strong>.</li>
+                    <li>Abre <strong>config.js</strong> con un editor de texto (VS Code, Notepad++, etc).</li>
+                    <li>Busca la línea que dice <code>TWITCH_CHANNEL: 'nombre_actual'</code>.</li>
+                    <li>Cambia <code>'nombre_actual'</code> por tu nombre de usuario de Twitch (en minúsculas).</li>
+                </ul>
+                <div class="code-block">
+<span class="code-comment">// Ejemplo en js/config.js</span>
+<span class="code-keyword">const</span> <span class="code-class">CONFIG</span> = {
+  <span class="code-function">TWITCH_CHANNEL</span>: <span class="code-string">'tu_usuario_aqui'</span>,
+  <span class="code-comment">// ... resto de la configuración</span>
+};</div>
+            </div>
+
+            <div class="card">
+                <div class="component-header">
+                    <div class="component-icon">💾</div>
+                    <div class="component-title">02. Sistema de XP y Logros</div>
+                </div>
+                <p>Este widget guarda el progreso de tus espectadores en un <strong>GitHub Gist</strong>. Es necesario configurar tus propias credenciales para que los datos se guarden correctamente.</p>
+                <ul style="margin-top: 10px;">
+                    <li>Crea un Gist en <a href="https://gist.github.com" style="color: var(--cyber-cyan);">gist.github.com</a> (un archivo llamado <code>xp_data.json</code>).</li>
+                    <li>Copia el <strong>ID del Gist</strong> (la cadena de caracteres al final de la URL).</li>
+                    <li>Genera un <strong>Personal Access Token (classic)</strong> en GitHub con permisos de <code>gist</code>.</li>
+                    <li>En el archivo <code>js/config.js</code>, actualiza los campos:</li>
+                </ul>
+                <div class="code-block">
+<span class="code-function">XP_GIST_ID</span>: <span class="code-string">'tu_id_de_gist_aqui'</span>,
+<span class="code-function">XP_GIST_TOKEN</span>: <span class="code-string">'tu_token_de_github_aqui'</span>,</div>
+                <div class="highlight-box">
+                    <strong>ADVERTENCIA:</strong> No compartas tu Token con nadie. Si planeas subir este código a un repositorio público, usa variables de entorno o asegúrate de excluir el archivo de configuración.
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="component-header">
+                    <div class="component-icon">📹</div>
+                    <div class="component-title">03. Implementación en OBS</div>
+                </div>
+                <p>Una vez configurado, es hora de llevarlo a tu stream:</p>
+                <ul style="margin-top: 10px;">
+                    <li>Carga el widget en un servidor local (ej: extensión "Live Server" de VS Code).</li>
+                    <li>En OBS, añade una nueva fuente de tipo <strong>Navegador (Browser Source)</strong>.</li>
+                    <li>En "URL", pega la dirección local (ej: <code>http://127.0.0.1:5500/index.html</code>).</li>
+                    <li>Configura el tamaño:
+                        <ul style="margin-left: 20px;">
+                            <li>Ancho: <strong>450</strong> (ajustable)</li>
+                            <li>Alto: <strong>800</strong> (ajustable)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="component-header">
+                    <div class="component-icon">💬</div>
+                    <div class="component-title">04. Comandos del Chat</div>
+                </div>
+                <p>Tus espectadores pueden interactuar con el widget usando estos comandos:</p>
+                <table class="stats-table">
+                    <tr>
+                        <th>Comando</th>
+                        <th>Descripción</th>
+                    </tr>
+                    <tr>
+                        <td><code>!nivel</code> / <code>!level</code></td>
+                        <td>Muestra tu nivel actual, rango y XP para el siguiente nivel.</td>
+                    </tr>
+                    <tr>
+                        <td><code>!stats</code></td>
+                        <td>Muestra tus estadísticas globales (mensajes, xp, logros).</td>
+                    </tr>
+                    <tr>
+                        <td><code>!top</code></td>
+                        <td>Muestra el Top 5 de usuarios más activos.</td>
+                    </tr>
+                    <tr>
+                        <td><code>!logros</code></td>
+                        <td>Lista tus logros desbloqueados y el progreso total.</td>
+                    </tr>
+                    <tr>
+                        <td><code>!racha</code> / <code>!streak</code></td>
+                        <td>Muestra tu racha actual de días consecutivos.</td>
+                    </tr>
+                    <tr>
+                        <td><code>!bro</code></td>
+                        <td>Comando especial para ver progreso del logro "Bro".</td>
+                    </tr>
+                    <tr>
+                        <td><code>!uptime</code></td>
+                        <td>Muestra cuánto tiempo lleva el stream en directo.</td>
+                    </tr>
+                    <tr>
+                        <td><code>!emotes</code></td>
+                        <td>Muestra estadísticas de uso de emotes en la sesión.</td>
+                    </tr>
+                </table>
             </div>
         </section>
 
@@ -1422,33 +1611,36 @@
                     <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
                     <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
                             style="color: var(--cyber-red);">📁</span> <span
-                            style="color: var(--cyber-red);">services/</span> <span style="color: #555;">(8
+                            style="color: var(--cyber-red);">services/</span> <span style="color: #555;">(12
                             archivos)</span></div>
                     <div style="margin-left: 60px;"><span style="color: #666;">├──</span> TwitchService.js</div>
                     <div style="margin-left: 60px;"><span style="color: #666;">├──</span> ExperienceService.js</div>
                     <div style="margin-left: 60px;"><span style="color: #666;">├──</span> AchievementService.js</div>
-                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 5
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> SessionStatsService.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 8
                             más...</span></div>
                     <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
                     <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
                             style="color: var(--cyber-green);">📁</span> <span
-                            style="color: var(--cyber-green);">managers/</span> <span style="color: #555;">(5
+                            style="color: var(--cyber-green);">managers/</span> <span style="color: #555;">(7
                             archivos)</span></div>
                     <div style="margin-left: 60px;"><span style="color: #666;">├──</span> MessageProcessor.js</div>
                     <div style="margin-left: 60px;"><span style="color: #666;">├──</span> UIManager.js</div>
-                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 3
+                    <div style="margin-left: 60px;"><span style="color: #666;">├──</span> NotificationManager.js</div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> <span style="color: #555;">+ 4
                             más...</span></div>
                     <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
-                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> <span
+                    <div style="margin-left: 40px;"><span style="color: #666;">├──</span> <span
                             style="color: var(--cyber-yellow);">📁</span> <span
-                            style="color: var(--cyber-yellow);">utils/</span></div>
-                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> UIUtils.js</div>
-                    <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
-                    <div style="margin-left: 20px;"><span style="color: #666;">├──</span> <span
+                            style="color: var(--cyber-yellow);">commands/</span> <span style="color: #555;">(11
+                            archivos)</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">│</span></div>
+                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> <span
                             style="color: var(--cyber-magenta);">📁</span> <span
-                            style="color: var(--cyber-magenta);">data/</span></div>
-                    <div style="margin-left: 40px;"><span style="color: #666;">└──</span> AchievementsData.js <span
-                            style="color: #555;">← 120 logros</span></div>
+                            style="color: var(--cyber-magenta);">data/</span> <span style="color: #555;">(2
+                            archivos)</span></div>
+                    <div style="margin-left: 60px;"><span style="color: #666;">└──</span> AchievementsData.js <span
+                            style="color: #555;">← 143 logros</span></div>
                     <div style="margin-left: 20px;"><span style="color: #666;">│</span></div>
                     <div style="margin-left: 20px;"><span style="color: #666;">├──</span> � <span
                             style="color: #aaa;">img/</span> <span style="color: #555;">← Iconos e imágenes</span></div>
