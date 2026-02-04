@@ -337,7 +337,8 @@ export default class SessionStatsService {
         const recentAchievements = this.stats.achievementsUnlocked.slice(-3).reverse();
 
         // Racha más alta activa
-        const highestStreak = this._getHighestActiveStreak();
+        // Top rachas activas (Top 2 para el VS)
+        const topStreaks = this._getTopActiveStreaks(2);
 
         return {
             // Tiempos
@@ -363,7 +364,7 @@ export default class SessionStatsService {
             recentAchievements,
 
             // Rachas
-            highestStreak,
+            topStreaks,
             activeStreaksCount: this.stats.currentActiveStreaks.size,
 
             // Última actividad
@@ -419,26 +420,22 @@ export default class SessionStatsService {
     }
 
     /**
-     * Obtiene la racha más alta activa
+     * Obtiene las top N rachas más altas activas
      * @private
      */
-    _getHighestActiveStreak() {
-        let highest = { username: null, days: 0 };
-
-        this.stats.currentActiveStreaks.forEach((days, username) => {
-            // Filtrar bots
-            if (username.startsWith('justinfan')) return;
-            if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return;
-
-            if (days > highest.days) {
-                highest = {
-                    username: username.charAt(0).toUpperCase() + username.slice(1),
-                    days
-                };
-            }
-        });
-
-        return highest.username ? highest : null;
+    _getTopActiveStreaks(n = 2) {
+        return Array.from(this.stats.currentActiveStreaks.entries())
+            .filter(([username]) => {
+                if (username.startsWith('justinfan')) return false;
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return false;
+                return true;
+            })
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, n)
+            .map(([username, days]) => ({
+                username: username.charAt(0).toUpperCase() + username.slice(1),
+                days
+            }));
     }
 
     /**
@@ -592,7 +589,7 @@ export default class SessionStatsService {
                 type: 'streaks',
                 title: 'RACHAS ACTIVAS',
                 data: {
-                    highestStreak: displayStats.highestStreak,
+                    topStreaks: displayStats.topStreaks,
                     totalActive: displayStats.activeStreaksCount
                 }
             },
