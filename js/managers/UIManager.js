@@ -41,6 +41,10 @@ export default class UIManager {
 
         // Control de cooldown para animaciones
         this.lastMessageTime = 0;
+        
+        // Tracking de mensajes por usuario para cooldown
+        this.lastMessageByUser = new Map(); // { username: timestamp }
+        this.userCooldownMs = 5000; // 5 segundos
 
         // Suscribirse a eventos
         this._setupEventListeners();
@@ -136,12 +140,24 @@ export default class UIManager {
             const shouldShowIncoming = !isVisible && timeSinceLast > this.config.ANIMATION_COOLDOWN_MS;
 
             this.lastMessageTime = now;
+            
+            // Verificar cooldown por usuario (mismo usuario <5s)
+            const lowerUsername = username.toLowerCase();
+            const lastUserMessageTime = this.lastMessageByUser.get(lowerUsername) || 0;
+            const timeSinceUserMessage = now - lastUserMessageTime;
+            const isSameUserQuickly = timeSinceUserMessage < this.userCooldownMs;
+            
+            // Actualizar timestamp del usuario
+            this.lastMessageByUser.set(lowerUsername, now);
 
-            if (!shouldShowIncoming) {
+            if (isSameUserQuickly) {
+                // MISMO USUARIO <5s: Solo actualizar contenido sin animación
+                this.fastTransition(username, message, emotes, subscriberInfo);
+            } else if (!shouldShowIncoming) {
                 // TRANSICIÓN RÁPIDA (conversación continua)
                 this.fastTransition(username, message, emotes, subscriberInfo);
             } else {
-                // ANIMACIÓN COMPLETA DE ENTRADA (> 30s de silencio)
+                // ANIMACIÓN COMPLETA DE ENTRADA (>30s de silencio)
                 this.fullIncomingSequence(username, message, emotes, subscriberInfo);
             }
 
