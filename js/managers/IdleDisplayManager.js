@@ -20,7 +20,7 @@ export default class IdleDisplayManager {
         // Configuración de idle
         this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || 30000;  // 30 segundos sin actividad
         this.screenRotationMs = config.IDLE_ROTATION_MS || 12000;  // 12 segundos por pantalla
-        this.totalScreensInCycle = 5;  // Número de pantallas diferentes en el ciclo
+        this.totalScreensInCycle = 9;  // Número de pantallas diferentes en el ciclo (actualizado dinámicamente)
         this.maxCycles = 2;  // Número de ciclos completos antes de ocultar
 
         // Estado
@@ -278,11 +278,11 @@ export default class IdleDisplayManager {
             this.screensShown++;
 
             // Verificar si hemos completado los ciclos máximos
-            // NOTA: totalScreensInCycle en SessionStatsService son 7 ahora
-            const maxScreens = (this.statsService.getIdleDisplayData(0).totalScreens || 7) * this.maxCycles;
+            // Obtener el número total de pantallas dinámicamente
+            const totalScreens = this.statsService.getIdleDisplayData(0).totalScreens || 9;
+            const maxScreens = totalScreens * this.maxCycles;
 
-            // Hardcode 7 como fallback seguro si no podemos obtenerlo dinámicamente fácil
-            if (this.screensShown >= (7 * this.maxCycles)) {
+            if (this.screensShown >= maxScreens) {
                 this._hideAfterCycles();
                 return;
             }

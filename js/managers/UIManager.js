@@ -283,10 +283,13 @@ export default class UIManager {
                    if (xpLevelValue) xpLevelValue.textContent = subValue;
                    */
 
-                   // Cambiar Badge -> SUB
+                   // NO CAMBIAR BADGE - Mantener el ranking (TOP 32, etc.)
+                   // Badge se mantiene como está (TOP X, VIP, etc.)
+                   /* REMOVED - Badge change:
                    if (userBadge) {
                        userBadge.textContent = `SUB ${subValue} MESES`;
                    }
+                   */
                    
                    // OCULTAR ICONO DE RANGO/ADMIN (Para ganar espacio)
                    // El icono se restaurará automáticamente en el próximo mensaje por la lógica de revealMessage
@@ -299,9 +302,17 @@ export default class UIManager {
 
                    // CAMBIAR RANGO A EXCELSIOR USER (Visual Glitch)
                    // Solo visual, no cambia el Gist
+                   // Después de 2s alterna a SUB info
                    const xpTitleEl = this.dom.container.querySelector('#xp-title');
                    if (xpTitleEl) {
+                       // Mostrar EXCELSIOR USER primero
                        UIUtils.scrambleText(xpTitleEl, 'EXCELSIOR USER', 30, false);
+                       
+                       // Después de 2 segundos, alternar a SUB info
+                       setTimeout(() => {
+                           const subText = `SUB ${subValue} MESES`;
+                           UIUtils.scrambleText(xpTitleEl, subText, 30, false);
+                       }, 2000);
                    }
 
                 }, 4000); // 4 segundos de delay (ajustable)

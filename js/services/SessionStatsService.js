@@ -621,7 +621,12 @@ export default class SessionStatsService {
 
         // Rotar entre pantallas
         const screenIndex = cycleIndex % screens.length;
-        return screens[screenIndex];
+        const screenData = screens[screenIndex];
+        
+        // Añadir información sobre el total de pantallas
+        screenData.totalScreens = screens.length;
+        
+        return screenData;
     }
 
     /**
