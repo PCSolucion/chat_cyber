@@ -476,6 +476,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "epic",
             icon: "🤖",
+            image: "img/logros/cyberpsycho tier.png",
             rule: { field: "userData.level", operator: ">=", value: 60 }
         },
         maxtac_rank: {
@@ -485,6 +486,7 @@ const ACHIEVEMENTS_DATA = {
             category: "levels",
             rarity: "legendary",
             icon: "🚔",
+            image: "img/logros/maxtac rank.png",
             rule: { field: "userData.level", operator: ">=", value: 70 }
         },
         level_milestone_75: {
@@ -637,6 +639,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "rare",
             icon: "🏭",
+            image: "img/logros/xp tycoon.png",
             rule: { field: "userData.xp", operator: ">=", value: 50000 }
         },
         xp_empire: {
@@ -702,6 +705,7 @@ const ACHIEVEMENTS_DATA = {
             category: "xp",
             rarity: "epic",
             icon: "3️⃣",
+            image: "img/logros/triple threat.png",
             rule: { field: "stats.usedMultiplier3", operator: "==", value: true }
         },
         bonus_hunter: {
@@ -860,6 +864,7 @@ const ACHIEVEMENTS_DATA = {
             category: "stream",
             rarity: "uncommon",
             icon: "🎬",
+            image: "img/logros/stream opener.png",
             rule: { field: "stats.streamOpenerCount", operator: ">=", value: 5 }
         },
         early_supporter: {
@@ -869,6 +874,7 @@ const ACHIEVEMENTS_DATA = {
             category: "stream",
             rarity: "rare",
             icon: "🌟",
+            image: "img/logros/early supporter.png",
             rule: { field: "stats.streamOpenerCount", operator: ">=", value: 10 }
         },
         live_regular: {
@@ -1195,6 +1201,7 @@ const ACHIEVEMENTS_DATA = {
             category: "special",
             rarity: "epic",
             icon: "📋",
+            image: "img/logros/completionist.png",
             rule: { field: "userData.achievements.length", operator: ">=", value: 50 }
         },
         master_collector: {
@@ -1243,6 +1250,7 @@ const ACHIEVEMENTS_DATA = {
             category: "bro",
             rarity: "uncommon",
             icon: "🤛",
+            image: "img/logros/bro initiate.png",
             rule: { field: "stats.broCount", operator: ">=", value: 10 }
         },
         bro_fanatic: {
@@ -1252,6 +1260,7 @@ const ACHIEVEMENTS_DATA = {
             category: "bro",
             rarity: "rare",
             icon: "😎",
+            image: "img/logros/bro initiate.png",
             rule: { field: "stats.broCount", operator: ">=", value: 20 }
         },
         bro_master: {
@@ -1261,6 +1270,7 @@ const ACHIEVEMENTS_DATA = {
             category: "bro",
             rarity: "epic",
             icon: "🧢",
+            image: "img/logros/bro initiate.png",
             rule: { field: "stats.broCount", operator: ">=", value: 50 }
         },
         bro_legend: {
@@ -1270,6 +1280,7 @@ const ACHIEVEMENTS_DATA = {
             category: "bro",
             rarity: "legendary",
             icon: "💪",
+            image: "img/logros/bro initiate.png",
             rule: { field: "stats.broCount", operator: ">=", value: 100 }
         },
 

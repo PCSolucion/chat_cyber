@@ -54,10 +54,10 @@ const API = (function () {
             const baseUrl = `https://gist.githubusercontent.com/${VIEWER_CONFIG.GIST_USERNAME}/${VIEWER_CONFIG.GIST_ID}/raw`;
             const timestamp = Date.now(); // Cache buster
 
-            // Fetch all data in parallel
+            // Fetch XP and history, but achievements.json is optional (handled locally)
             const [xpResponse, achResponse, historyResponse] = await Promise.all([
                 fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_FILENAME}?t=${timestamp}`),
-                fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_ACHIEVEMENTS_FILENAME}?t=${timestamp}`),
+                fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_ACHIEVEMENTS_FILENAME}?t=${timestamp}`).catch(e => ({ ok: false })),
                 fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_HISTORY_FILENAME}?t=${timestamp}`)
             ]);
 
@@ -265,14 +265,18 @@ const API = (function () {
      * @returns {Object}
      */
     function getAchievementsData() {
+        // ALWAYS prioritize local ACHIEVEMENTS_DATA to allow local edits (images, etc) 
+        // to take effect immediately without needing to update the Gist.
+        if (typeof ACHIEVEMENTS_DATA !== 'undefined') {
+            return ACHIEVEMENTS_DATA;
+        }
+        
         if (window.DYNAMIC_ACHIEVEMENTS) {
             return window.DYNAMIC_ACHIEVEMENTS;
         }
-        if (typeof ACHIEVEMENTS_DATA === 'undefined') {
-            console.error('❌ ACHIEVEMENTS_DATA not loaded');
-            return { achievements: {}, categories: [] };
-        }
-        return ACHIEVEMENTS_DATA;
+
+        console.error('❌ ACHIEVEMENTS_DATA not loaded');
+        return { achievements: {}, categories: [] };
     }
 
     /**
