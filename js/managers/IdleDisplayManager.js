@@ -610,21 +610,59 @@ export default class IdleDisplayManager {
                 <div class="speedometer-wrapper">
                     <div class="speedometer-gauge">
                         <div class="gauge-bg"></div>
+                        <div class="gauge-ticks" id="gauge-ticks"></div>
                         <div class="gauge-fill" id="gauge-needle" style="transform: rotate(0deg)"></div>
                         <div class="gauge-cover">
                             <div class="gauge-value-text cyan-glow tabular-nums" id="stat-mpm">${data.avgMpm}</div>
-                            <div class="gauge-label-text">MSG/MIN</div>
+                            <div class="gauge-label-text">MESSAGES PER MINUTE</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="idle-footer-info animate-hidden animate-in delay-5">
-                <span class="pulse-dot"></span> INICIO: ${startTimeStr}h
+                <span class="pulse-dot"></span> SESSION START: ${startTimeStr}h
             </div>
         `;
 
-        // Wait for screen fade-in (500ms) before starting animations
+        // Generar ticks decorativos
+        const ticksContainer = document.getElementById('gauge-ticks');
+        if (ticksContainer) {
+            for (let i = 0; i <= 10; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'gauge-tick';
+                const rotation = i * 18; // 180 degrees / 10 segments
+                tick.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 50%;
+                    height: 1px;
+                    background: ${i % 2 === 0 ? 'rgba(0, 246, 255, 0.4)' : 'rgba(255, 255, 255, 0.1)'};
+                    transform-origin: left center;
+                    transform: rotate(${180 + rotation}deg) translateX(10px);
+                    z-index: 1;
+                `;
+                // Add a small number for main ticks
+                if (i % 2 === 0) {
+                    const label = document.createElement('div');
+                    label.textContent = i;
+                    label.style.cssText = `
+                        position: absolute;
+                        right: 15px;
+                        top: -5px;
+                        font-family: 'Share Tech Mono', monospace;
+                        font-size: 8px;
+                        color: rgba(255, 255, 255, 0.3);
+                        transform: rotate(${-180 - rotation}deg);
+                    `;
+                    tick.appendChild(label);
+                }
+                ticksContainer.appendChild(tick);
+            }
+        }
+
+        // Wait for screen fade-in (800ms) before starting animations
         setTimeout(() => {
             // Animate Numbers (Slower to match needle)
             this._animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 2500);
