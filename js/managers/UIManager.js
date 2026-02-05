@@ -1,5 +1,7 @@
 import UIUtils from '../utils/UIUtils.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * UIManager - Gestor Principal de la Interfaz de Usuario
@@ -55,25 +57,25 @@ export default class UIManager {
      * @private
      */
     _setupEventListeners() {
-        EventManager.on('stream:statusChanged', (isOnline) => {
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
             this.updateSystemStatus(isOnline);
         });
 
-        EventManager.on('stream:categoryUpdated', (category) => {
+        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
             this.updateStreamCategory(category);
         });
 
-        EventManager.on('ui:systemMessage', (data) => {
+        EventManager.on(EVENTS.UI.SYSTEM_MESSAGE, (data) => {
             // data puede ser un string directo o un objeto { text, style... }
             const text = typeof data === 'string' ? data : data.text;
             this.displayMessage('SYSTEM', text, {}, 99, 'system');
         });
 
-        EventManager.on('chat:messageReceived', () => {
+        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
             this.flashLED('ledRx');
         });
 
-        EventManager.on('gist:dataSaved', () => {
+        EventManager.on(EVENTS.STORAGE.DATA_SAVED, () => {
             this.flashLED('ledTx');
         });
     }
@@ -625,7 +627,7 @@ export default class UIManager {
         this.hideTimeout = setTimeout(() => {
             if (window.KEEP_WIDGET_VISIBLE === true) return;
             this.dom.container.classList.add('hidden');
-            if (this.config.DEBUG) console.log('🔒 Widget ocultado tras extensión de tiempo');
+            if (this.config.DEBUG) Logger.info('UI', 'Widget ocultado tras extensión de tiempo');
         }, extraTimeMs);
     }
 
@@ -648,9 +650,9 @@ export default class UIManager {
             if (window.KEEP_WIDGET_VISIBLE === true) return;
 
             this.dom.container.classList.add('hidden');
-            EventManager.emit('ui:messageHidden');
+            EventManager.emit(EVENTS.UI.MESSAGE_HIDDEN);
             if (this.config.DEBUG) {
-                console.log('🔒 Widget ocultado automáticamente');
+                Logger.info('UI', 'Widget ocultado automáticamente');
             }
         }, displayTime);
     }

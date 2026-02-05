@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class StreakCommand extends BaseCommand {
     constructor() {
@@ -23,6 +24,6 @@ export default class StreakCommand extends BaseCommand {
             message = `@${username} -> 🔥 Racha: ${streakDays} días consecutivos (Bono x${multiplier.toFixed(1)})`;
         }
 
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

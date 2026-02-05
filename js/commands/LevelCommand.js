@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class LevelCommand extends BaseCommand {
     constructor() {
@@ -22,6 +23,6 @@ export default class LevelCommand extends BaseCommand {
         const message = `@${username} -> Nivel ${xpInfo.level} | ${xpInfo.title} | XP: ${Math.floor(xpInfo.progress.xpInCurrentLevel)}/${Math.floor(xpInfo.progress.xpNeededForNext)}`;
 
         // Emitir evento para mostrar en UI
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

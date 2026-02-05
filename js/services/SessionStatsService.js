@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * SessionStatsService - Estadísticas en Tiempo Real de la Sesión
@@ -105,7 +106,7 @@ export default class SessionStatsService {
      */
     _bindToServices() {
         // Suscribirse a level-ups vía EventManager
-        EventManager.on('user:levelUp', (eventData) => {
+        EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
             this.stats.levelUps.push({
                 ...eventData,
                 timestamp: Date.now()
@@ -113,12 +114,12 @@ export default class SessionStatsService {
         });
 
         // Suscribirse a cambios de estado del stream
-        EventManager.on('stream:statusChanged', (isOnline) => {
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
             this.setStreamStatus(isOnline);
         });
 
         // Suscribirse a achievements vía EventManager
-        EventManager.on('user:achievementUnlocked', (eventData) => {
+        EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
             this.stats.achievementsUnlocked.push({
                 ...eventData,
                 timestamp: Date.now()

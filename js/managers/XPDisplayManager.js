@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * XPDisplayManager - Gestión de UI para el Sistema de XP (Integrado en Widget)
@@ -99,7 +100,7 @@ export default class XPDisplayManager {
      */
     bindToExperienceService() {
         // Suscribirse al evento global de level up
-        EventManager.on('user:levelUp', (eventData) => {
+        EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
             this.showLevelUp(eventData);
         });
     }

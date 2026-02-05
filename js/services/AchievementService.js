@@ -1,5 +1,6 @@
 import { ACHIEVEMENTS_DATA } from '../../viewer/data/AchievementsData.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * AchievementService - Sistema de Logros (Refactorizado)
@@ -45,8 +46,8 @@ export default class AchievementService {
         }
 
         // Suscribirse a eventos de stream
-        EventManager.on('stream:statusChanged', (isOnline) => this.setStreamStatus(isOnline));
-        EventManager.on('stream:categoryUpdated', (category) => this.setStreamCategory(category));
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline));
+        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category));
     }
 
     /**
@@ -524,11 +525,11 @@ export default class AchievementService {
     }
 
     onAchievementUnlocked(callback) {
-        return EventManager.on('user:achievementUnlocked', callback);
+        return EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, callback);
     }
 
     emitAchievementUnlocked(username, achievement) {
-        EventManager.emit('user:achievementUnlocked', {
+        EventManager.emit(EVENTS.USER.ACHIEVEMENT_UNLOCKED, {
             username,
             achievement,
             timestamp: Date.now()

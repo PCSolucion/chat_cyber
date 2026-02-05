@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -170,7 +171,7 @@ export default class GistStorageService {
             }
 
             Logger.debug('Storage', `${fileName} guardado en Gist`);
-            EventManager.emit('gist:dataSaved');
+            EventManager.emit(EVENTS.STORAGE.DATA_SAVED);
             return true;
 
         } catch (error) {

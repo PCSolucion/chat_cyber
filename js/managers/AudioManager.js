@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * AudioManager - Centralized Audio Management System
@@ -41,16 +42,16 @@ export default class AudioManager {
 
     _setupEventListeners() {
         // 1. Chat Message
-        EventManager.on('chat:messageReceived', () => this.playChatMessage());
+        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => this.playChatMessage());
         
         // 2. Level Up (Data contains newLevel)
-        EventManager.on('user:levelUp', (data) => this.playLevelUp(data));
+        EventManager.on(EVENTS.USER.LEVEL_UP, (data) => this.playLevelUp(data));
         
         // 3. Achievement
-        EventManager.on('user:achievementUnlocked', () => this.playAchievement());
+        EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, () => this.playAchievement());
         
         // 4. Test sound
-        EventManager.on('test:sound', () => this.playChatMessage());
+        EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());
     }
 
     /**

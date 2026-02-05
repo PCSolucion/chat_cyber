@@ -1,4 +1,5 @@
 import EventManager from './EventEmitter.js';
+import { EVENTS } from './EventTypes.js';
 
 /**
  * Logger - Servicio centralizado de registro y diagnóstico
@@ -78,7 +79,7 @@ class Logger {
         this._log('ERROR', module, message, data);
         
         // Emitir evento para notificación visual si es crítico
-        EventManager.emit('system:error', { module, message, data });
+        EventManager.emit(EVENTS.SYSTEM.ERROR, { module, message, data });
         
         // Persistir si está habilitado
         if (this.config.persistErrors) {

@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class TopCommand extends BaseCommand {
     constructor() {
@@ -13,7 +14,7 @@ export default class TopCommand extends BaseCommand {
         const leaderboard = services.xp.getXPLeaderboard(3);
 
         if (!leaderboard || leaderboard.length === 0) {
-            EventManager.emit('ui:systemMessage', 'Aún no hay datos de ranking.');
+            EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, 'Aún no hay datos de ranking.');
             return;
         }
 
@@ -25,6 +26,6 @@ export default class TopCommand extends BaseCommand {
         });
 
         const message = `TOP 3: ${parts.join(' | ')}`;
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

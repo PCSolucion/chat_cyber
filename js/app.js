@@ -3,6 +3,7 @@ import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
 import EventManager from './utils/EventEmitter.js';
+import { EVENTS } from './utils/EventTypes.js';
 import Logger from './utils/Logger.js';
 import { ALL_COMMANDS } from './commands/index.js';
 import CommandManager from './managers/CommandManager.js';
@@ -111,11 +112,11 @@ class App {
 
             // EventManager ya notifica a los componentes interesados (Processor, UI, Achievements)
             if (statusChanged) {
-                EventManager.emit('stream:statusChanged', isOnline);
+                EventManager.emit(EVENTS.STREAM.STATUS_CHANGED, isOnline);
             }
 
             if (category) {
-                EventManager.emit('stream:categoryUpdated', category);
+                EventManager.emit(EVENTS.STREAM.CATEGORY_UPDATED, category);
             }
 
             // GESTIÓN DINÁMICA DEL WATCH TIME TRACKER

@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class ShoutoutCommand extends BaseCommand {
     constructor() {
@@ -29,7 +30,7 @@ export default class ShoutoutCommand extends BaseCommand {
             }
 
             const message = `📢 ¡Seguid a este crack! twitch.tv/${targetUser} (Último juego: ${game}) - ¡Dadle amor! 💜`;
-            EventManager.emit('ui:systemMessage', message);
+            EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
 
         } catch (error) {
             console.error('Error executing !so:', error);

@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * NotificationManager - Gestor de Notificaciones
@@ -51,17 +52,17 @@ export default class NotificationManager {
      */
     _setupEventListeners() {
         // Escuchar logros desbloqueados
-        EventManager.on('user:achievementUnlocked', (eventData) => {
+        EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
             this.showAchievement(eventData);
         });
 
         // Escuchar progreso de "Bro"
-        EventManager.on('user:broProgress', ({ current, max }) => {
+        EventManager.on(EVENTS.USER.BRO_PROGRESS, ({ current, max }) => {
             this.showBroProgress(current, max);
         });
 
         // Escuchar level ups para mostrarlos también como notificación (opcional, pero mejora UX)
-        EventManager.on('user:levelUp', (eventData) => {
+        EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
             // Podríamos añadir una notificación especial para level ups aquí si quisiéramos
             // Por ahora, el XPDisplayManager ya lo maneja de forma visual directa.
         });

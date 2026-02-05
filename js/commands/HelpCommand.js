@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class HelpCommand extends BaseCommand {
     constructor() {
@@ -19,6 +20,6 @@ export default class HelpCommand extends BaseCommand {
         ];
         
         const message = `@${username} -> Comandos: ${commands.join(', ')}`;
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

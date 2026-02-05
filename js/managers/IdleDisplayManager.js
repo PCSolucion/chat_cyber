@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 import IdleScreenRenderer from './IdleScreenRenderer.js';
 import IdleDataOrchestrator from './IdleDataOrchestrator.js';
 
@@ -54,12 +55,11 @@ export default class IdleDisplayManager {
      */
     _setupEventListeners() {
         // Escuchar actividad de usuarios para salir de modo idle
-        EventManager.on('user:activity', () => {
+        EventManager.on(EVENTS.USER.ACTIVITY, () => {
             this.onActivity();
         });
-
         // Escuchar cuando se oculta el mensaje para entrar en idle inmediatamente
-        EventManager.on('ui:messageHidden', () => {
+        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, () => {
             this._forceIdleMode();
         });
     }

@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class EmotesCommand extends BaseCommand {
     constructor() {
@@ -12,7 +13,7 @@ export default class EmotesCommand extends BaseCommand {
         const topEmotes = services.sessionStats.getTopEmotes(3);
 
         if (topEmotes.length === 0) {
-            EventManager.emit('ui:systemMessage', '🤔 Aún no se han usado emotes en esta sesión.');
+            EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, '🤔 Aún no se han usado emotes en esta sesión.');
             return;
         }
 
@@ -23,6 +24,6 @@ export default class EmotesCommand extends BaseCommand {
         
         const message = `🔥 Emotes Trending: ${parts.join(' | ')}`;
         
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

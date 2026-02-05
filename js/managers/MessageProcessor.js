@@ -12,6 +12,7 @@ import UIManager from './UIManager.js';
 import IdleDisplayManager from './IdleDisplayManager.js';
 import NotificationManager from './NotificationManager.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -237,13 +238,13 @@ export default class MessageProcessor {
             }
 
             // Emitir evento de mensaje recibido para que otros servicios reaccionen
-            EventManager.emit('chat:messageReceived', { username, message, tags });
+            EventManager.emit(EVENTS.CHAT.MESSAGE_RECEIVED, { username, message, tags });
 
             // Si es un comando, DETENER procesamiento visual aquí.
             // El CommandManager se encargará de ejecutar la lógica y emitir respuestas de sistema si corresponde.
             if (message.startsWith('!')) {
                 // Aún trackeamos actividad técnica (que el usuario está vivo), pero no mostramos el texto basura
-                EventManager.emit('user:activity', username);
+                EventManager.emit(EVENTS.USER.ACTIVITY, username);
                 return;
             }
 
@@ -339,7 +340,7 @@ export default class MessageProcessor {
             }
 
             // Notificar actividad (vía evento)
-            EventManager.emit('user:activity', username);
+            EventManager.emit(EVENTS.USER.ACTIVITY, username);
 
         } catch (e) {
             console.error('❌ Error processing message:', e);
@@ -400,7 +401,7 @@ export default class MessageProcessor {
                     nextMilestone = Math.ceil((broCount + 1) / 100) * 100;
                 }
 
-                EventManager.emit('user:broProgress', { current: broCount, max: nextMilestone });
+                EventManager.emit(EVENTS.USER.BRO_PROGRESS, { current: broCount, max: nextMilestone });
             }
 
             // Inyectar la lista actualizada de logros en xpResult

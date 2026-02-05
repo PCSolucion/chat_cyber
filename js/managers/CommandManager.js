@@ -1,4 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * CommandManager - Gestión modular de comandos de chat
@@ -48,7 +50,7 @@ export default class CommandManager {
         // Middleware de Logging
         this.addMiddleware((ctx, next) => {
             if (this.config.DEBUG) {
-                console.log(`⚡ Command execution: !${ctx.commandName} by ${ctx.username}`);
+                Logger.debug('Command', `Command execution: !${ctx.commandName} by ${ctx.username}`);
             }
             next();
         });
@@ -58,13 +60,13 @@ export default class CommandManager {
             if (this.checkPermissions(ctx.tags, ctx.command.requiredPermission)) {
                 next();
             } else {
-                console.warn(`🚫 Access denied for !${ctx.commandName} (User: ${ctx.username}, Required: ${ctx.command.requiredPermission})`);
+                Logger.warn('Command', `Access denied for !${ctx.commandName} (User: ${ctx.username}, Required: ${ctx.command.requiredPermission})`);
             }
         });
     }
 
     _setupEventListeners() {
-        EventManager.on('chat:messageReceived', (data) => {
+        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, (data) => {
             this.handleMessage(data);
         });
     }

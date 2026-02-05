@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class UptimeCommand extends BaseCommand {
     constructor() {
@@ -11,7 +12,7 @@ export default class UptimeCommand extends BaseCommand {
         if (!services.sessionStats) return;
 
         if (!services.sessionStats.isLive || !services.sessionStats.sessionStart) {
-             EventManager.emit('ui:systemMessage', '🔴 El stream está OFFLINE (o no se han detectado datos aún).');
+             EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, '🔴 El stream está OFFLINE (o no se han detectado datos aún).');
              return;
         }
 
@@ -22,6 +23,6 @@ export default class UptimeCommand extends BaseCommand {
 
         const timeStr = `${hours}h ${minutes % 60}m ${seconds % 60}s`;
         
-        EventManager.emit('ui:systemMessage', `⏱️ Stream en directo: ${timeStr}`);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, `⏱️ Stream en directo: ${timeStr}`);
     }
 }

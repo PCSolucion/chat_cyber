@@ -3,6 +3,7 @@ import LevelCalculator from './LevelCalculator.js';
 import XPSourceEvaluator from './XPSourceEvaluator.js';
 import PersistenceManager from './PersistenceManager.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
 /**
@@ -341,7 +342,7 @@ export default class ExperienceService {
         // Detectar level-up
         const leveledUp = newLevel > previousLevel;
         if (leveledUp) {
-            EventManager.emit('user:levelUp', {
+            EventManager.emit(EVENTS.USER.LEVEL_UP, {
                 username,
                 oldLevel: previousLevel,
                 newLevel,
@@ -514,7 +515,7 @@ export default class ExperienceService {
     }
 
     onLevelUp(callback) {
-        return EventManager.on('user:levelUp', callback);
+        return EventManager.on(EVENTS.USER.LEVEL_UP, callback);
     }
 
     // Método depreciado en favor de EventManager.emit directo en trackMessage

@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class StatsCommand extends BaseCommand {
     constructor() {
@@ -21,6 +22,6 @@ export default class StatsCommand extends BaseCommand {
         const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 
         const message = `@${username} -> 📊 Sesión actual: ${msgCount} mensajes | ⏱️ Tiempo: ${timeStr}`;
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

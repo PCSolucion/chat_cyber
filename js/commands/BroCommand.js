@@ -1,5 +1,6 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 export default class BroCommand extends BaseCommand {
     constructor() {
@@ -15,6 +16,6 @@ export default class BroCommand extends BaseCommand {
         const broCount = stats.broCount || 0;
 
         const message = `@${username} -> Has dicho "bro" ${broCount} veces. Bro...`;
-        EventManager.emit('ui:systemMessage', message);
+        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }
