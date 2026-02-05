@@ -251,12 +251,6 @@ export default class UIManager {
             // Aplicar estilos de rol
             this.applyRoleStyles(userRole);
 
-            // Aplicar estilos de rol
-            this.applyRoleStyles(userRole);
-
-            // Aplicar estilos de rol
-            this.applyRoleStyles(userRole);
-
             // ================= SUBSCRIBER GOLD MODE LOGIC =================
             // 1. Limpiar timers previos
             if (this.goldModeTimeout) {
