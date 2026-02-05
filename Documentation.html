@@ -855,7 +855,7 @@
     <nav class="sidebar-nav">
         <div class="sidebar-logo">
             <h3>CYBERPUNK WIDGET</h3>
-            <span>DOCUMENTACIÓN v1.0</span>
+            <span>DOCUMENTACIÓN v1.1.1</span>
         </div>
 
         <div class="nav-section">
@@ -883,6 +883,10 @@
             <a href="#componentes" class="nav-link">
                 <span class="nav-icon">›</span>
                 Servicios y Managers
+            </a>
+            <a href="#utilidades" class="nav-link">
+                <span class="nav-icon">›</span>
+                Utilidades (v1.1.1+)
             </a>
             <a href="#idle" class="nav-link">
                 <span class="nav-icon">›</span>
@@ -939,7 +943,7 @@
                     </tr>
                     <tr>
                         <td>Total de Archivos JS</td>
-                        <td>21 archivos (~180KB)</td>
+                        <td>23 archivos (~190KB)</td>
                     </tr>
                     <tr>
                         <td>Archivos CSS</td>
@@ -947,7 +951,7 @@
                     </tr>
                     <tr>
                         <td>Logros Definidos</td>
-                        <td>143 logros en 11 categorías</td>
+                        <td>143 logros en 11 categorías (datos centralizados)</td>
                     </tr>
                     <tr>
                         <td>Servicios de Emotes</td>
@@ -958,6 +962,72 @@
                         <td>GitHub Gist API + localStorage (backup)</td>
                     </tr>
                 </table>
+            </div>
+        </section>
+
+        <!-- ============== NOVEDADES v1.1.1 ============== -->
+        <section id="novedades">
+            <h2>Novedades v1.1.1 (Feb 2026)</h2>
+            
+            <div class="highlight-box">
+                Esta versión introduce <strong>mejoras arquitectónicas significativas</strong> que optimizan
+                la mantenibilidad, rendimiento y escalabilidad del sistema.
+            </div>
+
+            <div class="component-grid">
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">📋</div>
+                        <div class="component-title">Sistema de Logging Centralizado</div>
+                    </div>
+                    <p>Implementación de <code>EventTypes.js</code> que reemplaza todos los strings hardcodeados
+                    por constantes tipadas, mejorando la mantenibilidad y previniendo errores.</p>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">🎨</div>
+                        <div class="component-title">Motor de Animaciones Optimizado</div>
+                    </div>
+                    <p><code>ScrambleEngine.js</code> centraliza las animaciones de texto scramble con
+                    optimizaciones de rendimiento usando RAF y mejor gestión de memoria.</p>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">🗂️</div>
+                        <div class="component-title">Datos de Logros Centralizados</div>
+                    </div>
+                    <p>Consolidación de <code>AchievementsData.js</code> en <code>viewer/data/</code> como
+                    fuente única de verdad. Renombrado de <code>achievements-viewer</code> a <code>viewer</code>.</p>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">⚡</div>
+                        <div class="component-title">Sistema de Comandos Modular</div>
+                    </div>
+                    <p>Nuevo <code>CommandRegistry</code> con middleware, permisos y validación para
+                    una gestión escalable de comandos de chat.</p>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">🔄</div>
+                        <div class="component-title">Separación de Responsabilidades</div>
+                    </div>
+                    <p><code>IdleDataOrchestrator.js</code> extrae la lógica de datos del modo Idle,
+                    separando claramente datos de renderizado.</p>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">💾</div>
+                        <div class="component-title">Persistencia Mejorada</div>
+                    </div>
+                    <p>Resolución de conflictos HTTP 409 en <code>GistStorageService</code> para
+                    mayor estabilidad en entornos de baja latencia.</p>
+                </div>
             </div>
         </section>
 
@@ -1130,6 +1200,11 @@
                         <td>Lógica de negocio (XP, logros, estadísticas en vivo)</td>
                     </tr>
                     <tr>
+                        <td>4b. Comandos (v1.1.1)</td>
+                        <td>CommandRegistry + Middleware</td>
+                        <td>Sistema modular de comandos con permisos y validación</td>
+                    </tr>
+                    <tr>
                         <td>5. Managers</td>
                         <td>UIManager, XPDisplay, IdleDisplay, Notification</td>
                         <td>Gestión de interfaz, notificaciones y animaciones</td>
@@ -1137,7 +1212,7 @@
                     <tr>
                         <td>6. Persistencia</td>
                         <td>GistStorageService</td>
-                        <td>Almacenamiento en GitHub Gist + localStorage</td>
+                        <td>Almacenamiento en GitHub Gist + localStorage (mejorado v1.1.1 con resolución de conflictos)</td>
                     </tr>
                 </table>
             </div>
@@ -1193,7 +1268,7 @@
                     <span class="tag service">Service</span>
                     <ul>
                         <li>Motor de reglas dinámico que separa lógica de datos</li>
-                        <li><strong>143 logros</strong> definidos en un archivo externo</li>
+                        <li><strong>143 logros</strong> definidos en <code>viewer/data/AchievementsData.js</code> (centralizado v1.1.1)</li>
                         <li>Evaluación en tiempo real tras cada mensaje recibido</li>
                     </ul>
                 </div>
@@ -1278,6 +1353,69 @@
                         <li>Gestión centralizada de popups y alertas visuales</li>
                         <li>Maneja notificaciones de logros y el sistema <strong>"Bro"</strong></li>
                         <li>Cola de notificaciones para evitar solapamientos</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== UTILIDADES Y COMPONENTES CENTRALIZADOS ============== -->
+        <section id="utilidades">
+            <h2>Utilidades y Componentes Centralizados (v1.1.1+)</h2>
+            
+            <div class="highlight-box">
+                La versión <strong>1.1.1</strong> introduce componentes centralizados que mejoran la arquitectura,
+                mantenibilidad y rendimiento del sistema mediante la consolidación de funcionalidades comunes.
+            </div>
+
+            <div class="component-grid">
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">E</div>
+                        <div>
+                            <div class="component-title">EventTypes</div>
+                            <div class="component-file">js/constants/EventTypes.js</div>
+                        </div>
+                    </div>
+                    <span class="tag util">Constant</span>
+                    <ul>
+                        <li>Catálogo centralizado de <strong>todos los eventos del sistema</strong></li>
+                        <li>Reemplaza strings hardcodeados por constantes tipadas</li>
+                        <li>Mejora mantenibilidad y previene errores de typos</li>
+                        <li>Incluye eventos de: XP, Logros, UI, Sistema, Comandos, etc.</li>
+                    </ul>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">S</div>
+                        <div>
+                            <div class="component-title">ScrambleEngine</div>
+                            <div class="component-file">js/utils/ScrambleEngine.js</div>
+                        </div>
+                    </div>
+                    <span class="tag util">Utility</span>
+                    <ul>
+                        <li>Motor centralizado para <strong>animaciones de texto scramble</strong></li>
+                        <li>Efecto cyberpunk de caracteres aleatorios antes del texto final</li>
+                        <li>Optimizado con RAF (RequestAnimationFrame) y gestión de memoria</li>
+                        <li>Usado en IdleDisplayManager y otros componentes UI</li>
+                    </ul>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
+                        <div class="component-icon">I</div>
+                        <div>
+                            <div class="component-title">IdleDataOrchestrator</div>
+                            <div class="component-file">js/utils/IdleDataOrchestrator.js</div>
+                        </div>
+                    </div>
+                    <span class="tag util">Utility</span>
+                    <ul>
+                        <li>Extrae y centraliza la <strong>lógica de datos del modo Idle</strong></li>
+                        <li>Separa responsabilidades: datos vs renderizado</li>
+                        <li>Coordina SessionStatsService, ExperienceService y AchievementService</li>
+                        <li>Provee datos estructurados a IdleDisplayManager</li>
                     </ul>
                 </div>
             </div>
