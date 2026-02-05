@@ -1,4 +1,5 @@
 import CONFIG from '../config.js';
+import ScrambleEngine from './ScrambleEngine.js';
 
 /**
  * UIUtils - Utilidades para la Interfaz de Usuario
@@ -97,50 +98,17 @@ const UIUtils = {
         return result;
     },
 
-    /**
-     * Efecto de desencriptación/scramble de texto
-     * - Revela el texto carácter por carácter
-     * - Usa caracteres aleatorios durante la revelación
-     * 
-     * @param {HTMLElement} element - Elemento DOM donde aplicar el efecto
-     * @param {string} finalText - Texto final a mostrar
-     * @param {number} speed - Velocidad del efecto (ms entre frames)
-     */
-    scrambleText(element, finalText, speed = 30, addQuotes = true) {
-        const quote = addQuotes ? '"' : '';
+    scrambleText(element, finalText, speed = 30, addQuotes = true, onComplete = null) {
+        // La velocidad en ScrambleEngine se controla por revealSpeed (caracteres por frame)
+        // Mapeamos el 'speed' de 30ms (un frame de reveal cada 30ms aprox) a revealSpeed
+        // frames por segundo = 60. 30ms interval = ~33hz. revealSpeed = 0.3 aprox.
+        const mappedRevealSpeed = Math.max(0.1, 10 / speed);
 
-        // Si el texto es muy corto, mostrarlo directamente
-        if (finalText.length < 2) {
-            element.innerHTML = `${quote}${finalText}${quote}`;
-            return;
-        }
-
-        let iteration = 0;
-        const chars = '!<>-_\\/[]{}—=+*^?#________'; // Caracteres "tecno"
-
-        // Limpiar intervalo anterior si existe
-        if (element.interval) {
-            clearInterval(element.interval);
-        }
-
-        element.interval = setInterval(() => {
-            element.innerText = quote + finalText
-                .split("")
-                .map((letter, index) => {
-                    if (index < iteration) {
-                        return finalText[index];
-                    }
-                    return chars[Math.floor(Math.random() * chars.length)];
-                })
-                .join("") + quote;
-
-            if (iteration >= finalText.length) {
-                clearInterval(element.interval);
-                element.innerHTML = `${quote}${finalText}${quote}`;
-            }
-
-            iteration += 1 / 2; // Velocidad de revelado
-        }, speed);
+        ScrambleEngine.scramble(element, finalText, {
+            revealSpeed: mappedRevealSpeed,
+            addQuotes: addQuotes,
+            onComplete: onComplete
+        });
     },
 
     /**
