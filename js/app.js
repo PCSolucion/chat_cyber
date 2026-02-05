@@ -1,4 +1,5 @@
 import CONFIG from './config.js';
+import { TIMING } from './constants/AppConstants.js';
 import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
@@ -133,7 +134,7 @@ class App {
             }
 
             // Próximo intervalo
-            const nextInterval = isOnline ? 600000 : 60000;
+            const nextInterval = isOnline ? TIMING.METADATA_CHECK_ONLINE_MS : TIMING.METADATA_CHECK_OFFLINE_MS;
             if (this.categoryTimer) clearTimeout(this.categoryTimer);
             this.categoryTimer = setTimeout(updateMetadata, nextInterval);
         };
@@ -147,7 +148,7 @@ class App {
     startWatchTimeTracker() {
         if (this.watchTimeInterval) return;
 
-        const INTERVAL_MS = 600000; // 10 minutos
+        const INTERVAL_MS = TIMING.WATCH_TIME_INTERVAL_MS; // 10 minutos
 
         const trackTime = async () => {
             if (!this.twitchService || !this.processor || !this.isStreamOnline) return;
@@ -178,7 +179,7 @@ class App {
         this.watchTimeInterval = setInterval(trackTime, INTERVAL_MS);
         
         // Ejecución inicial diferida
-        setTimeout(trackTime, 5000);
+        setTimeout(trackTime, TIMING.WATCH_TIME_INITIAL_DELAY_MS);
     }
 
     /**

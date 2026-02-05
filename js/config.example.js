@@ -6,6 +6,10 @@
 const CONFIG = {
     // Configuración de Twitch
     TWITCH_CHANNEL: 'tu_canal_aqui',
+    
+    // Usuario principal (Broadcaster) - Usualmente el mismo que el canal
+    // Se usa para excluirlo de rankings de subs, etc.
+    BROADCASTER_USERNAME: 'tu_usuario',
 
     // Tiempos (en milisegundos)
     MESSAGE_DISPLAY_TIME: 14000,

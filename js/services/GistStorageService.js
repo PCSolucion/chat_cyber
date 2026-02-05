@@ -1,6 +1,7 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import Logger from '../utils/Logger.js';
+import { TIMING, STORAGE } from '../constants/AppConstants.js';
 
 /**
  * GistStorageService - Servicio de Persistencia con GitHub Gist
@@ -34,7 +35,7 @@ export default class GistStorageService {
         // Cache local
         this.cache = null;
         this.cacheTimestamp = null;
-        this.cacheTTL = 60000; // 1 minuto de cache
+        this.cacheTTL = TIMING.GIST_CACHE_TTL_MS; // 1 minuto de cache
         this.lastError = null; // Store last error for UI debugging
 
         // Control de rate limiting
@@ -137,9 +138,9 @@ export default class GistStorageService {
      */
     async saveFile(fileName, data, retryCount = 0) {
         if (!this.checkConfiguration()) return false;
-
-        const maxRetries = 3;
-        const retryDelay = 1000; // 1 segundo base
+        
+        const maxRetries = STORAGE.MAX_RETRIES;
+        const retryDelay = STORAGE.BASE_RETRY_DELAY_MS;
 
         try {
             const content = JSON.stringify(data, null, 2);

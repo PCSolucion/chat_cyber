@@ -1,5 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { STATS } from '../constants/AppConstants.js';
 
 /**
  * SessionStatsService - Estadísticas en Tiempo Real de la Sesión
@@ -83,13 +84,13 @@ export default class SessionStatsService {
             });
 
             // Mantener solo los últimos 60 minutos
-            if (this.stats.activityHistory.length > 60) {
+            if (this.stats.activityHistory.length > STATS.ACTIVITY_HISTORY_MAX_MINUTES) {
                 this.stats.activityHistory.shift();
             }
 
             // Agregar al array circular de mensajes por minuto
             this.stats.messagesByMinute.push(this.lastMinuteMessages);
-            if (this.stats.messagesByMinute.length > 60) {
+            if (this.stats.messagesByMinute.length > STATS.MESSAGES_BY_MINUTE_BUFFER) {
                 this.stats.messagesByMinute.shift();
             }
 
@@ -448,8 +449,11 @@ export default class SessionStatsService {
 
         return Array.from(this.experienceService.usersXP.entries())
             .filter(([username, data]) => {
-                // Excluir al streamer (liiukiin) y filtrar por meses > 0
-                if (username === 'liiukiin') return false;
+                // Excluir al streamer y filtrar por meses > 0
+                // Fallback: Si no hay BROADCASTER_USERNAME, usa TWITCH_CHANNEL, o 'liiukiin' por defecto
+                const broadcaster = this.config.BROADCASTER_USERNAME || this.config.TWITCH_CHANNEL || 'liiukiin';
+                
+                if (username.toLowerCase() === broadcaster.toLowerCase()) return false;
                 return data.subMonths && data.subMonths > 0;
             })
             .sort((a, b) => b[1].subMonths - a[1].subMonths)

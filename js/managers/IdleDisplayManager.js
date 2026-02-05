@@ -1,5 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { IDLE } from '../constants/AppConstants.js';
 import IdleScreenRenderer from './IdleScreenRenderer.js';
 import IdleDataOrchestrator from './IdleDataOrchestrator.js';
 
@@ -27,10 +28,10 @@ export default class IdleDisplayManager {
         this.orchestrator = new IdleDataOrchestrator(sessionStatsService);
 
         // Configuración de idle
-        this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || 30000;  // 30 segundos sin actividad
-        this.screenRotationMs = config.IDLE_ROTATION_MS || 12000;  // 12 segundos por pantalla
-        this.totalScreensInCycle = 9;  // Número de pantallas diferentes en el ciclo (actualizado dinámicamente)
-        this.maxCycles = 2;  // Número de ciclos completos antes de ocultar
+        this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || IDLE.DEFAULT_TIMEOUT_MS;
+        this.screenRotationMs = config.IDLE_ROTATION_MS || IDLE.DEFAULT_ROTATION_MS;
+        this.totalScreensInCycle = IDLE.TOTAL_SCREENS_IN_CYCLE;
+        this.maxCycles = IDLE.MAX_CYCLES;
 
         // Estado
         this.isIdle = false;
@@ -255,7 +256,7 @@ export default class IdleDisplayManager {
             this.screensShown++;
 
             // Verificar si hemos completado los ciclos máximos
-            const totalScreens = currentScreenData.totalScreens || 9;
+            const totalScreens = currentScreenData.totalScreens || IDLE.TOTAL_SCREENS_IN_CYCLE;
             const maxScreens = totalScreens * this.maxCycles;
 
             if (this.screensShown >= maxScreens) {
