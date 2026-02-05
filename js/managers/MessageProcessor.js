@@ -13,6 +13,7 @@ import IdleDisplayManager from './IdleDisplayManager.js';
 import NotificationManager from './NotificationManager.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { TIMING } from '../constants/AppConstants.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -450,7 +451,7 @@ export default class MessageProcessor {
     _checkIsStreamStart() {
         if (!this.isStreamOnline || !this.streamStartTime) return false;
         
-        const windowMs = 10 * 60 * 1000; // 10 minutos
+        const windowMs = TIMING.STREAM_START_WINDOW_MS; // 10 minutos
         return (Date.now() - this.streamStartTime) < windowMs;
     }
 

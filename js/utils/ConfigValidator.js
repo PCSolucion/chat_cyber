@@ -1,4 +1,5 @@
 import Logger from './Logger.js';
+import { TIMING, IDLE } from '../constants/AppConstants.js';
 
 /**
  * ConfigValidator - Validador de Integridad de la Configuración
@@ -20,10 +21,10 @@ export default class ConfigValidator {
             
             // Campos Importantes con valores por defecto
             BROADCASTER_USERNAME: { required: false, type: 'string', default: 'liiukiin' },
-            MESSAGE_DISPLAY_TIME: { required: false, type: 'number', default: 14000 },
-            IDLE_TIMEOUT_MS: { required: false, type: 'number', default: 30000 },
-            IDLE_ROTATION_MS: { required: false, type: 'number', default: 12000 },
-            ANIMATION_COOLDOWN_MS: { required: false, type: 'number', default: 30000 },
+            MESSAGE_DISPLAY_TIME: { required: false, type: 'number', default: TIMING.MESSAGE_DISPLAY_TIME_MS },
+            IDLE_TIMEOUT_MS: { required: false, type: 'number', default: IDLE.DEFAULT_TIMEOUT_MS },
+            IDLE_ROTATION_MS: { required: false, type: 'number', default: IDLE.DEFAULT_ROTATION_MS },
+            ANIMATION_COOLDOWN_MS: { required: false, type: 'number', default: TIMING.ANIMATION_COOLDOWN_MS },
             
             // Estructuras anidadas
             UI: { 

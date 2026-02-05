@@ -1,4 +1,5 @@
 import UIUtils from '../utils/UIUtils.js';
+import { IDLE } from '../constants/AppConstants.js';
 
 /**
  * IdleScreenRenderer - Encargado de generar el HTML de las pantallas de inactividad
@@ -18,7 +19,11 @@ export default class IdleScreenRenderer {
      * @param {HTMLElement} container Contenedor donde se insertará el contenido
      */
     render(screenData, container) {
-        if (!container || !screenData) return;
+        if (!container) return;
+        if (!screenData) {
+            container.innerHTML = '<div class="empty-message">ERROR: NO SCREEN DATA</div>';
+            return;
+        }
 
         // Limpiar contenedor
         container.innerHTML = '';
@@ -28,35 +33,51 @@ export default class IdleScreenRenderer {
         screenContent.className = 'idle-screen-content';
         container.appendChild(screenContent);
 
-        // Crear contenido según tipo de pantalla
-        switch (screenData.type) {
-            case 'summary':
-                this._renderSummaryScreen(screenData, screenContent);
-                break;
-            case 'leaderboard':
-                this._renderLeaderboardScreen(screenData, screenContent);
-                break;
-            case 'trending':
-                this._renderTrendingScreen(screenData, screenContent);
-                break;
-            case 'achievements':
-                this._renderAchievementsScreen(screenData, screenContent);
-                break;
-            case 'streaks':
-                this._renderStreaksScreen(screenData, screenContent);
-                break;
-            case 'watchtime_session':
-            case 'watchtime_total':
-                this._renderWatchTimeList(screenData, screenContent);
-                break;
-            case 'last_achievement':
-                this._renderLastAchievementScreen(screenData, screenContent);
-                break;
-            case 'top_subscribers':
-                this._renderTopSubsScreen(screenData, screenContent);
-                break;
-            default:
-                this._renderSummaryScreen(screenData, screenContent);
+        // Crear contenido según tipo de pantalla con protección contra errores
+        try {
+            switch (screenData.type) {
+                case 'summary':
+                    this._renderSummaryScreen(screenData, screenContent);
+                    break;
+                case 'leaderboard':
+                    this._renderLeaderboardScreen(screenData, screenContent);
+                    break;
+                case 'trending':
+                    this._renderTrendingScreen(screenData, screenContent);
+                    break;
+                case 'achievements':
+                    this._renderAchievementsScreen(screenData, screenContent);
+                    break;
+                case 'streaks':
+                    this._renderStreaksScreen(screenData, screenContent);
+                    break;
+                case 'watchtime_session':
+                case 'watchtime_total':
+                    this._renderWatchTimeList(screenData, screenContent);
+                    break;
+                case 'last_achievement':
+                    this._renderLastAchievementScreen(screenData, screenContent);
+                    break;
+                case 'top_subscribers':
+                    this._renderTopSubsScreen(screenData, screenContent);
+                    break;
+                default:
+                    this._renderSummaryScreen(screenData, screenContent);
+            }
+        } catch (error) {
+            console.error(`❌ Error rendering idle screen of type ${screenData.type}:`, error);
+            screenContent.innerHTML = `
+                <div class="empty-message" style="font-size: 10px; opacity: 0.5;">
+                    [INTERNAL_RENDER_ERROR]: ${screenData.type}<br>
+                    FALLBACK_RECOVERY_ACTIVE
+                </div>
+            `;
+            // Si falla la pantalla específica, mostrar al menos el resumen como fallback
+            if (screenData.type !== 'summary') {
+                setTimeout(() => {
+                    try { this._renderSummaryScreen(screenData, screenContent); } catch(e) {}
+                }, 1000);
+            }
         }
     }
 
@@ -67,7 +88,14 @@ export default class IdleScreenRenderer {
      * @returns {number} Duración calculada en milisegundos
      */
     calculateScreenDuration(screenData, baseRotationMs) {
-        let duration = baseRotationMs;
+        // Asegurar que baseRotationMs es un número válido
+        const rotationMs = (typeof baseRotationMs === 'number' && !isNaN(baseRotationMs)) 
+            ? baseRotationMs 
+            : (IDLE.DEFAULT_ROTATION_MS || 12000);
+            
+        let duration = rotationMs;
+        
+        if (!screenData || !screenData.type) return duration;
 
         // Si es una lista con scroll, calcular tiempo basado en items
         if (['leaderboard', 'top_subscribers', 'watchtime_total', 'watchtime_session'].includes(screenData.type)) {
@@ -152,8 +180,8 @@ export default class IdleScreenRenderer {
         }
 
         const shouldScroll = users.length > 5;
-        // Asumimos 12000 como base si no hay manager, pero esto se usa dentro de la construcción del HTML
-        const scrollDuration = this.calculateScreenDuration(screenData, 12000) / 1000;
+        const baseRotation = IDLE.DEFAULT_ROTATION_MS || 12000;
+        const scrollDuration = this.calculateScreenDuration(screenData, baseRotation) / 1000;
 
         const content = `
             <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 
@@ -177,8 +205,9 @@ export default class IdleScreenRenderer {
     _renderSummaryScreen(screenData, container) {
         const { data } = screenData;
 
-        // Obtener hora de inicio formateada
-        const startTime = new Date(this.statsService.sessionStart);
+        // Obtener hora de inicio formateada con fallback seguro
+        const sessionStart = this.statsService?.sessionStart || Date.now();
+        const startTime = new Date(sessionStart);
         const startTimeStr = UIUtils.formatClockTime(startTime);
 
         container.innerHTML = `
@@ -309,7 +338,7 @@ export default class IdleScreenRenderer {
         }
 
         const shouldScroll = users.length > 5;
-        const scrollDuration = this.calculateScreenDuration(screenData, 12000) / 1000;
+        const scrollDuration = this.calculateScreenDuration(screenData, IDLE.DEFAULT_ROTATION_MS) / 1000;
 
         const content = `
             <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 
@@ -359,7 +388,7 @@ export default class IdleScreenRenderer {
         }
 
         const shouldScroll = users.length > 5;
-        const scrollDuration = this.calculateScreenDuration(screenData, 12000) / 1000;
+        const scrollDuration = this.calculateScreenDuration(screenData, IDLE.DEFAULT_ROTATION_MS) / 1000;
 
         const content = `
             <div class="idle-list-scroll-wrapper ${shouldScroll ? 'animate-scroll' : ''}" 

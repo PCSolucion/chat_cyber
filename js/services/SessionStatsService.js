@@ -1,6 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
-import { STATS } from '../constants/AppConstants.js';
+import { STATS, TIMING } from '../constants/AppConstants.js';
 import UIUtils from '../utils/UIUtils.js';
 
 /**
@@ -98,7 +98,7 @@ export default class SessionStatsService {
             this.lastMinuteMessages = 0;
             this.lastMinuteUsers = new Set();
 
-        }, 60000); // Cada minuto
+        }, TIMING.ACTIVITY_TRACKER_INTERVAL_MS); // Cada minuto
     }
 
     /**
@@ -267,7 +267,7 @@ export default class SessionStatsService {
             ? Date.now() - this.sessionStart
             : 0;
 
-        const sessionMinutes = Math.floor(sessionDuration / 60000);
+        const sessionMinutes = Math.floor(sessionDuration / TIMING.MINUTE_MS);
         const sessionHours = Math.floor(sessionMinutes / 60);
 
         // Calcular mensajes por minuto promedio
@@ -293,7 +293,7 @@ export default class SessionStatsService {
 
         return {
             // Tiempos
-            sessionDuration: this._formatDuration(sessionDuration),
+            sessionDuration: UIUtils.formatDuration(sessionDuration),
             sessionMinutes,
             sessionHours,
 
@@ -451,7 +451,7 @@ export default class SessionStatsService {
             .map(u => ({
                 username: UIUtils.formatUsername(u.username),
                 minutes: u.minutes,
-                formatted: UIUtils.formatDuration(u.minutes * 60000) // Convert back to ms for format
+                formatted: UIUtils.formatDuration(u.minutes * TIMING.MINUTE_MS) // Convert back to ms for format
             }));
     }
 
@@ -495,7 +495,6 @@ export default class SessionStatsService {
             currentActiveStreaks: new Map(),
             commandsUsed: new Map(),
             wordFrequency: new Map(),
-            commandsUsed: new Map(),
             activityHistory: [],
             sessionWatchTime: new Map()
         };

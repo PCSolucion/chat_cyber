@@ -1,4 +1,5 @@
 import CONFIG from '../config.js';
+import { TIMING } from '../constants/AppConstants.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -119,7 +120,7 @@ export default class TwitchService {
         }
 
         this.reconnectAttempts++;
-        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff
+        const delay = Math.min(TIMING.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts), TIMING.RECONNECT_MAX_DELAY_MS); // Exponential backoff
 
         Logger.info('Twitch', `Intentando reconectar en ${delay / 1000}s... (Intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 

@@ -27,11 +27,11 @@ export default class IdleDisplayManager {
         // Orquestador de datos delegado
         this.orchestrator = new IdleDataOrchestrator(sessionStatsService);
 
-        // Configuración de idle
-        this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || IDLE.DEFAULT_TIMEOUT_MS;
-        this.screenRotationMs = config.IDLE_ROTATION_MS || IDLE.DEFAULT_ROTATION_MS;
-        this.totalScreensInCycle = IDLE.TOTAL_SCREENS_IN_CYCLE;
-        this.maxCycles = IDLE.MAX_CYCLES;
+        // Configuración de idle con fallback robusto
+        this.idleTimeoutMs = Number(config.IDLE_TIMEOUT_MS) || IDLE.DEFAULT_TIMEOUT_MS || 30000;
+        this.screenRotationMs = Number(config.IDLE_ROTATION_MS) || IDLE.DEFAULT_ROTATION_MS || 12000;
+        this.totalScreensInCycle = Number(IDLE.TOTAL_SCREENS_IN_CYCLE) || 9;
+        this.maxCycles = Number(IDLE.MAX_CYCLES) || 2;
 
         // Estado
         this.isIdle = false;
@@ -113,8 +113,9 @@ export default class IdleDisplayManager {
                 mainContainer.appendChild(container);
             }
         }
-
+        console.log('✨ Creating new idle container');
         this.idleContainer = container;
+        container.style.zIndex = '100'; // Asegurar que está sobre otros elementos
     }
 
     /**
@@ -226,7 +227,9 @@ export default class IdleDisplayManager {
 
         // Mostrar container de idle
         if (this.idleContainer) {
-            this.idleContainer.style.display = 'block';
+            this.idleContainer.style.display = 'flex'; // Cambiado de block a flex para consistencia con CSS
+            this.idleContainer.style.visibility = 'visible';
+            this.idleContainer.style.opacity = '1';
         }
 
         // Iniciar visualización real inmediatamente (sin secuencia de arranque)
@@ -243,31 +246,43 @@ export default class IdleDisplayManager {
     _scheduleNextRotation() {
         if (this.rotationInterval) clearTimeout(this.rotationInterval);
 
-        // Obtener la pantalla actual para determinar cuánto tiempo mostrarla
-        const currentScreenData = this.orchestrator.getData(this.currentCycleIndex);
-
-        // Calcular delay dinámico delegando al renderer
-        const delay = this.renderer.calculateScreenDuration(currentScreenData, this.screenRotationMs);
-
-        this.rotationInterval = setTimeout(() => {
-            if (!this.isIdle) return;
-
-            this.currentCycleIndex++;
-            this.screensShown++;
-
-            // Verificar si hemos completado los ciclos máximos
-            const totalScreens = currentScreenData.totalScreens || IDLE.TOTAL_SCREENS_IN_CYCLE;
-            const maxScreens = totalScreens * this.maxCycles;
-
-            if (this.screensShown >= maxScreens) {
-                this._hideAfterCycles();
+        try {
+            // Obtener la pantalla actual para determinar cuánto tiempo mostrarla
+            const currentScreenData = this.orchestrator.getData(this.currentCycleIndex);
+            
+            // Si no hay datos, esperar tiempo default y reintentar
+            if (!currentScreenData) {
+                this.rotationInterval = setTimeout(() => this._scheduleNextRotation(), this.screenRotationMs);
                 return;
             }
 
-            this._updateIdleDisplay();
-            this._scheduleNextRotation();
+            // Calcular delay dinámico delegando al renderer
+            const delay = this.renderer.calculateScreenDuration(currentScreenData, this.screenRotationMs);
 
-        }, delay);
+            this.rotationInterval = setTimeout(() => {
+                if (!this.isIdle) return;
+
+                this.currentCycleIndex++;
+                this.screensShown++;
+
+                // Verificar si hemos completado los ciclos máximos
+                const totalScreens = currentScreenData.totalScreens || IDLE.TOTAL_SCREENS_IN_CYCLE;
+                const maxScreens = totalScreens * this.maxCycles;
+
+                if (this.screensShown >= maxScreens) {
+                    this._hideAfterCycles();
+                    return;
+                }
+
+                this._updateIdleDisplay();
+                this._scheduleNextRotation();
+
+            }, delay);
+        } catch (error) {
+            console.error('❌ Error in idle rotation schedule:', error);
+            // Reintentar en 5 segundos si falla
+            this.rotationInterval = setTimeout(() => this._scheduleNextRotation(), 5000);
+        }
     }
 
     /**
@@ -391,16 +406,38 @@ export default class IdleDisplayManager {
     _updateIdleDisplay() {
         if (!this.idleContainer || !this.statsService) return;
 
-        const screenData = this.orchestrator.getData(this.currentCycleIndex);
+        try {
+            const screenData = this.orchestrator.getData(this.currentCycleIndex);
+            
+            if (!screenData) {
+                console.warn('⚠️ No screen data available for index:', this.currentCycleIndex);
+                return;
+            }
 
-        // Delegar el renderizado al renderer especializado
-        this.renderer.render(screenData, this.idleContainer);
+            // Delegar el renderizado al renderer especializado
+            this.renderer.render(screenData, this.idleContainer);
 
-        // Añadir clase de animación al contenedor principal para la transición entre pantallas
-        this.idleContainer.classList.add('idle-screen-enter');
-        setTimeout(() => {
+            // Añadir clase de animación al contenedor principal para la transición entre pantallas
             this.idleContainer.classList.remove('idle-screen-enter');
-        }, 500);
+            void this.idleContainer.offsetWidth; // Force reflow
+            this.idleContainer.classList.add('idle-screen-enter');
+            
+            setTimeout(() => {
+                if (this.idleContainer) {
+                    this.idleContainer.classList.remove('idle-screen-enter');
+                }
+            }, 500);
+        } catch (error) {
+            console.error('❌ Error updating idle display:', error);
+            if (this.idleContainer) {
+                this.idleContainer.innerHTML = `
+                    <div class="empty-message" style="font-size: 10px; color: var(--cyber-red);">
+                        SYSTEM ERROR: RENDER_FAILURE<br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
     }
 
     /**

@@ -1,3 +1,5 @@
+import { TIMING } from '../constants/AppConstants.js';
+
 /**
  * StreamHistoryService
  * Automatiza el registro del historial de streams en GitHub Gist
@@ -40,7 +42,7 @@ export default class StreamHistoryService {
         this.checkStream();
 
         // Verificar cada minuto
-        this.checkInterval = setInterval(() => this.checkStream(), 60000);
+        this.checkInterval = setInterval(() => this.checkStream(), TIMING.STREAM_CHECK_INTERVAL_MS);
     }
 
     /**
@@ -141,7 +143,7 @@ export default class StreamHistoryService {
         this.currentSession.title = metadata.title;
 
         // Guardar cada 5 minutos
-        if (!this.lastSaveTime || (now - this.lastSaveTime > 300000)) {
+        if (!this.lastSaveTime || (now - this.lastSaveTime > TIMING.STREAM_SAVE_COOLDOWN_MS)) {
             await this.saveHistory();
             this.lastSaveTime = now;
         }
@@ -155,7 +157,7 @@ export default class StreamHistoryService {
 
         try {
             // Calcular duración de esta sesión en minutos
-            const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / 60000);
+            const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / TIMING.MINUTE_MS);
             if (sessionMinutes < 1 && !this.DEBUG) return; // Ignorar sesiones < 1 min
 
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD

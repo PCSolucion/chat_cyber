@@ -4,6 +4,7 @@ import XPSourceEvaluator from './XPSourceEvaluator.js';
 import PersistenceManager from './PersistenceManager.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { XP } from '../constants/AppConstants.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
 /**
@@ -129,9 +130,9 @@ export default class ExperienceService {
 
             // Configuración global
             settings: {
-                minTimeBetweenXP: 1000, // 1 segundo mínimo entre ganancias de XP
-                saveDebounceMs: 5000,   // Guardar cada 5 segundos máximo
-                maxXPPerMessage: 100    // Límite de XP por mensaje individual
+                minTimeBetweenXP: XP.MIN_TIME_BETWEEN_XP_MS, // 1 segundo mínimo entre ganancias de XP
+                saveDebounceMs: XP.SAVE_DEBOUNCE_MS,   // Guardar cada 5 segundos máximo
+                maxXPPerMessage: XP.MAX_XP_PER_MESSAGE    // Límite de XP por mensaje individual
             },
 
             // Multiplicadores de racha (días -> multiplicador)
