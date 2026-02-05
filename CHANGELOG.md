@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.1] - 2026-02-05
+
+### Lista completa de cambios
+
+- refactor: Implement centralized logging system and typed event catalog
+- refactor: Consolidate achievements data and rename achievements-viewer to viewer
+- feat: Implement modular command registry with middleware and permissions
+- perf: Optimize and centralize text scramble animation engine
+- refactor: Extract idle data orchestration from SessionStatsService and screen rendering from IdleDisplayManager
+- fix: Resolve Gist persistence conflicts and improve stability in low-latency environments
+
 ## [1.1.0] - 2026-02-04
 
 ### Lista completa de cambios
