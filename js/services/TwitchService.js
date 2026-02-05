@@ -1,4 +1,5 @@
 import CONFIG from '../config.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * TwitchService - Servicio de Conexión con Twitch IRC
@@ -56,8 +57,8 @@ export default class TwitchService {
             this.client.on('connected', (address, port) => {
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
-                console.log(`✅ Conectado a Twitch IRC: ${address}:${port}`);
-                console.log(`📺 Monitoreando canal: #${this.channel}`);
+                Logger.info('Twitch', `Conectado a Twitch IRC: ${address}:${port}`);
+                Logger.info('Twitch', `Monitoreando canal: #${this.channel}`);
             });
 
             // Event: Mensaje recibido
@@ -87,23 +88,23 @@ export default class TwitchService {
             // Event: Desconectado
             this.client.on('disconnected', (reason) => {
                 this.isConnected = false;
-                console.warn('⚠️ Desconectado de Twitch IRC:', reason);
+                Logger.warn('Twitch', 'Desconectado de Twitch IRC:', reason);
                 this.handleReconnect();
             });
 
             // Event: Error de conexión
             this.client.on('error', (error) => {
-                console.error('❌ Error en TwitchService:', error);
+                Logger.error('Twitch', 'Error en TwitchService:', error);
             });
 
             // Iniciar conexión
             this.client.connect().catch((error) => {
-                console.error('❌ Error al conectar con Twitch:', error);
+                Logger.error('Twitch', 'Error al conectar con Twitch:', error);
                 this.handleReconnect();
             });
 
         } catch (error) {
-            console.error('❌ Error al inicializar TwitchService:', error);
+            Logger.error('Twitch', 'Error al inicializar TwitchService:', error);
         }
     }
 
@@ -113,14 +114,14 @@ export default class TwitchService {
      */
     handleReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error(`❌ Máximo de intentos de reconexión alcanzado (${this.maxReconnectAttempts})`);
+            Logger.error('Twitch', `Máximo de intentos de reconexión alcanzado (${this.maxReconnectAttempts})`);
             return;
         }
 
         this.reconnectAttempts++;
         const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff
 
-        console.log(`🔄 Intentando reconectar en ${delay / 1000}s... (Intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        Logger.info('Twitch', `Intentando reconectar en ${delay / 1000}s... (Intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
         setTimeout(() => {
             if (!this.isConnected) {
@@ -142,7 +143,7 @@ export default class TwitchService {
             const category = await response.text();
             return category ? category.trim() : null;
         } catch (error) {
-            console.warn('⚠️ No se pudo obtener la categoría del stream:', error);
+            Logger.warn('Twitch', 'No se pudo obtener la categoría del stream:', error);
             return null;
         }
     }
@@ -161,7 +162,7 @@ export default class TwitchService {
             const isOffline = text.toLowerCase().includes('offline');
             return !isOffline;
         } catch (error) {
-            console.warn('⚠️ No se pudo verificar estado del stream:', error);
+            Logger.warn('Twitch', 'No se pudo verificar estado del stream:', error);
             return false;
         }
     }
@@ -176,9 +177,7 @@ export default class TwitchService {
         // y a menudo devuelve 404 o bloqueos.
         // Por estabilidad, usamos exclusivamente el tracking local de eventos JOIN/PART/MESSAGE.
 
-        if (CONFIG.DEBUG) {
-            console.log(`ℹ️ TwitchService: Usando tracker local de chatters (${this.activeChatters.size} usuarios) para evitar CORS.`);
-        }
+        Logger.debug('Twitch', `Usando tracker local de chatters (${this.activeChatters.size} usuarios) para evitar CORS.`);
 
         return Array.from(this.activeChatters);
     }
@@ -190,11 +189,11 @@ export default class TwitchService {
         if (this.client && this.isConnected) {
             this.client.disconnect()
                 .then(() => {
-                    console.log('👋 Desconectado de Twitch');
+                    Logger.info('Twitch', '👋 Desconectado de Twitch');
                     this.isConnected = false;
                 })
                 .catch((error) => {
-                    console.error('❌ Error al desconectar:', error);
+                    Logger.error('Twitch', 'Error al desconectar:', error);
                 });
         }
     }

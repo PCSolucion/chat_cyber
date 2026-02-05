@@ -12,6 +12,7 @@ import UIManager from './UIManager.js';
 import IdleDisplayManager from './IdleDisplayManager.js';
 import NotificationManager from './NotificationManager.js';
 import EventManager from '../utils/EventEmitter.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * MessageProcessor - Orquestador central de la lógica de mensajes
@@ -43,7 +44,7 @@ export default class MessageProcessor {
      * Los errores aquí se capturan para no detener la aplicación
      */
     init() {
-        console.log('⚙️ Inicializando procesador de mensajes...');
+        Logger.info('App', '⚙️ Inicializando procesador de mensajes...');
 
         // AudioService removed (Delegated to AudioManager via events)
 
@@ -52,7 +53,7 @@ export default class MessageProcessor {
         try {
             this.services.ranking = new RankingSystem(this.config);
         } catch (e) {
-            console.error('❌ Error initializing RankingSystem:', e);
+            Logger.error('App', 'Error initializing RankingSystem:', e);
         }
 
         // 4. XP System
@@ -72,9 +73,9 @@ export default class MessageProcessor {
                         this.services.gist
                     );
                     this.services.streamHistory.startMonitoring();
-                    console.log('📅 Stream History Service initialized');
+                    Logger.info('App', '📅 Stream History Service initialized');
                 } catch (e) {
-                    console.warn('⚠️ Stream History Service initialization failed:', e);
+                    Logger.warn('App', 'Stream History Service initialization failed:', e);
                 }
 
                 this.services.xp = new ExperienceService(
@@ -94,7 +95,7 @@ export default class MessageProcessor {
                     this.services.achievements
                 );
             } catch (e) {
-                console.error('⚠️ XP System initialization failed:', e);
+                Logger.error('XP', 'XP System initialization failed:', e);
             }
         }
 
@@ -105,9 +106,9 @@ export default class MessageProcessor {
         if (this.config.THIRD_PARTY_EMOTES_ENABLED) {
             try {
                 this.services.thirdPartyEmotes = new ThirdPartyEmoteService(this.config);
-                console.log('🎭 Third Party Emotes service initialized');
+                Logger.info('UI', '🎭 Third Party Emotes service initialized');
             } catch (e) {
-                console.warn('⚠️ Third Party Emotes initialization failed:', e);
+                Logger.warn('UI', 'Third Party Emotes initialization failed:', e);
             }
         }
 
@@ -120,7 +121,7 @@ export default class MessageProcessor {
                 this.services.thirdPartyEmotes // Inyección de dependencia
             );
         } catch (e) {
-            console.error('❌ CRITICAL: UIManager initialization failed:', e);
+            Logger.error('UI', 'CRITICAL: UIManager initialization failed:', e);
         }
 
         // 7. Session Stats Service (Estadísticas en tiempo real)
@@ -130,9 +131,9 @@ export default class MessageProcessor {
                 this.services.xp,
                 this.services.achievements
             );
-            console.log('📊 Session Stats service initialized');
+            Logger.info('Stats', '📊 Session Stats service initialized');
         } catch (e) {
-            console.warn('⚠️ Session Stats initialization failed:', e);
+            Logger.warn('Stats', 'Session Stats initialization failed:', e);
         }
 
         // 8. Idle Display Manager (Muestra stats cuando no hay chat)
@@ -142,9 +143,9 @@ export default class MessageProcessor {
                 this.services.sessionStats,
                 this.managers.ui
             );
-            console.log('💤 Idle Display Manager initialized');
+            Logger.info('UI', '💤 Idle Display Manager initialized');
         } catch (e) {
-            console.warn('⚠️ Idle Display Manager initialization failed:', e);
+            Logger.warn('UI', 'Idle Display Manager initialization failed:', e);
         }
 
         // 9. Notification Manager (Gestión centralizada de notificaciones)
@@ -154,9 +155,9 @@ export default class MessageProcessor {
                 this.managers.ui
             );
             this.managers.notification = this.notificationManager;
-            console.log('📢 Notification Manager initialized');
+            Logger.info('UI', '📢 Notification Manager initialized');
         } catch (e) {
-            console.warn('⚠️ Notification Manager initialization failed:', e);
+            Logger.warn('UI', 'Notification Manager initialization failed:', e);
         }
 
         this.isInitialized = true;

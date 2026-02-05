@@ -1,4 +1,5 @@
 import EventManager from '../utils/EventEmitter.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * GistStorageService - Servicio de Persistencia con GitHub Gist
@@ -56,9 +57,9 @@ export default class GistStorageService {
         this.isConfigured = !!(gistId && token);
 
         if (this.isConfigured) {
-            console.log('✅ GistStorageService configurado correctamente');
+            Logger.info('Storage', 'GistStorageService configurado correctamente');
         } else {
-            console.warn('⚠️ GistStorageService: Faltan credenciales (gistId o token)');
+            Logger.warn('Storage', 'GistStorageService: Faltan credenciales (gistId o token)');
             this.lastError = 'Credenciales no configuradas (Revisa config.js)';
         }
     }
@@ -70,10 +71,10 @@ export default class GistStorageService {
     checkConfiguration() {
         if (!this.isConfigured) {
             if (!this.gistId) {
-                console.error('❌ GistStorageService: Falta XP_GIST_ID en config');
+                Logger.error('Storage', 'GistStorageService: Falta XP_GIST_ID en config');
             }
             if (!this.token) {
-                console.error('❌ GistStorageService: Falta XP_GIST_TOKEN en config');
+                Logger.error('Storage', 'GistStorageService: Falta XP_GIST_TOKEN en config');
             }
             return false;
         }
@@ -115,13 +116,13 @@ export default class GistStorageService {
             const file = gist.files[fileName];
 
             if (!file) {
-                console.warn(`⚠️ Archivo ${fileName} no encontrado en Gist`);
+                Logger.warn('Storage', `Archivo ${fileName} no encontrado en Gist`);
                 return null;
             }
 
             return JSON.parse(file.content);
         } catch (error) {
-            console.error(`❌ Error al cargar ${fileName}:`, error);
+            Logger.error('Storage', `Error al cargar ${fileName}:`, error);
             return null;
         }
     }
@@ -157,7 +158,7 @@ export default class GistStorageService {
             // Manejar Conflictos (409) o Unprocessable Entity (422) con reintentos
             if ((response.status === 409 || response.status === 422) && retryCount < maxRetries) {
                 const delay = retryDelay * Math.pow(2, retryCount) + (Math.random() * 1000);
-                console.warn(`⚠️ Conflicto (409/422) al guardar ${fileName}. Reintentando en ${Math.round(delay)}ms... (Intento ${retryCount + 1}/${maxRetries})`);
+                Logger.warn('Storage', `Conflicto (409/422) al guardar ${fileName}. Reintentando en ${Math.round(delay)}ms... (Intento ${retryCount + 1}/${maxRetries})`);
                 
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return await this.saveFile(fileName, data, retryCount + 1);
@@ -168,12 +169,12 @@ export default class GistStorageService {
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-            if (this.config.DEBUG) console.log(`💾 ${fileName} guardado en Gist`);
+            Logger.debug('Storage', `${fileName} guardado en Gist`);
             EventManager.emit('gist:dataSaved');
             return true;
 
         } catch (error) {
-            console.error(`❌ Error al guardar ${fileName}:`, error);
+            Logger.error('Storage', `Error al guardar ${fileName}:`, error);
             // Propagar el error para que el PersistenceManager sepa que falló
             throw error;
         }
@@ -195,7 +196,7 @@ export default class GistStorageService {
         }
 
         if (!forceRefresh && this.cache && this.cacheTimestamp && (Date.now() - this.cacheTimestamp < this.cacheTTL)) {
-            if (this.config.DEBUG) console.log('📦 Usando cache de XP data');
+            Logger.debug('Storage', 'Usando cache de XP data');
             return this.cache;
         }
 
@@ -256,9 +257,7 @@ export default class GistStorageService {
             this.requestResetTime = new Date(parseInt(reset) * 1000);
         }
 
-        if (this.config.DEBUG && remaining !== null) {
-            console.log(`📊 Rate limit: ${remaining} requests restantes`);
-        }
+        Logger.debug('Storage', `Rate limit updated`, { remaining: this.requestCount });
     }
 
     /**

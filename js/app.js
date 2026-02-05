@@ -3,6 +3,7 @@ import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
 import EventManager from './utils/EventEmitter.js';
+import Logger from './utils/Logger.js';
 import { ALL_COMMANDS } from './commands/index.js';
 import CommandManager from './managers/CommandManager.js';
 import AudioManager from './managers/AudioManager.js';
@@ -13,7 +14,10 @@ import AudioManager from './managers/AudioManager.js';
 class App {
     constructor() {
         this.config = CONFIG;
-        console.log('🚀 Booting Twitch Chat Overlay...');
+        
+        // 0. Inicializar Logger
+        Logger.init(this.config);
+        Logger.info('App', '🚀 Booting Twitch Chat Overlay...');
 
         // 1. Instanciar Message Processor
         this.processor = null;
@@ -21,7 +25,7 @@ class App {
             this.processor = new MessageProcessor(this.config);
             this.processor.init();
         } catch (e) {
-            console.error('❌ FATAL: MessageProcessor failed to initialize.', e);
+            Logger.error('App', 'FATAL: MessageProcessor failed to initialize.', e);
         }
 
         // Inicializar AudioManager
@@ -42,7 +46,7 @@ class App {
                 (tags, msg) => this.onMessageReceived(tags, msg)
             );
         } catch (e) {
-            console.error('❌ FATAL: TwitchService creation failed.', e);
+            Logger.error('App', 'FATAL: TwitchService creation failed.', e);
         }
     }
 
