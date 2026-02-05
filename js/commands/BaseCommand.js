@@ -2,9 +2,10 @@
  * BaseCommand - Clase base para todos los comandos del chat
  */
 export default class BaseCommand {
-    constructor(name, aliases = []) {
+    constructor(name, aliases = [], requiredPermission = 'everyone') {
         this.name = name;
         this.aliases = aliases;
+        this.requiredPermission = requiredPermission; // everyone, subscriber, vip, moderator, broadcaster
     }
 
     /**

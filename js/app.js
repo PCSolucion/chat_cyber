@@ -3,16 +3,7 @@ import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
 import EventManager from './utils/EventEmitter.js';
-import LevelCommand from './commands/LevelCommand.js';
-import AchievementsCommand from './commands/AchievementsCommand.js';
-import TopCommand from './commands/TopCommand.js';
-import StreakCommand from './commands/StreakCommand.js';
-import BroCommand from './commands/BroCommand.js';
-import HelpCommand from './commands/HelpCommand.js';
-import StatsCommand from './commands/StatsCommand.js';
-import UptimeCommand from './commands/UptimeCommand.js';
-import EmotesCommand from './commands/EmotesCommand.js';
-import ShoutoutCommand from './commands/ShoutoutCommand.js';
+import { ALL_COMMANDS } from './commands/index.js';
 import CommandManager from './managers/CommandManager.js';
 import AudioManager from './managers/AudioManager.js';
 
@@ -38,22 +29,9 @@ class App {
         this.audioManager.init();
 
         // Inicializar CommandManager después de que processor haya creado los servicios base
-        // (Processor crea XP y Achievements internamente, lo cual es deuda técnica, 
-        // pero por ahora accederemos a ellos a través del processor)
         if (this.processor && this.processor.services) {
             this.commandManager = new CommandManager(this.processor.services, this.config);
-            
-            // Registrar comandos básicos
-            this.commandManager.registerCommand(new HelpCommand());
-            this.commandManager.registerCommand(new LevelCommand());
-            this.commandManager.registerCommand(new AchievementsCommand());
-            this.commandManager.registerCommand(new TopCommand());
-            this.commandManager.registerCommand(new StreakCommand());
-            this.commandManager.registerCommand(new BroCommand());
-            this.commandManager.registerCommand(new StatsCommand());
-            this.commandManager.registerCommand(new UptimeCommand());
-            this.commandManager.registerCommand(new EmotesCommand());
-            this.commandManager.registerCommand(new ShoutoutCommand());
+            this.commandManager.registerAll(ALL_COMMANDS);
         }
 
         // 2. Instanciar Twitch Service

@@ -3,7 +3,7 @@ import EventManager from '../utils/EventEmitter.js';
 
 export default class ShoutoutCommand extends BaseCommand {
     constructor() {
-        super('so', ['shoutout', 'streamer']);
+        super('so', ['shoutout', 'streamer'], 'moderator');
     }
 
     async execute({ args }) {
