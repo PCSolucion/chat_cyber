@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS_DATA } from '../../data/AchievementsData.js';
+import { ACHIEVEMENTS_DATA } from '../../viewer/data/AchievementsData.js';
 import EventManager from '../utils/EventEmitter.js';
 
 /**

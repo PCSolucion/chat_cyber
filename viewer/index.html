@@ -268,7 +268,11 @@
     </div>
     <!-- Scripts -->
     <!-- Load achievements data -->
-    <script src="data/AchievementsData.js"></script>
+    <!-- Load achievements data as module and expose to window for legacy scripts -->
+    <script type="module">
+        import { ACHIEVEMENTS_DATA } from './data/AchievementsData.js';
+        window.ACHIEVEMENTS_DATA = ACHIEVEMENTS_DATA;
+    </script>
 
     <!-- App modules -->
     <script src="js/config.js"></script>

@@ -24,7 +24,7 @@
  * Fields soportados: userData.*, stats.*
  */
 
-const ACHIEVEMENTS_DATA = {
+export const ACHIEVEMENTS_DATA = {
     _metadata: {
         version: "1.1",
         totalAchievements: 143, // +3 logros de streams TW3
