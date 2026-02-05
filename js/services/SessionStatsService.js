@@ -1,6 +1,7 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import { STATS } from '../constants/AppConstants.js';
+import UIUtils from '../utils/UIUtils.js';
 
 /**
  * SessionStatsService - Estadísticas en Tiempo Real de la Sesión
@@ -383,7 +384,7 @@ export default class SessionStatsService {
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)
             .map(([username, days]) => ({
-                username: username.charAt(0).toUpperCase() + username.slice(1),
+                username: UIUtils.formatUsername(username),
                 days
             }));
     }
@@ -407,7 +408,7 @@ export default class SessionStatsService {
             .sort((a, b) => b[1].subMonths - a[1].subMonths)
             .slice(0, n)
             .map(([username, data]) => ({
-                username: username.charAt(0).toUpperCase() + username.slice(1),
+                username: UIUtils.formatUsername(username),
                 months: data.subMonths,
                 level: data.level
             }));
@@ -448,9 +449,9 @@ export default class SessionStatsService {
             .sort((a, b) => b.minutes - a.minutes)
             .slice(0, n)
             .map(u => ({
-                username: u.username.charAt(0).toUpperCase() + u.username.slice(1),
+                username: UIUtils.formatUsername(u.username),
                 minutes: u.minutes,
-                formatted: this._formatDuration(u.minutes * 60000) // Convert back to ms for format
+                formatted: UIUtils.formatDuration(u.minutes * 60000) // Convert back to ms for format
             }));
     }
 
@@ -470,23 +471,7 @@ export default class SessionStatsService {
         };
     }
 
-    /**
-     * Formatea duración en texto legible
-     * @private
-     */
-    _formatDuration(ms) {
-        const seconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
 
-        if (hours > 0) {
-            return `${hours}h ${minutes % 60}m`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${seconds % 60}s`;
-        } else {
-            return `${seconds}s`;
-        }
-    }
 
 
 

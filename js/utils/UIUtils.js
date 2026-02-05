@@ -131,6 +131,54 @@ const UIUtils = {
     },
 
     /**
+     * Formatea un nombre de usuario para mostrarlo (Capitalize)
+     * @param {string} username 
+     * @returns {string}
+     */
+    formatUsername(username) {
+        if (!username) return '';
+        return username.charAt(0).toUpperCase() + username.slice(1);
+    },
+
+    /**
+     * Formatea una duración en milisegundos a texto legible (Xh Ym Zs)
+     * @param {number} ms - Milisegundos
+     * @returns {string} Texto formateado
+     */
+    formatDuration(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) {
+            return `${hours}h ${minutes % 60}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds % 60}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    },
+
+    /**
+     * Formatea un número con separadores de miles
+     * @param {number} num 
+     * @returns {string}
+     */
+    formatNumber(num) {
+        return new Intl.NumberFormat('es-ES').format(num);
+    },
+
+    /**
+     * Formatea una fecha/timestamp a HH:MM
+     * @param {Date|number} date 
+     * @returns {string}
+     */
+    formatClockTime(date) {
+        const d = date instanceof Date ? date : new Date(date);
+        return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    },
+
+    /**
      * Verifica si un texto procesado contiene imágenes HTML
      * @param {string} html - HTML a verificar
      * @returns {boolean} true si contiene <img>

@@ -1,3 +1,5 @@
+import UIUtils from '../utils/UIUtils.js';
+
 /**
  * IdleScreenRenderer - Encargado de generar el HTML de las pantallas de inactividad
  * 
@@ -177,7 +179,7 @@ export default class IdleScreenRenderer {
 
         // Obtener hora de inicio formateada
         const startTime = new Date(this.statsService.sessionStart);
-        const startTimeStr = startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const startTimeStr = UIUtils.formatClockTime(startTime);
 
         container.innerHTML = `
             <div class="idle-screen-title wide-spacing animate-hidden animate-in">RESUMEN DE SESIÓN</div>
@@ -477,7 +479,7 @@ export default class IdleScreenRenderer {
         }
 
         const { username, achievement: achData, timestamp } = achievement;
-        const timeStr = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = UIUtils.formatClockTime(timestamp);
 
         container.innerHTML = `
             <div class="idle-screen-title">ÚLTIMO LOGRO DESBLOQUEADO</div>
