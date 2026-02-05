@@ -35,7 +35,7 @@ export default class ConfigValidator {
             ACCESSIBILITY: {
                 required: false,
                 type: 'object',
-                default: { ENABLE_ARIA: true, ENABLE_SCREEN_READER: false }
+                default: { ENABLE_ARIA: true }
             }
         };
     }

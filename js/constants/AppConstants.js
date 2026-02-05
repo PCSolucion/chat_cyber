@@ -14,7 +14,6 @@ export const TIMING = {
     // Polling de metadata del stream (Categoría y Estado Online/Offline)
     METADATA_CHECK_ONLINE_MS: 600000,   // 10 min cuando está online (para no saturar API)
     METADATA_CHECK_OFFLINE_MS: 60000,   // 1 min cuando está offline (para detectar inicio rápido)
-    STREAM_CATEGORY_UPDATE_INTERVAL_MS: 300000, // 5 min
     
     // Tiempos de UI
     MESSAGE_DISPLAY_TIME_MS: 14000,      // Tiempo que el mensaje es visible

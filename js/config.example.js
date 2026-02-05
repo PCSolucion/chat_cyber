@@ -13,8 +13,6 @@ const CONFIG = {
 
     // Tiempos (en milisegundos)
     MESSAGE_DISPLAY_TIME: 14000,
-    TRANSITION_DURATION: 700,
-    STREAM_CATEGORY_UPDATE_INTERVAL: 300000, // 5 minutos
 
     // Audio - Cyberpunk style sound
     AUDIO_URL: 'sounds/cyberpunk-message.mp3',
@@ -29,10 +27,6 @@ const CONFIG = {
     // Animación
     ANIMATION_COOLDOWN_MS: 30000,
 
-    // Números de piloto
-    MIN_RANDOM_NUMBER: 1,
-    MAX_RANDOM_NUMBER: 99,
-
     // Usuario especial
     SPECIAL_USER: {
         username: 'tu_usuario',
@@ -42,8 +36,7 @@ const CONFIG = {
 
     // Configuración de accesibilidad
     ACCESSIBILITY: {
-        ENABLE_ARIA: true,
-        ENABLE_SCREEN_READER: true
+        ENABLE_ARIA: true
     },
 
     // Modo debug
@@ -63,9 +56,6 @@ const CONFIG = {
     XP_GIST_TOKEN: 'TU_TOKEN_AQUI', // NO COMPARTIR ESTE ARCHIVO SI TIENE EL TOKEN REAL
     XP_GIST_FILENAME: 'xp_data.json',
 
-    // Sonido de Level Up (opcional)
-    XP_LEVELUP_SOUND: null,
-
     // Tiempo de display del popup de Level Up (ms)
     XP_LEVELUP_DISPLAY_TIME: 4000,
 
@@ -84,11 +74,6 @@ const CONFIG = {
     // ============================================
 
     THIRD_PARTY_EMOTES_ENABLED: true,
-    THIRD_PARTY_PROVIDERS: {
-        '7tv': true,
-        'bttv': true,
-        'ffz': true
-    },
 
     // ============================================
     // CONFIGURACIÓN VISUAL (Iconos de Rango y Usuario)
