@@ -3,6 +3,7 @@ import { TIMING } from './constants/AppConstants.js';
 import MessageProcessor from './managers/MessageProcessor.js';
 import TwitchService from './services/TwitchService.js';
 import DevTools from './utils/DevTools.js';
+import ConfigValidator from './utils/ConfigValidator.js';
 import EventManager from './utils/EventEmitter.js';
 import { EVENTS } from './utils/EventTypes.js';
 import Logger from './utils/Logger.js';
@@ -15,9 +16,10 @@ import AudioManager from './managers/AudioManager.js';
  */
 class App {
     constructor() {
-        this.config = CONFIG;
+        // 0. Validar integridad de la configuración
+        this.config = ConfigValidator.validate(CONFIG);
         
-        // 0. Inicializar Logger
+        // 1. Inicializar Logger
         Logger.init(this.config);
         Logger.info('App', '🚀 Booting Twitch Chat Overlay...');
 

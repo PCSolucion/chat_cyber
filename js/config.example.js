@@ -113,6 +113,14 @@ const CONFIG = {
         SPECIAL_ICONS: {
             'ADMIN': 'arasaka.png',
             'SYSTEM': 'netrunner.png'
+        },
+        USER_THEMES: {
+            'takeru_xiii': 'takeru-bg',
+            'x1lenz': 'x1lenz-bg',
+            'chandalf': 'chandalf-bg',
+            'c_h_a_n_d_a_l_f': 'chandalf-bg',
+            'manguerazo': 'manguerazo-bg',
+            'duckcris': 'duckcris-bg'
         }
     },
 

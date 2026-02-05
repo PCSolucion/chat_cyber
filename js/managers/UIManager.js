@@ -453,34 +453,14 @@ export default class UIManager {
                         <span class="streak-label">LURK:</span>
                         <span class="streak-days">${timeText}</span>
                     `;
-                }
-            }
             */
             // ====================================================================
 
-            // Custom Background for Takeru_xiii
-            if (username.toLowerCase() === 'takeru_xiii') {
-                this.dom.container.classList.add('takeru-bg');
-            }
-
-            // Custom Background for x1lenz
-            if (username.toLowerCase() === 'x1lenz') {
-                this.dom.container.classList.add('x1lenz-bg');
-            }
-
-            // Custom Background for chandalf
-            if (['chandalf', 'c_h_a_n_d_a_l_f'].includes(username.toLowerCase())) {
-                this.dom.container.classList.add('chandalf-bg');
-            }
-
-            // Custom Background for manguerazo
-            if (username.toLowerCase() === 'manguerazo') {
-                this.dom.container.classList.add('manguerazo-bg');
-            }
-
-            // Custom Background for DUCKCris
-            if (username.toLowerCase() === 'duckcris') {
-                this.dom.container.classList.add('duckcris-bg');
+            // Aplicar temas personalizados de usuario desde la configuración
+            const userThemes = (this.config.UI && this.config.UI.USER_THEMES) || {};
+            const themeClass = userThemes[username.toLowerCase()];
+            if (themeClass) {
+                this.dom.container.classList.add(themeClass);
             }
 
             // Procesar y mostrar mensaje
