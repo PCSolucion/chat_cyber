@@ -1,5 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import IdleScreenRenderer from './IdleScreenRenderer.js';
+import IdleDataOrchestrator from './IdleDataOrchestrator.js';
 
 /**
  * IdleDisplayManager - Gestiona la visualización cuando no hay chat activo
@@ -20,6 +21,9 @@ export default class IdleDisplayManager {
 
         // Renderer delegado
         this.renderer = new IdleScreenRenderer(sessionStatsService);
+        
+        // Orquestador de datos delegado
+        this.orchestrator = new IdleDataOrchestrator(sessionStatsService);
 
         // Configuración de idle
         this.idleTimeoutMs = config.IDLE_TIMEOUT_MS || 30000;  // 30 segundos sin actividad
@@ -239,7 +243,7 @@ export default class IdleDisplayManager {
         if (this.rotationInterval) clearTimeout(this.rotationInterval);
 
         // Obtener la pantalla actual para determinar cuánto tiempo mostrarla
-        const currentScreenData = this.statsService.getIdleDisplayData(this.currentCycleIndex);
+        const currentScreenData = this.orchestrator.getData(this.currentCycleIndex);
 
         // Calcular delay dinámico delegando al renderer
         const delay = this.renderer.calculateScreenDuration(currentScreenData, this.screenRotationMs);
@@ -386,7 +390,7 @@ export default class IdleDisplayManager {
     _updateIdleDisplay() {
         if (!this.idleContainer || !this.statsService) return;
 
-        const screenData = this.statsService.getIdleDisplayData(this.currentCycleIndex);
+        const screenData = this.orchestrator.getData(this.currentCycleIndex);
 
         // Delegar el renderizado al renderer especializado
         this.renderer.render(screenData, this.idleContainer);

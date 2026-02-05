@@ -440,9 +440,9 @@ export default class SessionStatsService {
 
     /**
      * Obtiene los top N suscriptores por meses
-     * @private
+     * @param {number} n
      */
-    _getTopSubscribers(n = 20) {
+    getTopSubscribers(n = 20) {
         if (!this.experienceService || !this.experienceService.usersXP) return [];
 
         return Array.from(this.experienceService.usersXP.entries())
@@ -465,7 +465,7 @@ export default class SessionStatsService {
      * @param {string} period 'session', 'week', 'month', 'total'
      * @param {number} n 
      */
-    _getTopWatchTime(period, n) {
+    getTopWatchTime(period, n) {
         let users = [];
 
         if (period === 'session') {
@@ -535,99 +535,7 @@ export default class SessionStatsService {
         }
     }
 
-    /**
-     * Obtiene datos para mostrar en modo idle
-     * Alterna entre diferentes tipos de información
-     * @param {number} cycleIndex - Índice del ciclo actual
-     * @returns {Object} Datos para mostrar
-     */
-    getIdleDisplayData(cycleIndex = 0) {
-        const displayStats = this.getDisplayStats();
 
-        // Diferentes "pantallas" para rotar
-        const screens = [
-            // Pantalla 1: Resumen general
-            {
-                type: 'summary',
-                title: 'ESTADÍSTICAS DE SESIÓN',
-                data: {
-                    duration: displayStats.sessionDuration,
-                    messages: displayStats.totalMessages,
-                    users: displayStats.uniqueUsers,
-                    avgMpm: displayStats.avgMessagesPerMinute
-                }
-            },
-            // Pantalla 2: Top usuarios
-            {
-                type: 'leaderboard',
-                title: 'MÁS ACTIVOS',
-                data: displayStats.topUsers
-            },
-            // Pantalla 3: TRENDING - Palabras y Emotes populares
-            {
-                type: 'trending',
-                title: 'TRENDING HOY',
-                data: {
-                    topWords: this.getTopWords(3),
-                    topEmotes: this.getTopEmotes(3),
-                    totalEmotes: this.stats.totalEmotesUsed,
-                    uniqueWords: this.stats.wordFrequency.size
-                }
-            },
-            // Pantalla 4: XP y logros
-            {
-                type: 'achievements',
-                title: 'PROGRESO DE SESIÓN',
-                data: {
-                    levelUps: displayStats.totalLevelUps,
-                    achievements: displayStats.totalAchievements,
-                    recent: displayStats.recentLevelUps.slice(0, 3)
-                }
-            },
-            // Pantalla 5: Rachas
-            {
-                type: 'streaks',
-                title: 'RACHAS ACTIVAS',
-                data: {
-                    topStreaks: displayStats.topStreaks,
-                    totalActive: displayStats.activeStreaksCount
-                }
-            },
-            // Pantalla 6: Watch Time Sesión
-            {
-                type: 'watchtime_session',
-                title: 'TIEMPO EN DIRECTO',
-                data: this._getTopWatchTime('session', 20)
-            },
-            // Pantalla 7: Watch Time Total
-            {
-                type: 'watchtime_total',
-                title: 'TIEMPO TOTAL (HISTÓRICO)',
-                data: this._getTopWatchTime('total', 15)
-            },
-            // Pantalla 8: Último Logro
-            {
-                type: 'last_achievement',
-                title: 'ÚLTIMO LOGRO DESBLOQUEADO',
-                data: displayStats.recentAchievements.length > 0 ? displayStats.recentAchievements[0] : null
-            },
-            // Pantalla 9: Top Suscriptores
-            {
-                type: 'top_subscribers',
-                title: 'SUSCRIPTORES VETERANOS',
-                data: this._getTopSubscribers(20)
-            }
-        ];
-
-        // Rotar entre pantallas
-        const screenIndex = cycleIndex % screens.length;
-        const screenData = screens[screenIndex];
-        
-        // Añadir información sobre el total de pantallas
-        screenData.totalScreens = screens.length;
-        
-        return screenData;
-    }
 
     /**
      * Resetea estadísticas de sesión
