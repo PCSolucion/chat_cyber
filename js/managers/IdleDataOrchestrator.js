@@ -50,10 +50,8 @@ export default class IdleDataOrchestrator {
                 type: 'trending',
                 title: 'TRENDING HOY',
                 data: {
-                    topWords: this.statsService.getTopWords(3),
                     topEmotes: this.statsService.getTopEmotes(3),
-                    totalEmotes: this.statsService.stats.totalEmotesUsed,
-                    uniqueWords: this.statsService.stats.wordFrequency.size
+                    totalEmotes: this.statsService.stats.totalEmotesUsed
                 }
             },
             // Pantalla 4: Logros y niveles de la sesión

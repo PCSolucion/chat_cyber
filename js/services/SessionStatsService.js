@@ -49,8 +49,7 @@ export default class SessionStatsService {
             // Comandos usados
             commandsUsed: new Map(),  // { command: count }
 
-            // Palabras clave / frases populares
-            wordFrequency: new Map(),  // { word: count }
+
 
             // Historial de actividad por minuto (para gráfico)
             activityHistory: [],  // { timestamp, messages, users }
@@ -169,8 +168,7 @@ export default class SessionStatsService {
             this.stats.commandsUsed.set(command, cmdCount + 1);
         }
 
-        // Trackear palabras (con filtrado de stopwords)
-        this._trackWords(message);
+
 
         // Actualizar rachas si están disponibles
         if (this.experienceService) {
@@ -239,57 +237,7 @@ export default class SessionStatsService {
         });
     }
 
-    /**
-     * Trackea frecuencia de palabras (con filtrado de stopwords)
-     * @private
-     */
-    _trackWords(message) {
-        // Ignorar comandos y mensajes muy cortos
-        if (message.startsWith('!') || message.length < 3) return;
 
-        // Stopwords comunes en español e inglés + palabras muy genéricas
-        const stopwords = new Set([
-            // Español
-            'que', 'como', 'para', 'pero', 'esto', 'esta', 'este', 'esos', 'esas',
-            'todo', 'toda', 'todos', 'todas', 'porque', 'cuando', 'donde', 'quien',
-            'cual', 'cuales', 'muy', 'mas', 'menos', 'solo', 'algo', 'nada',
-            'cada', 'otro', 'otra', 'otros', 'otras', 'mismo', 'misma', 'tanto',
-            'bien', 'mal', 'ahora', 'aqui', 'alli', 'siempre', 'nunca', 'tambien',
-            'aunque', 'entre', 'desde', 'hasta', 'sobre', 'bajo', 'hacia', 'contra',
-            'durante', 'mediante', 'segun', 'tras', 'ante', 'creo', 'pues', 'hacer',
-            'tiene', 'tienen', 'puede', 'pueden', 'seria', 'sido', 'siendo', 'haber',
-            // Inglés
-            'the', 'that', 'this', 'with', 'have', 'just', 'like', 'what', 'when',
-            'where', 'which', 'who', 'how', 'all', 'each', 'every', 'both', 'few',
-            'more', 'most', 'other', 'some', 'such', 'than', 'too', 'very', 'can',
-            'will', 'just', 'should', 'now', 'then', 'only', 'also', 'into', 'over',
-            'after', 'before', 'between', 'under', 'again', 'there', 'here', 'been',
-            'being', 'would', 'could', 'about', 'their', 'them', 'these', 'those',
-            'your', 'from', 'they', 'were', 'have', 'been', 'made', 'make'
-        ]);
-
-        const words = message.toLowerCase()
-            .replace(/[^\w\sáéíóúñü]/g, '')
-            .split(/\s+/)
-            .filter(w => w.length > 3 && !stopwords.has(w));  // 4+ chars y no stopword
-
-        words.forEach(word => {
-            const count = this.stats.wordFrequency.get(word) || 0;
-            this.stats.wordFrequency.set(word, count + 1);
-        });
-    }
-
-    /**
-     * Obtiene las top N palabras más usadas
-     * @param {number} n - Número de palabras a retornar
-     * @returns {Array} Array de { word, count }
-     */
-    getTopWords(n = 5) {
-        return Array.from(this.stats.wordFrequency.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, n)
-            .map(([word, count]) => ({ word, count }));
-    }
 
     /**
      * Obtiene los top N emotes más usados
@@ -563,7 +511,6 @@ export default class SessionStatsService {
             commandsUsed: new Map(),
             wordFrequency: new Map(),
             commandsUsed: new Map(),
-            wordFrequency: new Map(),
             activityHistory: [],
             sessionWatchTime: new Map()
         };
