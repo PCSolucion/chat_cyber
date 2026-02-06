@@ -137,9 +137,11 @@
 /* Face-off Results */
 .faceoff-comparison {
     display: grid;
-    grid-template-columns: 1fr 160px 1fr;
-    gap: var(--spacing-lg);
-    align-items: start;
+    grid-template-columns: 1fr 180px 1fr; /* Increased center column slightly */
+    gap: var(--spacing-md);
+    align-items: center; /* Center vertically */
+    width: 100%;
+    margin: 0 auto;
 }
 
 .comparison-card {
@@ -186,9 +188,16 @@
 }
 
 .comparison-username {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     margin-bottom: 0.2rem;
-    color: var(--text-bright);
+    color: var(--cyber-yellow); /* Yellow for better visibility */
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(252, 238, 9, 0.3);
 }
 
 .comparison-stats {
@@ -247,11 +256,10 @@
 }
 
 .stat-diff-bar {
-    height: 8px;
-    background: rgba(0, 0, 0, 0.6);
-    /* Darker background for contrast */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%, 0 80%);
+    height: 10px; /* Thicker */
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 5px 100%, 0 80%);
     position: relative;
     width: 100%;
 }
