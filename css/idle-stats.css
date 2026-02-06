@@ -30,7 +30,8 @@
    ======================================== */
 .container.idle-mode {
   padding-top: 0;
-  height: 395px !important; /* Altura fijada para evitar parpadeos entre secciones */
+  height: 405px !important;
+  min-height: 405px !important;
   overflow: hidden;
 }
 
@@ -79,6 +80,8 @@
 .container.idle-mode .header {
   position: relative;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 70px !important; /* Header más pequeño en idle porque no hay XP */
+  height: 70px !important;
 }
 
 .container.idle-mode .user-identity-stack {
@@ -107,8 +110,8 @@
 .idle-screen-content {
   display: flex;
   flex-direction: column;
-  height: 310px; /* Altura interna fija para las secciones */
-  gap: 10px;
+  height: 310px;
+  gap: 5px; /* Más compacto */
   overflow: hidden;
 }
 
@@ -265,16 +268,16 @@
 /* Speedometer Component */
 .speedometer-wrapper {
   position: relative;
-  width: 240px;
-  height: 120px; /* Half circle */
+  width: 180px; /* Reducido de 240px */
+  height: 90px; /* Reducido de 120px */
   overflow: hidden;
-  margin-top: 15px;
+  margin-top: 10px;
 }
 
 .speedometer-gauge {
   position: relative;
   width: 100%;
-  height: 240px; /* Full circle logic invisible bottom */
+  height: 180px; /* Acorde al nuevo ancho de 180px */
 }
 
 /* Background Arc - Multiple Rings */
@@ -398,7 +401,7 @@
 
 .gauge-value-text {
   font-family: "Orbitron", sans-serif;
-  font-size: 2.5rem;
+  font-size: 1.8rem; /* Reducido de 2.5rem */
   font-weight: 800;
   color: #fff;
   line-height: 0.9;
@@ -482,12 +485,12 @@
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.03);
-  padding: 10px 10px 10px 5px; /* Reducido padding izquierdo */
+  padding: 6px 10px; /* Reducido para ahorrar espacio */
   gap: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   transition: all 0.2s ease;
-  min-height: 45px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Separador sutil abajo en lugar de borde lateral */
+  min-height: 38px; /* Reducido de 45px */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .modern-list-item.top-1 {
@@ -637,8 +640,7 @@
 }
 
 .trend-name {
-  font-size: 1.1rem;
-  /* Increased from 0.85rem */
+  font-size: 0.95rem; /* Reducido para ahorrar espacio vertical */
   color: #fff;
   font-weight: 600;
   white-space: nowrap;

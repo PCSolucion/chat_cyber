@@ -27,7 +27,8 @@
     padding: 8px 12px;
     background: var(--bg-solid);
     /* Solid Background */
-    border-left: 4px solid #ff4b4b;
+    /* border-left removed to avoid visual noise */
+    border-left: none;
     position: relative;
     transform: translateY(-10px);
     opacity: 0;

@@ -112,6 +112,9 @@ export const DEFAULTS = {
     },
     ACCESSIBILITY: {
         ENABLE_ARIA: true
-    }
+    },
+    MAX_MESSAGE_LENGTH: 100,
+    MAX_WORD_LENGTH: 25,
+    MAX_EMOJI_LIMIT: 7
 };
 

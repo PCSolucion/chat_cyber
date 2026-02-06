@@ -189,13 +189,12 @@ export default class UIManager {
     }
 
     _fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime) {
-        this.identity.reset();
-        this.message.reset();
-        
-        this.identity.dom.username.textContent = "SIGNAL DETECTED";
+        // Preparar estado de desencriptado sin vaciar completamente y causar saltos
         this.identity.dom.username.classList.add('decrypting');
-        this.message.setRawHTML("> INCOMING TRANSMISSION...");
+        this.identity.dom.username.textContent = "SIGNAL DETECTED";
+        
         this.message.setDecrypting(true);
+        this.message.setRawHTML("> INCOMING TRANSMISSION...");
 
         this.timers.decrypt = setTimeout(() => {
             this.identity.dom.username.classList.remove('decrypting');
@@ -255,6 +254,17 @@ export default class UIManager {
         this.message.setRawHTML('');
         this.isProcessingQueue = false;
         if (this.xpDisplay) this.xpDisplay.reset();
+    }
+
+    /**
+     * Extiende el tiempo de visualización del widget
+     * Útil para notificaciones externas que necesitan que el widget no se oculte
+     * @param {number} ms - Milisegundos a extender
+     */
+    extendDisplayTime(ms) {
+        if (this.display) {
+            this.display.extendDisplayTime(ms);
+        }
     }
 }
 

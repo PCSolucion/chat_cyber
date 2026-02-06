@@ -114,6 +114,7 @@ export default class MessageProcessor {
     _setupPipeline() {
         this.pipeline
             .use('Blacklist', (ctx, next) => this._mwBlacklist(ctx, next))
+            .use('LanguageFilter', (ctx, next) => this._mwLanguageFilter(ctx, next))
             .use('EmoteParser', (ctx, next) => this._mwEmoteParser(ctx, next))
             .use('CommandFilter', (ctx, next) => this._mwCommandFilter(ctx, next))
             .use('XPProcessor', (ctx, next) => this._mwXPProcessor(ctx, next))
@@ -130,6 +131,22 @@ export default class MessageProcessor {
     _mwBlacklist(ctx, next) {
         const lowerUser = ctx.username.toLowerCase();
         if (this.config.BLACKLISTED_USERS?.includes(lowerUser)) return;
+        next();
+    }
+
+    /** 🌐 Paso 1.5: Filtrar idiomas no deseados (CJK, etc.) */
+    _mwLanguageFilter(ctx, next) {
+        if (!this.config.LANGUAGE_FILTER_ENABLED) return next();
+
+        // Regex para detectar caracteres fuera del rango latino/estándar
+        // Incluye: A-Z, acentos comunes, símbolos básicos y emojis
+        // Excluye: CJK (Chino/Japo/Koreano), Cirílico, Árabe, etc.
+        const foreignScriptRegex = /[^\u0000-\u024F\u2000-\u206F\u2E00-\u2E7F\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2700}-\u{27BF}\u{1F000}-\u{1Faff}\s]/u;
+
+        if (foreignScriptRegex.test(ctx.message)) {
+            // Logger.info('Filter', `Mensaje ignorado (idioma no soportado) de ${ctx.username}`);
+            return; // Detiene el pipeline, el mensaje se ignora
+        }
         next();
     }
 

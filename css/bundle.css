@@ -360,21 +360,21 @@ body {
 
 @keyframes decryptPulse {
     0% {
-        opacity: 0.6;
+        opacity: 0.8;
         color: var(--cyber-cyan);
-        text-shadow: 0 0 5px var(--cyber-cyan);
+        text-shadow: 0 0 2px var(--cyber-cyan);
     }
 
     50% {
         opacity: 1;
         color: #fff;
-        text-shadow: 0 0 10px #fff;
+        text-shadow: 0 0 8px var(--cyber-cyan), 0 0 20px rgba(0, 246, 255, 0.4);
     }
 
     100% {
-        opacity: 0.6;
+        opacity: 0.8;
         color: var(--cyber-cyan);
-        text-shadow: 0 0 5px var(--cyber-cyan);
+        text-shadow: 0 0 2px var(--cyber-cyan);
     }
 }
 
@@ -497,8 +497,10 @@ body {
     display: flex;
     flex-direction: column;
 
-    /* Altura mínima para evitar parpadeos */
-    min-height: 395px;
+    /* Altura fija rigurosa para evitar parpadeos y espasmos */
+    min-height: 405px;
+    height: 405px;
+    max-height: 405px;
 
     /* 3D HUD effect - Positive rotation to compress RIGHT side */
     transform: translateX(0) rotateY(5deg) scale(1) !important;
@@ -612,6 +614,9 @@ body {
     font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
     transition: all 0.3s ease;
+    height: 34px; /* Altura fija para evitar saltos */
+    min-height: 34px;
+    box-sizing: border-box;
 }
 
 .status-dot {
@@ -683,6 +688,11 @@ body {
     padding: 15px 15px 12px;
     position: relative;
     background: rgba(0, 0, 0, 0.3);
+    min-height: 135px; /* Suma exacta de XP(60)+Gap(5)+Title(40)+Padding(27)+reserba */
+    height: 135px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .info-container {
@@ -697,10 +707,9 @@ body {
     align-items: center;
     gap: 8px;
     padding-left: 0;
-    /* Eliminado padding extra a la izquierda */
     width: 100%;
     overflow: hidden;
-    /* Ensure content doesn't break layout */
+    min-height: 40px; /* Prevenir saltos cuando el nombre está vacío */
 }
 
 .user-identity-stack {
@@ -747,16 +756,17 @@ body {
     position: relative;
     animation: usernameGlow 3s ease-in-out infinite;
     white-space: nowrap;
-    /* Evitar saltos de lÃ­nea */
+    line-height: 1.6;
+    border-right: 3px solid transparent;
+    height: 1.6em; /* Altura fija para la línea de nombre */
+    display: flex;
+    align-items: center;
 
     /* Flex behavior for long names */
     flex: 0 1 auto;
-    /* Allow shrinking */
     min-width: 0;
-    /* Allow shrinking below content size if necessary */
     overflow: hidden;
     text-overflow: ellipsis;
-    /* Optional: adds ... if it still overflows despite font sizing */
 }
 
 /* Fuentes mÃ¡s pequeÃ±as para nombres largos */
@@ -1222,7 +1232,7 @@ body {
 }
 
 .container.top-user .quote {
-    border-left: 2px solid var(--cyber-cyan);
+    border-left: none; /* Removed as per user request */
     text-shadow: 0 0 8px var(--cyber-cyan);
 }
 
@@ -1339,14 +1349,18 @@ body {
 .quote {
     padding: 20px;
     min-height: 100px;
-    flex: 1;
+    flex: 1; /* Ocupar el resto del contenedor fijo */
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
     font-size: var(--message-size);
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
     font-weight: 500;
     letter-spacing: 0.5px;
     line-height: 1.6;
+    border-left: none !important; /* Asegurar que no hay borde izquierdo */
+    border-right: 3px solid transparent;
     position: relative;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
 }
@@ -1422,13 +1436,18 @@ body {
    =========================================== */
 
 .decrypting {
-    animation: decryptPulse 0.1s steps(2) infinite !important;
+    animation: decryptPulse 0.4s ease-in-out infinite !important;
     font-family: 'Share Tech Mono', monospace !important;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--cyber-cyan) !important;
-    border-right: 5px solid var(--cyber-cyan);
-    background: rgba(0, 246, 255, 0.1);
+    border-right: 3px solid var(--cyber-cyan);
+    background: rgba(0, 246, 255, 0.05);
+    line-height: 1.6 !important;
+}
+
+.driver-name.decrypting {
+    height: 1.6em !important;
 }
 
 /* Hide equalizer during incoming transmission */
@@ -1580,8 +1599,9 @@ body {
             rgba(var(--xp-primary-rgb), 0.05) 0%,
             transparent 50%,
             rgba(var(--xp-primary-rgb), 0.05) 100%);
+    height: 60px; /* Altura fija para evitar desplazamientos */
     min-height: 60px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* ============================================

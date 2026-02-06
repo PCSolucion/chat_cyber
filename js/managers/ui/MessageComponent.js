@@ -11,7 +11,81 @@ export default class MessageComponent {
     }
 
     update(message, emotes, userRole) {
-        const processed = UIUtils.processEmotes(message, emotes, this.thirdPartyEmoteService, this.config.EMOTE_SIZE);
+        const maxLength = this.config.MAX_MESSAGE_LENGTH || 100;
+        const maxWordLength = this.config.MAX_WORD_LENGTH || 25;
+        
+        // Convertir a array de caracteres visuales para manejar emojis (surrogates) correctamente
+        const allChars = Array.from(message);
+        let truncatedMessage = message;
+        let activeEmotes = emotes;
+
+        // 1. Límite de mensaje total (basado en caracteres visuales)
+        if (allChars.length > maxLength) {
+            truncatedMessage = allChars.slice(0, maxLength).join('') + '...';
+            
+            if (emotes) {
+                activeEmotes = {};
+                // Los índices de Twitch están basados en UTF-16 code units, no en visual chars.
+                // Sin embargo, si el mensaje es corto (100 visual chars), es probable que 
+                // los índices de emotes de Twitch (basados en string.length) sigan siendo útiles 
+                // si limitamos de forma conservadora.
+                const rawCutPoint = truncatedMessage.length; 
+                Object.entries(emotes).forEach(([id, positions]) => {
+                    const validPositions = positions
+                        .filter(pos => parseInt(pos.split('-')[0]) < rawCutPoint)
+                        .map(pos => {
+                            const [start, end] = pos.split('-').map(Number);
+                            return `${start}-${Math.min(end, rawCutPoint - 1)}`;
+                        });
+                    if (validPositions.length > 0) activeEmotes[id] = validPositions;
+                });
+            }
+        }
+
+        // 2. Límite de longitud Diferenciado (Palabras vs Emojis)
+        // Usamos 7 como límite riguroso para emojis
+        const maxEmojiLimit = this.config.MAX_EMOJI_LIMIT || 7;
+        let stopProcessing = false;
+        let finalMessageParts = [];
+
+        // Dividimos preservando TODOS los espacios
+        const chunks = truncatedMessage.split(/(\s+)/);
+        
+        for (const chunk of chunks) {
+            if (stopProcessing) break;
+
+            if (chunk.trim().length === 0) {
+                finalMessageParts.push(chunk);
+                continue;
+            }
+
+            const chars = Array.from(chunk);
+            
+            // Un chunk es una secuencia de emojis si NO contiene letras ni números Unicode
+            const hasAlphanumeric = /[\p{L}\p{N}]/u.test(chunk);
+            const currentLimit = hasAlphanumeric ? maxWordLength : maxEmojiLimit;
+            
+            if (chars.length > currentLimit) {
+                finalMessageParts.push(chars.slice(0, currentLimit).join('') + '…');
+                stopProcessing = true; // Paramos de añadir contenido para evitar repeticiones de bloques truncados
+            } else {
+                finalMessageParts.push(chunk);
+            }
+        }
+
+        let finalMessage = finalMessageParts.join('');
+
+        // Failsafe: Asegurar que el total no se dispare
+        if (Array.from(finalMessage).length > maxLength + 5) {
+            finalMessage = Array.from(finalMessage).slice(0, maxLength).join('') + '...';
+        }
+
+        // Si hemos modificado el texto (truncado), los índices de emotes de Twitch ya no valen
+        if (finalMessage !== truncatedMessage && activeEmotes) {
+            activeEmotes = null; 
+        }
+
+        const processed = UIUtils.processEmotes(finalMessage, activeEmotes, this.thirdPartyEmoteService, this.config.EMOTE_SIZE);
         const { isEmoteOnly, emoteCount } = UIUtils.isEmoteOnlyMessage(processed);
         
         this.el.className = 'quote';
@@ -29,7 +103,6 @@ export default class MessageComponent {
                 UIUtils.scrambleText(this.el, processed);
             } else {
                 if (!hasImages) {
-                    this.el.textContent = `"${processed}"`;
                     this.el.innerHTML = `"${processed}"`; 
                 } else {
                     this.el.innerHTML = `"${processed}"`;
