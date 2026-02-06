@@ -156,8 +156,19 @@ export default class ExperienceService {
             const data = await this.storageService.loadXPData();
 
             if (data && data.users) {
-                // Cargar datos de usuarios
+                // Cargar datos de usuarios con sanitización inmediata
                 Object.entries(data.users).forEach(([username, userData]) => {
+                    // Sanitización de LOGROS (Deduplicar si vinieran corruptos del Gist)
+                    let achievements = userData.achievements || [];
+                    if (Array.isArray(achievements) && achievements.length > 0) {
+                        const achMap = new Map();
+                        achievements.forEach(ach => {
+                            const id = typeof ach === 'string' ? ach : ach.id;
+                            if (id && !achMap.has(id)) achMap.set(id, ach);
+                        });
+                        achievements = Array.from(achMap.values());
+                    }
+
                     this.usersXP.set(username.toLowerCase(), {
                         xp: userData.xp || 0,
                         level: userData.level || 1,
@@ -166,7 +177,7 @@ export default class ExperienceService {
                         bestStreak: userData.bestStreak || userData.streakDays || 0,
                         lastStreakDate: userData.lastStreakDate || null,
                         totalMessages: userData.totalMessages || 0,
-                        achievements: userData.achievements || [],
+                        achievements: achievements,
                         achievementStats: userData.achievementStats || {},
                         activityHistory: userData.activityHistory || {},
                         watchTimeMinutes: userData.watchTimeMinutes || 0
@@ -190,16 +201,27 @@ export default class ExperienceService {
 
     /**
      * Tarea de guardado real (llamada por PersistenceManager)
+     * Implementa estrategia "Fetch-before-write" para integridad de datos
      * @private
      */
     async _performSaveTask() {
         try {
-            // Convertir Map a objeto para JSON
+            // 1. Sincronizar primero: Descargar versión más reciente del Gist
+            // Esto asegura que no borramos cambios hechos desde otro dispositivo
+            const remoteData = await this.storageService.loadXPData(true);
+            
+            if (remoteData && remoteData.users) {
+                this._mergeRemoteChanges(remoteData.users);
+                if (this.config.DEBUG) console.log('🔄 ExperienceService: Datos remotos fusionados antes de guardar');
+            }
+
+            // 2. Preparar snapshot unificado para subir
             const usersData = {};
             this.usersXP.forEach((data, username) => {
                 usersData[username] = data;
             });
 
+            // 3. Guardar en Gist (PATCH simple sin headers de precondición)
             await this.storageService.saveXPData({
                 users: usersData,
                 lastUpdated: new Date().toISOString(),
@@ -207,9 +229,88 @@ export default class ExperienceService {
             });
 
         } catch (error) {
-            // El PersistenceManager se encarga de loguear y propagar si es necesario
+            console.error('❌ ExperienceService: Error crítico en ciclo de persistencia:', error);
             throw error;
         }
+    }
+
+    /**
+     * Fusiona cambios remotos con los locales sin perder progreso nuevo
+     * @private
+     */
+    _mergeRemoteChanges(remoteUsers) {
+        Object.entries(remoteUsers).forEach(([username, remoteData]) => {
+            const lowerUser = username.toLowerCase();
+            const localData = this.usersXP.get(lowerUser);
+
+            if (!localData) {
+                // El usuario es nuevo en el remoto, lo añadimos
+                this.usersXP.set(lowerUser, remoteData);
+            } else {
+                // 1. Criterio de Fusión Base: Conservar siempre el mayor progreso
+                localData.xp = Math.max(localData.xp || 0, remoteData.xp || 0);
+                localData.level = Math.max(localData.level || 1, remoteData.level || 1);
+                localData.totalMessages = Math.max(localData.totalMessages || 0, remoteData.totalMessages || 0);
+                localData.watchTimeMinutes = Math.max(localData.watchTimeMinutes || 0, remoteData.watchTimeMinutes || 0);
+                localData.streakDays = Math.max(localData.streakDays || 0, remoteData.streakDays || 0);
+                localData.bestStreak = Math.max(localData.bestStreak || 0, remoteData.bestStreak || 0);
+                localData.subMonths = Math.max(localData.subMonths || 0, remoteData.subMonths || 0);
+
+                // 2. Mezclar LOGROS (Deduplicar por ID)
+                // Usamos un Map para asegurar que solo hay un objeto por logro ID
+                const achMap = new Map();
+                const allAchievements = [
+                    ...(remoteData.achievements || []),
+                    ...(localData.achievements || [])
+                ];
+
+                allAchievements.forEach(ach => {
+                    const id = typeof ach === 'string' ? ach : ach.id;
+                    if (!id) return;
+                    
+                    // Si ya existe, nos quedamos con el que tenga fecha (prioridad al remoto si ya estaba)
+                    if (!achMap.has(id)) {
+                        achMap.set(id, ach);
+                    }
+                });
+                localData.achievements = Array.from(achMap.values());
+
+                // 3. Mezclar ACHIEVEMENT STATS (Contadores internos)
+                if (remoteData.achievementStats) {
+                    if (!localData.achievementStats) localData.achievementStats = {};
+                    Object.entries(remoteData.achievementStats).forEach(([key, val]) => {
+                        if (typeof val === 'number') {
+                            localData.achievementStats[key] = Math.max(localData.achievementStats[key] || 0, val);
+                        } else if (val && !localData.achievementStats[key]) {
+                            // Para booleanos o arrays (como holidays)
+                            localData.achievementStats[key] = val;
+                        }
+                    });
+                }
+
+                // 4. Mezclar ACTIVITY HISTORY (Heatmaps)
+                if (remoteData.activityHistory) {
+                    if (!localData.activityHistory) localData.activityHistory = {};
+                    Object.entries(remoteData.activityHistory).forEach(([date, dayData]) => {
+                        if (!localData.activityHistory[date]) {
+                            localData.activityHistory[date] = dayData;
+                        } else {
+                            const localDay = localData.activityHistory[date];
+                            localDay.messages = Math.max(localDay.messages || 0, dayData.messages || 0);
+                            localDay.xp = Math.max(localDay.xp || 0, dayData.xp || 0);
+                            localDay.watchTime = Math.max(localDay.watchTime || 0, dayData.watchTime || 0);
+                        }
+                    });
+                }
+
+                // 5. Actualizar timestamp de actividad al más reciente
+                const remoteTime = remoteData.lastActivity ? new Date(remoteData.lastActivity).getTime() : 0;
+                const localTime = localData.lastActivity ? new Date(localData.lastActivity).getTime() : 0;
+                localData.lastActivity = Math.max(localTime, remoteTime);
+                
+                this.usersXP.set(lowerUser, localData);
+            }
+        });
     }
 
     /**

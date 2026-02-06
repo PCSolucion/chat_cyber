@@ -144,10 +144,11 @@ export default class GistStorageService {
 
         try {
             const content = JSON.stringify(data, null, 2);
+            const headers = this.getHeaders();
 
             const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
                 method: 'PATCH',
-                headers: this.getHeaders(),
+                headers: headers,
                 body: JSON.stringify({
                     files: {
                         [fileName]: { content: content }
@@ -160,7 +161,12 @@ export default class GistStorageService {
             // Manejar Conflictos (409) o Unprocessable Entity (422) con reintentos
             if ((response.status === 409 || response.status === 422) && retryCount < maxRetries) {
                 const delay = retryDelay * Math.pow(2, retryCount) + (Math.random() * 1000);
-                Logger.warn('Storage', `Conflicto (409/422) al guardar ${fileName}. Reintentando en ${Math.round(delay)}ms... (Intento ${retryCount + 1}/${maxRetries})`);
+                // Si es un 409, no lo logueamos como WARN ya que es común en multi-instancia
+                if (response.status === 409) {
+                    Logger.debug('Storage', `Conflicto temporal (409). Reintentando en ${Math.round(delay)}ms...`);
+                } else {
+                    Logger.warn('Storage', `Servidor ocupado (${response.status}). Reintentando en ${Math.round(delay)}ms...`);
+                }
                 
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return await this.saveFile(fileName, data, retryCount + 1);
@@ -171,13 +177,12 @@ export default class GistStorageService {
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-            Logger.debug('Storage', `${fileName} guardado en Gist`);
+            Logger.debug('Storage', `${fileName} guardado con éxito`);
             EventManager.emit(EVENTS.STORAGE.DATA_SAVED);
             return true;
 
         } catch (error) {
             Logger.error('Storage', `Error al guardar ${fileName}:`, error);
-            // Propagar el error para que el PersistenceManager sepa que falló
             throw error;
         }
     }

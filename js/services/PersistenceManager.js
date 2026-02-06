@@ -19,6 +19,10 @@ export default class PersistenceManager {
         this.debounceMs = options.debounceMs || 5000;
         this.debug = options.debug || false;
 
+        // Añadir un offset aleatorio por sesión (0-2s) para evitar que múltiples 
+        // instancias (OBS, Navegador) choquen al guardar al mismo tiempo.
+        this.sessionOffset = Math.random() * 2000;
+
         this.pendingChanges = new Set();
         this.saveTimeout = null;
         this.isSaving = false;
@@ -44,14 +48,14 @@ export default class PersistenceManager {
             clearTimeout(this.saveTimeout);
         }
 
-        // Añadir un pequeño jitter (0-1s) para evitar que múltiples instancias
-        // intenten guardar exactamente al mismo tiempo después de un evento
-        const jitter = Math.random() * 1000;
+        // Usamos el debounce config + el jitter de evento + el offset de esta sesión
+        const jitter = Math.random() * 500;
+        const totalDelay = this.debounceMs + this.sessionOffset + jitter;
         
         this.saveTimeout = setTimeout(() => {
             this.saveTimeout = null;
             this.saveImmediately();
-        }, this.debounceMs + jitter);
+        }, totalDelay);
     }
 
     /**
@@ -71,19 +75,17 @@ export default class PersistenceManager {
      * @private
      */
     async _performSave() {
-        // 1. Si no hay cambios y no hay nada en cola, cancelar
+        // 1. Si no hay cambios y no ha habido fallos previos, cancelar
         if (this.pendingChanges.size === 0 && !this.queuedSave) {
             return;
         }
 
         // 2. Si ya se está guardando, encolar para después
         if (this.isSaving) {
-            if (this.debug) console.log('⏳ PersistenceManager: Guardado en curso, encolando...');
             this.queuedSave = true;
             return;
         }
 
-        // 3. Bloquear y preparar snapshot de cambios
         this.isSaving = true;
         this.queuedSave = false;
         
@@ -103,16 +105,13 @@ export default class PersistenceManager {
             
             // Reincorporar cambios que fallaron para el siguiente intento
             changesSnapshot.forEach(item => this.pendingChanges.add(item));
-            
-            // Si el error es crítico, podríamos lanzar evento o manejar reintentos aquí
-            throw error; 
         } finally {
             this.isSaving = false;
 
             // 4. Si hubo peticiones mientras guardábamos, ejecutar la cola
             if (this.queuedSave || this.pendingChanges.size > 0) {
-                if (this.debug) console.log('🔄 PersistenceManager: Procesando cola pendiente...');
-                this._performSave(); 
+                const retryDelay = this.pendingChanges.size > 0 ? this.debounceMs : 500;
+                this.saveTimeout = setTimeout(() => this._performSave(), retryDelay);
             }
         }
     }
