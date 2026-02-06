@@ -69,3 +69,49 @@ export const STORAGE = {
     MAX_RETRIES: 3,                     // Intentos máximos en caso de fallo de red
     BASE_RETRY_DELAY_MS: 1000,          // Delay base para backoff exponencial
 };
+
+// Valores por defecto para la configuración (si el usuario no los define en config.js)
+export const DEFAULTS = {
+    BROADCASTER_USERNAME: 'liiukiin',
+    MESSAGE_DISPLAY_TIME: TIMING.MESSAGE_DISPLAY_TIME_MS,
+    AUDIO_URL: 'sounds/radiof1.mp3',
+    AUDIO_VOLUME: 1.0,
+    TOP_DATA_URL: 'https://gist.githubusercontent.com/PCSolucion/550afe48a9954f54462ec201e49c851b/raw',
+    EMOTE_SIZE: '1.2em',
+    ANIMATION_COOLDOWN_MS: TIMING.ANIMATION_COOLDOWN_MS,
+    XP_SYSTEM_ENABLED: true,
+    XP_GIST_FILENAME: 'xp_data.json',
+    XP_LEVELUP_DISPLAY_TIME: 4000,
+    XP_IGNORED_USERS_FOR_BONUS: ['wizebot', 'liiukiin'],
+    IDLE_TIMEOUT_MS: IDLE.DEFAULT_TIMEOUT_MS,
+    IDLE_ROTATION_MS: IDLE.DEFAULT_ROTATION_MS,
+    THIRD_PARTY_EMOTES_ENABLED: true,
+    BLACKLISTED_USERS: ['tangiabot', 'wizebot', 'streamelements', 'streamroutine_bot', 'botrixoficial'],
+    UI: {
+        RANK_ICONS: {
+            'CIVILIAN': 'civilian.png',
+            'ROOKIE': 'streetrat.png',
+            'MERCENARY': 'mercenary.png',
+            'SOLO': 'solo.png',
+            'NETRUNNER': 'netrunner.png',
+            'FIXER': 'fixer.png',
+            'CORPO': 'corpo.png',
+            'NIGHT CITY LEGEND': 'solo.png',
+            'CYBERPSYCHO': 'mercenary.png',
+            'MAXTAC': 'netrunner.png',
+            'TRAUMA TEAM': 'fixer.png',
+            'AFTERLIFE LEGEND': 'corpo.png',
+            'CHOOMBA SUPREME': 'corpo.png',
+            'CITIZEN OF NIGHT CITY': 'civilian.png'
+        },
+        SPECIAL_ICONS: {
+            'ADMIN': 'arasaka.png',
+            'SYSTEM': 'netrunner.png'
+        },
+        USER_THEMES: {}
+    },
+    ACCESSIBILITY: {
+        ENABLE_ARIA: true
+    }
+};
+

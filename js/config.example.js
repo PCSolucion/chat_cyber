@@ -1,124 +1,40 @@
 /**
  * Configuración del Overlay de Chat de Twitch - PLANTILLA
  * Renombra este archivo a 'config.js' y completa tus credenciales.
+ * 
+ * Los valores técnicos por defecto se encuentran en js/constants/AppConstants.js
  */
 
 const CONFIG = {
-    // Configuración de Twitch
+    // 1. CONFIGURACIÓN DE TWITCH (OBLIGATORIO)
     TWITCH_CHANNEL: 'tu_canal_aqui',
-    
-    // Usuario principal (Broadcaster) - Usualmente el mismo que el canal
-    // Se usa para excluirlo de rankings de subs, etc.
     BROADCASTER_USERNAME: 'tu_usuario',
-
-    // Tiempos (en milisegundos)
-    MESSAGE_DISPLAY_TIME: 14000,
-
-    // Audio - Cyberpunk style sound
-    AUDIO_URL: 'sounds/cyberpunk-message.mp3',
-    AUDIO_VOLUME: 1.0,
-
-    // Ranking Data Source
-    TOP_DATA_URL: 'https://gist.githubusercontent.com/TU_USUARIO/GIST_ID/raw',
-
-    // Tamaños y dimensiones
-    EMOTE_SIZE: '1.2em',
-
-    // Animación
-    ANIMATION_COOLDOWN_MS: 30000,
-
-    // Usuario especial
-    SPECIAL_USER: {
-        username: 'tu_usuario',
-        number: 63,
-        team: 'mercedes'
-    },
-
-    // Configuración de accesibilidad
-    ACCESSIBILITY: {
-        ENABLE_ARIA: true
-    },
-
-    // Modo debug
-    DEBUG: false,
-
-    // ============================================
-    // SISTEMA DE EXPERIENCIA (XP)
-    // ============================================
-
-    // Habilitar/deshabilitar sistema de XP
-    XP_SYSTEM_ENABLED: true,
-
-    // GitHub Gist para almacenamiento de XP
-    // IMPORTANTE: Crea un Gist privado y obtén un Personal Access Token
-    // con permisos de "gist" en https://github.com/settings/tokens
+    
+    // 2. SISTEMA DE EXPERIENCIA Y PERSISTENCIA (OBLIGATORIO)
+    // Crea un Gist privado y obtén un Token en https://github.com/settings/tokens
     XP_GIST_ID: 'TU_GIST_ID_AQUI',
-    XP_GIST_TOKEN: 'TU_TOKEN_AQUI', // NO COMPARTIR ESTE ARCHIVO SI TIENE EL TOKEN REAL
-    XP_GIST_FILENAME: 'xp_data.json',
+    XP_GIST_TOKEN: 'TU_TOKEN_AQUI', 
 
-    // Tiempo de display del popup de Level Up (ms)
-    XP_LEVELUP_DISPLAY_TIME: 4000,
-
-    // Usuarios ignorados para Rachas y Bonus Diario
-    XP_IGNORED_USERS_FOR_BONUS: ['wizebot', 'streamelements'],
-
-    // ============================================
-    // MODO IDLE (Estadísticas cuando no hay chat)
-    // ============================================
-
-    IDLE_TIMEOUT_MS: 30000,
-    IDLE_ROTATION_MS: 12000,
-
-    // ============================================
-    // EMOTES DE TERCEROS (7TV, BTTV, FFZ)
-    // ============================================
-
-    THIRD_PARTY_EMOTES_ENABLED: true,
-
-    // ============================================
-    // CONFIGURACIÓN VISUAL (Iconos de Rango y Usuario)
-    // ============================================
+    // 3. PERSONALIZACIÓN VISUAL (OPCIONAL)
     UI: {
-        RANK_ICONS: {
-            'CIVILIAN': 'civilian.png',
-            'ROOKIE': 'streetrat.png',
-            'MERCENARY': 'mercenary.png',
-            'SOLO': 'solo.png',
-            'NETRUNNER': 'netrunner.png',
-            'FIXER': 'fixer.png',
-            'CORPO': 'corpo.png',
-            'NIGHT CITY LEGEND': 'solo.png',
-            'CYBERPSYCHO': 'mercenary.png',
-            'MAXTAC': 'netrunner.png',
-            'TRAUMA TEAM': 'fixer.png',
-            'AFTERLIFE LEGEND': 'corpo.png',
-            'CHOOMBA SUPREME': 'corpo.png',
-            'CITIZEN OF NIGHT CITY': 'civilian.png'
-        },
-        SPECIAL_ICONS: {
-            'ADMIN': 'arasaka.png',
-            'SYSTEM': 'netrunner.png'
-        },
+        // Los iconos de rango por defecto ya están configurados
+        // Mantenemos USER_THEMES aquí como ejemplo de personalización
         USER_THEMES: {
-            'takeru_xiii': 'takeru-bg',
-            'x1lenz': 'x1lenz-bg',
-            'chandalf': 'chandalf-bg',
-            'c_h_a_n_d_a_l_f': 'chandalf-bg',
-            'manguerazo': 'manguerazo-bg',
-            'duckcris': 'duckcris-bg'
+            'usuario_ejemplo': 'tema-ejemplo-bg'
         }
     },
 
-    // Usuarios completamente excluidos (Bots de sistema)
+    // 4. FILTROS DE USUARIOS (OPCIONAL)
+    // Usuarios completamente excluidos (Bots)
     BLACKLISTED_USERS: [
-        'tangiabot',
         'wizebot',
         'streamelements',
-        'streamroutine_bot'
-    ]
+        'botrixoficial'
+    ],
+
+    // 5. AJUSTES DE DEBUG
+    DEBUG: false
 };
 
-// Exportar para uso en otros archivos
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CONFIG;
-}
+export default CONFIG;
+
