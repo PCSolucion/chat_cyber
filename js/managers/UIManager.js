@@ -8,6 +8,7 @@ import DisplayController from './ui/DisplayController.js';
 import StatusBarComponent from './ui/StatusBarComponent.js';
 import IdentityComponent from './ui/IdentityComponent.js';
 import MessageComponent from './ui/MessageComponent.js';
+import MessageQueueManager from './ui/MessageQueueManager.js';
 
 /**
  * UIManager - Gestor Principal de la Interfaz de Usuario
@@ -39,8 +40,10 @@ export default class UIManager {
             adminIcon: dom.adminIcon
         }, config);
         this.message = new MessageComponent(dom.message, thirdPartyEmoteService, config);
+        this.queue = new MessageQueueManager(config);
 
         // 3. Estado local
+        this.isProcessingQueue = false;
         this.lastMessageTime = 0;
         this.timers = {
             decrypt: null,
@@ -76,40 +79,83 @@ export default class UIManager {
             const text = typeof data === 'string' ? data : data.text;
             this.displayMessage('SYSTEM', text, {}, { isSubscriber: false });
         });
+
+        // Escuchar cuando un mensaje termina para procesar el siguiente en la cola
+        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, () => {
+            if (!this.queue.isEmpty()) {
+                // Pequeño delay de cortesía entre mensajes
+                setTimeout(() => this._processQueue(), 500);
+            } else {
+                this.isProcessingQueue = false;
+            }
+        });
     }
 
     /**
-     * Punto de entrada principal para mostrar mensajes
+     * Punto de entrada principal para mostrar mensajes (Añade a cola)
      */
-    displayMessage(username, message, emotes, subscriberInfo = {}) {
+    displayMessage(username, message, emotes, subscriberInfo = {}, xpResult = null) {
+        try {
+            // Añadir a la cola
+            this.queue.add({ username, message, emotes, subscriberInfo, xpResult });
+
+            // Si no estamos procesando la cola, empezar ahora
+            if (!this.isProcessingQueue) {
+                this._processQueue();
+            }
+
+        } catch (error) {
+            Logger.error('UI', 'Error adding message to queue', error);
+        }
+    }
+
+    /**
+     * Extrae y renderiza el siguiente mensaje de la cola
+     * @private
+     */
+    _processQueue() {
+        if (this.queue.isEmpty()) {
+            this.isProcessingQueue = false;
+            return;
+        }
+
+        this.isProcessingQueue = true;
+        const msgObj = this.queue.getNext();
+        const { username, message, emotes, subscriberInfo } = msgObj;
+
         try {
             const now = Date.now();
             const timeSinceLast = now - this.lastMessageTime;
             const isVisible = this.display.isVisibleState();
             
-            const shouldShowFullAnim = !isVisible && timeSinceLast > this.config.ANIMATION_COOLDOWN_MS;
+            // Si el widget ya estaba visible, usamos transición rápida. Si no, secuencia completa.
+            const shouldShowFullAnim = !isVisible && (now - this.lastMessageTime) > this.config.ANIMATION_COOLDOWN_MS;
             
             this.clearAllTimers();
             this.lastMessageTime = now;
             this.display.show();
 
+            // Calcular tiempo de visualización dinámico (Modo Turbo)
+            const displayTime = this.queue.calculateDisplayTime(msgObj);
+
             if (shouldShowFullAnim) {
-                this._fullIncomingSequence(username, message, emotes, subscriberInfo);
+                this._fullIncomingSequence(username, message, emotes, subscriberInfo, displayTime);
             } else {
-                this._fastTransition(username, message, emotes, subscriberInfo);
+                this._fastTransition(username, message, emotes, subscriberInfo, displayTime);
             }
 
         } catch (error) {
-            Logger.error('UI', 'Error displaying message', error);
+            Logger.error('UI', 'Error processing queue message', error);
+            this.isProcessingQueue = false;
         }
     }
 
-    _fastTransition(username, message, emotes, subscriberInfo) {
+    _fastTransition(username, message, emotes, subscriberInfo, displayTime) {
         this.identity.dom.username.style.opacity = '0';
         this.message.fade(0);
 
         this.timers.transition = setTimeout(() => {
-            this._revealMessage(username, message, emotes, subscriberInfo);
+            this._revealMessage(username, message, emotes, subscriberInfo, displayTime);
             requestAnimationFrame(() => {
                 this.identity.dom.username.style.opacity = '1';
                 this.message.fade(1);
@@ -117,7 +163,7 @@ export default class UIManager {
         }, 200);
     }
 
-    _fullIncomingSequence(username, message, emotes, subscriberInfo) {
+    _fullIncomingSequence(username, message, emotes, subscriberInfo, displayTime) {
         this.identity.reset();
         this.message.reset();
         
@@ -129,11 +175,11 @@ export default class UIManager {
         this.timers.decrypt = setTimeout(() => {
             this.identity.dom.username.classList.remove('decrypting');
             this.message.setDecrypting(false);
-            this._revealMessage(username, message, emotes, subscriberInfo);
+            this._revealMessage(username, message, emotes, subscriberInfo, displayTime);
         }, 800);
     }
 
-    _revealMessage(username, message, emotes, subscriberInfo) {
+    _revealMessage(username, message, emotes, subscriberInfo, displayTime) {
         const userRole = this.rankingSystem.getUserRole(username);
         const xpInfo = this.experienceService?.getUserXPInfo(username);
         
@@ -147,7 +193,7 @@ export default class UIManager {
         this._handleGoldMode(subscriberInfo);
 
         // Programar desaparición (Delegado al display controller)
-        let displayTime = this.config.MESSAGE_DISPLAY_TIME + (userRole.role !== 'user' ? 2000 : 0);
+        // El displayTime ya viene calculado por el QueueManager (incluye bonus por rango/prioridad)
         this.display.scheduleHide(displayTime);
     }
 

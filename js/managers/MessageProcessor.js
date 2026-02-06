@@ -236,7 +236,7 @@ export default class MessageProcessor {
             this.services.xp.updateSubscription(ctx.username, months);
         }
 
-        this.managers.ui.displayMessage(ctx.username, ctx.message, ctx.tags.emotes, subInfo);
+        this.managers.ui.displayMessage(ctx.username, ctx.message, ctx.tags.emotes, subInfo, ctx.xpResult);
         next();
     }
 
