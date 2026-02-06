@@ -212,9 +212,13 @@ export default class MessageProcessor {
         // Logros específicos: Progreso de Bro
         this._handleBroProgress(ctx.username, ctx.message);
 
-        // Actualizar objeto de logros para el renderizado
+        // Actualizar objeto de logros para el renderizado (Sincronización forzada)
         if (ctx.xpResult) {
-            ctx.xpResult.achievements = this.services.xp.getUserData(ctx.username).achievements || [];
+            const freshData = this.services.xp.getUserData(ctx.username);
+            ctx.xpResult.achievements = freshData.achievements || [];
+            ctx.xpResult.level = freshData.level;
+            ctx.xpResult.xp = freshData.xp;
+            ctx.xpResult.totalXP = freshData.xp;
         }
         next();
     }

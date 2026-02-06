@@ -14,14 +14,20 @@ import ScrambleEngine from './ScrambleEngine.js';
  */
 const UIUtils = {
     /**
-     * Escapa caracteres HTML para prevenir XSS
+     * Escapa caracteres HTML para prevenir XSS de forma eficiente
      * @param {string} text - Texto a escapar
      * @returns {string} Texto escapado
      */
     escapeHTML(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
     },
 
     /**

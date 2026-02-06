@@ -441,6 +441,13 @@ export default class ExperienceService {
         this.usersXP.set(lowerUser, userData);
         this.persistence.markDirty(lowerUser);
 
+        // Emitir evento de ganancia de XP para sincronizar UI
+        EventManager.emit(EVENTS.USER.XP_GAINED, {
+            username: lowerUser,
+            amount: totalXP,
+            total: userData.xp
+        });
+
         // Detectar level-up
         const leveledUp = newLevel > previousLevel;
         if (leveledUp) {
@@ -460,13 +467,18 @@ export default class ExperienceService {
             xpBeforeMultiplier,
             xpSources,
             totalXP: userData.xp,
+            xp: userData.xp, // Alias para compatibilidad
             level: newLevel,
             previousLevel,
             leveledUp,
-            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, newLevel),
-            levelTitle: this.levelCalculator.getLevelTitle(newLevel),
+            progress: this.levelCalculator.getLevelProgress(userData.xp, newLevel),
+            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, newLevel), // Alias
+            title: this.levelCalculator.getLevelTitle(newLevel),
+            levelTitle: this.levelCalculator.getLevelTitle(newLevel), // Alias
             streakDays: userData.streakDays || 0,
-            streakMultiplier
+            streakMultiplier,
+            achievements: userData.achievements || [],
+            totalMessages: userData.totalMessages
         };
     }
 
@@ -597,6 +609,14 @@ export default class ExperienceService {
 
         // 4. Guardar vía Gestor de Persistencia
         this.persistence.markDirty(lowerUser);
+
+        // Emitir evento de ganancia de XP (pasiva)
+        EventManager.emit(EVENTS.USER.XP_GAINED, {
+            username: lowerUser,
+            amount: xpEarned,
+            total: userData.xp,
+            passive: true
+        });
 
         return {
             totalTime: userData.watchTimeMinutes,
@@ -757,6 +777,15 @@ export default class ExperienceService {
             userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + totalXP;
 
             this.persistence.markDirty(lowerUser);
+
+            // Emitir evento para actualización de UI
+            EventManager.emit(EVENTS.USER.XP_GAINED, {
+                username: lowerUser,
+                amount: totalXP,
+                total: userData.xp,
+                passive: true
+            });
+
             updatedCount++;
         });
 

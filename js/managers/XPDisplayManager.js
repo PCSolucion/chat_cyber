@@ -39,9 +39,7 @@ export default class XPDisplayManager {
 
         // Cache de total logros
         this.totalAchievements = 0;
-        if (this.achievementService && this.achievementService.achievements) {
-            this.totalAchievements = Object.keys(this.achievementService.achievements).length;
-        }
+        this._updateTotalAchievements();
 
         // Estado
         this.levelUpTimeout = null;
@@ -55,6 +53,19 @@ export default class XPDisplayManager {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
             this.init();
+        }
+    }
+
+    /**
+     * Actualiza el total de logros disponibles desde el servicio
+     * @private
+     */
+    _updateTotalAchievements() {
+        if (this.achievementService) {
+            this.totalAchievements = this.achievementService.getTotalAchievements();
+            if (this.totalAchievements === 0 && this.config.DEBUG) {
+                console.warn('⚠️ XPDisplayManager: Total de logros detectado como 0. Verifique la carga de AchievementsData.js');
+            }
         }
     }
 
@@ -102,6 +113,13 @@ export default class XPDisplayManager {
         // Suscribirse al evento global de level up
         EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
             this.showLevelUp(eventData);
+        });
+
+        // Suscribirse a ganancias de XP (para actualizar la barra pasivamente ej: WatchTime)
+        EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
+            if (this.dom.xpSection && this.dom.xpSection.style.display !== 'none') {
+                this.updateXPDisplay(data.username);
+            }
         });
     }
 
@@ -184,7 +202,9 @@ export default class XPDisplayManager {
 
         // Actualizar Contadores de Logros
         if (this.dom.xpAchievements && this.totalAchievements > 0) {
-            const unlockedCount = (xpInfo.achievements || []).length;
+            // Siempre obtener los logros reales del servicio para evitar datos incompletos en xpResult
+            const realUserData = this.experienceService.getUserData(username);
+            const unlockedCount = (realUserData.achievements || []).length;
             const percentage = Math.min(100, Math.max(0, (unlockedCount / this.totalAchievements) * 100));
 
             this.dom.xpAchievements.style.display = 'block';
