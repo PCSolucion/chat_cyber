@@ -104,17 +104,28 @@ export default class IdleScreenRenderer {
             // Si hay scroll (más de 5 items)
             if (itemCount > 5) {
                 // Cálculo: Tiempo base + tiempo por item extra
-                // Damos 2.5 segundos por item para asegurar lectura cómoda
-                const calculatedTime = Math.max(duration, itemCount * 2500);
+                // Reducimos a 1.4s por item para que sea más dinámico
+                let multiplier = 1400;
                 
-                // Cap a un máximo razonable (ej. 45s) para no aburrir
-                duration = Math.min(calculatedTime, 45000);
-                
-                // Si es Top Subscribers, ser un poco más generosos
+                // Si es Top Suscriptores (última pantalla), lo hacemos aún más rápido (1.2s) para no demorar el cierre
                 if (screenData.type === 'top_subscribers') {
-                    duration = Math.max(duration, 20000); // Mínimo 20s para subs si hay lista
+                    multiplier = 1200;
                 }
+                
+                const calculatedTime = Math.max(rotationMs, itemCount * multiplier);
+                
+                // Cap a un máximo razonable (30s)
+                duration = Math.min(calculatedTime, 30000);
             }
+        }
+
+        // Reducir duración para Trending, Tiempo Total y Progreso Global
+        if (screenData.type === 'trending' || screenData.type === 'watchtime_total') {
+            duration = Math.max(4000, duration - 4000);
+        }
+        
+        if (screenData.type === 'achievements') {
+            duration = Math.max(4000, duration - 5000);
         }
 
         return duration;
@@ -372,12 +383,12 @@ export default class IdleScreenRenderer {
                 <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
-                        <span class="list-name" style="${index === 0 ? 'color: #ffd700;' : ''}">${user.username}</span>
+                        <span class="list-name" style="${index === 0 ? 'color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3);' : ''}">${user.username}</span>
                         <span class="list-sub tabular-nums">NIVEL ${user.level}</span>
                     </div>
                     <div class="list-stat">
-                        <span class="stat-num tabular-nums" style="color: #ffd700;">${user.months}</span>
-                        <span class="stat-unit" style="color: #aa771c;">meses</span>
+                        <span class="stat-num tabular-nums" style="color: #fff;">${user.months}</span>
+                        <span class="stat-unit" style="color: var(--cyber-red, #FF3B45); opacity: 0.8 !important;">meses</span>
                     </div>
                 </div>
             `;
@@ -398,7 +409,7 @@ export default class IdleScreenRenderer {
         `;
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in" style="border-bottom-color: #ffd700;">TOP SUSCRIPTORES</div>
+            <div class="idle-screen-title wide-spacing animate-hidden animate-in">TOP SUSCRIPTORES</div>
             <div class="idle-list-container">
                 ${content}
             </div>

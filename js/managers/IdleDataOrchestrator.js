@@ -83,8 +83,8 @@ export default class IdleDataOrchestrator {
                 // Pantalla 7: Tiempo de visualización histórico (acumulado)
                 {
                     type: 'watchtime_total',
-                    title: 'TIEMPO TOTAL (HISTÓRICO)',
-                    data: this.statsService.getTopWatchTime ? this.statsService.getTopWatchTime('total', 15) : []
+                    title: 'TIEMPO TOTAL',
+                    data: this.statsService.getTopWatchTime ? this.statsService.getTopWatchTime('total', 10) : []
                 },
                 // Pantalla 8: Detalle del último logro desbloqueado
                 {

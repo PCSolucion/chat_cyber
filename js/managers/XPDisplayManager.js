@@ -47,6 +47,9 @@ export default class XPDisplayManager {
 
         // Configuración de animaciones
         this.levelUpDisplayTime = config.XP_LEVELUP_DISPLAY_TIME || 3000;
+        
+        // El usuario que se está mostrando actualmente en el widget
+        this.currentUsername = null;
 
         // Inicializar cuando DOM esté listo
         if (document.readyState === 'loading') {
@@ -115,10 +118,14 @@ export default class XPDisplayManager {
             this.showLevelUp(eventData);
         });
 
-        // Suscribirse a ganancias de XP (para actualizar la barra pasivamente ej: WatchTime)
+        // Suscribirse a ganancias de XP
         EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
-            if (this.dom.xpSection && this.dom.xpSection.style.display !== 'none') {
-                this.updateXPDisplay(data.username);
+            // SOLO actualizar si el usuario que ganó XP es el que está actualmente en el mensaje
+            // O si no hay nadie pero la sección de XP está activa (poco probable con el nuevo sistema de colas)
+            if (this.currentUsername && data.username === this.currentUsername) {
+                if (this.dom.xpSection && this.dom.xpSection.style.display !== 'none') {
+                    this.updateXPDisplay(data.username);
+                }
             }
         });
     }
@@ -130,6 +137,9 @@ export default class XPDisplayManager {
      */
     updateXPDisplay(username, xpResult = null) {
         if (!this.experienceService) return;
+        
+        // Registrar quién es el usuario activo para futuros eventos
+        this.currentUsername = username;
 
         // Obtener info de XP - usar xpResult directamente si está disponible
         // trackMessage devuelve: { level, levelProgress, levelTitle, ... }
@@ -373,6 +383,7 @@ export default class XPDisplayManager {
      * Reinicia la visualización de XP (para nuevo mensaje)
      */
     reset() {
+        this.currentUsername = null;
         if (this.dom.xpGainContainer) {
             this.dom.xpGainContainer.innerHTML = '';
         }

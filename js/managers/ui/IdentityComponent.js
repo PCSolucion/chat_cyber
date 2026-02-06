@@ -69,10 +69,21 @@ export default class IdentityComponent {
 
     _resetRoleStyles() {
         this.dom.container.classList.remove('vip-user', 'top-user', 'admin-user', 'ranked-user', 'status-red', 'gold-mode-active');
+        
+        // Limpiar temas personalizados de usuario dinámicamente
+        const userThemes = this.config.UI?.USER_THEMES || {};
+        Object.values(userThemes).forEach(themeClass => {
+            this.dom.container.classList.remove(themeClass);
+        });
+
         this.dom.userBadge.className = 'user-badge';
     }
 
     reset() {
         this.dom.username.classList.remove('decrypting', 'small-text', 'extra-small-text');
+        this.dom.username.textContent = '';
+        this.dom.username.setAttribute('data-text', '');
+        if (this.dom.userBadge) this.dom.userBadge.textContent = '';
+        if (this.dom.adminIcon) this.dom.adminIcon.style.display = 'none';
     }
 }

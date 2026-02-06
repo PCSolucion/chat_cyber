@@ -30,6 +30,8 @@
    ======================================== */
 .container.idle-mode {
   padding-top: 0;
+  height: 395px !important; /* Altura fijada para evitar parpadeos entre secciones */
+  overflow: hidden;
 }
 
 .container.idle-mode .xp-section {
@@ -105,8 +107,9 @@
 .idle-screen-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 310px; /* Altura interna fija para las secciones */
   gap: 10px;
+  overflow: hidden;
 }
 
 /* Animación de entrada: Transición simple y suave (Fade In) */
@@ -478,34 +481,23 @@
 .modern-list-item {
   display: flex;
   align-items: center;
-  display: flex;
-  align-items: center;
-  background: var(--bg-solid);
-  /* Solid BG */
-  border-left: 2px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 15px; /* Increased vertical padding */
-  gap: 12px;
-  margin-bottom: 6px; /* Added spacing between items */
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 10px 10px 5px; /* Reducido padding izquierdo */
+  gap: 10px;
+  margin-bottom: 4px;
   transition: all 0.2s ease;
-  min-height: 50px; /* Force taller items */
+  min-height: 45px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Separador sutil abajo en lugar de borde lateral */
 }
 
 .modern-list-item.top-1 {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 215, 0, 0.15) 0%,
-    transparent 100%
-  );
-  border-left: 3px solid var(--cyber-yellow, #ffd700);
+  background: rgba(255, 255, 255, 0.07);
+  border-left: none;
 }
 
 .modern-list-item.top-3 {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 246, 255, 0.1) 0%,
-    transparent 100%
-  );
-  border-left: 3px solid var(--cyber-cyan, #00f6ff);
+  background: rgba(255, 255, 255, 0.04);
+  border-left: none;
 }
 
 .list-rank {
@@ -517,12 +509,12 @@
 }
 
 .top-1 .list-rank {
-  color: var(--cyber-yellow, #ffd700);
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .top-3 .list-rank {
-  color: var(--cyber-cyan, #00f6ff);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .list-content {
@@ -538,8 +530,6 @@
   /* Bold */
   font-size: 1.15rem;
   color: #fff;
-  text-shadow: var(--text-stroke);
-  /* Heavy Outline */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -883,7 +873,7 @@
 
 .vs-divider {
   font-family: "Orbitron", sans-serif;
-  font-size: 1.1rem; /* Slightly smaller */
+  font-size: 1.2rem;
   font-weight: 900;
   color: #fff;
   font-style: italic;
@@ -891,16 +881,9 @@
     0 0 10px rgba(255, 255, 255, 0.8),
     0 0 2px var(--cyber-red);
   z-index: 5;
-  background: #000;
-  width: 32px; /* Smaller */
-  height: 32px; /* Smaller */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px; /* Square with slight radius */
-  border: 1px solid var(--cyber-red);
   transform: rotate(5deg);
   flex-shrink: 0;
+  padding: 0 5px;
 }
 
 .battle-name {
@@ -1105,21 +1088,12 @@
 
 /* Better Animation: Scroll UP slowly with longer pause at end */
 @keyframes scrollUpList {
-  0%,
-  5% {
+  0%, 15% {
     transform: translateY(0);
   }
-
-  80% {
+  85%, 100% {
     transform: translateY(calc(-100% + 240px));
   }
-
-  /* Reach end earlier */
-  100% {
-    transform: translateY(calc(-100% + 240px));
-  }
-
-  /* Hold for remainder (approx 3-4s depending on duration) */
 }
 
 .idle-list-scroll-wrapper.animate-scroll {
@@ -1473,4 +1447,23 @@
     transform: translateY(0);
     /* No blur */
   }
+}
+
+/* Animación de salida solicitada por el usuario */
+@keyframes fadeOutLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+.container.exit-left {
+  animation: fadeOutLeft 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

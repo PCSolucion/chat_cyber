@@ -15,10 +15,11 @@ import MessageQueueManager from './ui/MessageQueueManager.js';
  * Pattern: Orchestrator (Refactored)
  */
 export default class UIManager {
-    constructor(config, rankingSystem, experienceService, thirdPartyEmoteService) {
+    constructor(config, rankingSystem, experienceService, thirdPartyEmoteService, xpDisplay = null) {
         this.config = config;
         this.rankingSystem = rankingSystem;
         this.experienceService = experienceService;
+        this.xpDisplay = xpDisplay;
         this.thirdPartyEmoteService = thirdPartyEmoteService;
 
         // 1. Referencias DOM base
@@ -41,6 +42,7 @@ export default class UIManager {
         }, config);
         this.message = new MessageComponent(dom.message, thirdPartyEmoteService, config);
         this.queue = new MessageQueueManager(config);
+        this.isIdle = false;
 
         // 3. Estado local
         this.isProcessingQueue = false;
@@ -48,7 +50,8 @@ export default class UIManager {
         this.timers = {
             decrypt: null,
             transition: null,
-            goldMode: null
+            goldMode: null,
+            nextQueue: null
         };
 
         this._setupEventListeners();
@@ -82,25 +85,35 @@ export default class UIManager {
 
         // Escuchar cuando un mensaje termina para procesar el siguiente en la cola
         EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, () => {
+            if (this.isIdle) return;
             if (!this.queue.isEmpty()) {
-                // Pequeño delay de cortesía entre mensajes
-                setTimeout(() => this._processQueue(), 500);
+                if (this.timers.nextQueue) clearTimeout(this.timers.nextQueue);
+                this.timers.nextQueue = setTimeout(() => this._processQueue(), 200);
             } else {
                 this.isProcessingQueue = false;
             }
         });
+
+        // Detectar entrada/salida de Idle
+        EventManager.on('idle:start', () => { this.isIdle = true; this.reset(); });
+        EventManager.on('idle:stop', () => { this.isIdle = false; });
     }
 
     /**
      * Punto de entrada principal para mostrar mensajes (Añade a cola)
      */
     displayMessage(username, message, emotes, subscriberInfo = {}, xpResult = null) {
+        if (this.isIdle) {
+            // Si estamos en idle, despertar al manager (esto disparará activity y eventualmente saldrá de idle)
+            EventManager.emit(EVENTS.USER.ACTIVITY, username);
+        }
+
         try {
             // Añadir a la cola
             this.queue.add({ username, message, emotes, subscriberInfo, xpResult });
 
-            // Si no estamos procesando la cola, empezar ahora
-            if (!this.isProcessingQueue) {
+            // Si no estamos procesando o si el widget ya es visible (y queremos swap rápido)
+            if (!this.isProcessingQueue || this.display.isVisibleState()) {
                 this._processQueue();
             }
 
@@ -114,24 +127,36 @@ export default class UIManager {
      * @private
      */
     _processQueue() {
+        if (this.isIdle) return;
         if (this.queue.isEmpty()) {
-            this.isProcessingQueue = false;
+            // Si la cola se vacía y el widget ya cumplió su ciclo, permitir ocultarse
             return;
+        }
+
+        // Si ya estamos procesando un mensaje, pero este es un swap (porque display es visible)
+        // debemos cancelar timers previos para que no solapen
+        if (this.isProcessingQueue && this.display.isVisibleState()) {
+            this.clearAllTimers();
         }
 
         this.isProcessingQueue = true;
         const msgObj = this.queue.getNext();
-        const { username, message, emotes, subscriberInfo } = msgObj;
+        if (!msgObj) return;
+
+        const { username, message, emotes, subscriberInfo, xpResult } = msgObj;
+
+        // Resetear visualización de XP antes de mostrar el nuevo usuario
+        if (this.xpDisplay) {
+            this.xpDisplay.reset();
+        }
 
         try {
             const now = Date.now();
-            const timeSinceLast = now - this.lastMessageTime;
             const isVisible = this.display.isVisibleState();
             
             // Si el widget ya estaba visible, usamos transición rápida. Si no, secuencia completa.
             const shouldShowFullAnim = !isVisible && (now - this.lastMessageTime) > this.config.ANIMATION_COOLDOWN_MS;
             
-            this.clearAllTimers();
             this.lastMessageTime = now;
             this.display.show();
 
@@ -139,9 +164,9 @@ export default class UIManager {
             const displayTime = this.queue.calculateDisplayTime(msgObj);
 
             if (shouldShowFullAnim) {
-                this._fullIncomingSequence(username, message, emotes, subscriberInfo, displayTime);
+                this._fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime);
             } else {
-                this._fastTransition(username, message, emotes, subscriberInfo, displayTime);
+                this._fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime);
             }
 
         } catch (error) {
@@ -150,12 +175,12 @@ export default class UIManager {
         }
     }
 
-    _fastTransition(username, message, emotes, subscriberInfo, displayTime) {
+    _fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         this.identity.dom.username.style.opacity = '0';
         this.message.fade(0);
 
         this.timers.transition = setTimeout(() => {
-            this._revealMessage(username, message, emotes, subscriberInfo, displayTime);
+            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
             requestAnimationFrame(() => {
                 this.identity.dom.username.style.opacity = '1';
                 this.message.fade(1);
@@ -163,7 +188,7 @@ export default class UIManager {
         }, 200);
     }
 
-    _fullIncomingSequence(username, message, emotes, subscriberInfo, displayTime) {
+    _fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         this.identity.reset();
         this.message.reset();
         
@@ -175,16 +200,21 @@ export default class UIManager {
         this.timers.decrypt = setTimeout(() => {
             this.identity.dom.username.classList.remove('decrypting');
             this.message.setDecrypting(false);
-            this._revealMessage(username, message, emotes, subscriberInfo, displayTime);
+            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
         }, 800);
     }
 
-    _revealMessage(username, message, emotes, subscriberInfo, displayTime) {
+    _revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         const userRole = this.rankingSystem.getUserRole(username);
-        const xpInfo = this.experienceService?.getUserXPInfo(username);
+        const xpInfo = xpResult || this.experienceService?.getUserXPInfo(username);
         
         if (xpInfo && username !== 'SYSTEM') {
-            userRole.rankTitle = { title: xpInfo.title, icon: 'icon-tech' };
+            userRole.rankTitle = { title: xpInfo.title || xpInfo.levelTitle, icon: 'icon-tech' };
+        }
+
+        // Actualizar UI de XP de forma SÍNCRONA con el mensaje
+        if (this.xpDisplay) {
+            this.xpDisplay.updateXPDisplay(username, xpResult);
         }
 
         // Delegar actualizaciones a los componentes
@@ -192,8 +222,7 @@ export default class UIManager {
         this.message.update(message, emotes, userRole);
         this._handleGoldMode(subscriberInfo);
 
-        // Programar desaparición (Delegado al display controller)
-        // El displayTime ya viene calculado por el QueueManager (incluye bonus por rango/prioridad)
+        // Programar desaparición
         this.display.scheduleHide(displayTime);
     }
 
@@ -218,6 +247,14 @@ export default class UIManager {
     clearAllTimers() {
         this.display.clearTimers();
         Object.values(this.timers).forEach(t => { if(t) clearTimeout(t); });
+    }
+
+    reset() {
+        this.clearAllTimers();
+        this.identity.reset();
+        this.message.setRawHTML('');
+        this.isProcessingQueue = false;
+        if (this.xpDisplay) this.xpDisplay.reset();
     }
 }
 

@@ -31,7 +31,7 @@ export default class IdleDisplayManager {
         this.idleTimeoutMs = Number(config.IDLE_TIMEOUT_MS) || IDLE.DEFAULT_TIMEOUT_MS || 30000;
         this.screenRotationMs = Number(config.IDLE_ROTATION_MS) || IDLE.DEFAULT_ROTATION_MS || 12000;
         this.totalScreensInCycle = Number(IDLE.TOTAL_SCREENS_IN_CYCLE) || 9;
-        this.maxCycles = Number(IDLE.MAX_CYCLES) || 2;
+        this.maxCycles = 1; // Solo una vuelta completa antes de ocultarse solo
 
         // Estado
         this.isIdle = false;
@@ -165,6 +165,7 @@ export default class IdleDisplayManager {
         this.screensShown = 0;  // Resetear contador de pantallas
 
         console.log('💤 Entering idle mode - showing stats');
+        EventManager.emit('idle:start');
 
         // Asegurar que el widget está visible
         const container = document.querySelector('.container');
@@ -177,6 +178,17 @@ export default class IdleDisplayManager {
             container.classList.remove('chandalf-bg');
             container.classList.remove('manguerazo-bg');
             container.classList.remove('duckcris-bg');
+        }
+
+        // Limpiar timers de UI para evitar que timeouts pendientes (como Gold Mode) sobrescriban la UI
+        if (this.uiManager) {
+            this.uiManager.clearAllTimers();
+        }
+
+        // Ocultar fondo de bits (particles-bg) solicitado por el usuario
+        const particlesBg = document.getElementById('particles-bg');
+        if (particlesBg) {
+            particlesBg.style.display = 'none';
         }
 
         // Ocultar mensaje normal
@@ -232,7 +244,8 @@ export default class IdleDisplayManager {
             this.idleContainer.style.opacity = '1';
         }
 
-        // Iniciar visualización real inmediatamente (sin secuencia de arranque)
+        // Iniciar visualización real inmediatamente
+        this.screensShown = 1; // La primera pantalla se muestra ahora
         this._updateIdleDisplay();
 
         // Iniciar rotación (usamos setTimeout recursivo para permitir tiempos variables)
@@ -262,17 +275,17 @@ export default class IdleDisplayManager {
             this.rotationInterval = setTimeout(() => {
                 if (!this.isIdle) return;
 
-                this.currentCycleIndex++;
-                this.screensShown++;
-
-                // Verificar si hemos completado los ciclos máximos
-                const totalScreens = currentScreenData.totalScreens || IDLE.TOTAL_SCREENS_IN_CYCLE;
-                const maxScreens = totalScreens * this.maxCycles;
+                // Verificar si YA mostramos todas las pantallas del ciclo antes de cambiar a la siguiente
+                const screensInCycle = currentScreenData.totalScreens || this.totalScreensInCycle;
+                const maxScreens = screensInCycle * this.maxCycles;
 
                 if (this.screensShown >= maxScreens) {
                     this._hideAfterCycles();
                     return;
                 }
+
+                this.currentCycleIndex++;
+                this.screensShown++;
 
                 this._updateIdleDisplay();
                 this._scheduleNextRotation();
@@ -295,6 +308,7 @@ export default class IdleDisplayManager {
         this.isIdle = false;
 
         console.log('🔔 Exiting idle mode - new message');
+        EventManager.emit('idle:stop');
 
         // Detener rotación
         if (this.rotationInterval) {
@@ -306,6 +320,12 @@ export default class IdleDisplayManager {
         const container = document.querySelector('.container');
         if (container) {
             container.classList.remove('idle-mode');
+        }
+
+        // Restaurar fondo de bits (particles-bg) al salir de idle
+        const particlesBg = document.getElementById('particles-bg');
+        if (particlesBg) {
+            particlesBg.style.display = '';
         }
 
         // Ocultar container de idle
@@ -369,16 +389,24 @@ export default class IdleDisplayManager {
             this.rotationInterval = null;
         }
 
-        // Ocultar el widget completamente
+        // Ocultar el widget completamente con animación
         const container = document.querySelector('.container');
         if (container) {
-            container.classList.add('hidden');
-            container.classList.remove('idle-mode');
-        }
-
-        // Ocultar container de idle
-        if (this.idleContainer) {
-            this.idleContainer.style.display = 'none';
+            container.classList.add('exit-left');
+            
+            // Esperar a que la animación termine (2s en CSS) antes de ocultar lógicamente
+            setTimeout(() => {
+                if (this.isHiddenAfterCycles) {
+                    container.classList.add('hidden');
+                    container.classList.remove('exit-left');
+                    container.classList.remove('idle-mode');
+                    
+                    // Ocultar container de idle
+                    if (this.idleContainer) {
+                        this.idleContainer.style.display = 'none';
+                    }
+                }
+            }, 2100);
         }
     }
 
@@ -396,6 +424,7 @@ export default class IdleDisplayManager {
         const container = document.querySelector('.container');
         if (container) {
             container.classList.remove('hidden');
+            container.classList.remove('exit-left');
         }
     }
 

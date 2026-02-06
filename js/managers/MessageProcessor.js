@@ -98,7 +98,7 @@ export default class MessageProcessor {
                 this.managers.xpDisplay = new XPDisplayManager(this.config, this.services.xp, this.services.achievements);
             }
 
-            this.managers.ui = new UIManager(this.config, this.services.ranking, this.services.xp, this.services.thirdPartyEmotes);
+            this.managers.ui = new UIManager(this.config, this.services.ranking, this.services.xp, this.services.thirdPartyEmotes, this.managers.xpDisplay);
             this.managers.idleDisplay = new IdleDisplayManager(this.config, this.services.sessionStats, this.managers.ui);
             this.notificationManager = new NotificationManager(this.config, this.managers.ui);
             this.managers.notification = this.notificationManager;
@@ -192,7 +192,7 @@ export default class MessageProcessor {
 
         if (this.managers.xpDisplay) {
             this.managers.xpDisplay.setVisible(true);
-            this.managers.xpDisplay.updateXPDisplay(ctx.username, ctx.xpResult);
+            // ELIMINADO: updateXPDisplay se llama ahora desde UIManager al procesar la cola
         }
         next();
     }
