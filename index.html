@@ -10,6 +10,7 @@
   <!-- Preload Critical Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://static-cdn.jtvnw.net">
   <link rel="preload" href="img/arasaka.png" as="image">
 
   <!-- CSS Modular - Importa todos los componentes -->
@@ -68,18 +69,18 @@
       <div class="border-glow"></div>
 
       <!-- Status bar top -->
-      <div class="status-bar">
+      <aside class="status-bar">
         <div class="network-activity">
           <div class="net-led rx" id="led-rx" title="RECEIVING"></div>
           <div class="net-led tx" id="led-tx" title="TRANSMITTING"></div>
         </div>
-        <span class="status-text" id="system-status-text" style="display: none;">SYS.ONLINE</span>
+        <span class="status-text hidden" id="system-status-text">SYS.ONLINE</span>
         <span class="status-divider">|</span>
         <span class="status-code" id="stream-category">CHAT.STREAM</span>
-      </div>
+      </aside>
 
       <!-- Header with username -->
-      <div class="header">
+      <header class="header">
         <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
         <div class="user-identity">
           <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
@@ -90,7 +91,7 @@
         </div>
 
         <!-- XP Display Section (Sistema de experiencia) - DESPUÉS -->
-        <div class="xp-display" id="xp-section">
+        <section class="xp-display" id="xp-section" aria-label="Nivel y Experiencia">
           <!-- Level Up Notification (overlay) -->
           <div class="xp-levelup" id="xp-levelup-inline">
             <span class="xp-levelup__star">★</span>
@@ -125,8 +126,8 @@
             <span class="xp-info__title" id="xp-title">...</span>
             <span class="xp-info__streak" id="xp-streak"></span>
           </div>
-        </div>
-      </div>
+        </section>
+      </header>
 
       <!-- Data stream indicator -->
       <div class="data-stream">
@@ -136,32 +137,26 @@
       <!-- Digital Particles BG (Top Users) -->
       <div id="particles-bg" class="particles-bg"></div>
 
-
-
       <!-- Message display -->
-      <div class="quote" id="message" role="status" aria-live="polite">
+      <main class="quote" id="message" role="log" aria-live="polite">
         [BOOTING...] 
-      </div>
-
-
+      </main>
 
       <!-- Achievement Notifications (Dentro del widget) -->
       <div class="achievement-notifications" id="achievement-notifications"></div>
 
       <!-- Achievement Counter (Absolute position near footer) -->
       <div class="xp-achievements-container" id="xp-achievements-container-wrapper">
-        <span class="xp-achievements" id="xp-achievements" style="display: none;"></span>
+        <span class="xp-achievements" id="xp-achievements"></span>
         <!-- Watch Time: Bottom Right Pegado al Borde -->
-        <div id="watch-time-container" style="display: none;"></div>
+        <div id="watch-time-container" class="hidden"></div>
       </div>
 
     </div>
   </div>
 
-
-
   <!-- Scripts externos -->
-  <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.13.7/runtime.min.js"></script>
+  <script src="libs/regenerator-runtime.min.js"></script>
   <script src="libs/tmi.min.js" defer></script>
 
   <!-- Aplicación principal (ES Module) -->
