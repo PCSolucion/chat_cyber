@@ -43,6 +43,14 @@ export const TIMING = {
     ANIMATION_COOLDOWN_MS: 30000,        // Tiempo sin mensajes para animación completa
 };
 
+// Configuración de Notificaciones
+export const NOTIFICATIONS = {
+    DISPLAY_TIME_MS: 11000,             // 9s render + 2s fade out
+    FADE_TIME_MS: 500,                  // Animación de salida
+    QUEUE_MAX_SIZE: 5,                  // Límite de notificaciones pendientes
+    BRO_PROGRESS_DISPLAY_TIME_MS: 4000  // Duración notifiación Bro
+};
+
 // Configuración del Modo Idle (Screensaver de estadísticas)
 export const IDLE = {
     MAX_CYCLES: 2,                      // Número de ciclos completos de rotación antes de ocultar

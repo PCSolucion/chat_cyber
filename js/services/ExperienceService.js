@@ -490,13 +490,7 @@ export default class ExperienceService {
     getUserData(username) {
         const lowerUser = username.toLowerCase();
 
-        /*
-        // ================= HISTORICAL DATA INJECTION =================
-        // DEPRECATED: Data is now managed directly in Gist.
-        const HISTORICAL_DATA = { ... };
-        if (HISTORICAL_DATA[lowerUser]) { ... }
-        // ==========================================================
-        */
+
 
         if (!this.usersXP.has(lowerUser)) {
             this.usersXP.set(lowerUser, {
@@ -640,8 +634,7 @@ export default class ExperienceService {
         return EventManager.on(EVENTS.USER.LEVEL_UP, callback);
     }
 
-    // Método depreciado en favor de EventManager.emit directo en trackMessage
-    emitLevelUp() {}
+
 
     /**
      * Obtiene información completa de XP de un usuario

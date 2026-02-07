@@ -258,6 +258,33 @@ const UIUtils = {
         if (typeof CONFIG !== 'undefined' && CONFIG.DEBUG) {
             console.log(`🎵 Equalizer initialized with ${barCount} bars`);
         }
+    },
+    /**
+     * Anima un valor numérico contando hacia arriba
+     * @param {string} elementId ID del elemento DOM
+     * @param {number} start Valor inicial
+     * @param {number} end Valor final
+     * @param {number} duration Duración de la animación
+     */
+    animateValue(elementId, start, end, duration) {
+        const obj = document.getElementById(elementId);
+        if (!obj) return;
+        
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // Easing easeOutExpo
+            const ease = (progress === 1) ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            obj.textContent = Math.floor(ease * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                 obj.textContent = end; // Ensure final value
+            }
+        };
+        window.requestAnimationFrame(step);
     }
 };
 

@@ -1355,6 +1355,22 @@
                         <li>Cola de notificaciones para evitar solapamientos</li>
                     </ul>
                 </div>
+
+                <div class="card manager">
+                    <div class="component-header">
+                        <div class="component-icon">R</div>
+                        <div>
+                            <div class="component-title">IdleScreenRenderer</div>
+                            <div class="component-file">js/managers/IdleScreenRenderer.js</div>
+                        </div>
+                    </div>
+                    <span class="tag manager">Renderer</span>
+                    <ul>
+                        <li>Implementa <strong>Patrón Strategy</strong> para renderizado modular de pantallas Idle</li>
+                        <li>Coordina carga dinámica de vistas desde <code>js/managers/ui/screens/</code></li>
+                        <li>Gestión de errores y fallback automático para garantizar estabilidad</li>
+                    </ul>
+                </div>
             </div>
         </section>
 
@@ -1404,10 +1420,26 @@
 
                 <div class="card util">
                     <div class="component-header">
+                        <div class="component-icon">U</div>
+                        <div>
+                            <div class="component-title">UIUtils</div>
+                            <div class="component-file">js/utils/UIUtils.js</div>
+                        </div>
+                    </div>
+                    <span class="tag util">Utility</span>
+                    <ul>
+                        <li>Colección de <strong>helpers para manipulación del DOM</strong> y Strings</li>
+                        <li>Formatos de tiempo, números y procesamiento de usuarios</li>
+                        <li>Centraliza animaciones reutilizables como <code>animateValue</code></li>
+                    </ul>
+                </div>
+
+                <div class="card util">
+                    <div class="component-header">
                         <div class="component-icon">I</div>
                         <div>
                             <div class="component-title">IdleDataOrchestrator</div>
-                            <div class="component-file">js/utils/IdleDataOrchestrator.js</div>
+                            <div class="component-file">js/managers/IdleDataOrchestrator.js</div>
                         </div>
                     </div>
                     <span class="tag util">Utility</span>

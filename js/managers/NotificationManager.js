@@ -1,5 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { NOTIFICATIONS } from '../constants/AppConstants.js';
 
 /**
  * NotificationManager - Gestor de Notificaciones
@@ -29,9 +30,10 @@ export default class NotificationManager {
         this.isShowingNotification = false;
 
         // Configuración de tiempos
-        this.NOTIFICATION_DISPLAY_TIME = 11000; // 11 segundos (9 + 2)
-        this.NOTIFICATION_FADE_TIME = 500;     // 0.5 segundos
-        this.QUEUE_MAX_SIZE = 5;               // Máximo 5 en cola
+        // Configuración de tiempos centralizada
+        this.displayTime = NOTIFICATIONS.DISPLAY_TIME_MS;
+        this.fadeTime = NOTIFICATIONS.FADE_TIME_MS;
+        this.queueMaxSize = NOTIFICATIONS.QUEUE_MAX_SIZE;
 
         // Mapeo de rareza a iconos
         this.rarityIconMap = {
@@ -82,7 +84,7 @@ export default class NotificationManager {
      * @param {Object} eventData - { username, achievement }
      */
     showAchievement(eventData) {
-        if (this.queue.length >= this.QUEUE_MAX_SIZE) {
+        if (this.queue.length >= this.queueMaxSize) {
             if (this.config.DEBUG) {
                 console.log(`🏆 Cola llena, logro descartado: ${eventData.achievement.name}`);
             }
@@ -122,7 +124,7 @@ export default class NotificationManager {
         }
 
         // Programar siguiente notificación
-        const totalTime = this.NOTIFICATION_DISPLAY_TIME + this.NOTIFICATION_FADE_TIME;
+        const totalTime = this.displayTime + this.fadeTime;
         setTimeout(() => {
             this.isShowingNotification = false;
             this._processQueue();
@@ -168,7 +170,7 @@ export default class NotificationManager {
 
         // Extender tiempo widget
         if (this.uiManager) {
-            this.uiManager.extendDisplayTime(4000);
+            this.uiManager.extendDisplayTime(NOTIFICATIONS.BRO_PROGRESS_DISPLAY_TIME_MS);
         }
 
         // Remover después de 3-4 segundos
@@ -226,7 +228,7 @@ export default class NotificationManager {
 
         // Extender tiempo del widget para que se vea el logro
         if (this.uiManager) {
-            this.uiManager.extendDisplayTime(this.NOTIFICATION_DISPLAY_TIME + 1000);
+            this.uiManager.extendDisplayTime(this.displayTime + 1000);
         }
 
         // Remover después del tiempo de display
@@ -238,11 +240,10 @@ export default class NotificationManager {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
-            }, this.NOTIFICATION_FADE_TIME);
-        }, this.NOTIFICATION_DISPLAY_TIME);
+            }, this.fadeTime);
+        }, this.displayTime);
 
-        // Reproducir sonido con delay
-        this._playAchievementSound();
+
 
         // Log para debug
         if (this.config.DEBUG) {
@@ -277,13 +278,8 @@ export default class NotificationManager {
      * Reproduce el sonido de logro
      * @private
      */
-    /**
-     * Reproduce el sonido de logro
-     * @private
-     */
-    _playAchievementSound() {
-        // Delegado a AudioManager vía evento user:achievementUnlocked
-    }
+
+
 
     /**
      * Limpia la cola de notificaciones

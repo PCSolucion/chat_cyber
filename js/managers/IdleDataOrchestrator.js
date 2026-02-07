@@ -37,7 +37,8 @@ export default class IdleDataOrchestrator {
                         duration: displayStats.sessionDuration || '00:00:00',
                         messages: displayStats.totalMessages || 0,
                         users: displayStats.uniqueUsers || 0,
-                        avgMpm: displayStats.avgMessagesPerMinute || 0
+                        avgMpm: displayStats.avgMessagesPerMinute || 0,
+                        sessionStart: this.statsService.sessionStart || Date.now()
                     }
                 },
                 // Pantalla 2: Leaderboard de actividad
