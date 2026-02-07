@@ -189,25 +189,32 @@ export default class XPDisplayManager {
             this.dom.xpTitle.textContent = title;
         }
 
-        // Actualizar Racha (Streak)
+        // Actualizar Racha (Streak) - Solo mostrar si es relevante (> 1 día)
         const streakContainer = document.getElementById('xp-streak');
         if (streakContainer) {
             // Obtener días de racha y multiplicador del xpResult
             const streakDays = xpInfo.streakDays || (xpResult && xpResult.streakDays) || 0;
             const multiplier = xpInfo.streakMultiplier || (xpResult && xpResult.streakMultiplier) || 1;
 
-            streakContainer.style.display = 'flex';
+            // Solo mostrar si la racha es relevante (> 1 día)
+            if (streakDays > 1) {
+                streakContainer.style.display = 'flex';
 
-            // Formatear multiplicador: mostrar decimales solo si es necesario (x1.5 vs x2)
-            const multDisplay = multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1);
+                // Formatear multiplicador: mostrar decimales solo si es necesario (x1.5 vs x2)
+                const multDisplay = multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1);
 
-            // Mostrar con etiquetas descriptivas
-            streakContainer.innerHTML = `
-                <span class="streak-label">RACHA:</span>
-                <span class="streak-days">${streakDays}d</span>
-                <span class="streak-mult" style="font-size: 0.75em; ${multiplier <= 1 ? 'opacity: 0.5;' : ''}">x${multDisplay}</span>
-            `;
-            streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
+                // Mostrar con etiquetas descriptivas
+                streakContainer.innerHTML = `
+                    <span class="streak-label">RACHA:</span>
+                    <span class="streak-days">${streakDays}d</span>
+                    <span class="streak-mult" style="font-size: 0.75em;">x${multDisplay}</span>
+                `;
+                streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
+            } else {
+                // Ocultar si no hay racha relevante
+                streakContainer.style.display = 'none';
+                streakContainer.innerHTML = '';
+            }
         }
 
         // Actualizar Contadores de Logros

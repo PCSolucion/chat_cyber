@@ -16,8 +16,7 @@
   order: 2;
   margin-top: 8px !important;
   margin-bottom: -10px !important;
-  border-top: 1px solid rgba(255, 58, 58, 0.2) !important;
-  border-bottom: none !important;
+  border: none !important;
 }
 
 .info-container .title-row {
@@ -406,9 +405,6 @@
   color: #fff;
   line-height: 0.9;
   letter-spacing: -1px;
-  text-shadow:
-    0 0 15px rgba(0, 246, 255, 0.7),
-    2px 2px 0px rgba(255, 0, 60, 0.3);
 }
 
 .gauge-label-text {
@@ -429,7 +425,6 @@
   color: #fff;
   line-height: 1.2;
   margin: 5px 0;
-  text-shadow: var(--text-stroke);
   white-space: nowrap;
 }
 
@@ -731,8 +726,6 @@
   /* Larger */
   font-weight: 800;
   color: var(--cyber-cyan, #00f6ff);
-  text-shadow: var(--text-stroke);
-  /* Heavy Outline */
 }
 
 .big-stat-label {
@@ -809,7 +802,6 @@
   font-size: 4rem;
   line-height: 1;
   color: var(--cyber-red, #ff003c);
-  text-shadow: 0 0 20px rgba(255, 59, 69, 0.6);
 }
 
 .hero-streak-card .streak-label {
@@ -911,11 +903,9 @@
 
 .side-left .battle-days {
   color: var(--cyber-red, #ff003c);
-  text-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
 }
 .side-right .battle-days {
   color: var(--cyber-cyan, #00f6ff);
-  text-shadow: 0 0 10px rgba(0, 246, 255, 0.4);
 }
 
 .battle-label {
@@ -1199,7 +1189,6 @@
   font-size: 1rem;
   color: var(--cyber-cyan, #00f6ff);
   font-weight: 700;
-  text-shadow: 0 0 5px rgba(0, 246, 255, 0.4);
   min-width: 50px;
   text-align: right;
 }
@@ -1297,7 +1286,6 @@
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--cyber-yellow, #ffd700);
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
   line-height: 1.2;
 }
 

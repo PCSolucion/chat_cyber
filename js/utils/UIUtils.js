@@ -261,9 +261,6 @@ const UIUtils = {
     }
 };
 
-// Auto-inicializar el ecualizador cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    UIUtils.initEqualizer('equalizer', 20);
-});
+
 
 export default UIUtils;

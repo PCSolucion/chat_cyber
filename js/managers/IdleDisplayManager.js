@@ -197,6 +197,13 @@ export default class IdleDisplayManager {
             messageDiv.style.display = 'none';
         }
 
+        // Ocultar sección XP completa (nivel, barra, título)
+        const xpSection = document.getElementById('xp-section');
+        if (xpSection) {
+            this._savedXpSectionDisplay = xpSection.style.display;
+            xpSection.style.display = 'none';
+        }
+
         // Cambiar el nombre de usuario por el título de estadísticas
         const usernameEl = document.getElementById('username');
         if (usernameEl) {
@@ -213,14 +220,14 @@ export default class IdleDisplayManager {
             this._savedBadge = badge.textContent;
             this._savedBadgeClass = badge.className;
             badge.textContent = 'LIVE';
-            badge.className = 'user-badge idle-badge';
+            badge.className = 'badge idle-badge';
         }
 
-        // Ocultar icono admin/rank
-        const adminIcon = document.getElementById('admin-icon');
-        if (adminIcon) {
-            this._savedAdminIconDisplay = adminIcon.style.display;
-            adminIcon.style.display = 'none';
+        // Ocultar icono de usuario (antes admin-icon)
+        const userIcon = document.getElementById('user-icon') || document.getElementById('admin-icon');
+        if (userIcon) {
+            this._savedUserIconDisplay = userIcon.style.display;
+            userIcon.style.display = 'none';
         }
 
         // Ocultar mission icon
@@ -339,6 +346,12 @@ export default class IdleDisplayManager {
             messageDiv.style.display = 'block';
         }
 
+        // Restaurar sección XP
+        const xpSection = document.getElementById('xp-section');
+        if (xpSection) {
+            xpSection.style.display = this._savedXpSectionDisplay !== undefined ? this._savedXpSectionDisplay : '';
+        }
+
         // Restaurar nombre de usuario
         const usernameEl = document.getElementById('username');
         if (usernameEl && this._savedUsername) {
@@ -354,10 +367,10 @@ export default class IdleDisplayManager {
             badge.className = this._savedBadgeClass;
         }
 
-        // Restaurar icono admin/rank
-        const adminIcon = document.getElementById('admin-icon');
-        if (adminIcon) {
-            adminIcon.style.display = this._savedAdminIconDisplay || '';
+        // Restaurar icono de usuario
+        const userIcon = document.getElementById('user-icon') || document.getElementById('admin-icon');
+        if (userIcon) {
+            userIcon.style.display = this._savedUserIconDisplay || '';
         }
 
         // Restaurar mission icon

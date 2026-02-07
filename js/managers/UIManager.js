@@ -38,7 +38,7 @@ export default class UIManager {
             container: dom.container,
             username: dom.username,
             userBadge: dom.userBadge,
-            adminIcon: dom.adminIcon
+            userIcon: dom.userIcon
         }, config);
         this.message = new MessageComponent(dom.message, thirdPartyEmoteService, config);
         this.queue = new MessageQueueManager(config);
@@ -63,7 +63,8 @@ export default class UIManager {
             username: document.getElementById('username'),
             message: document.getElementById('message'),
             userBadge: document.getElementById('user-badge'),
-            adminIcon: document.getElementById('admin-icon'),
+            // Nuevo ID: user-icon, con fallback a admin-icon para compatibilidad
+            userIcon: document.getElementById('user-icon') || document.getElementById('admin-icon'),
             streamCategory: document.getElementById('stream-category'),
             systemStatus: document.getElementById('system-status-text'),
             liveBadge: document.querySelector('.live-badge'),
@@ -230,7 +231,6 @@ export default class UIManager {
 
         this.timers.goldMode = setTimeout(() => {
             this.identity.dom.container.classList.add('gold-mode-active');
-            if (this.identity.dom.adminIcon) this.identity.dom.adminIcon.style.display = 'none';
 
             const xpTitleEl = document.getElementById('xp-title');
             if (xpTitleEl) {

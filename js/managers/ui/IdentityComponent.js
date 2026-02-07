@@ -2,10 +2,16 @@ import UIUtils from '../../utils/UIUtils.js';
 
 /**
  * IdentityComponent - Gestiona la identidad visual del usuario (Nombre, Iconos, Roles)
+ * 
+ * Elementos DOM esperados:
+ * - container: El contenedor principal (.container)
+ * - username: El nombre del usuario (#username, clase .user-identity__name)
+ * - userBadge: El badge del usuario (#user-badge, clase .badge)
+ * - userIcon: El icono del usuario (#user-icon, clase .user-identity__icon)
  */
 export default class IdentityComponent {
     constructor(elements, config) {
-        this.dom = elements; // { container, username, userBadge, adminIcon }
+        this.dom = elements; // { container, username, userBadge, userIcon }
         this.config = config;
     }
 
@@ -14,8 +20,8 @@ export default class IdentityComponent {
         this.dom.username.textContent = cleanName;
         this.dom.username.setAttribute('data-text', cleanName);
 
-        // Ajustar tamaño si es largo
-        this.dom.username.className = 'driver-name';
+        // Ajustar tamaño si es largo - usar nueva clase base
+        this.dom.username.className = 'user-identity__name';
         if (cleanName.length > 16) this.dom.username.classList.add('extra-small-text');
         else if (cleanName.length > 12) this.dom.username.classList.add('small-text');
 
@@ -46,7 +52,9 @@ export default class IdentityComponent {
     }
 
     _updateUserIcon(username, userRole) {
-        if (!this.dom.adminIcon) return;
+        // Compatibilidad: buscar tanto userIcon como adminIcon (legacy)
+        const iconEl = this.dom.userIcon || this.dom.adminIcon;
+        if (!iconEl) return;
 
         const uiConfig = this.config.UI || { RANK_ICONS: {}, SPECIAL_ICONS: {} };
         const isAdmin = username.toLowerCase() === (this.config.BROADCASTER_USERNAME || '').toLowerCase();
@@ -60,10 +68,10 @@ export default class IdentityComponent {
         }
 
         if (icon) {
-            this.dom.adminIcon.src = `img/${icon}`;
-            this.dom.adminIcon.style.display = 'block';
+            iconEl.src = `img/${icon}`;
+            iconEl.style.display = 'block';
         } else {
-            this.dom.adminIcon.style.display = 'none';
+            iconEl.style.display = 'none';
         }
     }
 
@@ -76,7 +84,7 @@ export default class IdentityComponent {
             this.dom.container.classList.remove(themeClass);
         });
 
-        this.dom.userBadge.className = 'user-badge';
+        this.dom.userBadge.className = 'badge';
     }
 
     reset() {
@@ -84,6 +92,10 @@ export default class IdentityComponent {
         this.dom.username.textContent = '';
         this.dom.username.setAttribute('data-text', '');
         if (this.dom.userBadge) this.dom.userBadge.textContent = '';
-        if (this.dom.adminIcon) this.dom.adminIcon.style.display = 'none';
+        
+        // Compatibilidad: ocultar tanto userIcon como adminIcon
+        const iconEl = this.dom.userIcon || this.dom.adminIcon;
+        if (iconEl) iconEl.style.display = 'none';
     }
 }
+

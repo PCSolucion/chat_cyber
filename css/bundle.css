@@ -55,17 +55,17 @@
     /* Heavy outline */
 
     /* ========================================
-     GLOWS (Efectos de brillo)
+     GLOWS (Efectos de brillo - sutiles)
      ======================================== */
-    --glow-yellow: 0 0 10px var(--cyber-yellow), 0 0 30px rgba(218, 189, 88, 0.4);
-    --glow-cyan: 0 0 10px var(--cyber-cyan), 0 0 25px rgba(0, 246, 255, 0.3);
-    --glow-red: 0 0 10px var(--cyber-red), 0 0 25px rgba(255, 0, 60, 0.3);
+    --glow-yellow: 0 0 3px var(--cyber-yellow), 0 0 8px rgba(218, 189, 88, 0.3);
+    --glow-cyan: 0 0 3px var(--cyber-cyan), 0 0 8px rgba(0, 246, 255, 0.2);
+    --glow-red: 0 0 3px var(--cyber-red), 0 0 8px rgba(255, 0, 60, 0.2);
 
     /* ========================================
      VIP COLORS
      ======================================== */
     --vip-gold: #ffd700;
-    --vip-glow: 0 0 10px #ffd700, 0 0 25px rgba(255, 215, 0, 0.5);
+    --vip-glow: 0 0 3px #ffd700, 0 0 8px rgba(255, 215, 0, 0.3);
 
     /* ========================================
      DIMENSIONES
@@ -286,19 +286,15 @@ body {
 }
 
 @keyframes cyberEQ {
-
-    0%,
-    100% {
-        height: 5px;
-        opacity: 0.4;
+    0%, 100% {
+        height: 3px;
+        opacity: 0.05;
     }
-
     50% {
-        height: 25px;
-        opacity: 1;
+        height: 18px;
+        opacity: 0.25;
     }
 }
-
 @keyframes digitalRain {
     0% {
         background-position: 0 0, 20px 20px;
@@ -681,56 +677,40 @@ body {
 
 /* === SOURCE: css/components/header.css === */
 /* ===========================================
-   HEADER - Username Display (PROMINENT)
+   HEADER - User Display Section
    =========================================== */
 
 .header {
-    padding: 15px 15px 12px;
+    padding: 15px 15px 20px;
     position: relative;
-    background: rgba(0, 0, 0, 0.3);
-    min-height: 135px; /* Suma exacta de XP(60)+Gap(5)+Title(40)+Padding(27)+reserba */
-    height: 135px;
+    background: linear-gradient(90deg, 
+                rgba(255, 58, 58, 0.05) 0%, 
+                transparent 50%, 
+                rgba(255, 58, 58, 0.05) 100%),
+                rgba(0, 0, 0, 0.3);
+    min-height: 158px;
+    height: 158px;
     display: flex;
     flex-direction: column;
+    gap: 15px;
     overflow: hidden;
 }
 
-.info-container {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    width: 100%;
-}
+/* ===========================================
+   USER IDENTITY - Nombre, icono y badges
+   =========================================== */
 
-.title-row {
+.user-identity {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 0;
     width: 100%;
+    min-height: 40px;
     overflow: hidden;
-    min-height: 40px; /* Prevenir saltos cuando el nombre está vacío */
 }
 
-.user-identity-stack {
-    display: flex;
-    flex-direction: row;
-    /* Cambiado a row para alinear badges horizontalmente */
-    align-items: center;
-    margin-left: auto;
-    margin-right: 0;
-    gap: 8px;
-    /* Aumentado gap */
-    flex: 0 0 auto;
-    min-width: max-content;
-}
-
-/* Hexagon icon - hidden */
-.mission-icon {
-    display: none;
-}
-
-.admin-icon {
+/* Icono de usuario/rango (oculto por defecto) */
+.user-identity__icon {
     display: none;
     height: 35px;
     width: auto;
@@ -738,13 +718,58 @@ body {
     filter: drop-shadow(0 0 5px rgba(255, 0, 60, 0.5));
     object-fit: contain;
     flex: 0 0 auto;
-    /* Icon shouldn't shrink */
+}
+
+/* Nombre de usuario - Big and Bold */
+.user-identity__name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: var(--username-size);
+    color: var(--cyber-yellow);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: var(--glow-yellow);
+    position: relative;
+    animation: usernameGlow 3s ease-in-out infinite;
+    white-space: nowrap;
+    line-height: 1.6;
+    border-right: 3px solid transparent;
+    height: 1.6em;
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tamaños de fuente para nombres largos */
+.user-identity__name.small-text {
+    font-size: 1.1rem !important;
+    letter-spacing: 2px;
+}
+
+.user-identity__name.extra-small-text {
+    font-size: 0.9rem !important;
+    letter-spacing: 1px;
+}
+
+/* Contenedor de badges */
+.user-identity__badges {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: auto;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: max-content;
 }
 
 /* ===========================================
-   USERNAME - Big and Bold
+   LEGACY ALIASES (Compatibilidad temporal)
    =========================================== */
 
+/* Alias para driver-name (legacy) */
 .driver-name {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
@@ -758,27 +783,27 @@ body {
     white-space: nowrap;
     line-height: 1.6;
     border-right: 3px solid transparent;
-    height: 1.6em; /* Altura fija para la línea de nombre */
+    height: 1.6em;
     display: flex;
     align-items: center;
-
-    /* Flex behavior for long names */
     flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Fuentes mÃ¡s pequeÃ±as para nombres largos */
+.user-identity__name.small-text,
 .driver-name.small-text {
     font-size: 1.1rem !important;
     letter-spacing: 2px;
 }
 
+.user-identity__name.extra-small-text,
 .driver-name.extra-small-text {
     font-size: 0.9rem !important;
     letter-spacing: 1px;
 }
+
 
 /* ===========================================
    HEADER DECORATIONS
@@ -836,6 +861,8 @@ body {
    USER BADGE STYLES (VIP/TOP/ADMIN/RANKED)
    =========================================== */
 
+/* Nueva nomenclatura BEM + Legacy */
+.badge,
 .user-badge {
     display: none;
     font-family: 'Share Tech Mono', monospace;
@@ -912,6 +939,7 @@ body {
    VIP Badge - Red (Matched to Admin, No Animation)
    =========================================== */
 
+.badge.vip,
 .user-badge.vip {
     display: inline-flex;
     align-items: center;
@@ -923,6 +951,7 @@ body {
     box-shadow: none;
 }
 
+.badge.vip::before,
 .user-badge.vip::before {
     content: '♛';
     font-size: 10px;
@@ -932,6 +961,7 @@ body {
    TOP Badge - Red (Matched to Admin)
    =========================================== */
 
+.badge.top-user,
 .user-badge.top-user {
     display: inline-flex;
     align-items: center;
@@ -946,6 +976,7 @@ body {
     font-weight: 800;
 }
 
+.badge.top-user::before,
 .user-badge.top-user::before {
     content: '★';
     font-size: 11px;
@@ -955,6 +986,7 @@ body {
    ADMIN Badge - Red/Magenta Shield
    =========================================== */
 
+.badge.admin,
 .user-badge.admin {
     display: inline-flex;
     align-items: center;
@@ -966,6 +998,7 @@ body {
     box-shadow: 0 0 15px rgba(255, 0, 60, 0.15);
 }
 
+.badge.admin::before,
 .user-badge.admin::before {
     content: '⚡';
     font-size: 11px;
@@ -975,6 +1008,7 @@ body {
    RANKED Badge - White/neutral (TOP 16+)
    =========================================== */
 
+.badge.ranked,
 .user-badge.ranked {
     display: inline-flex;
     align-items: center;
@@ -985,6 +1019,7 @@ body {
     border-left: 3px solid rgba(255, 255, 255, 0.5);
 }
 
+.badge.ranked::before,
 .user-badge.ranked::before {
     content: '#';
     font-size: 9px;
@@ -1199,7 +1234,7 @@ body {
 /* === SOURCE: css/components/user-roles.css === */
 /* ===========================================
    USER ROLE STYLES
-   Estilos de container segÃºn rol
+   Estilos de container según rol
    =========================================== */
 
 /* ===========================================
@@ -1207,10 +1242,10 @@ body {
    =========================================== */
 
 .container.vip-user {
-    /* Hereda estilos base - sin border especial */
     border-left-color: transparent;
 }
 
+.container.vip-user .user-identity__name,
 .container.vip-user .driver-name {
     color: #D5B956 !important;
     text-shadow: 0 0 5px rgba(252, 238, 9, 0.7) !important;
@@ -1226,13 +1261,14 @@ body {
     border-left: 3px solid var(--cyber-cyan);
 }
 
+.container.top-user .user-identity__name,
 .container.top-user .driver-name {
     color: #fcee09;
     text-shadow: 0 0 5px rgba(252, 238, 9, 0.7);
 }
 
 .container.top-user .quote {
-    border-left: none; /* Removed as per user request */
+    border-left: none;
     text-shadow: 0 0 8px var(--cyber-cyan);
 }
 
@@ -1248,15 +1284,15 @@ body {
         0 0 20px rgba(255, 0, 60, 0.4);
 }
 
+.container.admin-user .user-identity__name,
 .container.admin-user .driver-name {
     color: var(--cyber-red) !important;
     text-shadow: var(--glow-red) !important;
     animation: adminGlow 2s ease-in-out infinite;
 }
 
-.container.admin-user .mission-icon {
-    background: var(--cyber-red);
-    box-shadow: var(--glow-red);
+.container.admin-user .user-identity__icon {
+    filter: drop-shadow(0 0 8px rgba(255, 0, 60, 0.6));
 }
 
 .container.admin-user .status-bar {
@@ -1277,6 +1313,7 @@ body {
     border-left: 2px solid rgba(255, 255, 255, 0.3);
 }
 
+.container.ranked-user .user-identity__name,
 .container.ranked-user .driver-name {
     color: var(--text-bright);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
@@ -1291,9 +1328,9 @@ body {
     color: #fff;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
     background: rgba(0, 0, 0, 0.2);
-    /* border-left removed to avoid double border */
     padding-left: 20px;
 }
+
 
 /* === SOURCE: css/components/data-stream.css === */
 /* ===========================================
@@ -1304,6 +1341,7 @@ body {
     height: 1px;
     background: rgba(255, 59, 69, 0.2);
     width: 100%;
+    margin: 0;
 }
 
 /* Ocultar elementos internos no necesarios */
@@ -1313,33 +1351,7 @@ body {
     display: none;
 }
 
-/* === SOURCE: css/components/equalizer.css === */
-/* ===========================================
-   EQUALIZER - Cyber waveform
-   Barras generadas dinámicamente por UIUtils.initEqualizer()
-   Los animation-delay se asignan vía JS para más variedad
-   =========================================== */
 
-.equalizer {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 2px;
-    padding: 0 15px;
-    height: 30px;
-    background: rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    margin-top: 5px;
-}
-
-.bar {
-    width: 4px;
-    background: linear-gradient(180deg, var(--cyber-cyan), var(--cyber-blue));
-    border-radius: 2px;
-    height: 5px;
-    animation: cyberEQ 0.8s ease-in-out infinite;
-    box-shadow: 0 0 5px var(--cyber-cyan);
-}
 
 /* === SOURCE: css/components/message.css === */
 /* ===========================================
@@ -1362,7 +1374,7 @@ body {
     border-left: none !important; /* Asegurar que no hay borde izquierdo */
     border-right: 3px solid transparent;
     position: relative;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+    background: rgba(0, 0, 0, 0.3); /* Mismo fondo sólido para unificar */
 }
 
 /* Left accent - disabled */
@@ -1446,6 +1458,7 @@ body {
     line-height: 1.6 !important;
 }
 
+.user-identity__name.decrypting,
 .driver-name.decrypting {
     height: 1.6em !important;
 }
@@ -1562,16 +1575,15 @@ body {
 
 /* === SOURCE: css/xp-system.css === */
 /**
- * XP System Styles - Estilos para el Sistema de Experiencia
- * VersiÃ³n: INLINE (integrado en el widget)
+ * XP System Styles - Sistema de Experiencia
+ * Nomenclatura BEM: .xp-display, .xp-bar, .xp-bar__level, etc.
  */
 @import url('streak-style.css');
 
 :root {
-    /* Colores principales */
+    /* Colores principales XP */
     --xp-primary: #ff3a3a;
     --xp-primary-rgb: 255, 58, 58;
-    /* For RGBA usage */
     --xp-primary-dark: #cc0000;
     --xp-primary-light: #ff6666;
     --xp-accent: #ffd700;
@@ -1586,27 +1598,39 @@ body {
 }
 
 /* ============================================
-   SECCIÃ“N DE XP
+   XP DISPLAY - Contenedor principal
    ============================================ */
-.xp-section {
+.xp-display {
     position: relative;
-    padding: 5px;
-    margin: 8px -15px 0;
-    /* Combined margins */
+    padding: 5px 0;
+    margin: 0 -15px;
     width: calc(100% + 30px);
-    border-top: 1px solid rgba(var(--xp-primary-rgb), 0.2);
-    background: linear-gradient(90deg,
-            rgba(var(--xp-primary-rgb), 0.05) 0%,
-            transparent 50%,
-            rgba(var(--xp-primary-rgb), 0.05) 100%);
-    height: 60px; /* Altura fija para evitar desplazamientos */
+    height: auto;
+    min-height: 60px;
+    overflow: visible;
+}
+
+/* Legacy alias */
+.xp-section { 
+    position: relative;
+    padding: 5px 0;
+    margin: 0 -15px;
+    width: calc(100% + 30px);
+    height: auto;
     min-height: 60px;
     overflow: visible;
 }
 
 /* ============================================
-   BARRA DE XP INLINE
+   XP BAR - Barra de experiencia
    ============================================ */
+.xp-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Legacy alias */
 .xp-bar-inline {
     display: flex;
     align-items: center;
@@ -1614,6 +1638,18 @@ body {
 }
 
 /* Contenedor del nivel */
+.xp-bar__level {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    background: linear-gradient(135deg, var(--xp-primary-dark), var(--xp-primary));
+    padding: 3px 10px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+    min-width: 58px;
+    transform: translateY(-8px);
+}
+
+/* Legacy alias */
 .xp-level-container {
     display: flex;
     align-items: baseline;
@@ -1625,6 +1661,15 @@ body {
     transform: translateY(-8px);
 }
 
+.xp-bar__level-label {
+    font-family: var(--font-rajdhani);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--xp-text-secondary);
+    letter-spacing: 1px;
+}
+
+/* Legacy alias */
 .xp-level-label {
     font-family: var(--font-rajdhani);
     font-size: 10px;
@@ -1633,6 +1678,16 @@ body {
     letter-spacing: 1px;
 }
 
+.xp-bar__level-value {
+    font-family: var(--font-orbitron);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--xp-text);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    line-height: 1;
+}
+
+/* Legacy alias */
 .xp-level-value {
     font-family: var(--font-orbitron);
     font-size: 28px;
@@ -1643,6 +1698,15 @@ body {
 }
 
 /* Contenedor de la barra de progreso */
+.xp-bar__progress {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+}
+
+/* Legacy alias */
 .xp-progress-container {
     flex: 1;
     display: flex;
@@ -1651,6 +1715,16 @@ body {
     justify-content: center;
 }
 
+/* Track de la barra */
+.xp-bar__track {
+    position: relative;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(var(--xp-primary-rgb), 0.3);
+    overflow: hidden;
+}
+
+/* Legacy alias */
 .xp-progress-bar {
     position: relative;
     height: 20px;
@@ -1659,6 +1733,9 @@ body {
     overflow: hidden;
 }
 
+/* Ghost y Fill - posición absoluta */
+.xp-bar__ghost,
+.xp-bar__fill,
 .xp-progress-ghost,
 .xp-progress-fill,
 .xp-progress-glow {
@@ -1668,6 +1745,18 @@ body {
     height: 100%;
 }
 
+/* Ghost bar (blanco) */
+.xp-bar__ghost {
+    width: 0%;
+    background: #ffffff !important;
+    opacity: 1 !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8) !important;
+    border-right: 2px solid white;
+    z-index: 1;
+    transition: none !important;
+}
+
+/* Legacy alias */
 .xp-progress-ghost {
     width: 0%;
     background: #ffffff !important;
@@ -1678,9 +1767,9 @@ body {
     transition: none !important;
 }
 
-.xp-progress-fill {
+/* Fill bar (rojo con efecto líquido) */
+.xp-bar__fill {
     width: 0%;
-    /* Gradiente animado para efecto líquido sutil */
     background: linear-gradient(90deg,
             var(--xp-primary-dark) 0%,
             var(--xp-primary) 40%,
@@ -1695,7 +1784,25 @@ body {
     position: relative;
 }
 
-/* Brillo superior para dar profundidad líquida */
+/* Legacy alias */
+.xp-progress-fill {
+    width: 0%;
+    background: linear-gradient(90deg,
+            var(--xp-primary-dark) 0%,
+            var(--xp-primary) 40%,
+            var(--xp-primary-light) 60%,
+            var(--xp-primary) 100%);
+    background-size: 200% 100%;
+    animation: liquidFlow 4s ease-in-out infinite;
+    transition: width 1.5s ease-in-out;
+    z-index: 2;
+    box-shadow: 0 0 8px rgba(var(--xp-primary-rgb), 0.4);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Brillo superior */
+.xp-bar__fill::after,
 .xp-progress-fill::after {
     content: '';
     position: absolute;
@@ -1711,38 +1818,29 @@ body {
     animation: liquidPulse 2s ease-in-out infinite;
 }
 
-/* Animación de flujo líquido del gradiente - movimiento horizontal */
+/* Animaciones */
 @keyframes liquidFlow {
-
-    0%,
-    100% {
-        background-position: 100% 50%;
-    }
-
-    50% {
-        background-position: 0% 50%;
-    }
+    0%, 100% { background-position: 100% 50%; }
+    50% { background-position: 0% 50%; }
 }
 
-/* Animación de pulso de brillo - intensidad sin movimiento */
 @keyframes liquidPulse {
-
-    0%,
-    100% {
-        opacity: 0.6;
-    }
-
-    50% {
-        opacity: 1;
-    }
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 
-/* Glow sweep desactivado - reemplazado por liquidFlow/liquidPulse */
-.xp-progress-glow {
-    display: none;
-}
+/* Glow desactivado */
+.xp-progress-glow { display: none; }
 
 /* Texto de progreso */
+.xp-bar__text {
+    display: flex;
+    gap: 5px;
+    font-family: var(--font-rajdhani);
+    font-size: 14px;
+}
+
+/* Legacy alias */
 .xp-progress-text {
     display: flex;
     gap: 5px;
@@ -1750,28 +1848,27 @@ body {
     font-size: 14px;
 }
 
-.xp-current {
-    color: var(--xp-primary-light);
-    font-weight: 600;
-}
+.xp-bar__current { color: var(--xp-primary-light); font-weight: 600; }
+.xp-bar__divider { color: rgba(255, 255, 255, 0.3); }
+.xp-bar__next { color: var(--xp-text-secondary); }
+.xp-bar__suffix { color: var(--xp-primary); font-weight: 600; margin-left: 2px; }
 
-.xp-divider {
-    color: rgba(255, 255, 255, 0.3);
-}
-
-.xp-next {
-    color: var(--xp-text-secondary);
-}
-
-.xp-suffix {
-    color: var(--xp-primary);
-    font-weight: 600;
-    margin-left: 2px;
-}
+/* Legacy aliases */
+.xp-current { color: var(--xp-primary-light); font-weight: 600; }
+.xp-divider { color: rgba(255, 255, 255, 0.3); }
+.xp-next { color: var(--xp-text-secondary); }
+.xp-suffix { color: var(--xp-primary); font-weight: 600; margin-left: 2px; }
 
 /* ============================================
-   INDICADOR DE XP GANADO (+XP)
+   XP GAIN - Indicador de XP ganado (+XP)
    ============================================ */
+.xp-bar__gain {
+    position: relative;
+    min-width: 40px;
+    height: 100%;
+}
+
+/* Legacy alias */
 .xp-gain-container {
     position: relative;
     min-width: 40px;
@@ -1800,41 +1897,41 @@ body {
     animation: none;
 }
 
-.xp-gain-indicator.fade-out {
-    opacity: 0;
-}
+.xp-gain-indicator.fade-out { opacity: 0; }
 
 /* ============================================
-   TÃTULO DE XP
+   XP INFO - Título y Streak
    ============================================ */
+.xp-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+/* Legacy alias */
 .xp-title-inline {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 5px;
+    margin-top: 10px;
+    margin-bottom: 5px;
     padding-left: 5px;
 }
 
-.xp-title-icon {
-    display: none !important;
-    color: #00f6ff;
-    font-size: 10px;
-    animation: xpTitlePulse 2s infinite;
+.xp-info__title {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
     text-shadow: 0 0 5px rgba(0, 246, 255, 0.5);
 }
 
-@keyframes xpTitlePulse {
-
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1;
-    }
-}
-
+/* Legacy aliases */
 .xp-title-text {
     font-family: var(--font-mono);
     font-size: 15px;
@@ -1845,13 +1942,26 @@ body {
     text-shadow: 0 0 5px rgba(0, 246, 255, 0.5);
 }
 
+.xp-title-icon { display: none !important; }
+
+/* Streak - Alineado a la derecha */
+.xp-info__streak {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    padding-right: 5px;
+}
+
+
+
 /* ============================================
-   ANIMACIÃ“N DE LEVEL UP INLINE
+   XP LEVELUP - Animación de Level Up Inline
    ============================================ */
+.xp-levelup,
 .xp-levelup-inline {
     position: absolute;
     inset: 0 0 auto 0;
-    /* Top/Left/Right 0 */
     z-index: 10;
     display: flex;
     align-items: center;
@@ -1870,38 +1980,28 @@ body {
     pointer-events: none;
 }
 
+.xp-levelup.show,
 .xp-levelup-inline.show {
     animation: levelUpSlideIn 0.4s cubic-bezier(0.68, -0.2, 0.27, 1.2) forwards;
 }
 
+.xp-levelup.hiding,
 .xp-levelup-inline.hiding {
     animation: levelUpSlideOut 0.4s ease-in forwards;
 }
 
 @keyframes levelUpSlideIn {
-    0% {
-        opacity: 0;
-        transform: scaleX(0);
-    }
-
-    100% {
-        opacity: 1;
-        transform: scaleX(1);
-    }
+    0% { opacity: 0; transform: scaleX(0); }
+    100% { opacity: 1; transform: scaleX(1); }
 }
 
 @keyframes levelUpSlideOut {
-    0% {
-        opacity: 1;
-        transform: scaleX(1);
-    }
-
-    100% {
-        opacity: 0;
-        transform: scaleX(0);
-    }
+    0% { opacity: 1; transform: scaleX(1); }
+    100% { opacity: 0; transform: scaleX(0); }
 }
 
+/* Star icon */
+.xp-levelup__star,
 .levelup-star {
     font-size: 16px;
     color: #000;
@@ -1916,17 +2016,12 @@ body {
 }
 
 @keyframes starPulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.3);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
 }
 
+/* Text */
+.xp-levelup__text,
 .levelup-text {
     font-family: var(--font-orbitron);
     font-size: 16px;
@@ -1937,6 +2032,8 @@ body {
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* Chevrons */
+.xp-levelup__chevrons,
 .levelup-chevrons {
     font-size: 14px;
     color: #000;
@@ -1945,19 +2042,12 @@ body {
 }
 
 @keyframes chevronsMove {
-
-    0%,
-    100% {
-        transform: translateX(0);
-        opacity: 0.7;
-    }
-
-    50% {
-        transform: translateX(5px);
-        opacity: 1;
-    }
+    0%, 100% { transform: translateX(0); opacity: 0.7; }
+    50% { transform: translateX(5px); opacity: 1; }
 }
 
+/* Number */
+.xp-levelup__number,
 .levelup-number {
     font-family: 'Orbitron', monospace;
     font-size: 24px;
@@ -1968,6 +2058,7 @@ body {
     line-height: 1.2;
     text-shadow: none;
 }
+
 
 /* ============================================
    EFECTO LEVEL UP EN EL WIDGET
@@ -2034,6 +2125,7 @@ body {
 
 /* === SOURCE: css/streak-style.css === */
 /* STREAK INDICATOR - Right Aligned */
+.xp-info__streak,
 .xp-streak {
     display: flex;
     align-items: center;
@@ -2665,6 +2757,7 @@ body {
 }
 
 /* 2. XP Level Box (Animated Metallic Gold with Circuitry) */
+.container.gold-mode-active .xp-bar__level,
 .container.gold-mode-active .xp-level-container {
     background: 
         linear-gradient(135deg, 
@@ -2684,6 +2777,7 @@ body {
     overflow: hidden;
 }
 
+.container.gold-mode-active .xp-bar__level::after,
 .container.gold-mode-active .xp-level-container::after {
     content: '';
     position: absolute;
@@ -2693,6 +2787,7 @@ body {
     animation: goldPulse 3s ease-in-out infinite;
 }
 
+.container.gold-mode-active .xp-bar__level-label,
 .container.gold-mode-active .xp-level-label {
     color: #1a1200 !important;
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4) !important;
@@ -2700,6 +2795,7 @@ body {
     z-index: 2;
 }
 
+.container.gold-mode-active .xp-bar__level-value,
 .container.gold-mode-active .xp-level-value {
     color: #1a1200 !important;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.8) !important;
@@ -2708,6 +2804,7 @@ body {
 }
 
 /* 3. XP Progress Bar (Metallic Gold Flow) */
+.container.gold-mode-active .xp-bar__fill,
 .container.gold-mode-active .xp-progress-fill {
     background: linear-gradient(90deg, 
         #aa771c 0%, 
@@ -2724,6 +2821,7 @@ body {
 }
 
 /* 4. User Badge (Circuitry Style) */
+.container.gold-mode-active .badge,
 .container.gold-mode-active .user-badge {
     background: rgba(212, 175, 55, 0.08) !important;
     border: 1px solid rgba(212, 175, 55, 0.3) !important;
@@ -2737,12 +2835,19 @@ body {
     /* REAJUSTE DE ESPACIO */
     margin-left: 2px !important; 
     margin-right: 2px !important;
-    padding: 0 4px !important; /* Menor padding interno */
-    min-width: unset !important; /* Permitir que se encoja si es necesario */
+    padding: 0 4px !important;
+    min-width: unset !important;
+}
+
+/* 4b. User identity Icon (Clean Gold) */
+.container.gold-mode-active .user-identity__icon {
+    filter: none !important;
+    background: transparent !important;
 }
 
 /* 5. Status Text Color Shift (Metallic) */
 .container.gold-mode-active .status-text,
+.container.gold-mode-active .xp-info__title,
 .container.gold-mode-active .xp-title-text {
     color: #d4af37 !important;
     text-shadow: 0 0 10px rgba(212, 175, 55, 0.6);

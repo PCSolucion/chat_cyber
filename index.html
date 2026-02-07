@@ -73,61 +73,52 @@
 
       <!-- Header with username -->
       <div class="header">
-        <div class="info-container">
-          <!-- XP System Display (Moved to Top) -->
-          <div class="xp-section" id="xp-section"
-            style="margin-top: -10px; margin-bottom: 8px; border-top: none; border-bottom: 1px solid rgba(255, 58, 58, 0.2);">
-            <!-- Level Up Notification -->
-            <div class="xp-levelup-inline" id="xp-levelup-inline">
-              <span class="levelup-star">★</span>
-              <span class="levelup-text">LEVEL UP</span>
-              <span class="levelup-chevrons">❯❯❯</span>
-              <span class="levelup-number" id="levelup-number">2</span>
-            </div>
-
-            <!-- XP Bar -->
-            <div class="xp-bar-inline" id="xp-bar-inline">
-              <div class="xp-level-container">
-                <span class="xp-level-label">LVL</span>
-                <span class="xp-level-value" id="xp-level">1</span>
-              </div>
-              <div class="xp-progress-container">
-                <div class="xp-progress-bar">
-                  <div class="xp-progress-ghost" id="xp-progress-ghost"></div>
-                  <div class="xp-progress-fill" id="xp-progress-fill"></div>
-                  <div class="xp-progress-glow"></div>
-                </div>
-                <div class="xp-progress-text">
-                  <span class="xp-current" id="xp-current">0</span>
-                  <span class="xp-divider">/</span>
-                  <span class="xp-next" id="xp-next">100</span>
-                  <span class="xp-suffix">XP</span>
-                </div>
-              </div>
-              <div class="xp-gain-container" id="xp-gain-container"></div>
-            </div>
-
-            <!-- XP Title -->
-            <div class="xp-title-inline" id="xp-title-inline">
-              <span class="xp-title-icon">◆</span>
-              <span class="xp-title-text" id="xp-title">CIVILIAN</span>
-              <span class="xp-streak" id="xp-streak" style="display: none;"></span>
-            </div>
+        <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
+        <div class="user-identity">
+          <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
+          <span class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</span>
+          <div class="user-identity__badges">
+            <span class="badge" id="user-badge"></span>
           </div>
-
-          <div class="title-row">
-            <span class="mission-icon">!</span>
-            <img id="admin-icon" src="img/arasaka.png" class="admin-icon" alt="Corp">
-            <span class="driver-name" id="username" data-text="NETRUNNER">NETRUNNER</span>
-
-            <div class="user-identity-stack">
-              <span class="user-badge" id="user-badge"></span>
-            </div>
-          </div>
-
-
         </div>
 
+        <!-- XP Display Section (Sistema de experiencia) - DESPUÉS -->
+        <div class="xp-display" id="xp-section">
+          <!-- Level Up Notification (overlay) -->
+          <div class="xp-levelup" id="xp-levelup-inline">
+            <span class="xp-levelup__star">★</span>
+            <span class="xp-levelup__text">LEVEL UP</span>
+            <span class="xp-levelup__chevrons">❯❯❯</span>
+            <span class="xp-levelup__number" id="levelup-number">2</span>
+          </div>
+
+          <!-- XP Bar -->
+          <div class="xp-bar">
+            <div class="xp-bar__level">
+              <span class="xp-bar__level-label">LVL</span>
+              <span class="xp-bar__level-value" id="xp-level">1</span>
+            </div>
+            <div class="xp-bar__progress">
+              <div class="xp-bar__track">
+                <div class="xp-bar__ghost" id="xp-progress-ghost"></div>
+                <div class="xp-bar__fill" id="xp-progress-fill"></div>
+              </div>
+              <div class="xp-bar__text">
+                <span class="xp-bar__current" id="xp-current">0</span>
+                <span class="xp-bar__divider">/</span>
+                <span class="xp-bar__next" id="xp-next">100</span>
+                <span class="xp-bar__suffix">XP</span>
+              </div>
+            </div>
+            <div class="xp-bar__gain" id="xp-gain-container"></div>
+          </div>
+
+          <!-- XP Info (Title + Streak) -->
+          <div class="xp-info">
+            <span class="xp-info__title" id="xp-title">CIVILIAN</span>
+            <span class="xp-info__streak" id="xp-streak"></span>
+          </div>
+        </div>
       </div>
 
       <!-- Data stream indicator -->
@@ -138,8 +129,7 @@
       <!-- Digital Particles BG (Top Users) -->
       <div id="particles-bg" class="particles-bg"></div>
 
-      <!-- Equalizer / Audio visualizer (generado dinámicamente por UIUtils.initEqualizer) -->
-      <div class="equalizer" id="equalizer" aria-hidden="true"></div>
+
 
       <!-- Message display -->
       <div class="quote" id="message" role="status" aria-live="polite">
