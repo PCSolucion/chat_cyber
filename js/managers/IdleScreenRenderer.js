@@ -202,7 +202,6 @@ export default class IdleScreenRenderer {
         `;
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">${title}</div>
             <div class="idle-list-container">
                 ${content}
             </div>
@@ -222,8 +221,6 @@ export default class IdleScreenRenderer {
         const startTimeStr = UIUtils.formatClockTime(startTime);
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">RESUMEN DE SESIÓN</div>
-            
             <div class="idle-dashboard-top-row">
                 <div class="stat-card mini-stat animate-hidden animate-in delay-1">
                     <div class="stat-icon timer-icon"></div>
@@ -359,7 +356,6 @@ export default class IdleScreenRenderer {
         `;
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">TOP ACTIVOS (${users.length})</div>
             <div class="idle-list-container">
                 ${content}
             </div>
@@ -409,7 +405,6 @@ export default class IdleScreenRenderer {
         `;
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">TOP SUSCRIPTORES</div>
             <div class="idle-list-container">
                 ${content}
             </div>
@@ -450,7 +445,6 @@ export default class IdleScreenRenderer {
         }
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">EMOTES MÁS USADOS</div>
             <div class="trending-emotes-container">
                 ${emotesHtml}
             </div>
@@ -482,7 +476,6 @@ export default class IdleScreenRenderer {
         }
 
         container.innerHTML = `
-            <div class="idle-screen-title">PROGRESO GLOBAL</div>
             <div class="idle-stats-row">
                 <div class="big-stat-box animate-hidden animate-in delay-2">
                     <span class="big-stat-num tabular-nums" id="stat-levels">${data.levelUps}</span>
@@ -512,7 +505,6 @@ export default class IdleScreenRenderer {
 
         if (!achievement) {
              container.innerHTML = `
-                <div class="idle-screen-title">ÚLTIMO LOGRO</div>
                 <div class="empty-message">NADIE HA DESBLOQUEADO LOGROS AÚN</div>
             `;
             return;
@@ -522,8 +514,6 @@ export default class IdleScreenRenderer {
         const timeStr = UIUtils.formatClockTime(timestamp);
 
         container.innerHTML = `
-            <div class="idle-screen-title">ÚLTIMO LOGRO DESBLOQUEADO</div>
-            
             <div class="last-achievement-card">
                 <div class="achievement-icon-wrapper">
                     <img src="${achData.image}" alt="${achData.name}" class="achievement-icon-large">
@@ -597,7 +587,6 @@ export default class IdleScreenRenderer {
         }
 
         container.innerHTML = `
-            <div class="idle-screen-title wide-spacing animate-hidden animate-in">FACE-OFF: RACHAS</div>
             <div class="idle-hero-container">
                 ${streakContent}
                 <div class="sub-stat animate-hidden animate-in delay-5">

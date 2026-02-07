@@ -157,32 +157,32 @@ body {
 
     0%,
     100% {
-        text-shadow: var(--glow-yellow);
-        color: var(--cyber-yellow);
+        text-shadow: var(--glow-red);
+        color: var(--cyber-red);
     }
 
     50% {
-        text-shadow: 0 0 15px var(--cyber-yellow), 0 0 40px rgba(252, 238, 10, 0.5);
+        text-shadow: 0 0 15px var(--cyber-red), 0 0 40px rgba(255, 0, 60, 0.5);
     }
 
     /* Occasional glitch */
     92% {
-        color: var(--cyber-yellow);
+        color: var(--cyber-red);
         transform: translateX(0);
     }
 
     93% {
-        color: var(--cyber-red);
+        color: var(--cyber-cyan); /* Note: cyan is currently red in variables, but keeping semantically */
         transform: translateX(-2px);
     }
 
     94% {
-        color: var(--cyber-cyan);
+        color: var(--cyber-blue);
         transform: translateX(2px);
     }
 
     95% {
-        color: var(--cyber-yellow);
+        color: var(--cyber-red);
         transform: translateX(0);
     }
 }
@@ -725,12 +725,11 @@ body {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: var(--username-size);
-    color: var(--cyber-yellow);
+    color: var(--cyber-red);
     text-transform: uppercase;
     letter-spacing: 4px;
-    text-shadow: var(--glow-yellow);
+    text-shadow: var(--glow-red);
     position: relative;
-    animation: usernameGlow 3s ease-in-out infinite;
     white-space: nowrap;
     line-height: 1.6;
     border-right: 3px solid transparent;
@@ -774,12 +773,11 @@ body {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: var(--username-size);
-    color: var(--cyber-yellow);
+    color: var(--cyber-red);
     text-transform: uppercase;
     letter-spacing: 4px;
-    text-shadow: var(--glow-yellow);
+    text-shadow: var(--glow-red);
     position: relative;
-    animation: usernameGlow 3s ease-in-out infinite;
     white-space: nowrap;
     line-height: 1.6;
     border-right: 3px solid transparent;
@@ -1247,9 +1245,8 @@ body {
 
 .container.vip-user .user-identity__name,
 .container.vip-user .driver-name {
-    color: #D5B956 !important;
-    text-shadow: 0 0 5px rgba(252, 238, 9, 0.7) !important;
-    animation: none !important;
+    color: var(--cyber-red) !important;
+    text-shadow: var(--glow-red) !important;
     filter: none !important;
 }
 
@@ -1263,8 +1260,8 @@ body {
 
 .container.top-user .user-identity__name,
 .container.top-user .driver-name {
-    color: #fcee09;
-    text-shadow: 0 0 5px rgba(252, 238, 9, 0.7);
+    color: var(--cyber-red);
+    text-shadow: var(--glow-red);
 }
 
 .container.top-user .quote {
@@ -1288,7 +1285,6 @@ body {
 .container.admin-user .driver-name {
     color: var(--cyber-red) !important;
     text-shadow: var(--glow-red) !important;
-    animation: adminGlow 2s ease-in-out infinite;
 }
 
 .container.admin-user .user-identity__icon {
@@ -1396,8 +1392,8 @@ body {
 }
 
 .quote strong {
-    color: var(--cyber-yellow);
-    text-shadow: 0 0 10px rgba(252, 238, 10, 0.5);
+    color: var(--cyber-red);
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
 }
 
 /* ===========================================
@@ -1448,7 +1444,7 @@ body {
    =========================================== */
 
 .decrypting {
-    animation: decryptPulse 0.4s ease-in-out infinite !important;
+    /* animation: decryptPulse 0.4s ease-in-out infinite !important; REIMOVBED AS REQUESTED */
     font-family: 'Share Tech Mono', monospace !important;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -1704,6 +1700,7 @@ body {
     flex-direction: column;
     gap: 4px;
     justify-content: center;
+    transform: translateY(-4px);
 }
 
 /* Legacy alias */
@@ -1713,6 +1710,7 @@ body {
     flex-direction: column;
     gap: 4px;
     justify-content: center;
+    transform: translateY(-4px);
 }
 
 /* Track de la barra */

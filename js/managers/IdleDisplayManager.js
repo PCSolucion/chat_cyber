@@ -204,13 +204,11 @@ export default class IdleDisplayManager {
             xpSection.style.display = 'none';
         }
 
-        // Cambiar el nombre de usuario por el título de estadísticas
+        // Cambiar el nombre de usuario por el título de estadísticas (se actualizará con cada pantalla)
         const usernameEl = document.getElementById('username');
         if (usernameEl) {
             this._savedUsername = usernameEl.textContent;
             this._savedUsernameData = usernameEl.getAttribute('data-text');
-            usernameEl.textContent = 'ESTADÍSTICAS DEL DIRECTO';
-            usernameEl.setAttribute('data-text', 'ESTADÍSTICAS DEL DIRECTO');
             usernameEl.classList.add('idle-stats-title');
         }
 
@@ -454,6 +452,13 @@ export default class IdleDisplayManager {
             if (!screenData) {
                 console.warn('⚠️ No screen data available for index:', this.currentCycleIndex);
                 return;
+            }
+
+            // Actualizar el título en el header (sustituyendo al username)
+            const usernameEl = document.getElementById('username');
+            if (usernameEl && screenData.title) {
+                usernameEl.textContent = screenData.title;
+                usernameEl.setAttribute('data-text', screenData.title);
             }
 
             // Delegar el renderizado al renderer especializado
