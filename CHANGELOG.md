@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.2] - 2026-02-07
+
+### Lista completa de cambios
+
+- feat: Centralize stream monitoring with `StreamMonitorService` to reduce redundant polling
+- refactor: Modernize `UIManager` with State-to-UI pattern and modularize message pipeline
+- style: Unify username branding to "Cyber Red" aesthetic for all roles (Broadcaster, VIP, Top)
+- feat: Enhance Idle Mode with dynamic section titles and improved layout
+- fix: Restore `regenerator-runtime` to resolve critical OBS overlay compatibility
+- fix: Resolve blank idle screen issues and improve stats reliability
+- style: Restore `data-stream` horizontal bar and optimize header spacing
+- refactor: Clean up unused configurations and centralized constants
+- perf: Improve message queue handling and anti-spam processing
+- fix: Prevent achievement duplication and improve Gist persistence logic
+- style: Refine achievement font sizes and visual hierarchy
+
 ## [1.1.1] - 2026-02-05
 
 ### Lista completa de cambios
