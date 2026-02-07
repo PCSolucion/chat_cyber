@@ -1,8 +1,11 @@
 import { TIMING } from '../constants/AppConstants.js';
+import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * StreamHistoryService
- * Automatiza el registro del historial de streams en GitHub Gist
+ * Automatiza el registro del historial de streams en GitHub Gist.
+ * REFACTORED: Ahora es reactivo y depende de StreamMonitorService.
  */
 export default class StreamHistoryService {
     constructor(config, gistService) {
@@ -10,9 +13,6 @@ export default class StreamHistoryService {
         this.gistService = gistService;
 
         this.fileName = 'stream_history.json';
-        this.channel = config.TWITCH_CHANNEL || 'liiukiin';
-
-        this.checkInterval = null;
         this.isTracking = false;
         this.sessionStartTime = null;
         this.lastSaveTime = null;
@@ -23,126 +23,61 @@ export default class StreamHistoryService {
             title: ''
         };
 
-        // Grace period para cortes (5 minutos)
-        this.offlineCounter = 0;
-        this.MAX_OFFLINE_CHECKS = 5;
-
         this.DEBUG = config.DEBUG || false;
+        
+        this._setupListeners();
     }
 
-    /**
-     * Inicia el monitoreo
-     */
-    startMonitoring() {
-        if (this.checkInterval) return;
-
-        console.log('📡 StreamHistoryService: Iniciando monitoreo...');
-
-        // Verificación inicial
-        this.checkStream();
-
-        // Verificar cada minuto
-        this.checkInterval = setInterval(() => this.checkStream(), TIMING.STREAM_CHECK_INTERVAL_MS);
-    }
-
-    /**
-     * Detiene el monitoreo
-     */
-    stopMonitoring() {
-        if (this.checkInterval) {
-            clearInterval(this.checkInterval);
-            this.checkInterval = null;
-        }
-    }
-
-    /**
-     * Verifica el estado del stream y actualiza el historial
-     */
-    async checkStream() {
-        try {
-            const isOnline = await this.getStreamStatus();
-
+    _setupListeners() {
+        // Reaccionar al estado del stream
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
             if (isOnline) {
-                this.offlineCounter = 0; // Reset offline counter
-
-                if (!this.isTracking) {
-                    // Nuevo stream detectado
-                    console.log('🔴 Stream ONLINE detectado. Iniciando tracking...');
-                    this.isTracking = true;
-                    this.sessionStartTime = Date.now();
-                }
-
-                // Actualizar metadatos y guardar periódicamente
-                await this.updateSessionData();
-
+                this._handleStreamStart();
             } else {
-                if (this.isTracking) {
-                    this.offlineCounter++;
-                    console.log(`⚫ Stream OFFLINE detectado (${this.offlineCounter}/${this.MAX_OFFLINE_CHECKS})`);
-
-                    if (this.offlineCounter >= this.MAX_OFFLINE_CHECKS) {
-                        // Confirmado offline tras grace period
-                        console.log('🏁 Stream finalizado. Guardando datos finales...');
-                        await this.saveHistory(true); // Force save
-                        this.isTracking = false;
-                        this.sessionStartTime = null;
-                        this.offlineCounter = 0;
-                    }
-                }
+                this._handleStreamEnd();
             }
-        } catch (error) {
-            console.error('❌ Error en StreamHistoryService:', error);
-        }
+        });
+
+        // Reaccionar a cambios de categoría
+        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
+            this.currentSession.category = category;
+            if (this.isTracking) {
+                this._autoSave();
+            }
+        });
+
+        // Reaccionar a cambios de título
+        EventManager.on('stream:titleUpdated', (title) => {
+            this.currentSession.title = title;
+            if (this.isTracking) {
+                this._autoSave();
+            }
+        });
+    }
+
+    _handleStreamStart() {
+        if (this.isTracking) return;
+        
+        console.log('🔴 Historial: Stream ONLINE detectado. Iniciando tracking...');
+        this.isTracking = true;
+        this.sessionStartTime = Date.now();
+        this.initialDayDuration = undefined; // Resetear para recalcular en el primer save
+    }
+
+    async _handleStreamEnd() {
+        if (!this.isTracking) return;
+
+        console.log('🏁 Historial: Stream finalizado. Guardando datos finales...');
+        await this.saveHistory(true);
+        this.isTracking = false;
+        this.sessionStartTime = null;
     }
 
     /**
-     * Obtiene el estado del stream (API decapi.me)
+     * Guarda periódicamente si los datos han cambiado
      */
-    async getStreamStatus() {
-        try {
-            const response = await fetch(`https://decapi.me/twitch/uptime/${this.channel}`);
-            const text = await response.text();
-            return !text.includes('offline') && !text.includes('error');
-        } catch (e) {
-            console.warn('Error checking stream status:', e);
-            return false;
-        }
-    }
-
-    /**
-     * Obtiene metadatos del stream
-     */
-    async getStreamMetadata() {
-        try {
-            const [gameRes, titleRes] = await Promise.all([
-                fetch(`https://decapi.me/twitch/game/${this.channel}`),
-                fetch(`https://decapi.me/twitch/title/${this.channel}`)
-            ]);
-
-            return {
-                category: await gameRes.text(),
-                title: await titleRes.text()
-            };
-        } catch (e) {
-            console.warn('Error fetching metadata:', e);
-            return { category: '', title: '' };
-        }
-    }
-
-    /**
-     * Actualiza datos de la sesión y guarda en Gist si procede
-     */
-    async updateSessionData() {
+    async _autoSave() {
         const now = Date.now();
-
-        // Obtener metadatos actuales
-        const metadata = await this.getStreamMetadata();
-
-        // Actualizar datos locales
-        this.currentSession.category = metadata.category;
-        this.currentSession.title = metadata.title;
-
-        // Guardar cada 5 minutos
         if (!this.lastSaveTime || (now - this.lastSaveTime > TIMING.STREAM_SAVE_COOLDOWN_MS)) {
             await this.saveHistory();
             this.lastSaveTime = now;
@@ -156,17 +91,12 @@ export default class StreamHistoryService {
         if (!this.sessionStartTime) return;
 
         try {
-            // Calcular duración de esta sesión en minutos
             const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / TIMING.MINUTE_MS);
-            if (sessionMinutes < 1 && !this.DEBUG) return; // Ignorar sesiones < 1 min
+            if (sessionMinutes < 1 && !this.DEBUG && !final) return;
 
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
-            if (this.DEBUG) console.log(`💾 Guardando historial de stream... (Duración actual: ${sessionMinutes}m)`);
-
+            const today = new Date().toISOString().split('T')[0];
             const history = await this.gistService.loadFile(this.fileName) || {};
             
-            // Lógica simplificada de actualización
             if (this.initialDayDuration === undefined) {
                 if (history[today]) {
                     this.initialDayDuration = history[today].duration || 0;
@@ -197,4 +127,8 @@ export default class StreamHistoryService {
             console.error('❌ Error al guardar historial de stream:', error);
         }
     }
+
+    // Métodos legacy para compatibilidad si se llaman (vaciados)
+    startMonitoring() {}
+    stopMonitoring() {}
 }

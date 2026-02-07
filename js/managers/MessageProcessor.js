@@ -70,7 +70,6 @@ export default class MessageProcessor {
                 this.services.gist.configure(this.config.XP_GIST_ID, this.config.XP_GIST_TOKEN, this.config.XP_GIST_FILENAME);
                 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.services.gist);
-                this.services.streamHistory.startMonitoring();
                 
                 this.services.xp = new ExperienceService(this.config, this.services.gist);
                 this.services.achievements = new AchievementService(this.config, this.services.xp);

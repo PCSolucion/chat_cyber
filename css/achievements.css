@@ -10,6 +10,7 @@
     flex-direction: column;
     gap: 4px;
     margin: 10px 0;
+    margin-bottom: 35px; /* Evita tapar la barra de logros inferior */
     min-height: 0;
 }
 
@@ -22,9 +23,9 @@
 /* Notificación individual */
 .achievement-notification {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    align-items: center; /* Centrado vertical absoluto */
+    gap: 15px; /* Más espacio para una lectura limpia */
+    padding: 12px 15px; /* Incrementado padding vertical para equilibrio visual */
     background: var(--bg-solid);
     /* Solid Background */
     /* border-left removed to avoid visual noise */
@@ -49,24 +50,24 @@
 /* Icono del logro */
 /* Icono del logro */
 /* Icono del logro */
-.achievement-icon {
-    width: 50px;
-    /* +10% from 45px */
-    height: 50px;
+.achievement-notification .achievement-icon {
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    /* Prevent shrinking */
-    filter: none !important;
-    box-shadow: none !important;
-    border: none !important;
     background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0;
+    transform: translateY(-8px); /* Nudge hacia arriba más agresivo */
 }
 
 /* Target img directly */
 /* Target img directly */
-.achievement-icon img {
+.achievement-notification .achievement-icon img {
     /* Force clean image */
     all: initial !important;
     width: 100% !important;
@@ -80,9 +81,6 @@
     border-radius: 0 !important;
     background: transparent !important;
     transform: none !important;
-    clip-path: none !important;
-    mask: none !important;
-    -webkit-mask: none !important;
 }
 
 /* Contenido del logro */
@@ -91,7 +89,8 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px; /* Reducido el gap interno para que el bloque sea más compacto */
+    justify-content: center;
     z-index: 2;
     position: relative;
 }
@@ -99,18 +98,17 @@
 /* Label: "LOGRO DESBLOQUEADO" */
 .achievement-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    /* Increased from 10px */
+    font-size: 11px;
     font-weight: 800;
-    /* Extra Bold */
     color: var(--cyber-cyan, #00f0ff);
-    text-shadow: var(--text-stroke);
-    /* Heavy Outline */
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     display: flex;
     align-items: center;
     gap: 6px;
+    line-height: 1.4; /* Evita que el texto se corte verticalmente */
+    white-space: nowrap; /* Asegura que quepa en una línea */
 }
 
 .achievement-label::before {
@@ -122,26 +120,27 @@
 /* Achievement Name - Marquee Bounce */
 .achievement-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.95rem;
-    /* Slight increase */
-    /* Decreased from 1.05rem */
-    font-weight: 900;
-    /* Max Boldness */
+    font-size: 0.75rem;
+    /* Reduced from 0.85rem */
+    font-weight: 800;
+    /* Reduced from 900 */
     color: #fff;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    text-shadow: var(--text-stroke);
-    /* Heavy Outline */
+    letter-spacing: 0.5px;
+    /* Reduced from 1px */
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    /* Lighter outline (1px) */
     white-space: nowrap;
     overflow: hidden;
-    max-width: 260px;
+    max-width: 250px; /* Incrementado para dar más espacio */
     display: block;
-    line-height: 1.4;
+    line-height: 1.2;
+    padding-right: 5px; /* Pequeño buffer para evitar que la última letra toque el borde */
 }
 
 .achievement-name span {
     display: inline-block;
-    padding-left: 0;
+    padding-right: 20px; /* Buffer crítico: asegura que la animación llegue al final real del texto */
 }
 
 .achievement-name span.marquee-active {
@@ -155,24 +154,20 @@
 }
 
 @keyframes marquee-bounce {
-
-    0%,
-    20% {
+    0%, 20% {
         transform: translateX(0);
     }
-
     100% {
-        transform: translateX(calc(-100% + 260px));
+        /* Se mueve exactamente lo necesario para mostrar el final + el padding de seguridad */
+        transform: translateX(calc(-100% + 250px)); 
     }
-
-    /* Scroll until end fits */
 }
 
 /* Description Container - Mask for marquee */
 .achievement-desc {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    /* Increase */
+    font-size: 0.78rem;
+    /* Reduced from 0.85rem */
     font-weight: 700;
     /* Bold */
     color: #fff;
@@ -180,10 +175,11 @@
     white-space: nowrap;
     overflow: hidden;
     position: relative;
-    max-width: 280px;
+    max-width: 245px;
     /* Limit width to force scroll on long text */
     display: block;
-    line-height: 1.4;
+    line-height: 1.2;
+    /* Tighter line height */
 }
 
 .achievement-desc>span {
@@ -221,7 +217,7 @@
     height: 2px;
     background: #ff4b4b;
     box-shadow: 0 0 4px currentColor;
-    animation: timer-shrink 9s linear forwards;
+    animation: timer-shrink 11s linear forwards;
 }
 
 @keyframes timer-shrink {
@@ -259,7 +255,7 @@
 
 .achievement-notification[data-rarity="uncommon"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: var(--text-stroke), 0 0 5px var(--rarity-color);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 3px var(--rarity-color);
 }
 
 /* Timer Override Removed */
@@ -272,7 +268,7 @@
 
 .achievement-notification[data-rarity="rare"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: var(--text-stroke), 0 0 5px var(--rarity-color);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 4px var(--rarity-color);
 }
 
 /* Timer Override Removed */
@@ -285,7 +281,7 @@
 
 .achievement-notification[data-rarity="epic"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: var(--text-stroke), 0 0 10px var(--rarity-color);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px var(--rarity-color);
     /* Stronger glow + outline */
 }
 
@@ -303,12 +299,12 @@
 
 .achievement-notification[data-rarity="legendary"] .achievement-label {
     color: var(--rarity-color);
-    text-shadow: var(--text-stroke), 0 0 15px var(--rarity-color);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 10px var(--rarity-color);
 }
 
 .achievement-notification[data-rarity="legendary"] .achievement-name {
     color: var(--rarity-color);
-    text-shadow: 0 0 10px rgba(255, 106, 0, 0.5);
+    text-shadow: 0 0 5px rgba(255, 106, 0, 0.4);
 }
 
 /* Timer Override Removed */

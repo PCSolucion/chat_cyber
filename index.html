@@ -4,13 +4,20 @@
 <head>
   <meta charset="UTF-8">
   <title>Twitch Chat Overlay - Cyberpunk 2077</title>
+  <meta name="description" content="Twitch Chat Overlay con estética de Cyberpunk 2077. Incluye sistema de XP, logros y animaciones de nivel.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Preload Critical Resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="img/arasaka.png" as="image">
+
   <!-- CSS Modular - Importa todos los componentes -->
   <link rel="stylesheet" href="css/bundle.css">
-  <link rel="stylesheet" href="css/achievements.css?v=9">
+  <link rel="stylesheet" href="css/achievements.css?v=11">
   <link rel="stylesheet" href="css/idle-stats.css">
   <link rel="stylesheet" href="css/levelup.css">
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="img/arasaka.png" type="image/png">
 </head>
 
 <body>
@@ -18,7 +25,7 @@
   <div id="cp-levelup-overlay" class="cp-levelup-overlay">
     <div class="cp-levelup-content">
       <div class="cp-levelup-icon">
-        <svg class="cp-hex-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg class="cp-hex-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <polygon points="50 0, 95 25, 95 75, 50 100, 5 75, 5 25" />
         </svg>
         <div class="cp-hex-arrows">
@@ -30,10 +37,10 @@
       <div class="cp-levelup-bar">
         <div class="cp-levelup-main-text">
           <span class="cp-level-arrow">▲</span>
-          <span id="cp-new-level" class="cp-level-number">66</span>
+          <span id="cp-new-level" class="cp-level-number">--</span>
           <span class="cp-level-text">LEVEL UP!</span>
           <div class="cp-level-decor-right">
-            <svg class="cp-level-decor-icon" viewBox="0 0 24 24">
+            <svg class="cp-level-decor-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
             </svg>
@@ -43,12 +50,12 @@
           <div class="cp-stat-box">
             <span class="cp-stat-icon">👤</span>
             <span class="cp-stat-label">MERC:</span>
-            <span id="cp-username" class="cp-stat-value">NETRUNNER</span>
+            <span id="cp-username" class="cp-stat-value">---</span>
           </div>
           <div class="cp-stat-box">
             <span class="cp-stat-icon">◤</span>
             <span class="cp-stat-label">NEW RANK:</span>
-            <span id="cp-new-title" class="cp-stat-value">ROOKIE</span>
+            <span id="cp-new-title" class="cp-stat-value">---</span>
           </div>
         </div>
       </div>
@@ -96,7 +103,7 @@
           <div class="xp-bar">
             <div class="xp-bar__level">
               <span class="xp-bar__level-label">LVL</span>
-              <span class="xp-bar__level-value" id="xp-level">1</span>
+              <span class="xp-bar__level-value" id="xp-level">--</span>
             </div>
             <div class="xp-bar__progress">
               <div class="xp-bar__track">
@@ -104,9 +111,9 @@
                 <div class="xp-bar__fill" id="xp-progress-fill"></div>
               </div>
               <div class="xp-bar__text">
-                <span class="xp-bar__current" id="xp-current">0</span>
+                <span class="xp-bar__current" id="xp-current">--</span>
                 <span class="xp-bar__divider">/</span>
-                <span class="xp-bar__next" id="xp-next">100</span>
+                <span class="xp-bar__next" id="xp-next">--</span>
                 <span class="xp-bar__suffix">XP</span>
               </div>
             </div>
@@ -115,7 +122,7 @@
 
           <!-- XP Info (Title + Streak) -->
           <div class="xp-info">
-            <span class="xp-info__title" id="xp-title">CIVILIAN</span>
+            <span class="xp-info__title" id="xp-title">...</span>
             <span class="xp-info__streak" id="xp-streak"></span>
           </div>
         </div>
@@ -133,7 +140,7 @@
 
       <!-- Message display -->
       <div class="quote" id="message" role="status" aria-live="polite">
-        "Conectando al stream de Night City..."
+        [BOOTING...] 
       </div>
 
 
@@ -142,39 +149,20 @@
       <div class="achievement-notifications" id="achievement-notifications"></div>
 
       <!-- Achievement Counter (Absolute position near footer) -->
-      <div class="xp-achievements-container" id="xp-achievements-container-wrapper" style="
-        position: absolute;
-        bottom: 0px; 
-        left: 0;
-        width: 100%;
-        padding: 0 15px;
-        padding-bottom: 4px; 
-        box-sizing: border-box;
-        z-index: 10;
-        pointer-events: none;
-      ">
+      <div class="xp-achievements-container" id="xp-achievements-container-wrapper">
         <span class="xp-achievements" id="xp-achievements" style="display: none;"></span>
         <!-- Watch Time: Bottom Right Pegado al Borde -->
         <div id="watch-time-container" style="display: none;"></div>
       </div>
 
-      <!-- Footer tech info -->
-      <div class="footer-tech">
-      </div>
     </div>
   </div>
 
-  <!-- 
-    Panel de Pruebas ELIMINADO de este archivo.
-    Ahora disponible en: test-panel.html
-    
-    Para testear el widget, abre test-panel.html en el navegador.
-    El panel cargará el widget en un iframe y permitirá simular mensajes.
-  -->
+
 
   <!-- Scripts externos -->
   <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.13.7/runtime.min.js"></script>
-  <script src="libs/tmi.min.js"></script>
+  <script src="libs/tmi.min.js" defer></script>
 
   <!-- Aplicación principal (ES Module) -->
   <script type="module" src="js/app.js"></script>

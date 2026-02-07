@@ -10,6 +10,7 @@ import Logger from './utils/Logger.js';
 import { ALL_COMMANDS } from './commands/index.js';
 import CommandManager from './managers/CommandManager.js';
 import AudioManager from './managers/AudioManager.js';
+import StreamMonitorService from './services/StreamMonitorService.js';
 
 /**
  * App - Bootstrapper de la Aplicación
@@ -52,6 +53,12 @@ class App {
         } catch (e) {
             Logger.error('App', 'FATAL: TwitchService creation failed.', e);
         }
+
+        // 3. Inicializar Monitor de Stream
+        if (this.twitchService) {
+            this.streamMonitor = new StreamMonitorService(this.config, this.twitchService);
+            this._setupStreamListeners();
+        }
     }
 
     /**
@@ -82,47 +89,20 @@ class App {
             this.twitchService.connect();
         }
 
-        // Iniciar ciclo de actualización de metadatos (Este manejará el WatchTimeTracker)
-        this.startStreamCategoryUpdate();
+        // Iniciar ciclo de monitoreo centralizado
+        if (this.streamMonitor) {
+            this.streamMonitor.start();
+        }
     }
 
     /**
-     * Handler principal de mensajes
+     * Configura los listeners para el estado del stream
+     * @private
      */
-    onMessageReceived(tags, message) {
-        if (!this.processor) return;
-        this.processor.process(tags, message);
-    }
-
-    /**
-     * Inicia el ciclo de actualización de categoría y estado del stream
-     * - OFFLINE: Comprueba cada 1 min para detectar inicio rápido
-     * - ONLINE: Comprueba cada 10 min para reducir carga
-     */
-    startStreamCategoryUpdate() {
-        this.categoryTimer = null;
-
-        const updateMetadata = async () => {
-            if (!this.twitchService) return;
-
-            // 1. Obtener Categoría y Estado
-            const category = await this.twitchService.fetchChannelCategory();
-            const isOnline = await this.twitchService.fetchStreamStatus();
-
-            // Detectar cambio de estado
-            const statusChanged = isOnline !== this.isStreamOnline;
+    _setupStreamListeners() {
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
             this.isStreamOnline = isOnline;
-
-            // EventManager ya notifica a los componentes interesados (Processor, UI, Achievements)
-            if (statusChanged) {
-                EventManager.emit(EVENTS.STREAM.STATUS_CHANGED, isOnline);
-            }
-
-            if (category) {
-                EventManager.emit(EVENTS.STREAM.CATEGORY_UPDATED, category);
-            }
-
-            // GESTIÓN DINÁMICA DEL WATCH TIME TRACKER
+            
             if (isOnline) {
                 if (!this.watchTimeInterval) {
                     console.log('📡 Stream is ONLINE. Starting Watch Time Tracker...');
@@ -134,15 +114,17 @@ class App {
                     this.stopWatchTimeTracker();
                 }
             }
-
-            // Próximo intervalo
-            const nextInterval = isOnline ? TIMING.METADATA_CHECK_ONLINE_MS : TIMING.METADATA_CHECK_OFFLINE_MS;
-            if (this.categoryTimer) clearTimeout(this.categoryTimer);
-            this.categoryTimer = setTimeout(updateMetadata, nextInterval);
-        };
-
-        this.categoryTimer = setTimeout(updateMetadata, 2000);
+        });
     }
+
+    /**
+     * Handler principal de mensajes
+     */
+    onMessageReceived(tags, message) {
+        if (!this.processor) return;
+        this.processor.process(tags, message);
+    }
+
 
     /**
      * Inicia el tracker de tiempo de visualización
@@ -196,7 +178,7 @@ class App {
 
     async destroy() {
         console.log('🛑 Shutting down...');
-        if (this.categoryTimer) clearTimeout(this.categoryTimer);
+        if (this.streamMonitor) this.streamMonitor.stop();
         this.stopWatchTimeTracker();
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();

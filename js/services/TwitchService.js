@@ -169,6 +169,24 @@ export default class TwitchService {
     }
 
     /**
+     * Obtiene el título actual del stream
+     * @returns {Promise<string|null>}
+     */
+    async fetchStreamTitle() {
+        try {
+            const response = await fetch(`https://decapi.me/twitch/title/${this.channel}`);
+            if (!response.ok) {
+                return null;
+            }
+            const title = await response.text();
+            return title ? title.trim() : null;
+        } catch (error) {
+            Logger.warn('Twitch', 'No se pudo obtener el título del stream:', error);
+            return null;
+        }
+    }
+
+    /**
      * Obtiene la lista de usuarios conectados al chat
      * Intenta usar la API TMI, si falla (CORS), usa la lista local construida por eventos
      * @returns {Promise<Array<string>>} Lista de usernames

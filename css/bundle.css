@@ -2343,7 +2343,7 @@ body {
 
 .achievement-icon {
     font-size: 0.9em;
-    filter: drop-shadow(0 0 2px var(--cyber-yellow));
+    
 }
 
 .achievement-bar-track {
@@ -2890,5 +2890,21 @@ body {
     background: #ff3b45 !important;
     box-shadow: 0 0 5px #ff3b45, 0 0 10px rgba(255, 59, 69, 0.4) !important;
 }
+
+/* ===========================================
+   ACHIEVEMENT CONTAINER WRAPPER
+   =========================================== */
+#xp-achievements-container-wrapper {
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    width: 100%;
+    padding: 0 15px;
+    padding-bottom: 4px;
+    box-sizing: border-box;
+    z-index: 10;
+    pointer-events: none;
+}
+
 
 

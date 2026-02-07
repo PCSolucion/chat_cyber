@@ -29,7 +29,7 @@ export default class NotificationManager {
         this.isShowingNotification = false;
 
         // Configuración de tiempos
-        this.NOTIFICATION_DISPLAY_TIME = 9000; // 9 segundos
+        this.NOTIFICATION_DISPLAY_TIME = 11000; // 11 segundos (9 + 2)
         this.NOTIFICATION_FADE_TIME = 500;     // 0.5 segundos
         this.QUEUE_MAX_SIZE = 5;               // Máximo 5 en cola
 
