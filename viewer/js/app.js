@@ -55,6 +55,7 @@
     let leaderboardData = [];
     let achievementsData = {};
     let currentSort = { field: 'xp', direction: 'desc' };
+    let currentPeriod = 'all'; // 'all', 'month', 'week'
 
     // Pagination State
     let currentPage = 1;
@@ -254,13 +255,61 @@
                 sortLeaderboard();
             });
         });
+
+        // Setup Period Selector
+        const periodBtns = document.querySelectorAll('.period-btn');
+        periodBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const period = btn.dataset.period;
+                if (period === currentPeriod) return;
+
+                currentPeriod = period;
+
+                // Update active state
+                periodBtns.forEach(b => b.classList.toggle('active', b.dataset.period === period));
+
+                // Force sort by XP when changing timeframe (usually what people want)
+                currentSort.field = 'xp';
+                currentSort.direction = 'desc';
+                
+                // Update table header text
+                const xpHeader = document.querySelector('th[data-sort="xp"]');
+                if (xpHeader) {
+                    if (period === 'week') xpHeader.textContent = 'XP (7D)';
+                    else if (period === 'month') xpHeader.textContent = 'XP (30D)';
+                    else xpHeader.textContent = 'XP TOTAL';
+                    
+                    // Set active sort indicator
+                    document.querySelectorAll('.sortable').forEach(h => h.classList.remove('active', 'asc'));
+                    xpHeader.classList.add('active');
+                }
+
+                sortLeaderboard();
+            });
+        });
     }
 
     /**
      * Sort leaderboard data
      */
+    /**
+     * Sort leaderboard data
+     */
     function sortLeaderboard() {
-        leaderboardData.sort((a, b) => {
+        // Create a shallow copy and potentially map XP values
+        let usersToRender = leaderboardData.map(u => {
+            // If period is selected, override XP for display/sorting
+            // We use spread to avoid mutating original objects
+            if (currentPeriod === 'week') {
+                return { ...u, xp: u.weeklyXP || 0 };
+            } else if (currentPeriod === 'month') {
+                return { ...u, xp: u.monthlyXP || 0 };
+            }
+            return u;
+        });
+
+        // Sort the data
+        usersToRender.sort((a, b) => {
             let valA, valB;
 
             if (currentSort.field === 'level') {
@@ -287,26 +336,33 @@
 
         // Reset to first page on sort
         currentPage = 1;
-        renderLeaderboard();
+        renderLeaderboard(usersToRender);
     }
 
     /**
      * Render leaderboard
+     * @param {Array} data - The sorted/filtered data to render
      */
-    function renderLeaderboard() {
+    function renderLeaderboard(data = leaderboardData) {
         // Render podium (top 3)
-        elements.podium.innerHTML = Components.createPodium(leaderboardData.slice(0, 3));
+        // Ensure podium also respects the period XP!
+        elements.podium.innerHTML = Components.createPodium(data.slice(0, 3));
 
         // Calculate pagination slices
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        const pageData = leaderboardData.slice(startIndex, endIndex);
+        const pageData = data.slice(startIndex, endIndex);
 
-        // Render full ranking table
+        // Render full ranking table start ranking from 1 (or calculated if paginated)
+        // Note: Ranking number should probably reset if sorting changes, but keeping it simple
         elements.rankingBody.innerHTML = Components.createRankingRows(pageData, startIndex + 1);
 
-        // Render pagination controls
-        renderPagination();
+        // Update global ref for pagination (bit hacky but needed for controls)
+        // We'll store the current view data in a property if needed, 
+        // but for now let's just update the function signature.
+        // Wait, renderPagination needs to know the total length.
+        
+        renderPagination(data.length, data); 
 
         // Add click listeners to rows
         elements.rankingBody.querySelectorAll('tr[data-username]').forEach(row => {
@@ -327,9 +383,11 @@
 
     /**
      * Render pagination controls
+     * @param {number} totalItems - Total items count
+     * @param {Array} currentData - Current data (for re-rendering on page change)
      */
-    function renderPagination() {
-        const totalPages = Math.ceil(leaderboardData.length / itemsPerPage);
+    function renderPagination(totalItems = leaderboardData.length, currentData = leaderboardData) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
 
         if (totalPages <= 1) {
             elements.paginationControls.innerHTML = '';
@@ -369,7 +427,7 @@
             prevBtn.addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage--;
-                    renderLeaderboard();
+                    renderLeaderboard(currentData);
                     // Scroll to top of table
                     document.getElementById('ranking-table').scrollIntoView({ behavior: 'smooth' });
                 }
@@ -380,13 +438,15 @@
             nextBtn.addEventListener('click', () => {
                 if (currentPage < totalPages) {
                     currentPage++;
-                    renderLeaderboard();
+                    renderLeaderboard(currentData);
                     // Scroll to top of table
                     document.getElementById('ranking-table').scrollIntoView({ behavior: 'smooth' });
                 }
             });
         }
     }
+
+
 
     /**
      * Navigate to user profile

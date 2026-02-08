@@ -140,6 +140,39 @@ const API = (function () {
      * Get all users sorted by achievements count
      * @returns {Promise<Array>}
      */
+    /**
+     * Calculate XP earned in the last N days
+     * @param {Object} history - Activity history object
+     * @param {number} days - Number of days to look back
+     * @returns {number}
+     */
+    function calculatePeriodXP(history, days) {
+        if (!history) return 0;
+        
+        const now = new Date();
+        const cutoff = new Date();
+        cutoff.setDate(now.getDate() - days);
+        // Reset time to start of day for fair comparison
+        cutoff.setHours(0, 0, 0, 0);
+        
+        let total = 0;
+        Object.entries(history).forEach(([dateStr, data]) => {
+            // dateStr is usually YYYY-MM-DD
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            
+            if (date >= cutoff) {
+                total += (data.xp || 0);
+            }
+        });
+        return total;
+    }
+
+    /**
+     * Get global leaderboard
+     * Includes temporal stats (weekly/monthly)
+     * @returns {Promise<Array>}
+     */
     async function getLeaderboard() {
         const data = await fetchXPData();
         if (!data || !data.users) return [];
@@ -178,7 +211,12 @@ const API = (function () {
                         timestamp: ach.timestamp || ach.unlockedAt || null 
                     };
                 }),
-                achievementStats: userData.achievementStats || {}
+                achievementStats: userData.achievementStats || {},
+                activityHistory: userData.activityHistory || {},
+                
+                // Temporal Stats Calculation
+                weeklyXP: calculatePeriodXP(userData.activityHistory, 7),
+                monthlyXP: calculatePeriodXP(userData.activityHistory, 30)
             };
         });
 
