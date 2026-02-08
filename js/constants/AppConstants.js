@@ -70,6 +70,14 @@ export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
     SAVE_DEBOUNCE_MS: 5000,             // Frecuencia máxima de guardado en Gist
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
+    // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
+    ACHIEVEMENT_REWARDS: {
+        common: 50,
+        uncommon: 75,
+        rare: 150,
+        epic: 250,
+        legendary: 500
+    }
 };
 
 // Configuración de almacenamiento y red

@@ -498,6 +498,9 @@ export default class AchievementService {
                         unlockedAt: new Date().toISOString()
                     };
 
+                    // Otorga XP fija por el logro (antes de añadirlo a la lista de desbloqueados)
+                    this.experienceService.addAchievementXP(username, achievement.rarity);
+
                     existingAchievements.push(unlockedAchievement);
                     unlockedNow.push(achievement);
 

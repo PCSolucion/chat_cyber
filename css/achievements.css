@@ -105,10 +105,12 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     display: flex;
+    overflow: visible; /* Ensure shadows don't get clipped */
     align-items: center;
     gap: 6px;
-    line-height: 1.4; /* Evita que el texto se corte verticalmente */
-    white-space: nowrap; /* Asegura que quepa en una línea */
+    line-height: normal; /* Restore normal line height */
+    padding-bottom: 2px; /* Small buffer */
+    white-space: nowrap; 
 }
 
 .achievement-label::before {
@@ -141,6 +143,7 @@
 .achievement-name span {
     display: inline-block;
     padding-right: 20px; /* Buffer crítico: asegura que la animación llegue al final real del texto */
+    vertical-align: middle; /* Ensure vertical alignment */
 }
 
 .achievement-name span.marquee-active {
@@ -352,4 +355,354 @@
     background: linear-gradient(90deg, var(--cyber-cyan, #00f0ff), #ffffff);
     box-shadow: 0 0 5px var(--cyber-cyan, #00f0ff);
     transition: width 1s ease-out;
+}
+
+/* ========================================
+   ACHIEVEMENT OVERLAY (Top of Screen) - Xbox One Style (REFINED v3)
+   ======================================== */
+
+.cp-achievement-overlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-out;
+}
+
+.cp-achievement-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.achievement {
+    position: relative;
+    pointer-events: none;
+    width: 100%;
+    z-index: 100;
+}
+
+.animation {
+    width: 355px;
+    height: 110px;
+    padding: 5px 0px 5px 0px;
+    position: relative;
+    margin: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    overflow: visible; /* Asegurar que el brillo/pulso no se corte */
+}
+
+/* El círculo - Adaptado a Cyberpunk Dark (Sin bordes) */
+.circle {
+    width: 75px;
+    height: 75px;
+    top: 0;
+    opacity: 0;
+    margin: 0 auto;
+    border-radius: 100%;
+    background: radial-gradient(circle, rgba(255, 58, 58, 0.2) 0%, var(--bg-panel) 70%);
+    position: relative;
+    overflow: hidden;
+    z-index: 4;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+.circle.circle_animate {
+    animation: circle_grow_move 10.5s forwards;
+}
+
+.circle::before, .circle::after {
+    content: "";
+    opacity: 0;
+    width: 75px;
+    height: 75px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    display: block;
+}
+
+.circle::before { background-color: rgba(255, 59, 69, 0.1); } 
+.circle::after { background-color: rgba(0, 0, 0, 0.5); } 
+
+.circle.circle_animate::before {
+    animation: scale_circle_1 10.5s forwards;
+    animation-iteration-count: 2;
+}
+
+.circle.circle_animate::after {
+    animation: scale_circle_1 10.5s 0.1s forwards;
+}
+
+/* Rare Mode Overrides */
+.rare .circle::after, .rare .circle::before {
+    z-index: -1;
+}
+
+/* Imágenes dentro del círculo - Alineación Perfecta */
+.circle .img {
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circle .img img {
+    height: 55%; /* Tamaño equilibrado para el círculo */
+    width: auto;
+    max-width: 65%;
+    object-fit: contain;
+    position: absolute; /* Stacked for trophies */
+}
+
+.circle.circle_animate .xbox_img {
+    animation: logo_animate_opacity 10.5s forwards;
+    z-index: 102;
+}
+
+.circle.circle_animate .trophy_animate {
+    animation: trophy_animate_opacity 10.5s forwards;
+}
+
+.rare .trophy_img {
+    display: none;
+}
+
+.circle .trophy_1 {
+    animation: rotate_logo 6s infinite linear;
+}
+
+/* El Banner que se expande Detrás */
+.banner-outer {
+    display: flex;
+    align-content: center;
+    width: 100%;
+    top: -75px; /* Pull up behind circle */
+    position: relative;
+    justify-content: center;
+}
+
+.banner {
+    width: 355px;
+    height: 75px;
+    position: relative;
+    left: 0;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    /* Rojo suave en el centro, extremos oscuros para evitar "bordes" de color */
+    background: linear-gradient(90deg, 
+                var(--bg-panel) 0%, 
+                rgba(255, 58, 58, 0.15) 50%, 
+                var(--bg-panel) 100%);
+    overflow: hidden;
+    border-radius: 100px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.banner.banner-animate {
+    animation: banner-animate 10.5s forwards;
+}
+
+/* Contenido del texto */
+.achieve_disp {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Espacio entre líneas de texto */
+    width: 250px; /* Incrementado para el nombre de usuario */
+    position: absolute;
+    justify-content: center;
+    margin-left: 90px;
+    left: 0;
+    height: 100%;
+    top: 0;
+    opacity: 0;
+}
+
+.achieve_disp.achieve_disp_animate {
+    animation: textSlide 10.5s forwards;
+}
+
+.unlocked {
+    width: 100%;
+    color: white;
+    font-weight: 600;
+    font-size: 10.5pt;
+    font-family: 'Segoe UI Semibold', 'Segoe UI', sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 5px;
+}
+
+.score_disp {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Centrado vertical */
+    margin-bottom: 0 !important;
+}
+
+.achiev_name {
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 13pt;
+    color: white;
+    line-height: 24px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: 'Segoe UI Semibold', 'Segoe UI', sans-serif;
+    font-weight: 600; /* Semibold feel */
+}
+
+.acheive_score {
+    margin-left: 5px;
+    margin-right: 5px;
+    color: white;
+    font-weight: 700;
+    font-size: 13pt;
+    font-family: 'Segoe UI Bold', 'Segoe UI', sans-serif;
+}
+
+.gamerscore {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 24px;
+}
+
+.hyphen_sep {
+    margin-right: 5px;
+    color: white;
+    font-size: 15pt;
+    line-height: 24px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Diamond / Rare Animation */
+.brilliant-wrap {
+    display: none;
+    height: 75px;
+    width: 75px;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 101;
+    opacity: 0;
+}
+
+.rare .brilliant-wrap {
+    display: block;
+    animation: brilliant-wrap 10.5s ease-in-out forwards;
+}
+
+.brilliant {
+    height: 75px;
+    width: 75px;
+    background-image: url('../img/spritesheet.png');
+    background-size: 11025px 75px;
+    background-position: right;
+    animation: brilliant 7.4s steps(147) 2s forwards;
+}
+
+/* Keyframes */
+
+@keyframes rotate_logo {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(360deg); }
+    100% { transform: rotateY(0deg); }
+}
+
+@keyframes scale_circle_1 {
+    0% { transform: scale3d(0, 0, 0); }
+    2% { opacity: 1; }
+    5% { transform: scale3d(1, 1, 1); opacity: 0.8; }
+    6% { opacity: 0; }
+    90% { transform: scale3d(0, 0, 0); }
+    92% { opacity: 1; }
+    95% { transform: scale3d(1, 1, 1); opacity: 0.8; }
+    96%, 100% { opacity: 0; }
+}
+
+@keyframes circle_grow_move {
+    1% { opacity: 0; transform: scale(0.1); }
+    4% { transform: scale(1.1); }
+    5% { transform: scale(1); opacity: 1; }
+    11% { transform: translate(0); background-color: var(--bg-panel); }
+    24% { transform: translateX(-140px); background-color: #1a1a24; }
+    85% { transform: translateX(-140px); background-color: #1a1a24; }
+    89% { transform: translateX(0); background-color: var(--bg-panel); }
+    94% { transform: scale(1); }
+    96% { transform: scale(1.1); }
+    98% { transform: scale(0.1); opacity: 1; }
+    100% { transform: scale(0.1); opacity: 0; }
+}
+
+@keyframes logo_animate_opacity {
+    0% { opacity: 1; }
+    19% { opacity: 1; transform: scale3d(1,1,1); }
+    23% { opacity: 0; }
+    90% { opacity: 0; }
+    95% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+@keyframes trophy_animate_opacity {
+    0% { opacity: 0; }
+    20% { opacity: 0; }
+    24% { opacity: 1; }
+    90% { opacity: 1; }
+    95% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes banner-animate {
+    0% { width: 75px; opacity: 0; }
+    2% { opacity: 0; }
+    4% { opacity: 1; }
+    11% { width: 75px; }
+    24% { width: 355px; background: var(--bg-panel); }
+    85% { width: 355px; background: var(--bg-panel); }
+    89% { width: 75px; opacity: 1; }
+    90%, 100% { opacity: 0; }
+}
+
+@keyframes textSlide {
+    0% { transform: translateY(85px); opacity: 0; }
+    20% { transform: translateY(85px); opacity: 0; }
+    25% { transform: translateY(0); opacity: 1; }
+    79% { transform: translateY(0); opacity: 1; }
+    84% { transform: translateY(-115px); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes brilliant {
+    0% { background-position: 0; }
+    100% { background-position: -11025px; }
+}
+
+@keyframes brilliant-wrap {
+    0%, 20% { opacity: 0; }
+    20.1% { opacity: 1; }
+    90% { opacity: 1; }
+    95%, 100% { opacity: 0; }
 }

@@ -142,7 +142,16 @@ export default class ExperienceService {
                 { minDays: 5, multiplier: 1.5 },    // 5+ días = x1.5
                 { minDays: 3, multiplier: 1.2 },    // 3+ días = x1.2
                 { minDays: 0, multiplier: 1.0 }     // Default = x1
-            ]
+            ],
+
+            // Recompensas fijas por logros
+            achievementRewards: XP.ACHIEVEMENT_REWARDS || {
+                common: 50,
+                uncommon: 75,
+                rare: 150,
+                epic: 250,
+                legendary: 500
+            }
         };
     }
 
@@ -617,6 +626,56 @@ export default class ExperienceService {
             xpAdded: xpEarned,
             userData
         };
+    }
+
+    /**
+     * Añade XP fija por desbloqueo de logro (No afectado por multiplicadores)
+     * @param {string} username 
+     * @param {string} rarity - Rarity del logro (common, uncommon, etc.)
+     * @returns {number} XP ganada
+     */
+    addAchievementXP(username, rarity) {
+        const lowerUser = username.toLowerCase();
+        
+        // Verificar blacklist global
+        if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
+            return 0;
+        }
+
+        const userData = this.getUserData(lowerUser);
+        const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
+
+        const previousLevel = userData.level;
+        userData.xp += xpToGain;
+
+        // Recalcular nivel
+        const newLevel = this.levelCalculator.calculateLevel(userData.xp);
+        userData.level = newLevel;
+
+        this.persistence.markDirty(lowerUser);
+
+        // Emitir evento de ganancia de XP (marcado como pasivo/fijo para no aplicar efectos de racha en UI)
+        EventManager.emit(EVENTS.USER.XP_GAINED, {
+            username: lowerUser,
+            amount: xpToGain,
+            total: userData.xp,
+            passive: true,
+            source: 'achievement'
+        });
+
+        // Detectar level-up
+        if (newLevel > previousLevel) {
+            EventManager.emit(EVENTS.USER.LEVEL_UP, {
+                username,
+                oldLevel: previousLevel,
+                newLevel,
+                totalXP: userData.xp,
+                title: this.levelCalculator.getLevelTitle(newLevel),
+                timestamp: Date.now()
+            });
+        }
+
+        return xpToGain;
     }
 
     /**

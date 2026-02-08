@@ -47,8 +47,8 @@ export default class AudioManager {
         // 2. Level Up (Data contains newLevel)
         EventManager.on(EVENTS.USER.LEVEL_UP, (data) => this.playLevelUp(data));
         
-        // 3. Achievement
-        EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, () => this.playAchievement());
+        // 3. Achievement - HANDLED BY NotificationManager NOW
+        // EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, () => this.playAchievement());
         
         // 4. Test sound
         EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());
