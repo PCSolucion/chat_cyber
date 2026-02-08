@@ -57,6 +57,7 @@ export default class DevTools {
         if (!xpService) return;
 
         window.getXPStats = () => xpService.getGlobalStats();
+        window.getTopUsers = (limit) => xpService.getXPLeaderboard(limit);
 
         window.testLevelUp = (lvl) => {
             if (xpDisplay) {

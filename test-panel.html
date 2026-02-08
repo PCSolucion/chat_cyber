@@ -8,354 +8,342 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Reusa los estilos del widget principal -->
     <link rel="stylesheet" href="css/bundle.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Reusa los estilos del widget principal -->
+    <link rel="stylesheet" href="css/bundle.css">
     <style>
         /* =========================================
-       TEST PANEL STYLES
+       CYBER-HUD MODERN TEST PANEL
        ========================================= */
+        :root {
+            --cyan: #00f6ff;
+            --red: #ff003c;
+            --gold: #ffd700;
+            --purple: #bf00ff;
+            --bg-dark: #0a0a12;
+            --panel-bg: rgba(10, 10, 18, 0.95);
+            --border-glow: rgba(0, 246, 255, 0.2);
+        }
+
         body {
-            background: #0a0a12;
+            background: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 246, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.05));
+            background-size: 100% 100%, 100% 2px, 3px 100%;
             padding: 20px;
+            overflow-x: hidden;
+            height: 100vh;
         }
 
         #test-panel {
             position: fixed;
             right: 20px;
             top: 20px;
-            width: 280px;
-            background: rgba(10, 10, 18, 0.95);
-            border: 1px solid rgba(0, 246, 255, 0.3);
-            border-left: 3px solid #00f6ff;
-            padding: 15px;
+            bottom: 20px;
+            width: 320px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 246, 255, 0.2);
+            border-left: 4px solid var(--cyan);
+            padding: 20px;
             font-family: 'Rajdhani', sans-serif;
             color: #fff;
             z-index: 1000;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 246, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        #test-panel::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(0deg, transparent 0%, rgba(0, 246, 255, 0.02) 50%, transparent 100%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .panel-title {
-            margin: 0 0 15px;
-            color: #00f6ff;
-            font-size: 14px;
-            letter-spacing: 2px;
+            margin: 0 0 20px;
+            color: var(--cyan);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-glow);
+            padding-bottom: 10px;
+        }
+
+        .panel-title::after {
+            content: "v2.0";
+            font-size: 10px;
+            opacity: 0.5;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .panel-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-right: -10px;
+        }
+
+        /* Custom Scrollbar */
+        .panel-scroll-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .panel-scroll-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .panel-scroll-area::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            box-shadow: 0 0 5px var(--cyan);
         }
 
         .panel-section {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .panel-label {
             display: block;
-            font-size: 11px;
-            color: #888;
-            margin-bottom: 5px;
-        }
-
-        .panel-label--cyan {
-            color: #00f6ff;
-        }
-
-        .panel-label--red {
-            color: #ff3a3a;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
         }
 
         .panel-input {
             width: 100%;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(0, 246, 255, 0.3);
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 246, 255, 0.2);
             color: #fff;
-            font-family: inherit;
-            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            outline: none;
         }
 
-        .panel-input--gold {
-            border-color: rgba(255, 215, 0, 0.3);
-            color: #ffd700;
+        .panel-input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.2);
+            background: rgba(0, 246, 255, 0.05);
         }
 
         .checkbox-label {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #00f6ff;
-            margin-bottom: 10px;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--cyan);
+            margin-bottom: 15px;
             cursor: pointer;
+            transition: opacity 0.2s;
+            font-weight: 500;
+        }
+
+        .checkbox-label:hover {
+            opacity: 0.8;
         }
 
         .section-label {
             font-size: 11px;
-            color: #888;
-            margin-bottom: 8px;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .section-label::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-glow), transparent);
         }
 
         .button-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 5px;
+            gap: 8px;
             margin-bottom: 15px;
         }
 
-        .button-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        /* Base button styles */
         .btn {
-            padding: 6px 10px;
+            padding: 8px 12px;
             cursor: pointer;
-            font-family: inherit;
-            font-size: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
             text-align: left;
             border: 1px solid;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn--admin {
-            background: rgba(255, 0, 60, 0.2);
-            border-color: #ff003c;
-            color: #ff003c;
+        .btn:hover {
+            transform: translateX(3px);
+            filter: brightness(1.2);
         }
 
-        .btn--top1 {
-            background: rgba(0, 246, 255, 0.2);
-            border-color: #00f6ff;
-            color: #00f6ff;
+        .btn:active {
+            transform: scale(0.98);
         }
 
-        .btn--top {
-            background: rgba(255, 215, 0, 0.15);
-            border-color: #ffd700;
-            color: #ffd700;
-        }
+        .btn--top1 { background: rgba(0, 246, 255, 0.1); border-color: var(--cyan); color: var(--cyan); }
+        .btn--top { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); color: var(--gold); }
+        .btn--cyan { background: rgba(0, 246, 255, 0.2); border-color: var(--cyan); color: var(--cyan); text-align: center; }
+        .btn--gold { background: rgba(255, 215, 0, 0.2); border-color: var(--gold); color: var(--gold); text-align: center; }
+        .btn--green { background: rgba(0, 255, 100, 0.1); border-color: #00ff64; color: #00ff64; }
+        .btn--red { background: rgba(255, 0, 60, 0.1); border-color: var(--red); color: var(--red); }
+        .btn--purple { background: rgba(191, 0, 255, 0.1); border-color: var(--purple); color: var(--purple); }
 
-        .btn--normal {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.4);
-            color: #fff;
-        }
-
-        .btn--dim {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: #888;
-        }
-
-        .btn--cyan {
-            background: rgba(0, 246, 255, 0.2);
-            border-color: #00f6ff;
-            color: #00f6ff;
-            padding: 8px 15px;
-            font-size: 11px;
-        }
-
-        .btn--gold {
-            background: rgba(255, 215, 0, 0.15);
-            border-color: #ffd700;
-            color: #ffd700;
-            padding: 8px 15px;
-            font-size: 11px;
-        }
-
-        .btn--full {
-            width: 100%;
-            padding: 6px;
-        }
-
-        .btn--green {
-            background: rgba(0, 255, 0, 0.1);
-            border-color: #00ff00;
-            color: #00ff00;
-        }
-
-        .btn--red {
-            background: rgba(255, 0, 0, 0.2);
-            border-color: #ff0000;
-            color: #ff0000;
-        }
-
-        .btn--purple {
-            background: rgba(191, 0, 255, 0.1);
-            border-color: #bf00ff;
-            color: #bf00ff;
-        }
+        .btn--full { width: 100%; border-radius: 0; }
 
         .divider {
             margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(0, 246, 255, 0.2);
+            padding-top: 12px;
+            border-top: 1px solid var(--border-glow);
         }
 
-        .divider--red {
-            border-color: rgba(255, 58, 58, 0.3);
-        }
-
-        .panel-footer {
-            margin-top: 10px;
-            font-size: 9px;
-            color: #555;
-            text-align: center;
-        }
-
-        /* Widget iframe container - Dynamic Full Screen Preview */
         .widget-container {
             position: fixed;
             left: 20px;
             top: 20px;
-            /* Occupy space up to the right panel (280px + 20px right margin + 20px gap) */
-            width: calc(100% - 340px);
-            /* Maintain 16:9 Aspect Ratio */
+            width: calc(100% - 380px);
             aspect-ratio: 16/9;
-            /* Ensure it doesn't overflow vertically on small screens */
             max-height: calc(100vh - 40px);
-            border: 1px solid rgba(0, 246, 255, 0.2);
-            border-radius: 4px;
-            overflow: hidden;
+            border: 1px solid var(--border-glow);
             background: #000;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             z-index: 500;
-            /* Centered vertically if aspect ratio forces it smaller than height */
-            margin: auto;
+            overflow: hidden;
         }
 
         .widget-container iframe {
             width: 1920px;
             height: 1080px;
             border: none;
-            /* Transformation will be handled by JS */
             transform-origin: 0 0;
             pointer-events: auto;
         }
 
         .widget-label {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 12px;
-            color: #00f6ff;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 2px 6px;
-            border-radius: 2px;
+            top: 15px;
+            left: 15px;
+            font-size: 10px;
+            color: var(--cyan);
+            background: rgba(0, 246, 255, 0.1);
+            border: 1px solid var(--cyan);
+            padding: 4px 10px;
             font-family: 'Share Tech Mono', monospace;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             z-index: 10;
-            pointer-events: none;
         }
     </style>
 </head>
-
 <body>
-    <!-- Widget Preview (embedded iframe) -->
+    <!-- Widget Preview -->
     <div class="widget-container" id="preview-container">
-        <span class="widget-label">1080p PREVIEW</span>
+        <span class="widget-label">LIVE_PREVIEW // 1080p</span>
         <iframe id="widget-frame" src="index.html"></iframe>
     </div>
 
     <!-- Test Panel -->
     <div id="test-panel">
-        <h3 class="panel-title">🎮 PANEL DE PRUEBAS</h3>
+        <h3 class="panel-title">SYSTEM_CONSOLE</h3>
 
-        <div class="panel-section">
-            <label class="checkbox-label">
-                <input type="checkbox" id="keep-visible-checkbox">
-                MANTENER WIDGET VISIBLE
-            </label>
+        <div class="panel-scroll-area">
+            <div class="panel-section">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="keep-visible-checkbox">
+                    OVR_VISIBILITY_LOCK
+                </label>
 
-            <label class="panel-label">MENSAJE:</label>
-            <input type="text" id="test-message" value="Este es un mensaje de prueba!" class="panel-input">
-        </div>
+                <label class="panel-label">Input Buffer:</label>
+                <input type="text" id="test-message" value="ACCESS_GRANTED: Initializing test protocol..." class="panel-input">
+                
+                <div style="display: flex; gap: 8px; margin-top: 12px; background: rgba(0,0,0,0.4); padding: 8px; border: 1px solid var(--border-glow);">
+                    <label class="checkbox-label" style="color: #00ff64; font-size: 10px; margin-bottom: 0; flex: 1;">
+                        <input type="checkbox" id="mod-toggle"> MOD
+                    </label>
+                    <label class="checkbox-label" style="color: var(--purple); font-size: 10px; margin-bottom: 0; flex: 1;">
+                        <input type="checkbox" id="vip-toggle"> VIP
+                    </label>
+                    <label class="checkbox-label" style="color: var(--gold); font-size: 10px; margin-bottom: 0; flex: 1;">
+                        <input type="checkbox" id="sub-toggle"> SUB
+                    </label>
+                </div>
+            </div>
 
-        <div class="section-label">ADMIN & TOP 15:</div>
+            <div class="divider">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span class="section-label" style="margin-bottom: 0; flex: 1;">TOP_RANKING</span>
+                    <button onclick="refreshTopUsers()" class="btn btn--cyan" style="padding: 4px 8px; font-size: 9px; min-width: auto;">SYNC</button>
+                </div>
+                <div id="top-users-list" class="button-list">
+                    <div style="font-size: 11px; color: #555; font-family: 'Share Tech Mono';">Awaiting data...</div>
+                </div>
+            </div>
 
-        <div class="button-list">
-            <!-- ADMIN -->
-            <button onclick="testUser('Liiukiin')" class="btn btn--admin">⚡ ADMIN - Liiukiin</button>
+            <div class="divider">
+                <label class="panel-label">Manual User Override:</label>
+                <div class="button-row">
+                    <input type="text" id="custom-user" placeholder="NAME_ENTRY..." class="panel-input" style="flex: 1;">
+                    <button onclick="testUser(document.getElementById('custom-user').value)"
+                        class="btn btn--cyan" style="min-width: 60px;">EXEC</button>
+                </div>
+            </div>
 
-            <!-- TOP 1 -->
-            <button onclick="testUser('Takeru_xiii')" class="btn btn--top1">★ TOP 1 - Takeru_xiii</button>
+            <div class="divider">
+                <label class="panel-label">Streak Simulation:</label>
+                <div class="button-row">
+                    <input type="number" id="streak-days" value="5" min="1"
+                        class="panel-input" style="flex: 1; color: var(--gold); border-color: rgba(255,215,0,0.2);">
+                    <button onclick="testStreak(document.getElementById('streak-days').value)" class="btn btn--gold">LOAD</button>
+                </div>
+            </div>
 
-            <!-- TOP 2-15 -->
-            <button onclick="testUser('James_193')" class="btn btn--top">♛ TOP 2 - James_193</button>
-            <button onclick="testUser('Ractor09')" class="btn btn--top">♛ TOP 3 - Ractor09</button>
-            <button onclick="testUser('Xroockk')" class="btn btn--top">♛ TOP 4 - Xroockk</button>
-            <button onclick="testUser('X1lenz')" class="btn btn--top">♛ TOP 5 - X1lenz</button>
-            <button onclick="testUser('C_h_a_n_d_a_l_f')" class="btn btn--top">♛ TOP 6 - C_h_a_n_d_a_l_f</button>
-            <button onclick="testUser('Broxa24')" class="btn btn--top">♛ TOP 7 - Broxa24</button>
-            <button onclick="testUser('Manguerazo')" class="btn btn--top">♛ TOP 8 - Manguerazo</button>
-            <button onclick="testUser('Darkous666')" class="btn btn--top">♛ TOP 9 - Darkous666</button>
-            <button onclick="testUser('Ccxsnop')" class="btn btn--top">♛ TOP 10 - Ccxsnop</button>
-            <button onclick="testUser('Macusam')" class="btn btn--top">♛ TOP 11 - Macusam</button>
-            <button onclick="testUser('Urimas82')" class="btn btn--top">♛ TOP 12 - Urimas82</button>
-            <button onclick="testUser('Nanusso')" class="btn btn--top">♛ TOP 13 - Nanusso</button>
-            <button onclick="testUser('Reichskanz')" class="btn btn--top">♛ TOP 14 - Reichskanz</button>
-            <button onclick="testUser('Mambiitv')" class="btn btn--top">♛ TOP 15 - Mambiitv</button>
-        </div>
+            <div class="divider">
+                <label class="panel-label" style="color: var(--red);">System Data Controls:</label>
+                <div class="button-row">
+                    <button onclick="callWidgetFunction('exportXPData')" class="btn btn--full btn--green"
+                        style="flex: 1; text-align: center;">EXPORT BACKUP (JSON)</button>
+                </div>
+                <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button onclick="callWidgetFunction('testGistConnection')" class="btn btn--top1 btn--full" style="font-size: 9px;">📡 GIST</button>
+                    <button onclick="callWidgetFunction('testAchievement')" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
+                </div>
+                <button onclick="testLevelUp()" class="btn btn--full btn--purple" style="margin-top: 8px; text-align: center;">🚀 TEST_LEVEL_UP</button>
+            </div>
 
-        <div class="section-label">OTROS:</div>
-        <div class="button-list">
-            <button onclick="testUser('Ferminico')" class="btn btn--normal"># TOP 241 - Ferminico</button>
-            <button onclick="testUser('UsuarioNuevo')" class="btn btn--dim">Sin ranking - UsuarioNuevo</button>
-        </div>
-
-        <div class="divider">
-            <label class="panel-label">USUARIO PERSONALIZADO:</label>
-            <div class="button-row">
-                <input type="text" id="custom-user" placeholder="Nombre..." class="panel-input" style="flex: 1;">
-                <button onclick="testUser(document.getElementById('custom-user').value)"
-                    class="btn btn--cyan">TEST</button>
+            <div class="divider">
+                <label class="panel-label" style="color: var(--cyan);">Mode Overrides:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button onclick="callWidgetFunction('testIdleMode')" class="btn btn--top1 btn--full" style="font-size: 9px; text-align: center;">STATS</button>
+                    <button onclick="callWidgetFunction('showEmoteStats')" class="btn btn--purple btn--full" style="font-size: 9px; text-align: center;">EMOTES</button>
+                </div>
+                <button onclick="callWidgetFunction('testEmoteMessage')" class="btn btn--full btn--green" style="margin-top: 8px; text-align: center;">✨ SYNC_EMOTES</button>
             </div>
         </div>
 
-        <div class="divider">
-            <label class="panel-label">RACHAS (STREAK):</label>
-            <div class="button-row">
-                <input type="number" id="streak-days" placeholder="Días..." value="5" min="1"
-                    class="panel-input panel-input--gold" style="flex: 1;">
-                <button onclick="testStreak(document.getElementById('streak-days').value)" class="btn btn--gold">SET &
-                    TEST</button>
-            </div>
-        </div>
-
-        <!-- DATA CONTROLS -->
-        <div class="divider divider--red">
-            <label class="panel-label panel-label--red">DATA CONTROLS:</label>
-            <div class="button-row">
-                <button onclick="callWidgetFunction('exportXPData')" class="btn btn--full btn--green"
-                    style="flex: 1;">EXPORT LOCAL</button>
-                <button onclick="callWidgetFunction('resetAllXP')" class="btn btn--full btn--red" style="flex: 1;">RESET
-                    ALL XP</button>
-            </div>
-            <div style="margin-top: 8px;">
-                <button onclick="callWidgetFunction('testGistConnection')" class="btn btn--full btn--top1">📡 TEST GIST
-                    CONNECTION</button>
-            </div>
-            <div style="margin-top: 8px;">
-                <button onclick="callWidgetFunction('testAchievement')" class="btn btn--full btn--top">🏆 TEST
-                    ACHIEVEMENT</button>
-            </div>
-            <div style="margin-top: 8px;">
-                <button onclick="testLevelUp()" class="btn btn--full btn--purple">🚀 TEST LEVEL UP (NUEVO)</button>
-            </div>
-        </div>
-
-        <!-- IDLE STATS & EMOTES CONTROLS -->
-        <div class="divider">
-            <label class="panel-label panel-label--cyan">STATS & EMOTES:</label>
-            <div class="button-row">
-                <button onclick="callWidgetFunction('testIdleMode')" class="btn btn--full btn--top1" style="flex: 1;">📊
-                    TEST IDLE STATS</button>
-                <button onclick="callWidgetFunction('showEmoteStats')" class="btn btn--full btn--purple"
-                    style="flex: 1;">🎭 EMOTE STATS</button>
-            </div>
-            <div style="margin-top: 8px;">
-                <button onclick="callWidgetFunction('testEmoteMessage')" class="btn btn--full btn--green">✨ TEST
-                    7TV/BTTV MESSAGE</button>
-            </div>
-        </div>
-
-        <div class="panel-footer">
-            Pulsa un botón para simular un mensaje
+        <div class="panel-footer" style="padding-top: 15px; border-top: 1px solid var(--border-glow); margin-top: auto; font-family: 'Share Tech Mono';">
+            PROTOCOL_CONNECTED // STANDBY
         </div>
     </div>
 
@@ -384,10 +372,58 @@
         widgetFrame.addEventListener('load', () => {
             console.log('✅ Widget iframe loaded');
             fitPreview();
+            // Esperar un poco a que el sistema de XP cargue datos
+            setTimeout(refreshTopUsers, 1000);
         });
 
         function getWidgetWindow() {
             return widgetFrame.contentWindow;
+        }
+
+        // --- DYNAMIC RANKING ---
+        let refreshRetries = 0;
+        function refreshTopUsers() {
+            const win = getWidgetWindow();
+            
+            // Si el sistema no está listo, reintentamos un par de veces
+            if (!win || !win.getTopUsers) {
+                if (refreshRetries < 10) {
+                    refreshRetries++;
+                    setTimeout(refreshTopUsers, 500);
+                }
+                return;
+            }
+
+            const topUsers = win.getTopUsers(5);
+            const container = document.getElementById('top-users-list');
+            
+            // Si el sistema está listo pero el ranking viene vacío, 
+            // puede ser porque los datos asíncronos aún se están descargando del Gist
+            if (!topUsers || topUsers.length === 0) {
+                if (refreshRetries < 10) {
+                    refreshRetries++;
+                    setTimeout(refreshTopUsers, 1000);
+                }
+                container.innerHTML = '<div style="font-size: 10px; color: #888; padding: 5px;">Cargando datos desde la nube...</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            topUsers.forEach((user, index) => {
+                const btn = document.createElement('button');
+                btn.className = `btn btn--full ${index === 0 ? 'btn--top1' : 'btn--top'}`;
+                btn.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${index === 0 ? '★' : '♛'} ${user.username}</span>
+                        <span style="opacity: 0.7;">LVL ${user.level}</span>
+                    </div>
+                `;
+                btn.onclick = () => testUser(user.username);
+                container.appendChild(btn);
+            });
+            
+            console.log('✅ Top 5 users updated in panel');
+            refreshRetries = 0; // Reset para futuros refrescos manuales
         }
 
         // --- REAL TIME TWITCH API CHECKER ---
@@ -456,15 +492,29 @@
             // Feedback visual temporal en el botón (opcional, pero buena UX)
             // Como no tenemos referencia al botón presionado fácil, usamos log
             
-            const realMonths = await checkSubStatus(channel, username);
             const extraTags = {};
 
-            if (realMonths > 0) {
-                console.log(`✅ ¡CONFIRMADO! ${username} es suscriptor (${realMonths} meses)`);
+            // Leer overrides manuales
+            const forceMod = document.getElementById('mod-toggle').checked;
+            const forceVip = document.getElementById('vip-toggle').checked;
+            const forceSub = document.getElementById('sub-toggle').checked;
+
+            if (forceMod) extraTags.mod = true;
+            if (forceVip) extraTags.vip = true;
+
+            if (forceSub) {
+                console.log(`🧪 Forzando estado SUSCRIPTOR para ${username}`);
                 extraTags.subscriber = true;
-                extraTags['badge-info'] = { subscriber: realMonths.toString() };
+                extraTags['badge-info'] = { subscriber: "1" };
             } else {
-                console.log(`👤 ${username} no parece estar suscrito (o API error)`);
+                const realMonths = await checkSubStatus(channel, username);
+                if (realMonths > 0) {
+                    console.log(`✅ ¡CONFIRMADO! ${username} es suscriptor (${realMonths} meses)`);
+                    extraTags.subscriber = true;
+                    extraTags['badge-info'] = { subscriber: realMonths.toString() };
+                } else {
+                    console.log(`👤 ${username} no parece estar suscrito (o API error)`);
+                }
             }
 
             win.simularMensaje(username, message, extraTags);
