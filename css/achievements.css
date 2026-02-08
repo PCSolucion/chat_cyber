@@ -707,3 +707,25 @@
     90% { opacity: 1; }
     95%, 100% { opacity: 0; }
 }
+
+/* Data Bits Particles */
+.data-bit {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--cyber-cyan);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+}
+
+@keyframes bit-float {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+    }
+}

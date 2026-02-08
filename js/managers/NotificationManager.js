@@ -347,6 +347,22 @@ export default class NotificationManager {
       circle.classList.add("circle_animate");
       banner.classList.add("banner-animate");
       display.classList.add("achieve_disp_animate");
+
+      // Inicio del efecto de descifrado discreto
+      const nameElement = overlay.querySelector('.achiev_name');
+      if (nameElement) {
+        // El texto empieza a ser visible a los ~2.6s de la animación general
+        setTimeout(() => {
+          this._scrambleText(nameElement, achievement.name);
+          // Ráfaga de partículas al revelar el nombre
+          this._createDataParticles(overlay.querySelector('.animation'), 10);
+        }, 2600);
+      }
+
+      // Ráfaga inicial al abrirse el banner
+      setTimeout(() => {
+        this._createDataParticles(overlay.querySelector('.animation'), 15);
+      }, 1200);
     });
 
     // Duración extendida para la animación completa del Codepen (10.5s)
@@ -379,6 +395,86 @@ export default class NotificationManager {
       audio.play().catch(e => console.warn("Audio play failed:", e));
     } catch (e) {
       console.warn("Audio error:", e);
+    }
+  }
+
+  /**
+   * Efecto de descifrado (scramble) para texto Cyberpunk
+   * @private
+   * @param {HTMLElement} element 
+   * @param {string} finalText 
+   * @param {number} duration 
+   */
+  _scrambleText(element, finalText, duration = 800) {
+    const chars = "!<>-_\\/[]{}—=+*^?#0123456789";
+    const start = Date.now();
+    const originalText = finalText;
+    
+    const update = () => {
+      const timePassed = Date.now() - start;
+      const progress = timePassed / duration;
+      
+      if (progress < 1) {
+        let currentText = "";
+        for (let i = 0; i < originalText.length; i++) {
+          // Espacios se mantienen, el resto se descifra según progreso
+          if (originalText[i] === " " || Math.random() < progress) {
+            currentText += originalText[i];
+          } else {
+            currentText += chars[Math.floor(Math.random() * chars.length)];
+          }
+        }
+        element.innerText = currentText;
+        requestAnimationFrame(update);
+      } else {
+        element.innerText = originalText;
+      }
+    };
+    
+    update();
+  }
+
+  /**
+   * Crea partículas de bits de datos discretas
+   * @private
+   * @param {HTMLElement} parent 
+   * @param {number} count 
+   */
+  _createDataParticles(parent, count) {
+    if (!parent) return;
+    
+    for (let i = 0; i < count; i++) {
+      const bit = document.createElement('div');
+      bit.className = 'data-bit';
+      
+      // Posición aleatoria cerca del centro del banner
+      const x = 50 + (Math.random() - 0.5) * 100;
+      const y = 40 + (Math.random() - 0.5) * 40;
+      
+      // Dirección del movimiento
+      const tx = (Math.random() - 0.5) * 200;
+      const ty = (Math.random() - 0.5) * 150;
+      
+      // Estilo aleatorio
+      const size = Math.random() * 3 + 2;
+      const duration = 1000 + Math.random() * 1000;
+      const color = Math.random() > 0.5 ? '#00f0ff' : '#ffffff';
+      
+      bit.style.left = `${x}%`;
+      bit.style.top = `${y}%`;
+      bit.style.width = `${size}px`;
+      bit.style.height = `${size}px`;
+      bit.style.background = color;
+      bit.style.setProperty('--tx', `${tx}px`);
+      bit.style.setProperty('--ty', `${ty}px`);
+      bit.style.animation = `bit-float ${duration}ms ease-out forwards`;
+      
+      parent.appendChild(bit);
+      
+      // Limpieza
+      setTimeout(() => {
+        if (bit.parentNode) parent.removeChild(bit);
+      }, duration + 100);
     }
   }
 

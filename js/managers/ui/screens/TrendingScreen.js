@@ -7,8 +7,8 @@ export default class TrendingScreen extends BaseScreen {
     }
 
     calculateDuration(data, baseDuration) {
-        // Reducir duración para Trending (4000ms menos que el default)
-        return Math.max(4000, baseDuration - 4000);
+        // Reducir duración para Trending (6000ms menos que el default, solicitado: 2s menos que antes)
+        return Math.max(4000, baseDuration - 6000);
     }
 
     render(screenData, container) {
