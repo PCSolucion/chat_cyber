@@ -893,3 +893,115 @@
 .profile-theme-special .profile-header-bg {
     filter: hue-rotate(90deg) saturate(1.5);
 }
+
+/* ========================================
+   LOYALTY INSIGHTS
+   ======================================== */
+.loyalty-insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.loyalty-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: all 0.3s ease;
+}
+
+.loyalty-card:hover {
+    border-color: rgba(255, 59, 69, 0.3);
+    background: rgba(255, 59, 69, 0.05);
+    transform: translateY(-2px);
+}
+
+.loyalty-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loyalty-data {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.loyalty-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.loyalty-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: var(--cyber-yellow);
+    margin: 0.25rem 0;
+}
+
+.loyalty-desc {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.loyalty-progress-mini {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.loyalty-fill {
+    height: 100%;
+    background: var(--cyber-cyan);
+    box-shadow: 0 0 5px var(--cyber-cyan);
+}
+
+/* Categories Mini List */
+.top-cats-mini {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.top-cat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.cat-name-short {
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+
+.cat-time-short {
+    color: var(--cyber-cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+}
+

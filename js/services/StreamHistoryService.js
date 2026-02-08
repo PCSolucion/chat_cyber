@@ -62,6 +62,7 @@ export default class StreamHistoryService {
         this.isTracking = true;
         this.sessionStartTime = Date.now();
         this.initialDayDuration = undefined; // Resetear para recalcular en el primer save
+        this.activeDate = undefined; // Resetear fecha activa
     }
 
     async _handleStreamEnd() {
@@ -91,12 +92,44 @@ export default class StreamHistoryService {
         if (!this.sessionStartTime) return;
 
         try {
-            const sessionMinutes = Math.floor((Date.now() - this.sessionStartTime) / TIMING.MINUTE_MS);
+            const now = Date.now();
+            const today = new Date(now).toISOString().split('T')[0];
+            
+            // 1. Inicializar el día activo si es el primer save
+            if (!this.activeDate) this.activeDate = today;
+
+            // 2. Detectar cambio de día (Medianoche UTC) durante el directo
+            if (this.activeDate !== today) {
+                console.log(`📅 Cambio de día detectado en historial (${this.activeDate} -> ${today}). Dividiendo sesión...`);
+                
+                // Calcular minutos que pertenecen al día anterior (hasta las 00:00:00 UTC)
+                const midnightUTC = new Date(today + "T00:00:00Z").getTime();
+                const minsOldDay = Math.floor((midnightUTC - this.sessionStartTime) / TIMING.MINUTE_MS);
+                
+                if (minsOldDay > 0) {
+                    const history = await this.gistService.loadFile(this.fileName) || {};
+                    const oldInitial = (history[this.activeDate] && history[this.activeDate].duration) || 0;
+                    
+                    history[this.activeDate] = {
+                        ...(history[this.activeDate] || {}),
+                        date: this.activeDate,
+                        duration: oldInitial + minsOldDay
+                    };
+                    await this.gistService.saveFile(this.fileName, history);
+                }
+
+                // Reiniciar ancla de tiempo para el nuevo día
+                this.sessionStartTime = midnightUTC;
+                this.initialDayDuration = undefined; 
+                this.activeDate = today;
+            }
+
+            const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
             if (sessionMinutes < 1 && !this.DEBUG && !final) return;
 
-            const today = new Date().toISOString().split('T')[0];
             const history = await this.gistService.loadFile(this.fileName) || {};
             
+            // Inicializar o recargar duración del día si es undefined
             if (this.initialDayDuration === undefined) {
                 if (history[today]) {
                     this.initialDayDuration = history[today].duration || 0;

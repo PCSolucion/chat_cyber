@@ -479,10 +479,15 @@ const ProfileFeatures = (function () {
         const variance = sorted.reduce((sum, c) => sum + Math.pow(c.percentage - avg, 2), 0) / sorted.length;
 
         if (variance < 100 && sorted[0].percentage < 40) {
-            return { name: 'EQUILIBRADO', description: 'Dominas todas las categorías' };
+            return { key: 'balanced', name: 'EQUILIBRADO', description: 'Dominas todas las categorías' };
         }
 
-        return profiles[top.key] || { name: 'NETRUNNER', description: 'Perfil único' };
+        const profile = profiles[top.key] || { name: 'NETRUNNER', description: 'Perfil único' };
+        return {
+            key: top.key || 'special',
+            name: profile.name,
+            description: profile.description
+        };
     }
 
     /**
@@ -600,10 +605,254 @@ const ProfileFeatures = (function () {
                 
                 <div class="player-profile-type">
                     <span class="profile-type-label">Tipo de Perfil</span>
-                    <span class="profile-type-name">${playerProfile.name}</span>
+                    <span class="profile-type-name" data-profile-key="${playerProfile.key}">${playerProfile.name}</span>
                     <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 0.25rem;">
                         ${playerProfile.description}
                     </p>
+                </div>
+            </div>
+        `;
+    }
+
+    // ========================================
+    // LOYALTY INSIGHTS
+    // ========================================
+
+    /**
+     * Create loyalty insights section
+     * @param {Object} user - User data
+     * @returns {string} - HTML string
+     */
+    function createLoyaltyInsights(user) {
+        // 1. Attendance Rate (Based on last 11 streams)
+        // Filter keys to ensure they are valid dates (YYYY-MM-DD)
+        const streamHistoryKeys = Object.keys(window.STREAM_HISTORY || {})
+            .filter(key => /^\d{4}-\d{2}-\d{2}$/.test(key))
+            .sort().reverse();
+        
+        const totalStreams = Math.min(11, streamHistoryKeys.length) || 1;
+        
+        // Count how many of those specific dates the user was active
+        const recentHistoryDates = streamHistoryKeys.slice(0, totalStreams);
+        let userRecentAttendance = 0;
+        recentHistoryDates.forEach(date => {
+            // Check if user has ANY activity this day (messages or xp/watchTime)
+            if (user.activityHistory && user.activityHistory[date]) {
+                userRecentAttendance++;
+            }
+        });
+
+        const attendanceRate = Math.min(100, Math.round((userRecentAttendance / totalStreams) * 100));
+
+        // 2. Peak Activity Day
+        const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
+        Object.keys(user.activityHistory || {}).forEach(date => {
+            const day = new Date(date).getDay();
+            dayCounts[day] += (user.activityHistory[date].messages || 0);
+        });
+        const weekDays = ['Domingos', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábados'];
+        const peakDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
+        const peakDay = dayCounts[peakDayIndex] > 0 ? weekDays[peakDayIndex] : 'Sin datos';
+
+        // 3. Peak Activity Hour
+        const stats = user.achievementStats || {};
+        const primeTime = stats.primeTimeMessages || 0;
+        const night = stats.nightMessages || 0;
+        const early = stats.earlyMorningMessages || 0;
+        const total = user.totalMessages || 0;
+        const other = Math.max(0, total - primeTime - night - early);
+
+        let peakHourText = "Tarde (19:00 - 23:00)";
+        let peakHourVal = "21:00";
+        let peakIcon = "🌆";
+
+        const maxVal = Math.max(primeTime, night, early, other);
+        if (maxVal === 0) {
+            peakHourText = "Sin datos";
+            peakHourVal = "--:--";
+        } else if (maxVal === night) {
+            peakHourText = "Madrugada (00:00 - 05:00)";
+            peakHourVal = "02:00";
+            peakIcon = "🦇";
+        } else if (maxVal === early) {
+            peakHourText = "Amanecer (04:00 - 06:00)";
+            peakHourVal = "05:00";
+            peakIcon = "🌅";
+        } else if (maxVal === other && other > primeTime) {
+            peakHourText = "Día (06:00 - 19:00)";
+            peakHourVal = "14:00";
+            peakIcon = "☀️";
+        }
+
+        // 4. Chat Style
+        const emoteMessages = stats.messagesWithEmotes || 0;
+        const emoteRatio = total > 0 ? (emoteMessages / total) * 100 : 0;
+        
+        let chatStyle = "Observador";
+        let styleDesc = "Disfruta del stream en silencio.";
+        let styleIcon = "👁️";
+
+        if (total > 10) {
+            if (emoteRatio > 60) {
+                chatStyle = "Hype Beast";
+                styleDesc = "Los emotes son tu lenguaje principal.";
+                styleIcon = "🔥";
+            } else if (emoteRatio < 15) {
+                chatStyle = "Filósofo";
+                styleDesc = "Prefieres las palabras a los dibujos.";
+                styleIcon = "✍️";
+            } else if (total > 500) {
+                chatStyle = "Motor del Chat";
+                styleDesc = "Nunca dejas que el chat se detenga.";
+                styleIcon = "⚡";
+            } else {
+                chatStyle = "Equilibrado";
+                styleDesc = "Un balance perfecto entre texto y emotes.";
+                styleIcon = "⚖️";
+            }
+        }
+
+        // 5. Vibe Check (Social Engagement)
+        const mentions = stats.mentionCount || 0;
+        let vibeStatus = "Neutral";
+        let vibeDesc = "Mantienes un perfil bajo en lo social.";
+        let vibeIcon = "🧬";
+
+        if (mentions > 100) {
+            vibeStatus = "Main Character";
+            vibeDesc = "Eres el centro de atención del chat.";
+            vibeIcon = "🌟";
+        } else if (mentions > 30) {
+            vibeStatus = "Popular";
+            vibeDesc = "La gente suele interactuar contigo.";
+            vibeIcon = "🤝";
+        } else if (mentions > 5) {
+            vibeStatus = "Integrado";
+            vibeDesc = "Participas activamente en el grupo.";
+            vibeIcon = "🔗";
+        }
+
+        // 6. Stability Factor (Streak Resets)
+        const resets = stats.streakResets || 0;
+        let stability = "Roca";
+        let stabDesc = "Tu constancia es legendaria.";
+        let stabIcon = "💎";
+
+        if (resets > 5) {
+            stability = "Cometa";
+            stabDesc = "Apareces y desapareces como un glitch.";
+            stabIcon = "☄️";
+        } else if (resets > 2) {
+            stability = "Intermitente";
+            stabDesc = "A veces el sistema te pierde la pista.";
+            stabIcon = "📡";
+        }
+
+        // 7. Top Categories (Dynamic calculation from activity history)
+        const catTime = {};
+        const globalHistory = window.STREAM_HISTORY || {};
+        Object.entries(user.activityHistory || {}).forEach(([date, dayData]) => {
+            const hist = globalHistory[date];
+            if (hist && hist.category && dayData.watchTime) {
+                const c = hist.category;
+                catTime[c] = (catTime[c] || 0) + dayData.watchTime;
+            }
+        });
+        
+        const sortedCats = Object.entries(catTime)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+        
+        let catsHTML = "";
+        if (sortedCats.length > 0) {
+            catsHTML = `<div class="top-cats-mini">` + 
+                sortedCats.map(([name, mins]) => `
+                    <div class="top-cat-row">
+                        <span class="cat-name-short" title="${name}">${name}</span>
+                        <span class="cat-time-short">${(mins/60).toFixed(1)}h</span>
+                    </div>
+                `).join('') + `</div>`;
+        } else {
+            catsHTML = `<span class="loyalty-desc">Sin datos de juego</span>`;
+        }
+
+        return `
+            <div class="profile-advanced-section" id="loyalty-insights-section">
+                <h3 class="advanced-section-title">Análisis de Lealtad</h3>
+                <p class="advanced-section-subtitle">Métricas de comportamiento y compromiso con el canal</p>
+                
+                <div class="loyalty-insights-grid">
+                    <!-- Attendance -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">📅</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Índice de Asistencia</span>
+                            <span class="loyalty-value">${attendanceRate}%</span>
+                            <div class="loyalty-progress-mini">
+                                <div class="loyalty-fill" style="width: ${attendanceRate}%"></div>
+                            </div>
+                            <span class="loyalty-desc">Basado en los últimos ${totalStreams} directos</span>
+                        </div>
+                    </div>
+
+                    <!-- Peak Hour -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">${peakIcon}</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Hora Pico</span>
+                            <span class="loyalty-value">${peakHourVal}</span>
+                            <span class="loyalty-desc">${peakHourText}</span>
+                        </div>
+                    </div>
+
+                    <!-- Interests -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">🎮</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Zonas de Interés</span>
+                            ${catsHTML}
+                        </div>
+                    </div>
+
+                    <!-- Peak Day -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">📈</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Día Crítico</span>
+                            <span class="loyalty-value">${peakDay}</span>
+                            <span class="loyalty-desc">Vienes con todo los ${peakDay}</span>
+                        </div>
+                    </div>
+
+                    <!-- Peer Vibe -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">${vibeIcon}</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Vibe Check</span>
+                            <span class="loyalty-value">${vibeStatus}</span>
+                            <span class="loyalty-desc">${vibeDesc}</span>
+                        </div>
+                    </div>
+
+                    <!-- Chat Style -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">${styleIcon}</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Estilo de Chat</span>
+                            <span class="loyalty-value">${chatStyle}</span>
+                            <span class="loyalty-desc">${styleDesc}</span>
+                        </div>
+                    </div>
+
+                    <!-- Stability -->
+                    <div class="loyalty-card">
+                        <div class="loyalty-icon">${stabIcon}</div>
+                        <div class="loyalty-data">
+                            <span class="loyalty-label">Estabilidad</span>
+                            <span class="loyalty-value">${stability}</span>
+                            <span class="loyalty-desc">${stabDesc}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -829,12 +1078,14 @@ const ProfileFeatures = (function () {
      */
     function createAdvancedProfileSections(user) {
         const heatmap = createActivityHeatmap(user);
+        const loyalty = createLoyaltyInsights(user);
         const radar = createRadarChart(user);
         const predictions = createNextAchievements(user);
 
         return `
             <div class="profile-advanced-features">
                 ${heatmap}
+                ${loyalty}
                 ${radar}
                 ${predictions}
             </div>
@@ -889,13 +1140,14 @@ const ProfileFeatures = (function () {
 
     return {
         createActivityHeatmap,
-        switchYear, // Make sure this is exposed
+        switchYear,
+        createLoyaltyInsights,
         createRadarChart,
         createNextAchievements,
-        createAdvancedProfileSections, // Restored!
+        createAdvancedProfileSections,
         initializeFeatures: () => {
             setupHeatmapTooltips();
         },
-        getPlayerProfileType // Exported
+        getPlayerProfileType
     };
 })();
