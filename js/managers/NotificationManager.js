@@ -283,20 +283,19 @@ export default class NotificationManager {
     // Calcular ancho dinámico basado en el texto más largo
     const maxChars = Math.max(unlockedText.length, (achievement.name.length + 15));
     
-    // Ancho base: 355px. 
-    // Multiplicador equilibrado (8.5px) y umbral más alto (34 chars)
-    let bannerWidth = 355;
+    // Ancho base: 532px (1.5x del original 355px)
+    let bannerWidth = 532;
     if (maxChars > 34) {
-      bannerWidth = 355 + (maxChars - 34) * 8.5;
+      bannerWidth = 532 + (maxChars - 34) * 12.75;
     }
     
-    // Máximo razonable: 550px para no saturar
-    bannerWidth = Math.min(Math.round(bannerWidth), 550);
-    const textWidth = bannerWidth - 105;
+    // Máximo razonable: 825px para no saturar
+    bannerWidth = Math.min(Math.round(bannerWidth), 825);
+    const textWidth = bannerWidth - 150;
 
     // Cálculo dinámico de la traslación del círculo para que siempre quede en el borde izquierdo
-    // La fórmula es: -(mitad del ancho del banner - mitad del ancho del círculo[37.5px])
-    const circleTranslate = -1 * (bannerWidth / 2 - 37.5);
+    // La fórmula es: -(mitad del ancho del banner - mitad del ancho del círculo[56.25px])
+    const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
 
     // Estructura estilo Xbox One (Refinada v3 con soporte de rareza siempre activo)
     // Inyectamos las variables directamente en el HTML para evitar problemas de herencia
@@ -321,7 +320,7 @@ export default class NotificationManager {
                 <span class="unlocked">${unlockedText}</span>
                 <div class="score_disp">
                   <div class="gamerscore">
-                    <img width="20px" src="img/G.svg" alt="G"/>
+                    <img width="30px" src="img/G.svg" alt="G"/>
                     <span class="acheive_score">${xpReward}</span>
                   </div>
                   <span class="hyphen_sep">-</span>

@@ -228,15 +228,16 @@
             aspect-ratio: 16/9;
             max-height: calc(100vh - 40px);
             border: 1px solid var(--border-glow);
-            background: #000;
+            background: url('img/fondo pruebas2.png') no-repeat center center;
+            background-size: cover;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             z-index: 500;
             overflow: hidden;
         }
 
         .widget-container iframe {
-            width: 1920px;
-            height: 1080px;
+            width: 2560px;
+            height: 1440px;
             border: none;
             transform-origin: 0 0;
             pointer-events: auto;
@@ -260,7 +261,7 @@
 <body>
     <!-- Widget Preview -->
     <div class="widget-container" id="preview-container">
-        <span class="widget-label">LIVE_PREVIEW // 1080p</span>
+        <span class="widget-label">LIVE_PREVIEW // 2K (1440p)</span>
         <iframe id="widget-frame" src="index.html"></iframe>
     </div>
 
@@ -274,6 +275,14 @@
                     <input type="checkbox" id="keep-visible-checkbox">
                     OVR_VISIBILITY_LOCK
                 </label>
+
+                <div style="margin-bottom: 20px;">
+                    <label class="panel-label">ENVIRONMENT_SELECT:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button onclick="changeBG('img/fondo pruebas.webp')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_1</button>
+                        <button onclick="changeBG('img/fondo pruebas2.png')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_2</button>
+                    </div>
+                </div>
 
                 <label class="panel-label">Input Buffer:</label>
                 <input type="text" id="test-message" value="ACCESS_GRANTED: Initializing test protocol..." class="panel-input">
@@ -361,9 +370,9 @@
         function fitPreview() {
             if (!widgetFrame || !previewContainer) return;
             const containerWidth = previewContainer.getBoundingClientRect().width;
-            const scale = containerWidth / 1920;
+            const scale = containerWidth / 2560;
             widgetFrame.style.transform = `scale(${scale})`;
-            console.log(`🖥️ Preview rescaled: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
+            console.log(`🖥️ Preview rescaled to 2K: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
         }
 
         window.addEventListener('load', fitPreview);
@@ -572,6 +581,18 @@
                 console.log('Triggered Level Up Animation via postMessage');
             } else {
                 console.warn('Widget window not found');
+            }
+        }
+
+        // --- BACKGROUND CHANGER ---
+        function changeBG(url) {
+            const container = document.getElementById('preview-container');
+            if (url) {
+                container.style.backgroundImage = `url("${url}")`;
+                container.style.backgroundColor = 'transparent';
+            } else {
+                container.style.backgroundImage = 'none';
+                container.style.backgroundColor = '#000';
             }
         }
     </script>

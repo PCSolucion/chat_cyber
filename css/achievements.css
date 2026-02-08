@@ -389,9 +389,9 @@
 }
 
 .animation {
-    width: var(--banner-width, 355px);
-    height: 110px;
-    padding: 5px 0px 5px 0px;
+    width: var(--banner-width, 532px);
+    height: 165px;
+    padding: 8px 0px 8px 0px;
     position: relative;
     margin: auto;
     display: flex;
@@ -403,8 +403,8 @@
 
 /* El círculo - Adaptado a Cyberpunk Dark (Sin bordes) */
 .circle {
-    width: 75px;
-    height: 75px;
+    width: 112px;
+    height: 112px;
     top: 0;
     opacity: 0;
     margin: 0 auto;
@@ -413,7 +413,7 @@
     position: relative;
     overflow: hidden;
     z-index: 4;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.8);
 }
 
 .circle.circle_animate {
@@ -423,8 +423,8 @@
 .circle::before, .circle::after {
     content: "";
     opacity: 0;
-    width: 75px;
-    height: 75px;
+    width: 112px;
+    height: 112px;
     position: absolute;
     top: 0;
     left: 0;
@@ -492,14 +492,14 @@
     display: flex;
     align-content: center;
     width: 100%;
-    top: -75px; /* Pull up behind circle */
+    top: -112px; /* Pull up behind circle */
     position: relative;
     justify-content: center;
 }
 
 .banner {
-    width: var(--banner-width, 355px);
-    height: 75px;
+    width: var(--banner-width, 532px);
+    height: 112px;
     position: relative;
     left: 0;
     opacity: 0;
@@ -526,11 +526,11 @@
 .achieve_disp {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* Espacio entre líneas de texto */
-    width: var(--text-width, 250px);
+    gap: 9px; /* Gap a escala 1.5x */
+    width: var(--text-width, 375px);
     position: absolute;
     justify-content: center;
-    margin-left: 90px;
+    margin-left: 135px;
     left: 0;
     height: 100%;
     top: 0;
@@ -546,12 +546,12 @@
     width: 100%;
     color: white;
     font-weight: 600;
-    font-size: 10.5pt;
+    font-size: 16pt;
     font-family: 'Segoe UI Semibold', 'Segoe UI', sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 5px;
+    padding-right: 8px;
 }
 
 .score_disp {
@@ -566,9 +566,9 @@
     border: none;
     outline: none;
     background: none;
-    font-size: 13pt;
+    font-size: 20pt;
     color: white;
-    line-height: 24px;
+    line-height: 36px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -577,11 +577,11 @@
 }
 
 .acheive_score {
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 8px;
+    margin-right: 8px;
     color: white;
     font-weight: 700;
-    font-size: 13pt;
+    font-size: 20pt;
     font-family: 'Segoe UI Bold', 'Segoe UI', sans-serif;
 }
 
@@ -589,7 +589,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 24px;
+    height: 36px;
 }
 
 .hyphen_sep {
@@ -603,8 +603,8 @@
 /* Diamond / Rare Animation */
 .brilliant-wrap {
     display: none;
-    height: 75px;
-    width: 75px;
+    height: 112px;
+    width: 112px;
     border-radius: 50%;
     overflow: hidden;
     z-index: 101;
@@ -617,10 +617,10 @@
 }
 
 .brilliant {
-    height: 75px;
-    width: 75px;
+    height: 112px;
+    width: 112px;
     background-image: url('../img/spritesheet.png');
-    background-size: 11025px 75px;
+    background-size: 16464px 112px;
     background-position: right;
     animation: brilliant 7.4s steps(147) 2s forwards;
 }
@@ -688,17 +688,17 @@
 }
 
 @keyframes textSlide {
-    0% { transform: translateY(85px); opacity: 0; }
-    20% { transform: translateY(85px); opacity: 0; }
+    0% { transform: translateY(127px); opacity: 0; }
+    20% { transform: translateY(127px); opacity: 0; }
     25% { transform: translateY(0); opacity: 1; }
     79% { transform: translateY(0); opacity: 1; }
-    84% { transform: translateY(-115px); opacity: 0; }
+    84% { transform: translateY(-172px); opacity: 0; }
     100% { opacity: 0; }
 }
 
 @keyframes brilliant {
     0% { background-position: 0; }
-    100% { background-position: -11025px; }
+    100% { background-position: -16464px; }
 }
 
 @keyframes brilliant-wrap {
