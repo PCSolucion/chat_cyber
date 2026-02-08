@@ -2383,3 +2383,74 @@ a:hover {
     justify-content: space-between;
     align-items: center;
 }
+/* --- ENHANCED CATALOG SIDEBAR & SEARCH --- */
+
+/* Sidebar Group */
+.sidebar-group {
+    background: rgba(10, 10, 15, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--cyber-cyan); /* Default accent */
+    box-shadow: 0 0 10px var(--cyber-cyan);
+    opacity: 0.5;
+}
+
+/* Sidebar Title - Enhanced */
+.sidebar-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-bright);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyber-cyan), transparent);
+    opacity: 0.3;
+}
+
+/* Search Input - Cyberpunk Style */
+#catalog-search {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--text-dim);
+    color: var(--cyber-yellow);
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.3s ease;
+    padding-left: 1rem;
+    letter-spacing: 1px;
+    height: 40px;
+}
+
+#catalog-search:focus {
+    border-color: var(--cyber-yellow);
+    box-shadow: 0 0 15px rgba(255, 200, 0, 0.2), inset 0 0 10px rgba(255, 200, 0, 0.1);
+    background: rgba(10, 10, 15, 0.9);
+}
+
+#catalog-search::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+}
+

@@ -1,0 +1,195 @@
+/* ========================================
+   COMMANDS WIKI STYLES
+   ======================================== */
+
+.commands-section {
+    padding: 2rem;
+}
+
+.commands-search-container {
+    margin-bottom: 2rem;
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.commands-search-container input {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--text-dim);
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+    width: 100%;
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.commands-search-container input:focus {
+    border-color: var(--cyber-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    outline: none;
+}
+
+/* --- GRID LAYOUT --- */
+.commands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* --- CARD STYLE (CYBERPUNK) --- */
+.command-card {
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    backdrop-filter: blur(5px);
+}
+
+.command-card:hover {
+    border-color: var(--cyber-cyan);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.15);
+}
+
+.command-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--cyber-cyan);
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.command-card:hover::before {
+    opacity: 1;
+}
+
+/* Mods Styling */
+.command-card.mod-only {
+    border-color: rgba(255, 50, 50, 0.3);
+}
+
+.command-card.mod-only::before {
+    background: var(--cyber-red);
+}
+
+.command-card.mod-only:hover {
+    border-color: var(--cyber-red);
+    box-shadow: 0 5px 20px rgba(255, 0, 60, 0.15);
+}
+
+/* --- CARD HEADER --- */
+.cmd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.75rem;
+}
+
+.cmd-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.cmd-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.cmd-badge.public {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--cyber-cyan);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.cmd-badge.mod {
+    background: rgba(255, 0, 60, 0.1);
+    color: var(--cyber-red);
+    border: 1px solid rgba(255, 0, 60, 0.3);
+}
+
+/* --- CARD BODY --- */
+.cmd-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.cmd-desc {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.cmd-meta {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.cmd-meta code {
+    color: var(--cyber-yellow);
+    font-weight: bold;
+}
+
+.cmd-usage {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.cmd-aliases {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+/* --- CARD FOOTER --- */
+.cmd-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-top: auto;
+}
+
+.cmd-cooldown {
+    color: var(--cyber-blue);
+}
+
+.cmd-category {
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .commands-grid {
+        grid-template-columns: 1fr;
+    }
+}

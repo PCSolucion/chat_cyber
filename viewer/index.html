@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="css/stats_features.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/holo_effect.css">
+    <link rel="stylesheet" href="css/commands.css">
 </head>
 
 <body>
@@ -87,6 +88,10 @@
                 <a href="faceoff" class="nav-link" data-section="faceoff">
                     <span class="nav-marker"></span>
                     <span>FACE-OFF</span>
+                </a>
+                <a href="commands" class="nav-link" data-section="commands">
+                    <span class="nav-marker"></span>
+                    <span>COMANDOS</span>
                 </a>
             </nav>
 
@@ -195,6 +200,11 @@
                 <div class="catalog-layout">
                     <!-- Filters Sidebar -->
                     <aside class="catalog-sidebar">
+                        <div class="sidebar-group">
+                            <h3 class="sidebar-title">BUSCAR</h3>
+                            <input type="text" id="catalog-search" class="cyber-input" style="width: 100%; margin-bottom: 0.5rem;" placeholder="NOMBRE..." autocomplete="off">
+                        </div>
+
                         <div class="sidebar-group">
                             <h3 class="sidebar-title">CATEGORÍAS</h3>
                             <div class="category-filters" id="category-filters">
@@ -320,6 +330,28 @@
                     <p>No se encontraron datos para este usuario en Night City</p>
                 </div>
             </section>
+            <!-- Commands Wiki Section -->
+            <section id="commands" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        WIKI DEL SISTEMA
+                        <span class="title-tag">COMMAND LIST</span>
+                    </h2>
+                    <p class="section-subtitle">Referencia rápida de comandos y funciones del sistema</p>
+                </div>
+                
+                <div class="commands-search-container">
+                    <input type="text" id="commands-search" class="cyber-input" placeholder="BUSCAR COMANDO O FUNCIÓN..." spellcheck="false">
+                </div>
+
+                <div class="commands-grid" id="commands-list">
+                    <div class="grid-loading">
+                        <div class="cyber-loader"></div>
+                        <span>CARGANDO DATOS...</span>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Achievement Modal -->
@@ -352,6 +384,8 @@
     <script src="js/holo_effect.js"></script>
     <script src="js/stream_features.js"></script>
 
+    <script src="js/commands_data.js"></script>
+    <script src="js/commands_view.js"></script>
     <script src="js/app.js"></script>
 </body>
 

@@ -852,16 +852,50 @@ const ProfileFeatures = (function () {
         // Heatmap now uses tabs/year view, no auto-scroll needed
     }
 
+    /**
+     * Get player profile type (public wrapper)
+     * @param {Object} user 
+     * @returns {Object} { key, name, description }
+     */
+    function getPlayerProfileType(user) {
+        const allAchievements = API.getAchievementsData();
+        const distribution = calculateCategoryDistribution(user, allAchievements);
+        const profile = determinePlayerProfile(distribution);
+        
+        // Find key from name (reverse lookup or just store key in determinePlayerProfile)
+        // Let's modify determinePlayerProfile to return key too or just derive it
+        // Actually determinePlayerProfile returns {name, description} but we need the 'key' (netrunner, witcher3) for CSS.
+        // Let's fix determinePlayerProfile to return key.
+        
+        // RE-IMPLEMENTATION of determinePlayerProfile logic to get the KEY
+        if (!distribution || distribution.length === 0) return { key: 'newbie', name: 'NEWBIE' };
+        
+        const sorted = [...distribution].sort((a, b) => b.percentage - a.percentage);
+        const top = sorted[0];
+        
+        const avg = sorted.reduce((sum, c) => sum + c.percentage, 0) / sorted.length;
+        const variance = sorted.reduce((sum, c) => sum + Math.pow(c.percentage - avg, 2), 0) / sorted.length;
+
+        if (variance < 100 && sorted[0].percentage < 40) {
+             return { key: 'balanced', name: 'EQUILIBRADO', description: 'Dominas todas las categorías' };
+        }
+        
+        return { 
+            key: top.key, 
+            name: profile.name, 
+            description: profile.description 
+        };
+    }
+
     return {
         createActivityHeatmap,
+        switchYear, // Make sure this is exposed
         createRadarChart,
         createNextAchievements,
-        createAdvancedProfileSections,
-        initializeFeatures,
-        switchYear, // Exposed for tabs
-        // Expose individual functions for testing
-        generateHeatmapData,
-        calculateCategoryDistribution,
-        calculatePredictions
+        createAdvancedProfileSections, // Restored!
+        initializeFeatures: () => {
+            setupHeatmapTooltips();
+        },
+        getPlayerProfileType // Exported
     };
 })();

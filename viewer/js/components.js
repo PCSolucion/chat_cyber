@@ -246,11 +246,49 @@ const Components = (function () {
     /**
      * Create user profile
      * @param {Object} user
+     * @param {Array} leaderboardData (Optional)
      * @returns {string}
      */
-    function createUserProfile(user) {
+    function createUserProfile(user, leaderboardData = []) {
         const progress = Utils.calculateLevelProgress(user.xp, user.level);
         const topEmotes = Utils.getTopEmotes(user.achievementStats);
+
+        // --- Percentile Calculation ---
+        let percentileStat = '';
+        if (leaderboardData && leaderboardData.length > 0) {
+            // Find rank (1-based)
+            const rank = leaderboardData.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase()) + 1;
+            
+            if (rank > 0) {
+                const total = leaderboardData.length;
+                const topPercent = (rank / total) * 100;
+                let pctText = `TOP ${topPercent < 1 ? '<1' : Math.ceil(topPercent)}%`;
+                let comparison = `Mejor que el ${Math.floor(100 - topPercent)}%`;
+                
+                if (rank === 1) {
+                    pctText = "TOP 1";
+                    comparison = "LÍDER SUPREMO";
+                }
+
+                percentileStat = `
+                <div class="stats-card percentile-card">
+                    <h4 class="stats-card-title">Rendimiento</h4>
+                    <div class="percentile-content" style="text-align: center; display: flex; flex-direction: column; height: 100%; justify-content: center;">
+                        <div class="percentile-badge" style="font-size: 1.8rem; font-weight: bold; color: var(--cyber-yellow); text-shadow: 0 0 10px rgba(255, 200, 0, 0.3); margin-bottom: 0.5rem;">
+                            ${pctText}
+                        </div>
+                        <div class="percentile-description" style="color: var(--text-dim); font-size: 0.9rem;">
+                            ${comparison}
+                        </div>
+                        <div class="percentile-rank-details" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; display: flex; justify-content: space-between;">
+                            <span>RANGO GLOBAL</span>
+                            <span style="color: var(--text-bright); font-family: 'Share Tech Mono';">#${rank} / ${total}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }
+        }
+
 
         // Get unlocked achievements details
         const allAchievements = API.getAchievementsData().achievements || {};
@@ -386,6 +424,8 @@ const Components = (function () {
                         </div>
                      `: '<span class="label">Sin datos</span>'}
                 </div>
+                
+                ${percentileStat}
             </div>
             
             <!-- Unlocked Achievements -->

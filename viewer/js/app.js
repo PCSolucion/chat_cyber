@@ -20,6 +20,8 @@
         categoryFilters: document.getElementById('category-filters'),
         achievementsGrid: document.getElementById('achievements-grid'),
         totalAchievementsTag: document.getElementById('total-achievements-tag'),
+        // Catalog Search
+        catalogSearch: document.getElementById('catalog-search'),
 
         // Stats
         statsContainer: document.getElementById('stats-container'),
@@ -64,7 +66,8 @@
     // Filter State
     let currentFilters = {
         category: 'all',
-        rarity: 'all'
+        rarity: 'all',
+        search: ''
     };
 
     /**
@@ -83,6 +86,8 @@
         Router.addRoute('/catalog', () => navigateToSection('catalog', false));
         Router.addRoute('/stats', () => navigateToSection('stats', false));
         Router.addRoute('/faceoff', () => navigateToSection('faceoff', false));
+        Router.addRoute('/commands', () => navigateToSection('commands', false));
+
         Router.addRoute('/search', () => navigateToSection('search', false));
         Router.addRoute('/u/:username', (username) => {
             navigateToSection('search', false);
@@ -97,6 +102,7 @@
         setupModal();
         setupCardClicks();
         setupTableSorting();
+        setupCatalogSearch();
 
         // Check stream status
         checkStreamStatus();
@@ -108,6 +114,11 @@
         // Initialize Dashboards/Tickers
         if (typeof Dashboard !== 'undefined') {
             Dashboard.initTicker();
+        }
+
+        // Initialize Commands View
+        if (typeof CommandsView !== 'undefined') {
+            CommandsView.init();
         }
 
         console.log('✅ Application initialized');
@@ -583,6 +594,15 @@
             achievements = achievementsData[currentFilters.category];
         }
 
+        // 2. Filter by Search Query
+        if (currentFilters.search) {
+            const q = currentFilters.search.toLowerCase();
+            achievements = achievements.filter(ach => 
+                (ach.name && ach.name.toLowerCase().includes(q)) || 
+                (ach.description && ach.description.toLowerCase().includes(q))
+            );
+        }
+
         // 2. Filter by Rarity
         if (currentFilters.rarity !== 'all') {
             achievements = achievements.filter(ach => ach.rarity === currentFilters.rarity);
@@ -703,6 +723,18 @@
 
         container.innerHTML = html;
     }
+
+    /**
+     * Setup catalog search functionality
+     */
+     function setupCatalogSearch() {
+        if (!elements.catalogSearch) return;
+        
+        elements.catalogSearch.addEventListener('input', (e) => {
+            currentFilters.search = e.target.value.trim().toLowerCase();
+            renderAchievementsGrid();
+        });
+     }
 
     /**
      * Setup search functionality
@@ -896,7 +928,21 @@
             const user = await API.getUser(query);
 
             if (user) {
-                elements.userProfile.innerHTML = Components.createUserProfile(user);
+                // Pass leaderboardData for Percentile calculation
+                elements.userProfile.innerHTML = Components.createUserProfile(user, leaderboardData);
+                
+                // --- DYNAMIC THEME APPLICATION ---
+                // Reset classes first (keep 'user-profile')
+                elements.userProfile.className = 'user-profile';
+                
+                if (typeof ProfileFeatures !== 'undefined' && ProfileFeatures.getPlayerProfileType) {
+                    const profileType = ProfileFeatures.getPlayerProfileType(user);
+                    if (profileType && profileType.key) {
+                        elements.userProfile.classList.add(`profile-theme-${profileType.key}`);
+                        console.log(`🎨 Applied theme: ${profileType.key}`);
+                    }
+                }
+                
                 elements.userProfile.style.display = 'block';
                 elements.notFound.style.display = 'none';
 
