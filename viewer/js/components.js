@@ -131,7 +131,7 @@ const Components = (function () {
      */
     function createAchievementCard(achievement) {
         const iconContent = achievement.image
-            ? `<img src="${achievement.image}" alt="${Utils.escapeHTML(achievement.name)}">`
+            ? `<img src="${Utils.getImagePath(achievement.image)}" alt="${Utils.escapeHTML(achievement.name)}">`
             : (achievement.icon || '🏆');
 
         // Determine if this is a game-specific achievement
@@ -169,7 +169,7 @@ const Components = (function () {
      */
     function createAchievementDetail(achievement, holders = []) {
         const iconContent = achievement.image
-            ? `<img src="${achievement.image}" alt="${Utils.escapeHTML(achievement.name)}">`
+            ? `<img src="${Utils.getImagePath(achievement.image)}" alt="${Utils.escapeHTML(achievement.name)}">`
             : (achievement.icon || '🏆');
 
         // Game requirement notice
@@ -195,7 +195,7 @@ const Components = (function () {
                         ${holders.map(user => `
                             <div class="holder-item" title="${Utils.escapeHTML(user.username)} - Nivel ${user.level}" 
                                  style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer;"
-                                 onclick="window.location.hash = 'user/${encodeURIComponent(user.username)}'; document.querySelector('#achievement-modal').style.display='none';">
+                                 onclick="Router.navigate('u/${encodeURIComponent(user.username)}'); document.querySelector('#achievement-modal').style.display='none';">
                                 <div class="holder-avatar" style="width: 20px; height: 20px; border-radius: 50%; background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">
                                     ${Utils.getInitial(user.username)}
                                 </div>
@@ -401,7 +401,7 @@ const Components = (function () {
      */
     function createAchievementMini(achievement, unlocked = true) {
         const iconContent = achievement.image
-            ? `<img src="${achievement.image}" alt="${Utils.escapeHTML(achievement.name)}" title="${Utils.escapeHTML(achievement.name)}">`
+            ? `<img src="${Utils.getImagePath(achievement.image)}" alt="${Utils.escapeHTML(achievement.name)}" title="${Utils.escapeHTML(achievement.name)}">`
             : (achievement.icon || '🏆');
 
         return `
@@ -449,7 +449,7 @@ const Components = (function () {
         if (stats.rarestAchievement) {
             const ach = stats.rarestAchievement.details;
             const iconContent = ach.image
-                ? `<img src="${ach.image}" alt="${Utils.escapeHTML(ach.name)}">`
+                ? `<img src="${Utils.getImagePath(ach.image)}" alt="${Utils.escapeHTML(ach.name)}">`
                 : (ach.icon || '🏆');
 
             rarestContent = `

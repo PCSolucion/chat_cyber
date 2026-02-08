@@ -229,6 +229,30 @@ const Utils = (function () {
         return m > 0 ? `${h}h ${m}m` : `${h}h`;
     }
 
+    /**
+     * Resolve image path relative to base path
+     * @param {string} path 
+     * @returns {string}
+     */
+    function getImagePath(path) {
+        if (!path) return '';
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+        
+        const base = (typeof Router !== 'undefined' && Router.getBasePath) 
+            ? Router.getBasePath() 
+            : '';
+            
+        // Ensure path starts with slash if base also exists, or handle concatenation
+        let fullPath = path;
+        if (base) {
+            const cleanBase = base.endsWith('/') ? base : base + '/';
+            const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+            fullPath = cleanBase + cleanPath;
+        }
+        
+        return fullPath;
+    }
+
     // Public API
     return {
         getLevelTitle,
@@ -243,6 +267,7 @@ const Utils = (function () {
         getTopEmotes,
         formatRelativeTime,
         scrollToElement,
-        formatTime
+        formatTime,
+        getImagePath
     };
 })();

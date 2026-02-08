@@ -15,11 +15,13 @@ Portal web para consultar los logros desbloqueados por los usuarios del chat de 
 ```
 viewer/
 ├── index.html          # Página principal
+├── .htaccess           # Configuración para clean URLs
 ├── css/
 │   └── main.css        # Estilos completos (cyberpunk theme)
 ├── js/
 │   ├── config.js       # Configuración (credenciales Gist)
 │   ├── api.js          # Comunicación con GitHub Gist
+│   ├── router.js       # Enrutador History API
 │   ├── utils.js        # Funciones de utilidad
 │   ├── components.js   # Generadores de HTML
 │   └── app.js          # Lógica principal de la aplicación

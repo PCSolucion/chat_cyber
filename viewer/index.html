@@ -4,6 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Dynamic base tag to support subfolder hosting and History API routing
+        (function() {
+            const path = window.location.pathname;
+            // Detect if we are in a 'viewer' subfolder or root
+            const viewerMatch = path.match(/.*\/viewer\//);
+            const baseHref = viewerMatch ? viewerMatch[0] : '/';
+            document.write('<base href="' + baseHref + '">');
+        })();
+    </script>
     <link rel="icon" type="image/png" href="img/favicon.png">
     <title>Night City Achievements Hub - Cyberpunk Chat</title>
     <meta name="description"
@@ -34,7 +44,7 @@
         <!-- Sidebar -->
         <aside class="main-sidebar">
             <div class="sidebar-header">
-                <a href="#leaderboard" class="logo-link">
+                <a href="./" class="logo-link">
                     <div class="logo">
                         <h1 class="logo-text">Liiukiin <span class="accent">Logros<br>Twitch</span></h1>
                     </div>
@@ -56,16 +66,20 @@
                     <div id="search-suggestions" class="search-suggestions"></div>
                 </div>
 
-                <a href="#leaderboard" class="nav-link active" data-section="leaderboard">
+                <a href="leaderboard" class="nav-link active" data-section="leaderboard">
+                    <span class="nav-icon">📊</span>
                     <span>LEADERBOARD</span>
                 </a>
-                <a href="#catalog" class="nav-link" data-section="catalog">
+                <a href="catalog" class="nav-link" data-section="catalog">
+                    <span class="nav-icon">🏆</span>
                     <span>LISTA DE LOGROS</span>
                 </a>
-                <a href="#stats" class="nav-link" data-section="stats">
+                <a href="stats" class="nav-link" data-section="stats">
+                    <span class="nav-icon">📟</span>
                     <span>NETRUNNER DATA</span>
                 </a>
-                <a href="#faceoff" class="nav-link" data-section="faceoff">
+                <a href="faceoff" class="nav-link" data-section="faceoff">
+                    <span class="nav-icon">⚔️</span>
                     <span>FACE-OFF</span>
                 </a>
             </nav>
@@ -277,6 +291,7 @@
     <!-- App modules -->
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/router.js"></script>
     <script src="js/api.js"></script>
     <script src="js/components.js"></script>
     <script src="js/profile_features.js"></script>

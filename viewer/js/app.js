@@ -65,6 +65,25 @@
     async function init() {
         console.log('🎮 Initializing Night City Achievements Hub...');
 
+        // Determine base path (to handle subfolders correctly)
+        const path = window.location.pathname;
+        const basePath = path.substring(0, path.lastIndexOf('/viewer/') + 8) || '/';
+        
+        Router.init({ basePath });
+
+        // Define Routes
+        Router.addRoute('/', () => navigateToSection('leaderboard', false));
+        Router.addRoute('/leaderboard', () => navigateToSection('leaderboard', false));
+        Router.addRoute('/catalog', () => navigateToSection('catalog', false));
+        Router.addRoute('/stats', () => navigateToSection('stats', false));
+        Router.addRoute('/faceoff', () => navigateToSection('faceoff', false));
+        Router.addRoute('/search', () => navigateToSection('search', false));
+        Router.addRoute('/u/:username', (username) => {
+            navigateToSection('search', false);
+            elements.searchInput.value = username;
+            performSearch(username);
+        });
+
         // Setup event listeners
         setupNavigation();
         setupSearch();
@@ -80,9 +99,8 @@
         // Load initial data
         await loadInitialData();
 
-        // Check URL hash for direct navigation
-        handleHashChange();
-        window.addEventListener('hashchange', handleHashChange);
+        // Initial route handling after data is loaded
+        Router.handleRoute(window.location.pathname);
 
         // Initialize Live Ticker
         initTicker();
@@ -161,8 +179,9 @@
     /**
      * Navigate to a section
      * @param {string} section
+     * @param {boolean} updateUrl - whether to update the browser URL
      */
-    function navigateToSection(section) {
+    function navigateToSection(section, updateUrl = true) {
         // Update nav links
         elements.navLinks.forEach(link => {
             link.classList.toggle('active', link.dataset.section === section);
@@ -173,8 +192,9 @@
             sec.classList.toggle('active', sec.id === section);
         });
 
-        // Update hash without triggering hashchange
-        history.replaceState(null, null, `#${section}`);
+        if (updateUrl) {
+            Router.navigate(section);
+        }
 
         currentSection = section;
 
@@ -182,27 +202,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    /**
-     * Handle URL hash changes
-     */
-    function handleHashChange() {
-        const hash = window.location.hash.slice(1);
-
-        // Check if it's a valid section
-        const validSections = ['leaderboard', 'catalog', 'search', 'stats', 'faceoff'];
-        if (validSections.includes(hash)) {
-            navigateToSection(hash);
-            return;
-        }
-
-        // Check if it's a user search
-        if (hash.startsWith('user/')) {
-            const username = decodeURIComponent(hash.slice(5));
-            navigateToSection('search');
-            elements.searchInput.value = username;
-            performSearch(username);
-        }
-    }
+    // Removed handleHashChange in favor of Router
 
     /**
      * Setup table sorting listeners
@@ -371,7 +371,7 @@
      * @param {string} username
      */
     function navigateToUser(username) {
-        window.location.hash = `user/${encodeURIComponent(username)}`;
+        Router.navigate(`u/${encodeURIComponent(username)}`);
     }
 
     /**

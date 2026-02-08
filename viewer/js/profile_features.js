@@ -718,7 +718,7 @@ const ProfileFeatures = (function () {
      * @returns {string} - HTML string
      */
     function createPredictionCard(prediction) {
-        const imageUrl = prediction.image ? `../${prediction.image}` : '../img/logros/default.png';
+        const imageUrl = Utils.getImagePath(prediction.image || 'img/logros/default.png');
         const closeBadge = prediction.isClose ? '<span class="close-badge">¡Casi!</span>' : '';
 
         // Format remaining value
