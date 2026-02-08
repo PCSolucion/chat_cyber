@@ -1,30 +1,31 @@
-# .htaccess para achievements-viewer
-# Permite conexiones a GitHub API para cargar datos
-
-<IfModule mod_headers.c>
-    # CSP personalizado para esta carpeta
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://decapi.me https://gist.githubusercontent.com; frame-src 'none'; object-src 'none'; base-uri 'self';"
-</IfModule>
-
-# Asegurar que los archivos .js se sirvan correctamente
-<IfModule mod_mime.c>
-    AddType application/javascript .js
-    AddType text/css .css
-</IfModule>
-
-# Permitir acceso a esta carpeta y manejar URLs limpias
+# .htaccess universal para subdirectorios
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Base path for the app (adjust if hosted in a subfolder)
-    # RewriteBase /viewer/
+    # Asegurar que las carpetas terminen en /
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteCond %{REQUEST_URI} !/$
+    RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]
 
-    # If the request is for a real file or directory, serve it
+    # Si el archivo o directorio existe, servirlo directamente
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Otherwise, redirect everything to index.html
+    # Fallback a index.html para manejar el routing SPA (Hash)
     RewriteRule ^ index.html [L]
+</IfModule>
+
+# Tipos MIME para evitar errores de ejecución
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType image/png .png
+    AddType image/x-icon .ico
+</IfModule>
+
+# CSP y Seguridad
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: http:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://decapi.me https://gist.githubusercontent.com; frame-src 'none'; object-src 'none';"
 </IfModule>
 

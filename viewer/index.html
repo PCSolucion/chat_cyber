@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        // Dynamic base tag to support subfolder hosting and History API routing
+        // Ensure trailing slash for relative paths to work correctly without <base> tag
         (function() {
-            const path = window.location.pathname;
-            // Detect if we are in a 'viewer' subfolder or root
-            const viewerMatch = path.match(/.*\/viewer\//);
-            const baseHref = viewerMatch ? viewerMatch[0] : '/';
-            document.write('<base href="' + baseHref + '">');
+            if (!window.location.pathname.endsWith('/') && !window.location.pathname.includes('.')) {
+                window.location.replace(window.location.pathname + '/' + window.location.hash);
+            }
         })();
     </script>
     <link rel="icon" type="image/png" href="img/favicon.png">
