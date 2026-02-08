@@ -58,7 +58,13 @@
 
     // Pagination State
     let currentPage = 1;
-    const itemsPerPage = 50;
+    const itemsPerPage = 25;
+    
+    // Filter State
+    let currentFilters = {
+        category: 'all',
+        rarity: 'all'
+    };
 
     /**
      * Initialize the application
@@ -181,6 +187,15 @@
                 navigateToSection(section);
             });
         });
+
+        // Logo click navigation
+        const logoLink = document.querySelector('.logo-link');
+        if (logoLink) {
+            logoLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateToSection('dashboard');
+            });
+        }
     }
 
     /**
@@ -395,21 +410,41 @@
         // Render category filters
         elements.categoryFilters.innerHTML = Components.createCategoryFilters(categories);
 
-        // Add filter click listeners
+        // Add CATEGORY filter click listeners
         elements.categoryFilters.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const category = btn.dataset.category;
-                filterAchievements(category);
-
+                currentFilters.category = category;
+                
                 // Update active state
                 elements.categoryFilters.querySelectorAll('.filter-btn').forEach(b => {
                     b.classList.toggle('active', b.dataset.category === category);
                 });
+                
+                renderAchievementsGrid();
             });
         });
 
+        // Add RARITY filter click listeners
+        const rarityFilters = document.getElementById('rarity-filters');
+        if (rarityFilters) {
+            rarityFilters.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const rarity = btn.dataset.rarity;
+                    currentFilters.rarity = rarity;
+
+                    // Update active state
+                    rarityFilters.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.rarity === rarity);
+                    });
+
+                    renderAchievementsGrid();
+                });
+            });
+        }
+
         // Render all achievements
-        renderAchievementsGrid('all');
+        renderAchievementsGrid();
     }
 
     /**
@@ -417,8 +452,8 @@
      * @param {string} category
      */
     function filterAchievements(category) {
-        currentCategory = category;
-        renderAchievementsGrid(category);
+        currentFilters.category = category;
+        renderAchievementsGrid();
     }
 
     /**
@@ -481,16 +516,22 @@
      * Render achievements grid
      * @param {string} category
      */
-    function renderAchievementsGrid(category) {
+    function renderAchievementsGrid() {
         let achievements = [];
 
-        if (category === 'all') {
+        // 1. Filter by Category
+        if (currentFilters.category === 'all') {
             // Flatten all categories
             Object.values(achievementsData).forEach(categoryAchievements => {
                 achievements = achievements.concat(categoryAchievements);
             });
-        } else if (achievementsData[category]) {
-            achievements = achievementsData[category];
+        } else if (achievementsData[currentFilters.category]) {
+            achievements = achievementsData[currentFilters.category];
+        }
+
+        // 2. Filter by Rarity
+        if (currentFilters.rarity !== 'all') {
+            achievements = achievements.filter(ach => ach.rarity === currentFilters.rarity);
         }
 
         // Sort by rarity (legendary first for visibility)

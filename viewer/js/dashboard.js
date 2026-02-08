@@ -20,7 +20,7 @@ const Dashboard = (function () {
             : 0;
 
         // Get Latest 8 Unlocks from all users
-        const latestUnlocks = getLatestUnlocks(leaderboard, achievementsData, 8);
+        const latestUnlocks = getLatestUnlocks(leaderboard, achievementsData, 6);
 
         return `
             <div class="dashboard-layout">
@@ -52,13 +52,16 @@ const Dashboard = (function () {
                             ${latestUnlocks.map(u => `
                                 <div class="unlock-item" style="border-left-color: var(--rarity-${u.rarity})">
                                     <div class="unlock-icon">
-                                        ${u.image ? `<img src="${Utils.getImagePath(u.image)}" style="width:24px; height:24px;">` : '🏆'}
+                                        ${u.image ? `<img src="${Utils.getImagePath(u.image)}" style="width:40px; height:40px;">` : '🏆'}
                                     </div>
                                     <div class="unlock-info">
-                                        <div class="unlock-user">${u.username}</div>
+                                        <div class="unlock-header">
+                                            <div class="unlock-user">${u.username}</div>
+                                            <div class="unlock-time">${Utils.formatRelativeTime(u.timestamp)}</div>
+                                        </div>
                                         <div class="unlock-name">${Utils.escapeHTML(u.name)}</div>
+                                        <div class="unlock-description">${Utils.escapeHTML(u.description)}</div>
                                     </div>
-                                    <div class="unlock-time">${Utils.formatRelativeTime(u.timestamp)}</div>
                                 </div>
                             `).join('')}
                             ${latestUnlocks.length === 0 ? '<div style="opacity:0.3; text-align:center; padding: 2rem;">No se detectan descifrados recientes...</div>' : ''}
@@ -115,7 +118,7 @@ const Dashboard = (function () {
                     <!-- WIDGET: Rarity Analysis -->
                     <div class="hud-panel">
                         <span class="hud-panel-label">DATA_FRAGMENT_ANALYSIS</span>
-                        ${['common', 'rare', 'epic', 'legendary'].map(rarity => {
+                        ${['common', 'uncommon', 'rare', 'epic', 'legendary'].map(rarity => {
                             const count = stats.rarityDistribution[rarity] || 0;
                             const maxVal = Math.max(1, ...Object.values(stats.rarityDistribution));
                             const percent = (count / maxVal) * 100;
@@ -183,6 +186,7 @@ const Dashboard = (function () {
                         allUnlocks.push({
                             username: user.username,
                             name: data.name,
+                            description: data.description,
                             image: data.image,
                             rarity: data.rarity,
                             timestamp: ach.timestamp

@@ -183,18 +183,38 @@
                     <p class="section-subtitle">Todos los logros disponibles clasificados por categoría</p>
                 </div>
 
-                <!-- Category Filters -->
-                <div class="category-filters" id="category-filters">
-                    <button class="filter-btn active" data-category="all">
-                        TODOS
-                    </button>
-                </div>
+                <div class="catalog-layout">
+                    <!-- Filters Sidebar -->
+                    <aside class="catalog-sidebar">
+                        <div class="sidebar-group">
+                            <h3 class="sidebar-title">CATEGORÍAS</h3>
+                            <div class="category-filters" id="category-filters">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
 
-                <!-- Achievements Grid -->
-                <div class="achievements-grid" id="achievements-grid">
-                    <div class="grid-loading">
-                        <div class="cyber-loader"></div>
-                        <span>CARGANDO CATÁLOGO...</span>
+                        <div class="sidebar-group">
+                            <h3 class="sidebar-title">RAREZA</h3>
+                            <div class="rarity-filters" id="rarity-filters">
+                                <button class="filter-btn active" data-rarity="all">TODAS</button>
+                                <button class="filter-btn rarity-common" data-rarity="common">COMÚN</button>
+                                <button class="filter-btn rarity-uncommon" data-rarity="uncommon">POCO COMÚN</button>
+                                <button class="filter-btn rarity-rare" data-rarity="rare">RARO</button>
+                                <button class="filter-btn rarity-epic" data-rarity="epic">ÉPICO</button>
+                                <button class="filter-btn rarity-legendary" data-rarity="legendary">LEGENDARIO</button>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content -->
+                    <div class="catalog-content">
+                        <!-- Achievements Grid -->
+                        <div class="achievements-grid" id="achievements-grid">
+                            <div class="grid-loading">
+                                <div class="cyber-loader"></div>
+                                <span>CARGANDO CATÁLOGO...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

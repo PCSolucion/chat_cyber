@@ -97,32 +97,54 @@
 }
 
 .unlock-icon {
-    width: 30px;
-    height: 30px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-subtle);
 }
 
 .unlock-info {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; /* Text truncation fix */
+}
+
+.unlock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
 }
 
 .unlock-user {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: bold;
     color: var(--cyber-yellow);
-}
-
-.unlock-name {
-    font-size: 0.75rem;
-    color: var(--text-dim);
 }
 
 .unlock-time {
     font-size: 0.65rem;
     color: var(--text-muted);
     font-family: 'Share Tech Mono', monospace;
+}
+
+.unlock-name {
+    font-size: 0.8rem;
+    color: var(--text-bright);
+    font-weight: 600;
+}
+
+.unlock-description {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Progress Big Bar */

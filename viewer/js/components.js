@@ -21,25 +21,38 @@ const Components = (function () {
 
         const positions = ['first', 'second', 'third'];
         const medals = ['🥇', '🥈', '🥉'];
+        const titles = ['ELITE RUNNER', 'VETERAN', 'OPERATIVE'];
 
         return users.slice(0, 3).map((user, index) => `
             <div class="podium-place ${positions[index]}" data-username="${Utils.escapeHTML(user.username)}">
-                <div class="podium-medal">${medals[index]}</div>
-                <div class="podium-avatar">${Utils.getInitial(user.username)}</div>
-                <div class="podium-username">${Utils.escapeHTML(user.username)}</div>
-                <div class="podium-rank">${Utils.escapeHTML(user.rankTitle)}</div>
-                <div class="podium-stats">
-                    <div class="podium-stat">
-                        <span class="label">LOGROS:</span>
-                        <span class="value">${user.achievementCount}</span>
+                <div class="podium-rank-badge">#${index + 1}</div>
+                
+                <div class="podium-header">
+                    <div class="podium-avatar-container">
+                        <div class="podium-avatar">${Utils.getInitial(user.username)}</div>
+                        <div class="podium-halo"></div>
                     </div>
-                    <div class="podium-stat">
-                        <span class="label">NIVEL:</span>
-                        <span class="value">${user.level}</span>
-                    </div>
-                    <div class="podium-stat">
-                        <span class="label">XP:</span>
-                        <span class="value">${Utils.formatNumber(user.xp)}</span>
+                    <div class="podium-medal">${medals[index]}</div>
+                </div>
+
+                <div class="podium-body">
+                    <div class="podium-username">${Utils.escapeHTML(user.username)}</div>
+                    <div class="podium-title">${titles[index]}</div>
+                    <div class="podium-rank-subtitle">${Utils.escapeHTML(user.rankTitle)}</div>
+                    
+                    <div class="podium-stats-grid">
+                        <div class="p-stat">
+                            <span class="p-label">LOGROS</span>
+                            <span class="p-value">${user.achievementCount}</span>
+                        </div>
+                        <div class="p-stat">
+                            <span class="p-label">NIVEL</span>
+                            <span class="p-value">${user.level}</span>
+                        </div>
+                        <div class="p-stat full-width">
+                            <span class="p-label">XP TOTAL</span>
+                            <span class="p-value xp">${Utils.formatNumber(user.xp)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
