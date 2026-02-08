@@ -69,16 +69,25 @@ const API = (function () {
 
             // Handle XP Data Filtering
             if (cachedData.users) {
-                const ignoredUsers = [...(VIEWER_CONFIG.BLACKLISTED_USERS || [])];
+                // Map the blacklist to lowercase for reliable comparison
+                const ignoredUsers = (VIEWER_CONFIG.BLACKLISTED_USERS || []).map(u => u.toLowerCase());
+                
                 // Add user1-10 placeholders
                 for (let i = 1; i <= 10; i++) ignoredUsers.push(`user${i}`);
 
                 const filteredUsers = {};
                 Object.entries(cachedData.users).forEach(([username, data]) => {
-                    const lowerName = username.toLowerCase();
-                    const isIgnored = ignoredUsers.includes(lowerName) || lowerName.startsWith('justinfan');
+                    const lowerName = username.toLowerCase().trim();
+                    
+                    // Check strict blacklist
+                    const inBlacklist = ignoredUsers.some(blocked => blocked === lowerName);
+                    
+                    // Check specific patterns for spam accounts
+                    const isSpamPattern = lowerName.startsWith('justinfan') || 
+                                          lowerName.startsWith('did my best') || 
+                                          lowerName.startsWith('the_panadero');
 
-                    if (!isIgnored) {
+                    if (!inBlacklist && !isSpamPattern) {
                         filteredUsers[username] = data;
                     }
                 });
@@ -162,7 +171,13 @@ const API = (function () {
                 totalMessages: userData.totalMessages || 0,
                 streakDays: userData.streakDays || 0,
                 watchTimeMinutes,
-                achievements: userData.achievements || [],
+                achievements: (userData.achievements || []).map(ach => {
+                    if (typeof ach === 'string') return { id: ach, timestamp: null };
+                    return { 
+                        id: ach.id, 
+                        timestamp: ach.timestamp || ach.unlockedAt || null 
+                    };
+                }),
                 achievementStats: userData.achievementStats || {}
             };
         });

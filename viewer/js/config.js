@@ -62,7 +62,15 @@ const VIEWER_CONFIG = {
         'system',
         'tangiabot',
         'streamelements',
-        'streamroutine_bot'
+        'streamroutine_bot',
+        'juan123',
+        'did my best the vo',
+        'did my best the voidz1',
+        'did my best the voidz',
+        'did_my_best_the_voidz',
+        'did_my_best_the_voidz1',
+        'the_panadero_gamer255',
+        'the_panadero_gamer2555'
     ],
 
     // Debug mode

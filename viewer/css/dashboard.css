@@ -1,0 +1,244 @@
+/**
+ * Dashboard Styles - HUD REBORN
+ */
+
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+/* Base Panel Style (the one the user liked) */
+.hud-panel {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.hud-panel-label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background: #0A0A0F; /* Match app bg */
+    padding: 0 10px;
+    font-size: 0.65rem;
+    color: var(--cyber-blue);
+    letter-spacing: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    border-left: 2px solid var(--cyber-blue);
+}
+
+/* Grid areas */
+.dash-main-area {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dash-side-area {
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Content Styles */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.stat-row:last-child { border: none; }
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--text-bright);
+}
+
+.stat-value.accent {
+    color: var(--cyber-cyan);
+}
+
+/* Recent Unlocks List */
+.unlock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Removed scroll as requested */
+}
+
+.unlock-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 2px solid var(--rarity-common);
+    transition: background 0.2s ease;
+}
+
+.unlock-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.unlock-icon {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.unlock-info {
+    flex: 1;
+}
+
+.unlock-user {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--cyber-yellow);
+}
+
+.unlock-name {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+.unlock-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Progress Big Bar */
+.global-progress-container {
+    margin-top: 10px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+    color: var(--text-dim);
+}
+
+.big-progress-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.big-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyber-blue), var(--cyber-cyan));
+    box-shadow: 0 0 10px var(--cyber-blue);
+    transition: width 1s ease-out;
+}
+
+/* Featured Game Card */
+.game-status-card {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.game-status-card:hover {
+    transform: translateX(5px);
+}
+
+.game-icon-circle {
+    width: 50px;
+    height: 50px;
+    border: 1px solid var(--cyber-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 0 10px rgba(5, 213, 250, 0.2);
+}
+
+/* Rarity Distribution Widget */
+.rarity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+.rarity-row:last-child { margin-bottom: 0; }
+
+.rarity-name { width: 70px; text-transform: uppercase; font-size: 0.65rem; }
+
+.rarity-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.rarity-fill {
+    height: 100%;
+    position: absolute;
+    left: 0; 
+    top: 0;
+}
+
+.rarity-val { 
+    width: 25px; 
+    text-align: right; 
+    color: var(--text-bright); 
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Rarest Anomaly Widget */
+.rarest-card {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.rarest-icon {
+    width: 45px; height: 45px;
+    border: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.3);
+}
+
+.rarest-info { flex: 1; }
+.rarest-label { font-size: 0.65rem; color: var(--cyber-orange); margin-bottom: 2px; letter-spacing: 1px; }
+.rarest-name { color: var(--text-bright); font-size: 0.85rem; font-weight: bold; line-height: 1.2; margin-bottom: 4px; }
+.rarest-stat { font-size: 0.7rem; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
+
+@media (max-width: 1100px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+    .dash-side-area {
+        grid-column: 1;
+    }
+}

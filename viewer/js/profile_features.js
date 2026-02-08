@@ -433,12 +433,17 @@ const ProfileFeatures = (function () {
             });
         }
 
-        // Calculate percentages
-        Object.values(distribution).forEach(cat => {
-            cat.percentage = cat.total > 0 ? (cat.count / cat.total) * 100 : 0;
-        });
-
-        return Object.values(distribution).filter(cat => cat.total > 0);
+        // Calculate percentages and filter
+        return Object.values(distribution)
+            .filter(cat => {
+                // Exclude game-specific categories from the radar chart as requested
+                const isGameCategory = cat.key === 'cyberpunk2077' || cat.key === 'witcher3';
+                return cat.total > 0 && !isGameCategory;
+            })
+            .map(cat => {
+                cat.percentage = (cat.count / cat.total) * 100;
+                return cat;
+            });
     }
 
     /**

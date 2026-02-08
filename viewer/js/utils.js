@@ -253,10 +253,20 @@ const Utils = (function () {
         return fullPath;
     }
 
+    /**
+     * Format number with suffixes (K, M) - Alias for formatNumber
+     * @param {number} num
+     * @returns {string}
+     */
+    function formatNumberShort(num) {
+        return formatNumber(num);
+    }
+
     // Public API
     return {
         getLevelTitle,
         formatNumber,
+        formatNumberShort,
         formatNumberFull,
         getInitial,
         debounce,

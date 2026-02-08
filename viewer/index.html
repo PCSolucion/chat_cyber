@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/stream_features.css">
     <link rel="stylesheet" href="css/heatmap.css">
     <link rel="stylesheet" href="css/stats_features.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/holo_effect.css">
 </head>
 
@@ -46,7 +47,8 @@
             <div class="sidebar-header">
                 <a href="./" class="logo-link">
                     <div class="logo">
-                        <h1 class="logo-text">Liiukiin <span class="accent">Logros<br>Twitch</span></h1>
+                        <h1 class="logo-text">NETRUNNER<span class="accent">_CORE</span></h1>
+                        <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 3px;">BY LIIUKIIN // HUB_OS</div>
                     </div>
                 </a>
             </div>
@@ -66,20 +68,24 @@
                     <div id="search-suggestions" class="search-suggestions"></div>
                 </div>
 
-                <a href="leaderboard" class="nav-link active" data-section="leaderboard">
-                    <span class="nav-icon">📊</span>
+                <a href="./" class="nav-link active" data-section="dashboard">
+                    <span class="nav-marker"></span>
+                    <span>HOME</span>
+                </a>
+                <a href="leaderboard" class="nav-link" data-section="leaderboard">
+                    <span class="nav-marker"></span>
                     <span>LEADERBOARD</span>
                 </a>
                 <a href="catalog" class="nav-link" data-section="catalog">
-                    <span class="nav-icon">🏆</span>
-                    <span>LISTA DE LOGROS</span>
+                    <span class="nav-marker"></span>
+                    <span>LOGROS</span>
                 </a>
                 <a href="stats" class="nav-link" data-section="stats">
-                    <span class="nav-icon">📟</span>
-                    <span>NETRUNNER DATA</span>
+                    <span class="nav-marker"></span>
+                    <span>ANÁLISIS</span>
                 </a>
                 <a href="faceoff" class="nav-link" data-section="faceoff">
-                    <span class="nav-icon">⚔️</span>
+                    <span class="nav-marker"></span>
                     <span>FACE-OFF</span>
                 </a>
             </nav>
@@ -99,8 +105,26 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="title-deco">▸▸</span>
+                        CONSOLA CENTRAL
+                        <span class="title-tag">DASHBOARD</span>
+                    </h2>
+                    <p class="section-subtitle">Acceso autorizado. Monitorizando actividad de la red en Ciudad Nocturna.</p>
+                </div>
+                <div id="dashboard-container">
+                    <div class="grid-loading">
+                        <div class="cyber-loader"></div>
+                        <span>SINCRONIZANDO CON LA RED...</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Leaderboard Section -->
-            <section id="leaderboard" class="section active">
+            <section id="leaderboard" class="section">
                 <div class="section-header">
                     <h2 class="section-title">
                         <span class="title-deco">▸▸</span>
@@ -294,6 +318,7 @@
     <script src="js/router.js"></script>
     <script src="js/api.js"></script>
     <script src="js/components.js"></script>
+    <script src="js/dashboard.js"></script>
     <script src="js/profile_features.js"></script>
     <script src="js/holo_effect.js"></script>
     <script src="js/stream_features.js"></script>

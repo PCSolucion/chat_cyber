@@ -23,6 +23,7 @@
 
         // Stats
         statsContainer: document.getElementById('stats-container'),
+        dashboardContainer: document.getElementById('dashboard-container'),
 
         // Search
         searchInput: document.getElementById('user-search'),
@@ -72,7 +73,8 @@
         Router.init({ basePath });
 
         // Define Routes
-        Router.addRoute('/', () => navigateToSection('leaderboard', false));
+        Router.addRoute('/', () => navigateToSection('dashboard', false));
+        Router.addRoute('/dashboard', () => navigateToSection('dashboard', false));
         Router.addRoute('/leaderboard', () => navigateToSection('leaderboard', false));
         Router.addRoute('/catalog', () => navigateToSection('catalog', false));
         Router.addRoute('/stats', () => navigateToSection('stats', false));
@@ -102,8 +104,10 @@
         // Initial route handling after data is loaded
         Router.handleRoute(window.location.pathname);
 
-        // Initialize Live Ticker
-        initTicker();
+        // Initialize Dashboards/Tickers
+        if (typeof Dashboard !== 'undefined') {
+            Dashboard.initTicker();
+        }
 
         console.log('✅ Application initialized');
     }
@@ -122,6 +126,9 @@
 
             // Load achievements catalog
             achievementsData = API.getAchievementsByCategory();
+
+            // Render Dashboard
+            renderDashboard();
 
             // Render leaderboard
             renderLeaderboard();
@@ -433,14 +440,40 @@
                 led.classList.add('status-online'); // Blinking class
                 text.textContent = 'LIVE NOW';
                 text.style.color = 'var(--cyber-green)';
+                
+                // Update Dashboard status if module exists
+                if (typeof Dashboard !== 'undefined') {
+                    Dashboard.updateStreamStatus({ isLive: true, title: 'STREAM EN DIRECTO', uptime: data });
+                }
             } else {
                 led.style.color = 'var(--cyber-red)';
                 led.classList.remove('status-online');
                 text.textContent = 'OFFLINE';
                 text.style.color = 'var(--text-dim)';
+                
+                // Update Dashboard status if module exists
+                if (typeof Dashboard !== 'undefined') {
+                    Dashboard.updateStreamStatus({ isLive: false });
+                }
             }
         } catch (e) {
             console.warn('Could not check stream status:', e);
+        }
+    }
+
+    /**
+     * Render Dashboard
+     */
+    async function renderDashboard() {
+        if (!elements.dashboardContainer) return;
+        try {
+            elements.dashboardContainer.innerHTML = await Dashboard.createDashboard();
+            
+            // Re-run stream check to fill dashboard data immediately
+            checkStreamStatus();
+        } catch (error) {
+            console.error('Error rendering dashboard:', error);
+            elements.dashboardContainer.innerHTML = '<div class="error-message">Error cargando consola central</div>';
         }
     }
 

@@ -9,10 +9,16 @@
 :root {
     /* Primary Colors */
     --cyber-red: #FF3B45;
+    --cyber-red-rgb: 255, 59, 69;
     --cyber-yellow: #FCEE09;
+    --cyber-yellow-rgb: 252, 238, 9;
     --cyber-cyan: #00F0FF;
+    --cyber-cyan-rgb: 0, 240, 255;
     --cyber-magenta: #D900FF;
     --cyber-blue: #05D5FA;
+    --cyber-blue-rgb: 5, 213, 250;
+    --cyber-pink: #FF0055;
+    --cyber-pink-rgb: 255, 0, 85;
     --cyber-green: #4CAF50;
     --cyber-orange: #FF8000;
     --cyber-purple: #9C27B0;
@@ -187,52 +193,46 @@ a:hover {
 }
 
 .nav-link {
-    padding: 12px 24px;
     display: flex;
     align-items: center;
+    padding: 12px 24px;
     gap: 12px;
     color: var(--text-dim);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 2px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     position: relative;
-    border-left: 3px solid transparent;
+    border-left: 2px solid transparent;
 }
 
 .nav-link:hover {
     color: var(--text-bright);
-    background: rgba(255, 255, 255, 0.03);
-    border-left-color: rgba(255, 59, 69, 0.3);
+    background: rgba(255, 255, 255, 0.02);
     padding-left: 28px;
 }
 
 .nav-link.active {
-    color: var(--cyber-red);
-    background: rgba(255, 59, 69, 0.08);
-    border-left-color: var(--cyber-red);
-    text-shadow: var(--glow-red);
+    color: var(--text-bright);
+    background: linear-gradient(90deg, rgba(var(--cyber-blue-rgb), 0.1), transparent);
+    border-left-color: var(--cyber-blue);
 }
 
-.nav-link.active::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
+.nav-marker {
     width: 4px;
-    background: var(--cyber-red);
-    box-shadow: var(--glow-red);
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    transform: rotate(45deg);
 }
 
-.nav-icon {
-    font-size: 1.1rem;
-    transition: transform 0.3s ease;
-}
-
-.nav-link:hover .nav-icon {
-    transform: scale(1.2) rotate(-5deg);
+.nav-link:hover .nav-marker,
+.nav-link.active .nav-marker {
+    background: var(--cyber-blue);
+    box-shadow: 0 0 8px var(--cyber-blue);
+    transform: rotate(45deg) scale(1.5);
 }
 
 /* Sidebar Search */
