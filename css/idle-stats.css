@@ -1080,10 +1080,12 @@
 
 /* Better Animation: Scroll UP slowly with longer pause at end */
 @keyframes scrollUpList {
-  0%, 15% {
+  0%,
+  15% {
     transform: translateY(0);
   }
-  85%, 100% {
+  85%,
+  100% {
     transform: translateY(calc(-100% + 240px));
   }
 }
@@ -1204,7 +1206,7 @@
   text-align: center;
   height: 100%;
   padding: 10px;
-  gap: 15px;
+  gap: 8px; /* Reducido de 15px */
   animation: achievementPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -1221,8 +1223,8 @@
 
 .achievement-icon-wrapper {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 70px; /* Reducido de 100px */
+  height: 70px; /* Reducido de 100px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1269,7 +1271,7 @@
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px; /* Reducido de 15px */
   backdrop-filter: blur(5px);
 }
 
@@ -1283,7 +1285,7 @@
 
 .achievement-name {
   font-family: "Orbitron", sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.1rem; /* Reducido de 1.4rem */
   font-weight: 800;
   color: var(--cyber-yellow, #ffd700);
   line-height: 1.2;
@@ -1326,7 +1328,7 @@
   font-family: "Share Tech Mono", monospace;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 15px;
+  margin-bottom: 8px; /* Reducido de 15px */
   line-height: 1.4;
   min-height: 2.8em;
   display: -webkit-box;
