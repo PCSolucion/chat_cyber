@@ -280,9 +280,28 @@ export default class NotificationManager {
     const isRare = true;
     const unlockedText = `${username} ha desbloqueado el logro`;
 
+    // Calcular ancho dinámico basado en el texto más largo
+    const maxChars = Math.max(unlockedText.length, (achievement.name.length + 15));
+    
+    // Ancho base: 355px. 
+    // Multiplicador equilibrado (8.5px) y umbral más alto (34 chars)
+    let bannerWidth = 355;
+    if (maxChars > 34) {
+      bannerWidth = 355 + (maxChars - 34) * 8.5;
+    }
+    
+    // Máximo razonable: 550px para no saturar
+    bannerWidth = Math.min(Math.round(bannerWidth), 550);
+    const textWidth = bannerWidth - 105;
+
+    // Cálculo dinámico de la traslación del círculo para que siempre quede en el borde izquierdo
+    // La fórmula es: -(mitad del ancho del banner - mitad del ancho del círculo[37.5px])
+    const circleTranslate = -1 * (bannerWidth / 2 - 37.5);
+
     // Estructura estilo Xbox One (Refinada v3 con soporte de rareza siempre activo)
+    // Inyectamos las variables directamente en el HTML para evitar problemas de herencia
     overlay.innerHTML = `
-      <div class="achievement ${isRare ? 'rare' : ''}">
+      <div class="achievement ${isRare ? 'rare' : ''}" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
         <div class="animation">
           <div class="circle">
             <div class="img trophy_animate trophy_img">

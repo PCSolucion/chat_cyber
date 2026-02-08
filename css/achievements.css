@@ -389,7 +389,7 @@
 }
 
 .animation {
-    width: 355px;
+    width: var(--banner-width, 355px);
     height: 110px;
     padding: 5px 0px 5px 0px;
     position: relative;
@@ -498,7 +498,7 @@
 }
 
 .banner {
-    width: 355px;
+    width: var(--banner-width, 355px);
     height: 75px;
     position: relative;
     left: 0;
@@ -527,7 +527,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px; /* Espacio entre líneas de texto */
-    width: 250px; /* Incrementado para el nombre de usuario */
+    width: var(--text-width, 250px);
     position: absolute;
     justify-content: center;
     margin-left: 90px;
@@ -535,6 +535,7 @@
     height: 100%;
     top: 0;
     opacity: 0;
+    overflow: visible; /* Asegurar que el texto no se corte internamente */
 }
 
 .achieve_disp.achieve_disp_animate {
@@ -648,8 +649,8 @@
     4% { transform: scale(1.1); }
     5% { transform: scale(1); opacity: 1; }
     11% { transform: translate(0); background-color: var(--bg-panel); }
-    24% { transform: translateX(-140px); background-color: #1a1a24; }
-    85% { transform: translateX(-140px); background-color: #1a1a24; }
+    24% { transform: translateX(var(--circle-translate, -140px)); background-color: #1a1a24; }
+    85% { transform: translateX(var(--circle-translate, -140px)); background-color: #1a1a24; }
     89% { transform: translateX(0); background-color: var(--bg-panel); }
     94% { transform: scale(1); }
     96% { transform: scale(1.1); }
@@ -680,8 +681,8 @@
     2% { opacity: 0; }
     4% { opacity: 1; }
     11% { width: 75px; }
-    24% { width: 355px; background: var(--bg-panel); }
-    85% { width: 355px; background: var(--bg-panel); }
+    24% { width: var(--banner-width, 355px); background: var(--bg-panel); }
+    85% { width: var(--banner-width, 355px); background: var(--bg-panel); }
     89% { width: 75px; opacity: 1; }
     90%, 100% { opacity: 0; }
 }
