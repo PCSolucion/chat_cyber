@@ -376,32 +376,68 @@ const API = (function () {
             // Count achievements
             if (user.achievements && Array.isArray(user.achievements)) {
                 totalUnlocks += user.achievements.length;
-                user.achievements.forEach(achId => {
+                user.achievements.forEach(ach => {
+                    const achId = typeof ach === 'string' ? ach : ach.id;
+                    const timestamp = typeof ach === 'string' ? null : (ach.timestamp || ach.unlockedAt || null);
+
                     achievementCounts[achId] = (achievementCounts[achId] || 0) + 1;
 
                     // Track holders for "Rare Owner"
                     if (!achievementHolders[achId]) achievementHolders[achId] = [];
                     achievementHolders[achId].push({
                         username,
-                        unlockedAt: null // Timestamp not available in current schema
+                        unlockedAt: timestamp
                     });
                 });
             }
         });
 
         // Find rarest achievement
-        // Only consider achievements that have at least 1 unlock to avoid showing unreleased ones (or show 0%)
+        // Only consider achievements that have at least 1 unlock
         let rarest = null;
         let minCount = Infinity;
         const allAchievements = getAchievementsData().achievements || {};
 
+        const rarityWeight = {
+            'common': 1,
+            'uncommon': 2,
+            'rare': 3,
+            'epic': 4,
+            'legendary': 5
+        };
+
         Object.entries(achievementCounts).forEach(([id, count]) => {
-            if (allAchievements[id] && count < minCount) {
+            const details = allAchievements[id];
+            if (!details) return;
+
+            // Determine if this achievement is "rarer"
+            // 1. Fewer unlocks is better (Standard rarity definition)
+            // 2. If tie in unlocks, Higher Rarity Tier is better (User preference: Legendary > Common)
+            
+            let isRarer = false;
+
+            if (rarest === null) {
+                isRarer = true;
+            } else {
+                if (count < minCount) {
+                    isRarer = true;
+                } else if (count === minCount) {
+                    // Tie-breaker: Check intrinsic rarity
+                    const currentWeight = rarityWeight[details.rarity] || 0;
+                    const existingWeight = rarityWeight[rarest.details.rarity] || 0;
+                    
+                    if (currentWeight > existingWeight) {
+                        isRarer = true;
+                    }
+                }
+            }
+
+            if (isRarer) {
                 minCount = count;
                 rarest = {
                     id,
                     count,
-                    details: allAchievements[id],
+                    details: details,
                     percentage: ((count / activeUsers) * 100).toFixed(1),
                     holders: achievementHolders[id] || []
                 };
