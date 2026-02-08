@@ -1,6 +1,7 @@
 /**
  * Router Module
- * Handles path-based navigation with History API
+ * Handles query-based navigation with History API (?p=section)
+ * This avoids 404 errors on static hosts and local file:// access.
  */
 const Router = (function () {
     'use strict';
@@ -17,44 +18,42 @@ const Router = (function () {
         
         // Handle browser navigation (back/forward)
         window.addEventListener('popstate', () => {
-            handleRoute(window.location.pathname);
+            handleRoute();
         });
 
-        // Intercept all link clicks if they are internal
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (link && link.href && link.href.startsWith(window.location.origin + basePath)) {
-                // If it's a target="_blank" or similar, don't intercept
-                if (link.target === '_blank') return;
-                
-                e.preventDefault();
-                const path = link.href.replace(window.location.origin, '');
-                navigate(path);
-            }
-        });
-
-        console.log('🛣️ Router initialized');
+        console.log('🛣️ Router initialized (Query Mode)');
+        
+        // Initial check
+        handleRoute();
     }
 
     /**
      * Add a route
-     * @param {string} path 
+     * @param {string} path - The section name (e.g., 'leaderboard')
      * @param {Function} callback 
      */
     function addRoute(path, callback) {
-        routes[path.replace(/\/$/, '')] = callback;
+        // Remove leading slash if present
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        routes[cleanPath] = callback;
     }
 
     /**
      * Navigate to a path
-     * @param {string} path 
+     * @param {string} path - The section name (e.g., 'leaderboard')
      * @param {boolean} pushState 
      */
     function navigate(path, shouldPushState = true) {
-        const cleanPath = path.replace(/\/$/, '') || '/';
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
         
         if (shouldPushState) {
-            window.history.pushState({}, '', path);
+            const url = new URL(window.location);
+            if (cleanPath === '' || cleanPath === 'dashboard') {
+                url.search = ''; // Clean URL for home
+            } else {
+                url.searchParams.set('p', cleanPath);
+            }
+            window.history.pushState({}, '', url);
         }
 
         handleRoute(cleanPath);
@@ -62,88 +61,55 @@ const Router = (function () {
 
     /**
      * Internal handler for route matching
-     * @param {string} path 
+     * @param {string} specificPath - Optional specific path to handle
      */
-    function handleRoute(path) {
-        // Remove base path if present
-        let relativePath = path;
-        if (basePath && path.startsWith(basePath)) {
-            relativePath = path.substring(basePath.length);
+    function handleRoute(specificPath = null) {
+        let path = specificPath;
+
+        if (path === null) {
+            const params = new URLSearchParams(window.location.search);
+            path = params.get('p') || '';
         }
+
+        // Normalize
+        // If path is something like 'u/username', we handle it manually
+        // Check for parameterized routes like 'u/'
         
-        // Normalize: leading slash, no trailing slash
-        if (!relativePath.startsWith('/')) relativePath = '/' + relativePath;
-        if (relativePath.length > 1 && relativePath.endsWith('/')) {
-            relativePath = relativePath.substring(0, relativePath.length - 1);
-        }
-
-        console.log('🛤️ Routing to:', relativePath);
-
-        // Check routes
-        for (const route in routes) {
-            // Check for parameters (e.g., /u/:username)
-            if (route.includes(':')) {
-                const routeParts = route.split('/');
-                const pathParts = relativePath.split('/');
-
-                if (routeParts.length === pathParts.length) {
-                    let match = true;
-                    let params = [];
-
-                    for (let i = 0; i < routeParts.length; i++) {
-                        if (routeParts[i].startsWith(':')) {
-                            params.push(decodeURIComponent(pathParts[i]));
-                        } else if (routeParts[i] !== pathParts[i]) {
-                            match = false;
-                            break;
-                        }
-                    }
-
-                    if (match) {
-                        routes[route](...params);
-                        return;
-                    }
-                }
-            }
-
-            // Exact match
-            if (route === relativePath) {
-                routes[route]();
-                return;
-            }
-        }
-
-        // Special case for root
-        if (relativePath === '/' || relativePath === '') {
-            if (routes['/']) routes['/']();
+        console.log('🛣️ Routing to:', path);
+        
+        // Check exact match first
+        if (routes[path]) {
+            routes[path]();
             return;
         }
 
-        // 404 - fall back to home or first route
-        console.warn('🛤️ Route not found:', relativePath);
-        if (routes['/']) routes['/']();
-    }
+        // Check for parameterized routes (e.g., u/username matches u/:username)
+        for (const route in routes) {
+            if (route.includes(':')) {
+                const routePrefix = route.split(':')[0]; // e.g., 'u/'
+                if (path.startsWith(routePrefix)) {
+                    const paramValue = path.substring(routePrefix.length);
+                    routes[route](decodeURIComponent(paramValue));
+                    return;
+                }
+            }
+        }
 
-    /**
-     * Get current path
-     */
-    function getCurrentPath() {
-        return window.location.pathname;
-    }
+        // Default/Home
+        if (path === '' || path === '/' || path === 'dashboard') {
+            if (routes['dashboard']) routes['dashboard']();
+            else if (routes['/']) routes['/']();
+            return;
+        }
 
-    /**
-     * Get current base path
-     */
-    function getBasePath() {
-        return basePath;
+        // 404 Fallback
+        console.warn('🛣️ Route not found:', path);
+        if (routes['dashboard']) routes['dashboard']();
     }
 
     return {
         init,
         addRoute,
-        navigate,
-        handleRoute,
-        getCurrentPath,
-        getBasePath
+        navigate
     };
 })();

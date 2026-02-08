@@ -68,55 +68,73 @@
     };
 
     /**
-     * Initialize the application
+     * Initialize Application
      */
     async function init() {
-        console.log('🎮 Initializing Night City Achievements Hub...');
-
-        // Determine base path (to handle subfolders correctly)
-        const path = window.location.pathname;
-        const basePath = path.substring(0, path.lastIndexOf('/viewer/') + 8) || '/';
+        console.log('🌃 Night City Achievements Protocol Initiated...');
         
-        Router.init({ basePath });
-
-        // Define Routes
-        Router.addRoute('/', () => navigateToSection('dashboard', false));
-        Router.addRoute('/dashboard', () => navigateToSection('dashboard', false));
-        Router.addRoute('/leaderboard', () => navigateToSection('leaderboard', false));
-        Router.addRoute('/catalog', () => navigateToSection('catalog', false));
-        Router.addRoute('/stats', () => navigateToSection('stats', false));
-        Router.addRoute('/faceoff', () => navigateToSection('faceoff', false));
-        Router.addRoute('/search', () => navigateToSection('search', false));
-        Router.addRoute('/u/:username', (username) => {
-            navigateToSection('search', false);
-            elements.searchInput.value = username;
-            performSearch(username);
-        });
-
-        // Setup event listeners
+        // Initialize API
+        await API.init();
+        achievementsData = API.getAchievementsData();
+        
+        // Setup Navigation
         setupNavigation();
         setupSearch();
-        setupFaceOff();
         setupModal();
-        setupCardClicks();
         setupTableSorting();
+        setupFaceOff();
 
-        // Check stream status
+        // Check Stream Status
         checkStreamStatus();
         setInterval(checkStreamStatus, 60000); // Check every minute
 
+        // Initialize Router
+        // No path logic needed for query params
+        Router.init();
+
+        // Define Routes (mapping ?p=value to functions)
+        Router.addRoute('dashboard', () => navigateToSection('dashboard', false)); // default
+        Router.addRoute('leaderboard', () => navigateToSection('leaderboard', false));
+        Router.addRoute('catalog', () => navigateToSection('catalog', false));
+        Router.addRoute('stats', () => navigateToSection('stats', false));
+        Router.addRoute('faceoff', () => navigateToSection('faceoff', false));
+        
+        // User Profile Route (matches ?p=u/username)
+        Router.addRoute('u/:username', (username) => {
+            navigateToUser(username, false);
+        });
+
         // Load initial data
-        await loadInitialData();
-
-        // Initial route handling after data is loaded
-        Router.handleRoute(window.location.pathname);
-
-        // Initialize Dashboards/Tickers
-        if (typeof Dashboard !== 'undefined') {
-            Dashboard.initTicker();
+        loadLeaderboard();
+        renderCatalog();
+        
+        // Setup Stats
+        if(typeof Stats !== 'undefined') {
+            Stats.init();
+        }
+        
+        // Setup Dashboard
+        if(typeof Dashboard !== 'undefined') {
+            Dashboard.init();
         }
 
-        console.log('✅ Application initialized');
+        // Hide loader
+        document.getElementById('loader').classList.add('hidden');
+    }
+
+    /**
+     * Setup Navigation Listeners
+     */
+    function setupNavigation() {
+        elements.navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.getAttribute('data-section');
+                
+                // Use Router to navigate
+                Router.navigate(sectionId);
+            });
+        });
     }
 
     /**
