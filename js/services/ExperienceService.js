@@ -632,9 +632,10 @@ export default class ExperienceService {
      * Añade XP fija por desbloqueo de logro (No afectado por multiplicadores)
      * @param {string} username 
      * @param {string} rarity - Rarity del logro (common, uncommon, etc.)
+     * @param {Object} options - Opciones adicionales (ej. { suppressEvents: boolean })
      * @returns {number} XP ganada
      */
-    addAchievementXP(username, rarity) {
+    addAchievementXP(username, rarity, options = {}) {
         const lowerUser = username.toLowerCase();
         
         // Verificar blacklist global
@@ -655,16 +656,18 @@ export default class ExperienceService {
         this.persistence.markDirty(lowerUser);
 
         // Emitir evento de ganancia de XP (marcado como pasivo/fijo para no aplicar efectos de racha en UI)
-        EventManager.emit(EVENTS.USER.XP_GAINED, {
-            username: lowerUser,
-            amount: xpToGain,
-            total: userData.xp,
-            passive: true,
-            source: 'achievement'
-        });
+        if (!options.suppressEvents) {
+            EventManager.emit(EVENTS.USER.XP_GAINED, {
+                username: lowerUser,
+                amount: xpToGain,
+                total: userData.xp,
+                passive: true,
+                source: 'achievement'
+            });
+        }
 
         // Detectar level-up
-        if (newLevel > previousLevel) {
+        if (newLevel > previousLevel && !options.suppressEvents) {
             EventManager.emit(EVENTS.USER.LEVEL_UP, {
                 username,
                 oldLevel: previousLevel,
@@ -775,6 +778,102 @@ export default class ExperienceService {
         const key = id.toUpperCase();
         if (this.xpConfig.sources[key]) {
             Object.assign(this.xpConfig.sources[key], changes);
+        }
+    }
+
+    /**
+     * Actualiza las estadísticas de ranking de los usuarios y emite eventos
+     * @param {Map} rankingMap - Mapa de username -> rank (desde RankingSystem)
+     * @param {boolean} isInitialLoad - Si es la carga inicial (para suprimir notificaciones)
+     */
+    updateRankingStats(rankingMap, isInitialLoad = false) {
+        if (!rankingMap || rankingMap.size === 0) return;
+
+        const today = new Date().toDateString();
+        let changesCount = 0;
+
+        // 1. Identificar quién era el Top 1 anterior (según nuestros datos persistidos)
+        let previousTop1User = null;
+        for (const [username, userData] of this.usersXP.entries()) {
+            if (userData.achievementStats && userData.achievementStats.currentRank === 1) {
+                previousTop1User = username;
+                break;
+            }
+        }
+
+        // 2. Iterar sobre todos los usuarios del ranking actual
+        rankingMap.forEach((rank, username) => {
+            const lowerUser = username.toLowerCase();
+            const userData = this.getUserData(lowerUser); // Crea usuario si no existe
+            const stats = userData.achievementStats || {};
+
+            const previousRank = stats.currentRank || 999;
+            let statsChanged = false;
+
+            // Actualizar ranking actual y mejor ranking
+            if (stats.currentRank !== rank) {
+                stats.currentRank = rank;
+                statsChanged = true;
+                
+                // Calcular subida
+                const climb = previousRank - rank;
+                if (climb > 0) {
+                    stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
+                    stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
+                }
+            }
+
+            if (rank < (stats.bestRank || 999)) {
+                stats.bestRank = rank;
+                statsChanged = true;
+            }
+
+            // Actualizaciones diarias (Solo una vez al día por usuario)
+            if (stats.lastRankUpdateDate !== today) {
+                stats.lastRankUpdateDate = today;
+                
+                if (rank === 1) {
+                    stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
+                }
+                
+                if (rank <= 10) {
+                    stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
+                }
+
+                if (rank <= 15) {
+                    stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
+                }
+                
+                statsChanged = true;
+            }
+
+            // Lógica de "Destronar" al Top 1
+            // Si soy el nuevo Top 1, y antes había otro Top 1 distinto a mí
+            if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
+                if (!stats.dethroned) {
+                    stats.dethroned = true;
+                    statsChanged = true;
+                    if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
+                }
+            }
+
+            // Guardar y notificar si hubo cambios relevantes
+            if (statsChanged) {
+                userData.achievementStats = stats;
+                this.usersXP.set(lowerUser, userData);
+                this.persistence.markDirty(lowerUser);
+                changesCount++;
+
+                // Emitir evento para verificar logros de ranking
+                EventManager.emit(EVENTS.USER.RANKING_UPDATED, { 
+                    username: lowerUser, 
+                    isInitialLoad 
+                });
+            }
+        });
+
+        if (changesCount > 0 && this.config.DEBUG) {
+            console.log(`📊 Ranking stats updated for ${changesCount} users`);
         }
     }
 

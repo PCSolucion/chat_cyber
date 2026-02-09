@@ -48,6 +48,11 @@ export default class AchievementService {
         // Suscribirse a eventos de stream
         EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline));
         EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category));
+        EventManager.on(EVENTS.USER.RANKING_UPDATED, (data) => {
+            const username = typeof data === 'string' ? data : data.username;
+            const isInitialLoad = typeof data === 'object' ? data.isInitialLoad : false;
+            this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
+        });
     }
 
     /**
@@ -499,7 +504,8 @@ export default class AchievementService {
                     };
 
                     // Otorga XP fija por el logro (antes de añadirlo a la lista de desbloqueados)
-                    this.experienceService.addAchievementXP(username, achievement.rarity);
+                    // Si es carga inicial, suprimimos los eventos de XP/LevelUp también
+                    this.experienceService.addAchievementXP(username, achievement.rarity, { suppressEvents: context.isInitialLoad });
 
                     existingAchievements.push(unlockedAchievement);
                     unlockedNow.push(achievement);
@@ -519,9 +525,11 @@ export default class AchievementService {
             this.experienceService.persistence.markDirty(lowerUser);
 
             // Emitir eventos para cada logro desbloqueado
-            unlockedNow.forEach(achievement => {
-                this.emitAchievementUnlocked(username, achievement);
-            });
+            if (!context.isInitialLoad) {
+                unlockedNow.forEach(achievement => {
+                    this.emitAchievementUnlocked(username, achievement);
+                });
+            }
         }
 
         return unlockedNow;

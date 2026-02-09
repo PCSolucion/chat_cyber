@@ -19,6 +19,7 @@ const StreamFeatures = (function () {
 
     // Raw Data (Parsed from user input)
     const RAW_STREAM_DATA = {
+        "2026-02-07": { duration: 290, category: "Night of the Dead", title: "Night of the Dead | Directo #82" },
         "2026-01-30": { duration: 383, category: "Night of the Dead", title: "NOTD Directo #82 y luego Cyberpunk 2077 | Live #20 | FINAL HISTORIA PRINCIPAL" },
         "2026-01-29": { duration: 342, category: "New World: Aeternum", title: "NW Aeternum | Directo #972 | MALAS NOTICIAS... Britney Spears vuelve a los escenarios este 2026 y luego NOTD #81" },
         "2026-01-28": { duration: 347, category: "Night of the Dead", title: "NOTD Directo #81 y luego Cyberpunk 2077 | Live #20 | FINAL HISTORIA PRINCIPAL" },

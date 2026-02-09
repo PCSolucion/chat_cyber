@@ -314,6 +314,12 @@ export default class MessageProcessor {
 
         if (this.services.xp) {
             await this.services.xp.loadData().catch(e => console.error(e));
+            
+            // Si el ranking está cargado, actualizar estadísticas de ranking en XP service
+            if (this.services.ranking && this.services.ranking.isLoaded) {
+                 this.services.xp.updateRankingStats(this.services.ranking.userRankings, true);
+            }
+
             if (this.services.gist?.isConfigured) {
                 this.services.gist.testConnection().then(conn => {
                     Logger.info('XP', conn ? '✅ Gist connected' : '⚠️ Local mode only');
