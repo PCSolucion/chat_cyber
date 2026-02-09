@@ -35,9 +35,14 @@ export default class StatusBarComponent {
     flashLED(ledKey) {
         const led = this.dom[ledKey];
         if (!led) return;
+        
+        // Duración diferenciada: TX (datos) dura un poco más que RX (mensajes)
+        const duration = ledKey === 'ledTx' ? 400 : 150;
+
         led.classList.remove('active');
         void led.offsetWidth; // Trigger reflow
         led.classList.add('active');
-        setTimeout(() => led.classList.remove('active'), 200);
+        
+        setTimeout(() => led.classList.remove('active'), duration);
     }
 }

@@ -60,12 +60,17 @@ export default class DevTools {
         window.getTopUsers = (limit) => xpService.getXPLeaderboard(limit);
 
         window.testLevelUp = (lvl) => {
+            const data = {
+                username: 'TestUser',
+                newLevel: lvl || 10,
+                title: 'DEBUG RANK'
+            };
             if (xpDisplay) {
-                xpDisplay.showLevelUp({
-                    username: 'TestUser',
-                    newLevel: lvl || 10,
-                    title: 'DEBUG RANK'
-                });
+                xpDisplay.showLevelUp(data);
+            }
+            // notificationManager está en app.processor
+            if (this.app.processor && this.app.processor.notificationManager) {
+                this.app.processor.notificationManager.showLevelUp(data);
             }
         };
 
@@ -171,13 +176,16 @@ export default class DevTools {
             if (!data || !data.type) return;
 
             if (data.type === 'TEST_LEVEL_UP') {
-                const xpDisplay = this.app.processor.getManager('xpDisplay');
-                if (xpDisplay) {
-                    xpDisplay.showLevelUp({
-                        username: data.username || 'Test',
-                        newLevel: data.level || 10,
-                        title: data.title || 'TEST RANK'
-                    });
+                const testData = {
+                    username: data.username || 'Test',
+                    newLevel: data.level || 10,
+                    title: data.title || 'TEST RANK'
+                };
+                const xpDisp = this.app.processor.getManager('xpDisplay');
+                if (xpDisp) xpDisp.showLevelUp(testData);
+                
+                if (this.app.processor && this.app.processor.notificationManager) {
+                    this.app.processor.notificationManager.showLevelUp(testData);
                 }
             }
         });

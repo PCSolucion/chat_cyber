@@ -270,77 +270,85 @@ export default class XPDisplayManager {
     }
 
     /**
-     * Muestra la animación de Level Up (Overlay estilo Cyberpunk 2077)
+     * Muestra la animación de Level Up Inline (dentro del widget)
+     * Se ejecuta de forma inmediata al detectar el evento.
      * @param {Object} eventData - Datos del evento de level-up
      */
     showLevelUp(eventData) {
-        // 1. NUEVO OVERLAY (Cyberpunk 2077 Full Screen)
-        if (this.dom.cpLevelOverlay) {
-            // Limpiar timeout anterior
-            if (this.levelUpTimeout) {
-                clearTimeout(this.levelUpTimeout);
-            }
-
-            // Actualizar datos en el overlay
-            if (this.dom.cpNewLevel) {
-                this.dom.cpNewLevel.textContent = eventData.newLevel;
-            }
-            if (this.dom.cpNewTitle) {
-                this.dom.cpNewTitle.textContent = eventData.title || 'MERCENARY';
-            }
-            // Actualizar usuario
-            if (this.dom.cpUsername) {
-                this.dom.cpUsername.textContent = eventData.username || 'UNKNOWN';
-            }
-
-            // Mostrar Overlay
-            this.dom.cpLevelOverlay.classList.remove('hidden');
-            void this.dom.cpLevelOverlay.offsetWidth; // Force reflow
-            this.dom.cpLevelOverlay.classList.add('show');
-
-            this.isShowingLevelUp = true;
-
-            // Añadir efecto global al container
-            const container = document.querySelector('.container');
-            if (container) {
-                container.classList.add('level-up-effect');
-            }
-
-            // Ocultar después del tiempo configurado (Aumentado 2s extra)
-            this.levelUpTimeout = setTimeout(() => {
-                this.hideLevelUp();
-            }, this.levelUpDisplayTime + 3000);
-
-            if (this.config.DEBUG) {
-                console.log(`🎉 CP2077 Level Up mostrado: ${eventData.username} → LVL ${eventData.newLevel}`);
-            }
+        // SOLO ANIMACIÓN INLINE (Roja dentro del chat)
+        // Aseguramos visibilidad del componente de XP (importante para el test panel)
+        if (this.dom.xpSection) {
+            this.dom.xpSection.style.display = 'block';
         }
 
-        // 2. ANIMACIÓN LEGACY (Inline / Roja dentro del chat)
-        // Ejecutar SIEMPRE, independientemente del overlay nuevo
         if (this.dom.levelUpInline) {
-            if (this.dom.levelUpNumber) this.dom.levelUpNumber.textContent = eventData.newLevel;
-            // El título ya se actualiza en el overlay, pero por si acaso
+            if (this.dom.levelUpNumber) {
+                this.dom.levelUpNumber.textContent = eventData.newLevel;
+            }
 
             this.dom.levelUpInline.classList.add('show');
             this.isShowingLevelUp = true;
 
-            // Si no hay overlay nuevo controlando el timeout, usar este
-            if (!this.dom.cpLevelOverlay) {
-                this.levelUpTimeout = setTimeout(() => {
-                    this.hideLevelUp();
-                }, this.levelUpDisplayTime);
+            // Ocultar después del tiempo base
+            setTimeout(() => {
+                this.hideLevelUpInline();
+            }, this.levelUpDisplayTime);
+
+            if (this.config.DEBUG) {
+                console.log(`✨ Level Up Inline: ${eventData.username} → LVL ${eventData.newLevel}`);
             }
         }
-
-        // Audio is now handled by AudioManager listening to the same event
     }
 
     /**
-     * Oculta la animación de Level Up
+     * Muestra la animación de Level Up en el Overlay Superior (Estilo Cyberpunk 2077)
+     * Llamado por NotificationManager para evitar solapamientos con logros.
+     * @param {Object} eventData 
      */
-    hideLevelUp() {
-        // 1. Ocultar Overlay Nuevo
+    showTopLevelUp(eventData) {
+        if (!this.dom.cpLevelOverlay) return;
+
+        // Limpiar timeout anterior
+        if (this.levelUpTimeout) {
+            clearTimeout(this.levelUpTimeout);
+        }
+
+        // Actualizar datos en el overlay
+        if (this.dom.cpNewLevel) {
+            this.dom.cpNewLevel.textContent = eventData.newLevel;
+        }
+        if (this.dom.cpNewTitle) {
+            this.dom.cpNewTitle.textContent = eventData.title || 'MERCENARY';
+        }
+        if (this.dom.cpUsername) {
+            this.dom.cpUsername.textContent = eventData.username || 'UNKNOWN';
+        }
+
+        // Mostrar Overlay
+        this.dom.cpLevelOverlay.classList.remove('hidden');
+        void this.dom.cpLevelOverlay.offsetWidth; // Force reflow
+        this.dom.cpLevelOverlay.classList.add('show');
+
+        // Añadir efecto global al container
+        const container = document.querySelector('.container');
+        if (container) {
+            container.classList.add('level-up-effect');
+        }
+
+        // Ocultar después del tiempo configurado (Aumentado 2s extra)
+        this.levelUpTimeout = setTimeout(() => {
+            this.hideTopLevelUp();
+        }, this.levelUpDisplayTime + 3000);
+
+        if (this.config.DEBUG) {
+            console.log(`🚀 CP2077 Top Level Up: ${eventData.username} → LVL ${eventData.newLevel}`);
+        }
+    }
+
+    /**
+     * Oculta el Overlay Superior de Level Up
+     */
+    hideTopLevelUp() {
         if (this.dom.cpLevelOverlay) {
             this.dom.cpLevelOverlay.classList.remove('show');
 
@@ -349,25 +357,29 @@ export default class XPDisplayManager {
                 container.classList.remove('level-up-effect');
             }
         }
+    }
 
-        // 2. Ocultar Animación Legacy
+    /**
+     * Oculta la Animación Inline
+     */
+    hideLevelUpInline() {
         if (this.dom.levelUpInline) {
             this.dom.levelUpInline.classList.remove('show');
             this.dom.levelUpInline.classList.add('hiding');
 
-            // Si no estaba cubierto por el overlay nuevo (redundancia de seguridad)
-            const container = document.querySelector('.container');
-            if (container && !this.dom.cpLevelOverlay) container.classList.remove('level-up-effect');
-
             setTimeout(() => {
                 this.dom.levelUpInline.classList.remove('hiding');
+                this.isShowingLevelUp = false;
             }, 400);
         }
+    }
 
-        // Reset global state
-        setTimeout(() => {
-            this.isShowingLevelUp = false;
-        }, 400);
+    /**
+     * Oculta ambas animaciones (Legacy compatibility)
+     */
+    hideLevelUp() {
+        this.hideTopLevelUp();
+        this.hideLevelUpInline();
     }
 
     /**

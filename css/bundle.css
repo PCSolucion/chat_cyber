@@ -2884,21 +2884,34 @@ body {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    transition: all 0.1s ease;
+    background: rgba(255, 255, 255, 0.1);
+    /* Encendido rápido por defecto */
+    transition: background 0.05s ease-out, box-shadow 0.05s ease-out;
     box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.5);
+    position: relative;
 }
 
-/* RX - Green Flash */
+/* Efecto de desvanecimiento orgánico al apagar */
+.net-led:not(.active) {
+    transition: background 0.8s ease-in, box-shadow 0.8s ease-in;
+}
+
+/* RX - Green Flash (Mensajes Recibidos) - Nítido y rápido */
 .net-led.rx.active {
     background: #00ff88 !important;
-    box-shadow: 0 0 5px #00ff88, 0 0 10px rgba(0, 255, 136, 0.4) !important;
+    box-shadow: 
+        0 0 6px #00ff88, 
+        0 0 12px rgba(0, 255, 136, 0.5),
+        0 0 2px rgba(255, 255, 255, 0.8) !important;
 }
 
-/* TX - Red Flash */
+/* TX - Red Flash (Escritura de Datos) - Más cálido y persistente */
 .net-led.tx.active {
     background: #ff3b45 !important;
-    box-shadow: 0 0 5px #ff3b45, 0 0 10px rgba(255, 59, 69, 0.4) !important;
+    box-shadow: 
+        0 0 8px #ff3b45, 
+        0 0 18px rgba(255, 59, 69, 0.6),
+        0 0 3px rgba(255, 255, 255, 0.5) !important;
 }
 
 /* ===========================================

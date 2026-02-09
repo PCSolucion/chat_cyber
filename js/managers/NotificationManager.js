@@ -63,10 +63,9 @@ export default class NotificationManager {
       this.showBroProgress(current, max);
     });
 
-    // Escuchar level ups para mostrarlos también como notificación (opcional, pero mejora UX)
+    // Escuchar level ups para mostrarlos en la cola superior sin solaparse
     EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
-      // Podríamos añadir una notificación especial para level ups aquí si quisiéramos
-      // Por ahora, el XPDisplayManager ya lo maneja de forma visual directa.
+      this.showLevelUp(eventData);
     });
   }
 
@@ -97,7 +96,20 @@ export default class NotificationManager {
       type: "achievement",
       data: eventData,
     });
-
+ 
+    this._processQueue();
+  }
+ 
+  /**
+   * Añade una notificación de level-up a la cola
+   * @param {Object} eventData - { username, newLevel, title }
+   */
+  showLevelUp(eventData) {
+    this.queue.push({
+      type: "levelup",
+      data: eventData,
+    });
+ 
     this._processQueue();
   }
 
@@ -106,6 +118,10 @@ export default class NotificationManager {
    * @private
    */
   _processQueue() {
+    if (this.config.DEBUG && this.queue.length > 0) {
+      console.log(`[Queue] Checking: isShowing=${this.isShowingNotification}, items=${this.queue.length}`);
+    }
+
     if (this.isShowingNotification || this.queue.length === 0) {
       return;
     }
@@ -114,23 +130,34 @@ export default class NotificationManager {
     const notification = this.queue.shift();
 
     // Dispatch según tipo
+    let totalWaitTime = this.displayTime + this.fadeTime;
+
     switch (notification.type) {
       case "achievement":
         // Mostramos ambas: la del widget y la de Xbox (que ahora es parte de la cola)
         this._displayAchievement(notification.data);
         this._displayTopOverlayAchievement(notification.data);
+        
+        // Tiempo base del Xbox Achievement (11s) + margen
+        totalWaitTime = Math.max(totalWaitTime, 11500);
         break;
+
+      case "levelup":
+        // Llamar al XPDisplayManager para mostrar solo el overlay superior
+        if (this.uiManager && this.uiManager.xpDisplay) {
+          this.uiManager.xpDisplay.showTopLevelUp(notification.data);
+        }
+        
+        // Tiempo base del Level Up Overlay (6s) + margen
+        totalWaitTime = 6500;
+        break;
+
       default:
         console.warn("Unknown notification type:", notification.type);
         this.isShowingNotification = false;
         this._processQueue();
         return;
     }
-
-    // El tiempo total de espera antes de permitir la siguiente notificación
-    // Calculamos el tiempo base del Xbox Achievement (11s) ya que es el más largo
-    const xboxDuration = 11000;
-    const totalWaitTime = Math.max(this.displayTime + this.fadeTime, xboxDuration + 500);
 
     // Programar siguiente notificación
     setTimeout(() => {
