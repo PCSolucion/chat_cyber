@@ -80,6 +80,13 @@ export const XP = {
     }
 };
 
+// Configuración de Audio
+export const AUDIO = {
+    COOLDOWN_MESSAGE_MS: 250,           // Mínimo 250ms entre sonidos de chat
+    DEFAULT_VOLUME: 0.8,
+    MAX_OVERLAPPING_SOUNDS: 5           // Límite de sonidos simultáneos del mismo tipo
+};
+
 // Configuración de almacenamiento y red
 export const STORAGE = {
     MAX_RETRIES: 3,                     // Intentos máximos en caso de fallo de red
