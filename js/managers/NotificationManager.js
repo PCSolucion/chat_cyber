@@ -390,7 +390,7 @@ export default class NotificationManager {
     
     try {
       const audio = new Audio(soundUrl);
-      audio.volume = 0.4;
+      audio.volume = 0.7;
       audio.play().catch(e => console.warn("Audio play failed:", e));
     } catch (e) {
       console.warn("Audio error:", e);
