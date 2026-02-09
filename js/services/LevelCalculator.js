@@ -53,11 +53,23 @@ export default class LevelCalculator {
         if (xp < 0) return 1;
 
         const { baseXP, exponent } = this.levelConfig;
+        const limitLevel = 105;
+        const xpAtLimit = Math.floor(baseXP * Math.pow(limitLevel - 1, exponent));
 
-        // Inversa de la fórmula: xp = base * (level-1)^exp
-        // level-1 = (xp / base)^(1/exp)
-        // level = (xp / base)^(1/exp) + 1
-        return Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
+        // Si la XP es menor a la del límite, usamos fórmula estándar
+        if (xp <= xpAtLimit) {
+            return Math.floor(Math.pow(xp / baseXP, 1 / exponent)) + 1;
+        }
+
+        // Si es mayor, usar lógica inversa del escalado x5
+        // Fórmula aplicada: XP = XP_105 + (XP_Standard - XP_105) * 5
+        // (XP - XP_105) / 5 = XP_Standard - XP_105
+        // XP_Standard = ((XP - XP_105) / 5) + XP_105
+        
+        const xpDiffScaled = (xp - xpAtLimit) / 5;
+        const standardXPEquivalent = xpAtLimit + xpDiffScaled;
+        
+        return Math.floor(Math.pow(standardXPEquivalent / baseXP, 1 / exponent)) + 1;
     }
 
     /**
@@ -68,7 +80,25 @@ export default class LevelCalculator {
     getXPForLevel(level) {
         if (level <= 1) return 0;
         const { baseXP, exponent } = this.levelConfig;
-        return Math.floor(baseXP * Math.pow(level - 1, exponent));
+        
+        // Logica estándar para niveles hasta 104
+        if (level <= 105) {
+            return Math.floor(baseXP * Math.pow(level - 1, exponent));
+        }
+
+        // Para nivel 105 en adelante (empezando el cálculo desde nivel 105 hacia arriba)
+        // Calculamos la XP base hasta nivel 105
+        const xpAt105 = Math.floor(baseXP * Math.pow(104, exponent)); // XP necesaria para alcanzar lvl 105
+        
+        // Calculamos la diferencia estándar entre niveles a esta altura
+        // Y la multiplicamos por 5 para cada nivel adicional
+        // Aproximación simple: Seguir curva pero multiplicada
+        // XP = XP_105 + (XP_Standard_Current - XP_Standard_105) * 5
+        
+        const standardXP = Math.floor(baseXP * Math.pow(level - 1, exponent));
+        const diff = standardXP - xpAt105;
+        
+        return xpAt105 + (diff * 5);
     }
 
     /**

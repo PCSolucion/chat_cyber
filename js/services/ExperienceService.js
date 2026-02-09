@@ -581,9 +581,9 @@ export default class ExperienceService {
         // Esto corrige el problema de "datos antiguos" en Face Off para lurkers
         userData.lastActivity = Date.now();
 
-        // 2. Otorgar XP Pasiva (10 XP cada 10 mins)
-        // Ratio: 1.0 XP por minuto
-        const xpEarned = Math.floor(minutes * 1.0);
+        // 2. Otorgar XP Pasiva (15 XP cada 10 mins)
+        // Ratio: 1.5 XP por minuto
+        const xpEarned = Math.floor(minutes * 1.5);
 
         if (xpEarned > 0) {
             userData.xp += xpEarned;
@@ -787,7 +787,7 @@ export default class ExperienceService {
         if (!chatters || !Array.isArray(chatters)) return;
 
         let updatedCount = 0;
-        const xpPerMinute = 1.0;
+        const xpPerMinute = 1.5;
         const totalXP = Math.floor(minutes * xpPerMinute);
 
         chatters.forEach(username => {
