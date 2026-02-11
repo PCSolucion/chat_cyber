@@ -41,6 +41,91 @@ export default class ExperienceService {
     }
 
     /**
+     * Verifica si un usuario está en la lista negra
+     * @private
+     * @param {string} username 
+     * @returns {boolean}
+     */
+    _isBlacklisted(username) {
+        const lowerUser = username.toLowerCase();
+        return (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || 
+               lowerUser.startsWith('justinfan');
+    }
+
+    /**
+     * Aplica actividad (XP, mensajes, tiempo) a un usuario centralizadamente.
+     * Gestiona: XP, Nivel, Historial Diario, Persistencia y Eventos.
+     * 
+     * @private
+     * @param {string} username 
+     * @param {Object} options 
+     * @returns {Object|null} null si está blacklisted, de lo contrario datos del resultado
+     */
+    _applyActivity(username, { xp = 0, messages = 0, watchTime = 0, passive = false, source = null, suppressEvents = false }) {
+        const lowerUser = username.toLowerCase();
+        if (this._isBlacklisted(lowerUser)) return null;
+
+        const userData = this.getUserData(lowerUser);
+        const previousLevel = userData.level;
+
+        // 1. Actualizar XP y Actividad básica
+        userData.xp += xp;
+        userData.totalMessages += messages;
+        userData.lastActivity = Date.now();
+        
+        if (watchTime > 0) {
+            userData.watchTimeMinutes = (userData.watchTimeMinutes || 0) + watchTime;
+        }
+
+        // 2. Actualizar Historial Diario (Heatmap/Stats)
+        const today = this.streakManager.getCurrentDay();
+        if (!userData.activityHistory) userData.activityHistory = {};
+        if (!userData.activityHistory[today]) {
+            userData.activityHistory[today] = { messages: 0, xp: 0, watchTime: 0 };
+        }
+        
+        userData.activityHistory[today].messages += messages;
+        userData.activityHistory[today].xp += xp;
+        userData.activityHistory[today].watchTime = (userData.activityHistory[today].watchTime || 0) + watchTime;
+
+        // 3. Lógica de Niveles
+        const newLevel = this.levelCalculator.calculateLevel(userData.xp);
+        const leveledUp = newLevel > previousLevel;
+        if (leveledUp) {
+            userData.level = newLevel;
+        }
+
+        // 4. Persistencia
+        this.stateManager.markDirty(lowerUser);
+
+        // 5. Notificar Eventos
+        if (!suppressEvents) {
+            if (xp !== 0) {
+                EventManager.emit(EVENTS.USER.XP_GAINED, {
+                    username: lowerUser,
+                    amount: xp,
+                    total: userData.xp,
+                    passive: passive || (xp > 0 && messages === 0),
+                    source
+                });
+            }
+
+            if (leveledUp) {
+                EventManager.emit(EVENTS.USER.LEVEL_UP, {
+                    username: username, // Original casing if possible
+                    oldLevel: previousLevel,
+                    newLevel,
+                    totalXP: userData.xp,
+                    title: this.levelCalculator.getLevelTitle(newLevel),
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        return { userData, leveledUp, previousLevel, newLevel };
+    }
+
+    /**
      * Inicializa la configuración de fuentes de XP
      * Estructura extensible para añadir nuevas fuentes
      * @returns {Object}
@@ -162,8 +247,8 @@ export default class ExperienceService {
     trackMessage(username, context = {}) {
         const lowerUser = username.toLowerCase();
 
-        // Verificar blacklist global (no trackear nada)
-        if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
+        // 1. Verificar blacklist
+        if (this._isBlacklisted(lowerUser)) {
             return {
                 username: lowerUser,
                 xpGained: 0,
@@ -183,10 +268,10 @@ export default class ExperienceService {
         // Resetear día si cambió
         this.checkDayReset();
 
-        // Obtener o crear datos del usuario
+        // Obtener datos del usuario
         let userData = this.getUserData(lowerUser);
 
-        // Verificar cooldown global de XP
+        // 2. Verificar cooldown global de XP (específico de mensajes)
         const now = Date.now();
         if (userData.lastActivity && (now - userData.lastActivity) < this.xpConfig.settings.minTimeBetweenXP) {
             return {
@@ -205,14 +290,11 @@ export default class ExperienceService {
             };
         }
 
-        const previousLevel = userData.level;
-
-        // Verificar si el usuario está excluido de bonos (bots, admin, etc.)
+        // 3. Lógica de Racha
         const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
             .map(u => u.toLowerCase())
             .includes(lowerUser);
 
-        // 1. Determinar Racha (Necesario antes de evaluar XP para el multiplicador y el bono)
         let streakResult = {
             streakDays: userData.streakDays || 0,
             lastStreakDate: userData.lastStreakDate,
@@ -223,7 +305,7 @@ export default class ExperienceService {
             streakResult = this.streakManager.updateStreak(userData);
         }
 
-        // 2. Evaluar XP ganado de cada fuente usando la Fábrica
+        // 4. Evaluar XP base
         const evaluationState = {
             isIgnoredForBonus: ignoredForBonus,
             isFirstMessageOfDay: !this.dailyFirstMessage.has(lowerUser),
@@ -234,64 +316,29 @@ export default class ExperienceService {
         let totalXP = evaluation.totalXP;
         const xpSources = evaluation.sources;
 
-        // Registrar primer mensaje del día si fue otorgado
         if (evaluationState.isFirstMessageOfDay && !ignoredForBonus) {
             this.dailyFirstMessage.set(lowerUser, true);
         }
 
-        // 3. Aplicar multiplicador de racha
+        // 5. Multiplicador de racha
         const streakMultiplier = this.streakManager.getStreakMultiplier(streakResult.streakDays);
         const xpBeforeMultiplier = totalXP;
         totalXP = Math.floor(totalXP * streakMultiplier);
 
-        // Aplicar límite máximo por mensaje (después del multiplicador)
+        // Límite máximo
         totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage * streakMultiplier);
 
-        // Actualizar datos del usuario
-        userData.xp += totalXP;
-        userData.totalMessages += 1;
-        userData.lastActivity = Date.now();
+        // 6. Aplicar actividad (Centralizado)
+        const result = this._applyActivity(lowerUser, {
+            xp: totalXP,
+            messages: 1,
+            suppressEvents: false // Queremos que _applyActivity emita los eventos
+        });
+
+        // Actualizar datos de racha que no están en _applyActivity
         userData.streakDays = streakResult.streakDays;
         userData.lastStreakDate = streakResult.lastStreakDate;
         userData.bestStreak = streakResult.bestStreak || userData.bestStreak || 0;
-
-        // Registrar actividad diaria para heatmap
-        const today = this.streakManager.getCurrentDay();
-        if (!userData.activityHistory) {
-            userData.activityHistory = {};
-        }
-        if (!userData.activityHistory[today]) {
-            userData.activityHistory[today] = { messages: 0, xp: 0 };
-        }
-        userData.activityHistory[today].messages += 1;
-        userData.activityHistory[today].xp += totalXP;
-
-        // Recalcular nivel
-        const newLevel = this.levelCalculator.calculateLevel(userData.xp);
-        userData.level = newLevel;
-
-        // Guardar datos actualizados
-        this.stateManager.markDirty(lowerUser);
-
-        // Emitir evento de ganancia de XP para sincronizar UI
-        EventManager.emit(EVENTS.USER.XP_GAINED, {
-            username: lowerUser,
-            amount: totalXP,
-            total: userData.xp
-        });
-
-        // Detectar level-up
-        const leveledUp = newLevel > previousLevel;
-        if (leveledUp) {
-            EventManager.emit(EVENTS.USER.LEVEL_UP, {
-                username,
-                oldLevel: previousLevel,
-                newLevel,
-                totalXP: userData.xp,
-                title: this.levelCalculator.getLevelTitle(newLevel),
-                timestamp: Date.now()
-            });
-        }
 
         return {
             username: lowerUser,
@@ -299,14 +346,14 @@ export default class ExperienceService {
             xpBeforeMultiplier,
             xpSources,
             totalXP: userData.xp,
-            xp: userData.xp, // Alias para compatibilidad
-            level: newLevel,
-            previousLevel,
-            leveledUp,
-            progress: this.levelCalculator.getLevelProgress(userData.xp, newLevel),
-            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, newLevel), // Alias
-            title: this.levelCalculator.getLevelTitle(newLevel),
-            levelTitle: this.levelCalculator.getLevelTitle(newLevel), // Alias
+            xp: userData.xp,
+            level: userData.level,
+            previousLevel: result.previousLevel,
+            leveledUp: result.leveledUp,
+            progress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+            title: this.levelCalculator.getLevelTitle(userData.level),
+            levelTitle: this.levelCalculator.getLevelTitle(userData.level),
             streakDays: userData.streakDays || 0,
             streakMultiplier,
             achievements: userData.achievements || [],
@@ -347,66 +394,20 @@ export default class ExperienceService {
      */
     addWatchTime(username, minutes) {
         const lowerUser = username.toLowerCase();
-
-        // Verificar blacklist global
-        if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
-            return null;
-        }
-
-        const userData = this.getUserData(lowerUser);
-
-        // 1. Sumar tiempo
-        if (!userData.watchTimeMinutes) userData.watchTimeMinutes = 0;
-        userData.watchTimeMinutes += minutes;
-
-        // ACTUALIZAR ÚLTIMA ACTIVIDAD
-        // Esto corrige el problema de "datos antiguos" en Face Off para lurkers
-        userData.lastActivity = Date.now();
-
-        // 2. Otorgar XP Pasiva (15 XP cada 10 mins)
-        // Ratio: 1.5 XP por minuto
         const xpEarned = Math.floor(minutes * 1.5);
 
-        if (xpEarned > 0) {
-            userData.xp += xpEarned;
-
-            // Verificar Level Up (sin emitir evento visual completo para no interrumpir)
-            const newLevel = this.levelCalculator.calculateLevel(userData.xp);
-            if (newLevel > userData.level) {
-                userData.level = newLevel;
-            }
-        }
-
-        // Registrar tiempo visualizado en el historial diario
-        const today = this.streakManager.getCurrentDay();
-        if (!userData.activityHistory) {
-            userData.activityHistory = {};
-        }
-        if (!userData.activityHistory[today]) {
-            userData.activityHistory[today] = { messages: 0, xp: 0, watchTime: 0 };
-        }
-        if (!userData.activityHistory[today].watchTime) {
-            userData.activityHistory[today].watchTime = 0;
-        }
-        userData.activityHistory[today].watchTime += minutes;
-        // También sumar el XP ganado al historial diario
-        userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + xpEarned;
-
-        // 4. Guardar
-        this.stateManager.markDirty(lowerUser);
-
-        // Emitir evento de ganancia de XP (pasiva)
-        EventManager.emit(EVENTS.USER.XP_GAINED, {
-            username: lowerUser,
-            amount: xpEarned,
-            total: userData.xp,
+        const result = this._applyActivity(lowerUser, {
+            xp: xpEarned,
+            watchTime: minutes,
             passive: true
         });
 
+        if (!result) return null;
+
         return {
-            totalTime: userData.watchTimeMinutes,
+            totalTime: result.userData.watchTimeMinutes,
             xpAdded: xpEarned,
-            userData
+            userData: result.userData
         };
     }
 
@@ -419,48 +420,16 @@ export default class ExperienceService {
      */
     addAchievementXP(username, rarity, options = {}) {
         const lowerUser = username.toLowerCase();
-        
-        // Verificar blacklist global
-        if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
-            return 0;
-        }
-
-        const userData = this.getUserData(lowerUser);
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
-        const previousLevel = userData.level;
-        userData.xp += xpToGain;
+        const result = this._applyActivity(lowerUser, {
+            xp: xpToGain,
+            passive: true,
+            source: 'achievement',
+            suppressEvents: options.suppressEvents
+        });
 
-        // Recalcular nivel
-        const newLevel = this.levelCalculator.calculateLevel(userData.xp);
-        userData.level = newLevel;
-
-        this.stateManager.markDirty(lowerUser);
-
-        // Emitir evento de ganancia de XP (marcado como pasivo/fijo para no aplicar efectos de racha en UI)
-        if (!options.suppressEvents) {
-            EventManager.emit(EVENTS.USER.XP_GAINED, {
-                username: lowerUser,
-                amount: xpToGain,
-                total: userData.xp,
-                passive: true,
-                source: 'achievement'
-            });
-        }
-
-        // Detectar level-up
-        if (newLevel > previousLevel && !options.suppressEvents) {
-            EventManager.emit(EVENTS.USER.LEVEL_UP, {
-                username,
-                oldLevel: previousLevel,
-                newLevel,
-                totalXP: userData.xp,
-                title: this.levelCalculator.getLevelTitle(newLevel),
-                timestamp: Date.now()
-            });
-        }
-
-        return xpToGain;
+        return result ? xpToGain : 0;
     }
 
     /**
@@ -666,54 +635,13 @@ export default class ExperienceService {
         const totalXP = Math.floor(minutes * xpPerMinute);
 
         chatters.forEach(username => {
-            const lowerUser = username.toLowerCase();
-
-            // Ignorar bots blaclisted y justinfan
-            if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) return;
-
-            const userData = this.getUserData(lowerUser);
-
-            // Incrementar tiempo
-            userData.watchTimeMinutes = (userData.watchTimeMinutes || 0) + minutes;
-
-            // ACTUALIZAR ÚLTIMA ACTIVIDAD
-            userData.lastActivity = Date.now();
-
-            // Otorgar XP Pasiva
-            if (totalXP > 0) {
-                userData.xp += totalXP;
-
-                // Verificar Level Up silencioso
-                const newLevel = this.levelCalculator.calculateLevel(userData.xp);
-                if (newLevel > userData.level) {
-                   userData.level = newLevel;
-                }
-            }
-
-            // Registrar en historial diario
-            const today = this.streakManager.getCurrentDay();
-            if (!userData.activityHistory) userData.activityHistory = {};
-            if (!userData.activityHistory[today]) {
-                userData.activityHistory[today] = { messages: 0, xp: 0, watchTime: 0 };
-            }
-            if (!userData.activityHistory[today].watchTime) {
-                userData.activityHistory[today].watchTime = 0;
-            }
-            
-            userData.activityHistory[today].watchTime += minutes;
-            userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + totalXP;
-
-            this.stateManager.markDirty(lowerUser);
-
-            // Emitir evento para actualización de UI
-            EventManager.emit(EVENTS.USER.XP_GAINED, {
-                username: lowerUser,
-                amount: totalXP,
-                total: userData.xp,
+            const result = this._applyActivity(username, {
+                xp: totalXP,
+                watchTime: minutes,
                 passive: true
             });
 
-            updatedCount++;
+            if (result) updatedCount++;
         });
 
         if (this.config.DEBUG && updatedCount > 0) {
