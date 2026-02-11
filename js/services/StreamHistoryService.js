@@ -8,9 +8,9 @@ import { EVENTS } from '../utils/EventTypes.js';
  * REFACTORED: Ahora es reactivo y depende de StreamMonitorService.
  */
 export default class StreamHistoryService {
-    constructor(config, gistService) {
+    constructor(config, storage) {
         this.config = config;
-        this.gistService = gistService;
+        this.storage = storage;
 
         this.fileName = 'stream_history.json';
         this.isTracking = false;
@@ -86,7 +86,7 @@ export default class StreamHistoryService {
     }
 
     /**
-     * Guarda el historial en Gist
+     * Guarda el historial en el storage disponible
      */
     async saveHistory(final = false) {
         if (!this.sessionStartTime) return;
@@ -107,7 +107,7 @@ export default class StreamHistoryService {
                 const minsOldDay = Math.floor((midnightUTC - this.sessionStartTime) / TIMING.MINUTE_MS);
                 
                 if (minsOldDay > 0) {
-                    const history = await this.gistService.loadFile(this.fileName) || {};
+                    const history = await this.storage.load(this.fileName) || {};
                     const oldInitial = (history[this.activeDate] && history[this.activeDate].duration) || 0;
                     
                     history[this.activeDate] = {
@@ -115,7 +115,7 @@ export default class StreamHistoryService {
                         date: this.activeDate,
                         duration: oldInitial + minsOldDay
                     };
-                    await this.gistService.saveFile(this.fileName, history);
+                    await this.storage.save(this.fileName, history);
                 }
 
                 // Reiniciar ancla de tiempo para el nuevo día
@@ -127,7 +127,7 @@ export default class StreamHistoryService {
             const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
             if (sessionMinutes < 1 && !this.DEBUG && !final) return;
 
-            const history = await this.gistService.loadFile(this.fileName) || {};
+            const history = await this.storage.load(this.fileName) || {};
             
             // Inicializar o recargar duración del día si es undefined
             if (this.initialDayDuration === undefined) {
@@ -151,7 +151,7 @@ export default class StreamHistoryService {
                 count: this.dayCount
             };
 
-            const success = await this.gistService.saveFile(this.fileName, history);
+            const success = await this.storage.save(this.fileName, history);
             if (success) {
                 console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m`);
                 if (typeof window !== 'undefined') window.STREAM_HISTORY = history;

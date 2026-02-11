@@ -21,6 +21,11 @@ import AchievementMiddleware from './pipeline/middlewares/AchievementMiddleware.
 import UIRendererMiddleware from './pipeline/middlewares/UIRendererMiddleware.js';
 import StatsTrackerMiddleware from './pipeline/middlewares/StatsTrackerMiddleware.js';
 
+// Storage Management (Strategy Pattern)
+import StorageManager from './storage/StorageManager.js';
+import GistStorageProvider from './storage/GistStorageProvider.js';
+import LocalStorageProvider from './storage/LocalStorageProvider.js';
+
 import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
 import IdleDisplayManager from './IdleDisplayManager.js';
@@ -51,16 +56,19 @@ export default class MessageProcessor {
         
         // Nueva tubería de procesamiento
         this.pipeline = new MessagePipeline();
+
+        // Nuevo Gestor de Almacenamiento (Strategy Pattern)
+        this.storageManager = new StorageManager();
     }
 
     /**
      * Inicializa todos los servicios y configura la tubería de mensajes
      */
-    init() {
+    async init() {
         Logger.info('App', '⚙️ Inicializando procesador de mensajes...');
 
         // 1. Inicializar Servicios Base
-        this._initServices();
+        await this._initServices();
         
         // 2. Inicializar Managers Base
         this._initManagers();
@@ -75,18 +83,25 @@ export default class MessageProcessor {
      * Inicialización de servicios (Separado para limpieza)
      * @private
      */
-    _initServices() {
+    async _initServices() {
         try {
             this.services.ranking = new RankingSystem(this.config);
             
+            // Configurar Estrategia de Almacenamiento
+            this.services.gist = new GistStorageService(this.config);
+            this.services.gist.configure(this.config.XP_GIST_ID, this.config.XP_GIST_TOKEN, this.config.XP_GIST_FILENAME);
+
+            this.storageManager
+                .addProvider(new GistStorageProvider(this.services.gist))
+                .addProvider(new LocalStorageProvider());
+
+            await this.storageManager.init();
+
             if (this.config.XP_SYSTEM_ENABLED) {
-                this.services.gist = new GistStorageService(this.config);
-                this.services.gist.configure(this.config.XP_GIST_ID, this.config.XP_GIST_TOKEN, this.config.XP_GIST_FILENAME);
+                // Nuevo Gestor de Estado Centralizado usando el StorageManager (Strategy)
+                this.services.stateManager = new UserStateManager(this.config, this.storageManager);
                 
-                // Nuevo Gestor de Estado Centralizado
-                this.services.stateManager = new UserStateManager(this.config, this.services.gist);
-                
-                this.services.streamHistory = new StreamHistoryService(this.config, this.services.gist);
+                this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
                 
                 // Inyectar stateManager en los servicios que lo necesitan
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager);

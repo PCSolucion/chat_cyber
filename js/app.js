@@ -24,24 +24,17 @@ class App {
         Logger.init(this.config);
         Logger.info('App', '🚀 Booting Twitch Chat Overlay...');
 
-        // 1. Instanciar Message Processor
+        // 1. Instanciar Message Processor (Sin inicializar aún)
         this.processor = null;
         try {
             this.processor = new MessageProcessor(this.config);
-            this.processor.init();
         } catch (e) {
-            Logger.error('App', 'FATAL: MessageProcessor failed to initialize.', e);
+            Logger.error('App', 'FATAL: MessageProcessor creation failed.', e);
         }
 
         // Inicializar AudioManager
         this.audioManager = new AudioManager(this.config);
         this.audioManager.init();
-
-        // Inicializar CommandManager después de que processor haya creado los servicios base
-        if (this.processor && this.processor.services) {
-            this.commandManager = new CommandManager(this.processor.services, this.config);
-            this.commandManager.registerAll(ALL_COMMANDS);
-        }
 
         // 2. Instanciar Twitch Service
         this.twitchService = null;
@@ -67,12 +60,21 @@ class App {
         this.isStreamOnline = false;
         this.watchTimeInterval = null;
 
-        // Cargar datos del processor
+        // 1. Inicializar Processor asíncronamente (incluye StorageManager)
         if (this.processor) {
             try {
+                await this.processor.init();
+                
+                // Inicializar CommandManager después de que processor haya creado los servicios base
+                if (this.processor.services) {
+                    this.commandManager = new CommandManager(this.processor.services, this.config);
+                    this.commandManager.registerAll(ALL_COMMANDS);
+                }
+
+                // Cargar datos del processor (XP, Rankings, etc.)
                 await this.processor.loadAsyncData();
             } catch (e) {
-                console.error('⚠️ App Logic load warning:', e);
+                Logger.error('App', 'Error during Processor initialization:', e);
             }
         }
 

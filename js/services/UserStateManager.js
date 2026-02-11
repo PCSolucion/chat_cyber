@@ -14,11 +14,12 @@ import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 export default class UserStateManager {
     /**
      * @param {Object} config - Configuración global
-     * @param {GistStorageService} storageService - Servicio de storage (Gist)
+     * @param {StorageManager} storage - Gestor de storage (Strategy)
      */
-    constructor(config, storageService) {
+    constructor(config, storage) {
         this.config = config;
-        this.storageService = storageService;
+        this.storage = storage;
+        this.fileName = config.XP_GIST_FILENAME || 'xp_data.json';
 
         // Base de datos de usuarios en memoria
         this.users = new Map();
@@ -37,7 +38,7 @@ export default class UserStateManager {
      */
     async load() {
         try {
-            const data = await this.storageService.loadXPData();
+            const data = await this.storage.load(this.fileName);
 
             if (data && data.users) {
                 Object.entries(data.users).forEach(([username, userData]) => {
@@ -141,8 +142,8 @@ export default class UserStateManager {
      */
     async _performSaveTask() {
         try {
-            // 1. Sincronizar con el servidor para no sobreescribir otros cambios
-            const remoteData = await this.storageService.loadXPData(true);
+            // 1. Sincronizar con el servidor para no sobreescribir otros cambios (Opcional, pero mantenemos la lógica)
+            const remoteData = await this.storage.load(this.fileName);
             
             if (remoteData && remoteData.users) {
                 this._mergeRemoteChanges(remoteData.users);
@@ -155,7 +156,7 @@ export default class UserStateManager {
             });
 
             // 3. Guardar
-            await this.storageService.saveXPData({
+            await this.storage.save(this.fileName, {
                 users: usersSnapshot,
                 lastUpdated: new Date().toISOString(),
                 version: '1.1'
