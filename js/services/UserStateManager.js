@@ -39,8 +39,12 @@ export default class UserStateManager {
     async load() {
         try {
             console.group('📂 UserStateManager: Iniciando Carga');
+            const activeProvider = this.storage.activeProvider ? this.storage.activeProvider.constructor.name : 'NINGUNO';
+            console.log(`🔌 Proveedor Activo: ${activeProvider}`);
+            console.log(`📄 Recurso solicitado: ${this.fileName}`);
+
             const data = await this.storage.load(this.fileName);
-            console.log('📦 Datos recibidos del Storage:', data);
+            console.log('📦 Datos crudos recibidos:', data);
 
             if (data) {
                 // Soporte para estructura plana (sin .users) o envuelta
@@ -53,11 +57,15 @@ export default class UserStateManager {
                             this.users.set(username.toLowerCase(), this._sanitizeUserData(userData));
                         }
                     });
+                } else {
+                    console.warn('⚠️ La estructura de datos recibida no es un objeto válido de usuarios:', usersToLoad);
                 }
+            } else {
+                console.warn('⚠️ No se recibieron datos de ningún proveedor de almacenamiento.');
             }
 
             this.isLoaded = true;
-            console.log(`✅ Usuarios procesados: ${this.users.size}`);
+            console.log(`✅ Usuarios procesados y listos: ${this.users.size}`);
             console.groupEnd();
             
             // Integrar datos iniciales (subs importados)
@@ -76,7 +84,6 @@ export default class UserStateManager {
     /**
      * Obtiene los datos de un usuario (los crea si no existen)
      * @param {string} username 
-     * @returns {Object}
      */
     getUser(username) {
         const lowerUser = username.toLowerCase();

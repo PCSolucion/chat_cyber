@@ -30,6 +30,14 @@ export default class GistStorageProvider extends BaseStorageProvider {
     }
 
     async isAvailable() {
-        return this.gistService.isConfigured && await this.gistService.testConnection();
+        if (!this.gistService.isConfigured) {
+            Logger.warn('GistProvider', 'Gist no está configurado (faltan ID o Token)');
+            return false;
+        }
+        const connected = await this.gistService.testConnection();
+        if (!connected) {
+            Logger.error('GistProvider', 'No se pudo verificar la conexión con GitHub Gist');
+        }
+        return connected;
     }
 }
