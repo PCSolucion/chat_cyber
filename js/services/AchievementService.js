@@ -23,10 +23,12 @@ export default class AchievementService {
      * Constructor del servicio de logros
      * @param {Object} config - Configuración global
      * @param {ExperienceService} experienceService - Servicio de XP
+     * @param {UserStateManager} stateManager - Gestor de estado
      */
-    constructor(config, experienceService) {
+    constructor(config, experienceService, stateManager) {
         this.config = config;
         this.experienceService = experienceService;
+        this.stateManager = stateManager;
 
         // Los logros se cargarán desde ACHIEVEMENTS_DATA
         this.achievements = {};
@@ -217,7 +219,7 @@ export default class AchievementService {
 
         // Si no está en cache, cargar desde userData (Gist)
         if (!this.userStats.has(lowerUser)) {
-            const userData = this.experienceService.getUserData(lowerUser);
+            const userData = this.stateManager.getUser(lowerUser);
             const savedStats = userData.achievementStats || {};
 
             this.userStats.set(lowerUser, {
@@ -391,9 +393,11 @@ export default class AchievementService {
         this.userStats.set(lowerUser, stats);
 
         // Sincronizar con userData para guardar en Gist
-        const userData = this.experienceService.getUserData(lowerUser);
+        const userData = this.stateManager.getUser(lowerUser);
         userData.achievementStats = stats;
+        this.stateManager.markDirty(lowerUser);
     }
+
 
     /**
      * Actualiza estadísticas de fechas festivas
@@ -474,8 +478,8 @@ export default class AchievementService {
         // Actualizar estadísticas primero
         this.updateUserStats(lowerUser, context);
 
-        // Obtener datos del usuario desde ExperienceService
-        const userData = this.experienceService.getUserData(lowerUser);
+        // Obtener datos del usuario desde StateManager
+        const userData = this.stateManager.getUser(lowerUser);
         const userStats = this.getUserStats(lowerUser);
 
         // Lista de logros desbloqueados en esta verificación
@@ -522,7 +526,7 @@ export default class AchievementService {
         // Guardar logros actualizados si hay nuevos
         if (unlockedNow.length > 0) {
             userData.achievements = existingAchievements;
-            this.experienceService.persistence.markDirty(lowerUser);
+            this.stateManager.markDirty(lowerUser);
 
             // Emitir eventos para cada logro desbloqueado
             if (!context.isInitialLoad) {
@@ -553,7 +557,7 @@ export default class AchievementService {
      * @returns {Array}
      */
     getUserAchievements(username) {
-        const userData = this.experienceService.getUserData(username.toLowerCase());
+        const userData = this.stateManager.getUser(username.toLowerCase());
         const achievementData = userData.achievements || [];
 
         // Normalize: handle both old format (string ID) and new format (object with id/unlockedAt)

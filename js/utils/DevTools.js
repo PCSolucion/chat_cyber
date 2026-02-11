@@ -138,7 +138,7 @@ export default class DevTools {
         const userData = this.xpService.getUserData(username);
         userData.streakDays = days;
         userData.lastStreakDate = new Date().toLocaleDateString('en-CA');
-        this.xpService.usersXP.set(username.toLowerCase(), userData);
+        this.xpService.stateManager.markDirty(username);
         console.log(`🔥 Streak set for ${username}: ${days} days`);
     }
 

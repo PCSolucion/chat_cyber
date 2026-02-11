@@ -7,6 +7,7 @@ import AchievementService from '../services/AchievementService.js';
 import ThirdPartyEmoteService from '../services/ThirdPartyEmoteService.js';
 import SessionStatsService from '../services/SessionStatsService.js';
 import WatchTimeService from '../services/WatchTimeService.js';
+import UserStateManager from '../services/UserStateManager.js';
 
 import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
@@ -70,17 +71,21 @@ export default class MessageProcessor {
                 this.services.gist = new GistStorageService(this.config);
                 this.services.gist.configure(this.config.XP_GIST_ID, this.config.XP_GIST_TOKEN, this.config.XP_GIST_FILENAME);
                 
+                // Nuevo Gestor de Estado Centralizado
+                this.services.stateManager = new UserStateManager(this.config, this.services.gist);
+                
                 this.services.streamHistory = new StreamHistoryService(this.config, this.services.gist);
                 
-                this.services.xp = new ExperienceService(this.config, this.services.gist);
-                this.services.achievements = new AchievementService(this.config, this.services.xp);
+                // Inyectar stateManager en los servicios que lo necesitan
+                this.services.xp = new ExperienceService(this.config, this.services.stateManager);
+                this.services.achievements = new AchievementService(this.config, this.services.xp, this.services.stateManager);
             }
 
             if (this.config.THIRD_PARTY_EMOTES_ENABLED) {
                 this.services.thirdPartyEmotes = new ThirdPartyEmoteService(this.config);
             }
 
-            this.services.sessionStats = new SessionStatsService(this.config, this.services.xp, this.services.achievements);
+            this.services.sessionStats = new SessionStatsService(this.config, this.services.xp, this.services.achievements, this.services.stateManager);
             
             // Inicializar WatchTimeService (Requiere TwitchService inyectado después)
             this.services.watchTime = new WatchTimeService(this.config, this.services.xp, this.services.sessionStats);
@@ -366,7 +371,7 @@ export default class MessageProcessor {
 
     async destroy() {
         Logger.info('App', '🛑 MessageProcessor: Shutting down...');
-        if (this.services.xp?.persistence) await this.services.xp.persistence.saveImmediately();
+        if (this.services.stateManager) await this.services.stateManager.saveImmediately();
         if (this.services.sessionStats) this.services.sessionStats.destroy();
         if (this.services.watchTime) this.services.watchTime.stop();
         if (this.managers.idleDisplay) this.managers.idleDisplay.stop();

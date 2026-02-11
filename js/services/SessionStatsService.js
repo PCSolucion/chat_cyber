@@ -14,10 +14,11 @@ import UIUtils from '../utils/UIUtils.js';
  * @class SessionStatsService
  */
 export default class SessionStatsService {
-    constructor(config, experienceService, achievementService) {
+    constructor(config, experienceService, achievementService, stateManager) {
         this.config = config;
         this.experienceService = experienceService;
         this.achievementService = achievementService;
+        this.stateManager = stateManager;
 
         // Timestamp de inicio de sesión
         this.sessionStart = null;
@@ -394,18 +395,17 @@ export default class SessionStatsService {
      * @param {number} n
      */
     getTopSubscribers(n = 20) {
-        if (!this.experienceService || !this.experienceService.usersXP) return [];
+        if (!this.stateManager) return [];
 
-        return Array.from(this.experienceService.usersXP.entries())
+        return Array.from(this.stateManager.getAllUsers().entries())
             .filter(([username, data]) => {
                 // Excluir al streamer y filtrar por meses > 0
-                // Fallback: Si no hay BROADCASTER_USERNAME, usa TWITCH_CHANNEL, o 'liiukiin' por defecto
                 const broadcaster = this.config.BROADCASTER_USERNAME || this.config.TWITCH_CHANNEL || 'liiukiin';
                 
                 if (username.toLowerCase() === broadcaster.toLowerCase()) return false;
                 return data.subMonths && data.subMonths > 0;
             })
-            .sort((a, b) => b[1].subMonths - a[1].subMonths)
+            .sort((a, b) => (b[1].subMonths || 0) - (a[1].subMonths || 0))
             .slice(0, n)
             .map(([username, data]) => ({
                 username: UIUtils.formatUsername(username),
@@ -425,16 +425,13 @@ export default class SessionStatsService {
         if (period === 'session') {
             users = Array.from(this.stats.sessionWatchTime.entries())
                 .map(([username, minutes]) => ({ username, minutes }));
-        } else if (this.experienceService) {
-            // Iterar sobre todos los usuarios conocidos por XP service
-            // NOTA: Esto acceso a propiedad interna usersXP, idealmente debería haber un método público
-            // pero por simplicidad accedemos al Map si está accesible
-            if (this.experienceService.usersXP) {
-                users = Array.from(this.experienceService.usersXP.keys()).map(username => ({
-                    username,
-                    minutes: this.experienceService.getWatchTimeStats(username, period)
-                }));
-            }
+        } else if (this.stateManager) {
+            // Iterar sobre todos los usuarios conocidos por StateManager
+            const allUsers = this.stateManager.getAllUsers();
+            users = Array.from(allUsers.keys()).map(username => ({
+                username,
+                minutes: this.experienceService.getWatchTimeStats(username, period)
+            }));
         }
 
         // Sort y slice

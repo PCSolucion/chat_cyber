@@ -1,7 +1,6 @@
 import StreakManager from './StreakManager.js';
 import LevelCalculator from './LevelCalculator.js';
 import XPSourceEvaluator from './XPSourceEvaluator.js';
-import PersistenceManager from './PersistenceManager.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import { XP } from '../constants/AppConstants.js';
@@ -15,30 +14,20 @@ import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
  * - Calcular niveles basados en XP acumulado
  * - Detectar level-ups y emitir eventos
  * - Gestionar fuentes de XP extensibles
- * 
- * @class ExperienceService
  */
 export default class ExperienceService {
+
     /**
      * Constructor del servicio de experiencia
      * @param {Object} config - Configuración global
-     * @param {GistStorageService} storageService - Servicio de persistencia
+     * @param {UserStateManager} stateManager - Gestor de estado de usuarios
      */
-    constructor(config, storageService) {
+    constructor(config, stateManager) {
         this.config = config;
-        this.storageService = storageService;
-
-        // Cache local de datos de usuarios
-        this.usersXP = new Map();
-
-        // Registro de última actividad por usuario (para cooldowns y bonus)
-        this.lastActivity = new Map();
+        this.stateManager = stateManager;
 
         // Registro de mensajes del día actual (para bonus primer mensaje)
         this.dailyFirstMessage = new Map();
-
-        // Queues y Locks (Ahora gestionados por PersistenceManager)
-        this.isLoaded = false;
 
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
@@ -48,13 +37,6 @@ export default class ExperienceService {
         this.levelCalculator = new LevelCalculator();
         this.xpEvaluator = new XPSourceEvaluator(this.xpConfig);
         
-        // Gestor de Persistencia
-        this.persistence = new PersistenceManager({
-            saveCallback: () => this._performSaveTask(),
-            debounceMs: this.xpConfig.settings.saveDebounceMs,
-            debug: this.config.DEBUG
-        });
-
         this.currentDay = this.streakManager.getCurrentDay();
     }
 
@@ -157,169 +139,11 @@ export default class ExperienceService {
 
 
     /**
-     * Carga los datos de XP desde el storage
+     * Carga los datos delegando al stateManager
      * @returns {Promise<void>}
      */
     async loadData() {
-        try {
-            const data = await this.storageService.loadXPData();
-
-            if (data && data.users) {
-                // Cargar datos de usuarios con sanitización inmediata
-                Object.entries(data.users).forEach(([username, userData]) => {
-                    // Sanitización de LOGROS (Deduplicar si vinieran corruptos del Gist)
-                    let achievements = userData.achievements || [];
-                    if (Array.isArray(achievements) && achievements.length > 0) {
-                        const achMap = new Map();
-                        achievements.forEach(ach => {
-                            const id = typeof ach === 'string' ? ach : ach.id;
-                            if (id && !achMap.has(id)) achMap.set(id, ach);
-                        });
-                        achievements = Array.from(achMap.values());
-                    }
-
-                    this.usersXP.set(username.toLowerCase(), {
-                        xp: userData.xp || 0,
-                        level: userData.level || 1,
-                        lastActivity: userData.lastActivity || null,
-                        streakDays: userData.streakDays || 0,
-                        bestStreak: userData.bestStreak || userData.streakDays || 0,
-                        lastStreakDate: userData.lastStreakDate || null,
-                        totalMessages: userData.totalMessages || 0,
-                        achievements: achievements,
-                        achievementStats: userData.achievementStats || {},
-                        activityHistory: userData.activityHistory || {},
-                        watchTimeMinutes: userData.watchTimeMinutes || 0
-                    });
-                });
-            }
-
-            this.isLoaded = true;
-            console.log(`✅ XP Data cargado: ${this.usersXP.size} usuarios`);
-            
-            // Cargar datos importados de sub
-            this._mergeInitialSubscribers();
-
-        } catch (error) {
-            console.error('❌ Error al cargar XP data:', error);
-            this.isLoaded = true; // Continuar sin datos previos
-            // Intentar cargar subs incluso si falló la carga remota
-            this._mergeInitialSubscribers();
-        }
-    }
-
-    /**
-     * Tarea de guardado real (llamada por PersistenceManager)
-     * Implementa estrategia "Fetch-before-write" para integridad de datos
-     * @private
-     */
-    async _performSaveTask() {
-        try {
-            // 1. Sincronizar primero: Descargar versión más reciente del Gist
-            // Esto asegura que no borramos cambios hechos desde otro dispositivo
-            const remoteData = await this.storageService.loadXPData(true);
-            
-            if (remoteData && remoteData.users) {
-                this._mergeRemoteChanges(remoteData.users);
-                if (this.config.DEBUG) console.log('🔄 ExperienceService: Datos remotos fusionados antes de guardar');
-            }
-
-            // 2. Preparar snapshot unificado para subir
-            const usersData = {};
-            this.usersXP.forEach((data, username) => {
-                usersData[username] = data;
-            });
-
-            // 3. Guardar en Gist (PATCH simple sin headers de precondición)
-            await this.storageService.saveXPData({
-                users: usersData,
-                lastUpdated: new Date().toISOString(),
-                version: '1.0'
-            });
-
-        } catch (error) {
-            console.error('❌ ExperienceService: Error crítico en ciclo de persistencia:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Fusiona cambios remotos con los locales sin perder progreso nuevo
-     * @private
-     */
-    _mergeRemoteChanges(remoteUsers) {
-        Object.entries(remoteUsers).forEach(([username, remoteData]) => {
-            const lowerUser = username.toLowerCase();
-            const localData = this.usersXP.get(lowerUser);
-
-            if (!localData) {
-                // El usuario es nuevo en el remoto, lo añadimos
-                this.usersXP.set(lowerUser, remoteData);
-            } else {
-                // 1. Criterio de Fusión Base: Conservar siempre el mayor progreso
-                localData.xp = Math.max(localData.xp || 0, remoteData.xp || 0);
-                localData.level = Math.max(localData.level || 1, remoteData.level || 1);
-                localData.totalMessages = Math.max(localData.totalMessages || 0, remoteData.totalMessages || 0);
-                localData.watchTimeMinutes = Math.max(localData.watchTimeMinutes || 0, remoteData.watchTimeMinutes || 0);
-                localData.streakDays = Math.max(localData.streakDays || 0, remoteData.streakDays || 0);
-                localData.bestStreak = Math.max(localData.bestStreak || 0, remoteData.bestStreak || 0);
-                localData.subMonths = Math.max(localData.subMonths || 0, remoteData.subMonths || 0);
-
-                // 2. Mezclar LOGROS (Deduplicar por ID)
-                // Usamos un Map para asegurar que solo hay un objeto por logro ID
-                const achMap = new Map();
-                const allAchievements = [
-                    ...(remoteData.achievements || []),
-                    ...(localData.achievements || [])
-                ];
-
-                allAchievements.forEach(ach => {
-                    const id = typeof ach === 'string' ? ach : ach.id;
-                    if (!id) return;
-                    
-                    // Si ya existe, nos quedamos con el que tenga fecha (prioridad al remoto si ya estaba)
-                    if (!achMap.has(id)) {
-                        achMap.set(id, ach);
-                    }
-                });
-                localData.achievements = Array.from(achMap.values());
-
-                // 3. Mezclar ACHIEVEMENT STATS (Contadores internos)
-                if (remoteData.achievementStats) {
-                    if (!localData.achievementStats) localData.achievementStats = {};
-                    Object.entries(remoteData.achievementStats).forEach(([key, val]) => {
-                        if (typeof val === 'number') {
-                            localData.achievementStats[key] = Math.max(localData.achievementStats[key] || 0, val);
-                        } else if (val && !localData.achievementStats[key]) {
-                            // Para booleanos o arrays (como holidays)
-                            localData.achievementStats[key] = val;
-                        }
-                    });
-                }
-
-                // 4. Mezclar ACTIVITY HISTORY (Heatmaps)
-                if (remoteData.activityHistory) {
-                    if (!localData.activityHistory) localData.activityHistory = {};
-                    Object.entries(remoteData.activityHistory).forEach(([date, dayData]) => {
-                        if (!localData.activityHistory[date]) {
-                            localData.activityHistory[date] = dayData;
-                        } else {
-                            const localDay = localData.activityHistory[date];
-                            localDay.messages = Math.max(localDay.messages || 0, dayData.messages || 0);
-                            localDay.xp = Math.max(localDay.xp || 0, dayData.xp || 0);
-                            localDay.watchTime = Math.max(localDay.watchTime || 0, dayData.watchTime || 0);
-                        }
-                    });
-                }
-
-                // 5. Actualizar timestamp de actividad al más reciente
-                const remoteTime = remoteData.lastActivity ? new Date(remoteData.lastActivity).getTime() : 0;
-                const localTime = localData.lastActivity ? new Date(localData.lastActivity).getTime() : 0;
-                localData.lastActivity = Math.max(localTime, remoteTime);
-                
-                this.usersXP.set(lowerUser, localData);
-            }
-        });
+        await this.stateManager.load();
     }
 
     /**
@@ -446,9 +270,8 @@ export default class ExperienceService {
         const newLevel = this.levelCalculator.calculateLevel(userData.xp);
         userData.level = newLevel;
 
-        // Guardar datos actualizados vía Gestor de Persistencia
-        this.usersXP.set(lowerUser, userData);
-        this.persistence.markDirty(lowerUser);
+        // Guardar datos actualizados
+        this.stateManager.markDirty(lowerUser);
 
         // Emitir evento de ganancia de XP para sincronizar UI
         EventManager.emit(EVENTS.USER.XP_GAINED, {
@@ -492,53 +315,12 @@ export default class ExperienceService {
     }
 
     /**
-     * Obtiene los datos de un usuario, creando entrada si no existe
+     * Obtiene los datos de un usuario delegando al stateManager
      * @param {string} username - Nombre del usuario (lowercase)
      * @returns {Object}
      */
     getUserData(username) {
-        const lowerUser = username.toLowerCase();
-
-
-
-        if (!this.usersXP.has(lowerUser)) {
-            this.usersXP.set(lowerUser, {
-                xp: 0,
-                level: 1,
-                lastActivity: null,
-                streakDays: 0,
-                bestStreak: 0,
-                lastStreakDate: null,
-                totalMessages: 0,
-                achievements: [],
-                achievementStats: {},
-                activityHistory: {}, // { "YYYY-MM-DD": { messages: N, xp: N } }
-                watchTimeMinutes: 0,
-                watchTimeLog: {},
-                subMonths: 0 // New field for subscription tracking
-            });
-        }
-
-        // ================= TEST DATA FOR LIIUKIIN =================
-        // Si el usuario es Liiukiin, asegurar que tenga tiempo inicial para pruebas
-        if (lowerUser === 'liiukiin') {
-            const liiukiinData = this.usersXP.get(lowerUser);
-            if (!liiukiinData.watchTimeMinutes || liiukiinData.watchTimeMinutes < 120) {
-                liiukiinData.watchTimeMinutes = 120; // 2 horas iniciales
-            }
-        }
-        // ==========================================================
-
-        // Ensure activityHistory and bestStreak exist for older users
-        const userData = this.usersXP.get(lowerUser);
-        if (!userData.activityHistory) {
-            userData.activityHistory = {};
-        }
-        if (userData.bestStreak === undefined) {
-            userData.bestStreak = userData.streakDays || 0;
-        }
-
-        return userData;
+        return this.stateManager.getUser(username);
     }
 
     /**
@@ -554,7 +336,7 @@ export default class ExperienceService {
         // (A veces la API devuelve 0 o null si es gift sub reciente, pero si tenemos un valor mayor guardado, lo mantenemos)
         if (months > (userData.subMonths || 0)) {
             userData.subMonths = months;
-            this.persistence.markDirty(lowerUser);
+            this.stateManager.markDirty(lowerUser);
         }
     }
 
@@ -610,8 +392,8 @@ export default class ExperienceService {
         // También sumar el XP ganado al historial diario
         userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + xpEarned;
 
-        // 4. Guardar vía Gestor de Persistencia
-        this.persistence.markDirty(lowerUser);
+        // 4. Guardar
+        this.stateManager.markDirty(lowerUser);
 
         // Emitir evento de ganancia de XP (pasiva)
         EventManager.emit(EVENTS.USER.XP_GAINED, {
@@ -653,7 +435,7 @@ export default class ExperienceService {
         const newLevel = this.levelCalculator.calculateLevel(userData.xp);
         userData.level = newLevel;
 
-        this.persistence.markDirty(lowerUser);
+        this.stateManager.markDirty(lowerUser);
 
         // Emitir evento de ganancia de XP (marcado como pasivo/fijo para no aplicar efectos de racha en UI)
         if (!options.suppressEvents) {
@@ -734,13 +516,8 @@ export default class ExperienceService {
         return userData.watchTimeMinutes || 0;
     }
 
-    /**
-     * Obtiene el leaderboard de XP
-     * @param {number} limit - Cantidad de usuarios a retornar
-     * @returns {Array} Lista ordenada de usuarios
-     */
     getXPLeaderboard(limit = 10) {
-        const users = Array.from(this.usersXP.entries())
+        const users = Array.from(this.stateManager.getAllUsers().entries())
             .map(([username, data]) => ({
                 username,
                 xp: data.xp,
@@ -794,7 +571,7 @@ export default class ExperienceService {
 
         // 1. Identificar quién era el Top 1 anterior (según nuestros datos persistidos)
         let previousTop1User = null;
-        for (const [username, userData] of this.usersXP.entries()) {
+        for (const [username, userData] of this.stateManager.getAllUsers().entries()) {
             if (userData.achievementStats && userData.achievementStats.currentRank === 1) {
                 previousTop1User = username;
                 break;
@@ -860,8 +637,7 @@ export default class ExperienceService {
             // Guardar y notificar si hubo cambios relevantes
             if (statsChanged) {
                 userData.achievementStats = stats;
-                this.usersXP.set(lowerUser, userData);
-                this.persistence.markDirty(lowerUser);
+                this.stateManager.markDirty(lowerUser);
                 changesCount++;
 
                 // Emitir evento para verificar logros de ranking
@@ -927,7 +703,7 @@ export default class ExperienceService {
             userData.activityHistory[today].watchTime += minutes;
             userData.activityHistory[today].xp = (userData.activityHistory[today].xp || 0) + totalXP;
 
-            this.persistence.markDirty(lowerUser);
+            this.stateManager.markDirty(lowerUser);
 
             // Emitir evento para actualización de UI
             EventManager.emit(EVENTS.USER.XP_GAINED, {
@@ -945,81 +721,45 @@ export default class ExperienceService {
         }
     }
 
-    /**
-     * Obtiene estadísticas globales
-     * @returns {Object}
-     */
     getGlobalStats() {
         let totalXP = 0;
         let totalMessages = 0;
         let highestLevel = 1;
+        const users = this.stateManager.getAllUsers();
 
-        this.usersXP.forEach(data => {
+        users.forEach(data => {
             totalXP += data.xp;
             totalMessages += data.totalMessages;
             if (data.level > highestLevel) highestLevel = data.level;
         });
 
         return {
-            totalUsers: this.usersXP.size,
+            totalUsers: users.size,
             totalXP,
             totalMessages,
             highestLevel,
-            averageXP: this.usersXP.size > 0 ? Math.floor(totalXP / this.usersXP.size) : 0
+            averageXP: users.size > 0 ? Math.floor(totalXP / users.size) : 0
         };
     }
 
-    /**
-     * Resetea todos los datos de XP (Local y Remoto)
-     * ACCIÓN DESTRUCTIVA
-     */
     async resetAllData() {
-        this.usersXP.clear();
-        this.lastActivity.clear();
+        await this.stateManager.resetAll();
         this.dailyFirstMessage.clear();
-
-        // Forzar guardado de estado vacío
-        await this.persistence.saveImmediately();
         console.log('☢️ SYSTEM PURGE: ALL XP DATA CLEARED');
     }
 
-    /**
-     * Devuelve todos los datos como JSON para exportación
-     */
     getAllDataJSON() {
         const usersData = {};
-        this.usersXP.forEach((data, username) => {
+        this.stateManager.getAllUsers().forEach((data, username) => {
             usersData[username] = data;
         });
 
         return JSON.stringify({
             users: usersData,
             lastUpdated: new Date().toISOString(),
-            version: '1.0'
+            version: '1.2'
         }, null, 2);
     }
 
-    /**
-     * Fusiona los datos iniciales de suscriptores (Importación CSV)
-     * @private
-     */
-    _mergeInitialSubscribers() {
-        if (!INITIAL_SUBSCRIBERS) return;
-
-        let updatedCount = 0;
-        Object.entries(INITIAL_SUBSCRIBERS).forEach(([username, months]) => {
-            const lowerUser = username.toLowerCase();
-            const userData = this.getUserData(lowerUser); // Creates if not exists
-
-            if (!userData.subMonths || userData.subMonths < months) {
-                userData.subMonths = months;
-                this.persistence.markDirty(lowerUser);
-                updatedCount++;
-            }
-        });
-
-        if (updatedCount > 0) {
-            console.log(`📥 Importados datos de suscripción para ${updatedCount} usuarios.`);
-        }
-    }
+    // Método eliminado: _mergeInitialSubscribers movido a UserStateManager
 }

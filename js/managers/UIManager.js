@@ -6,6 +6,7 @@ import Logger from '../utils/Logger.js';
 // Nuevos componentes especializados
 import DisplayController from './ui/DisplayController.js';
 import StatusBarComponent from './ui/StatusBarComponent.js';
+import NotificationManager from './NotificationManager.js';
 import IdentityComponent from './ui/IdentityComponent.js';
 import MessageComponent from './ui/MessageComponent.js';
 import MessageQueueManager from './ui/MessageQueueManager.js';
@@ -220,6 +221,7 @@ export default class UIManager {
         // Delegar actualizaciones a los componentes
         this.identity.update(username, userRole, subscriberInfo);
         this.message.update(message, emotes, userRole);
+        
         this._handleGoldMode(subscriberInfo);
 
         // Programar desaparición
