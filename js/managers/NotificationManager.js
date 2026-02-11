@@ -138,6 +138,9 @@ export default class NotificationManager {
         this._displayAchievement(notification.data);
         this._displayTopOverlayAchievement(notification.data);
         
+        // Emitir evento para sincronizar sonido con la animación real
+        EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, notification.data);
+        
         // Tiempo base del Xbox Achievement (11s) + margen
         totalWaitTime = Math.max(totalWaitTime, 11500);
         break;
@@ -290,9 +293,6 @@ export default class NotificationManager {
         `🏆 Achievement notification shown: ${username} -> ${achievement.name}`,
       );
     }
-
-    // Play Sound (Del widget Cyberpunk)
-    this._playAchievementSound();
   }
 
   /**
@@ -368,9 +368,6 @@ export default class NotificationManager {
     const banner = overlay.querySelector('.banner');
     const display = overlay.querySelector('.achieve_disp');
 
-    // Reproducir sonido de logro raro
-    this._playXboxSound();
-
     // Trigger show animation
     requestAnimationFrame(() => {
       overlay.classList.add("show");
@@ -413,22 +410,6 @@ export default class NotificationManager {
   }
 
   /**
-   * Reproduce el sonido de logro raro de Xbox
-   * @private
-   */
-  _playXboxSound() {
-    const soundUrl = 'sounds/logro3.mp3';
-    
-    try {
-      const audio = new Audio(soundUrl);
-      audio.volume = 0.7;
-      audio.play().catch(e => console.warn("Audio play failed:", e));
-    } catch (e) {
-      console.warn("Audio error:", e);
-    }
-  }
-
-  /**
    * Efecto de descifrado (scramble) para texto Cyberpunk
    * @private
    * @param {HTMLElement} element 
@@ -447,7 +428,6 @@ export default class NotificationManager {
       if (progress < 1) {
         let currentText = "";
         for (let i = 0; i < originalText.length; i++) {
-          // Espacios se mantienen, el resto se descifra según progreso
           if (originalText[i] === " " || Math.random() < progress) {
             currentText += originalText[i];
           } else {
@@ -477,15 +457,10 @@ export default class NotificationManager {
       const bit = document.createElement('div');
       bit.className = 'data-bit';
       
-      // Posición aleatoria cerca del centro del banner
       const x = 50 + (Math.random() - 0.5) * 100;
       const y = 40 + (Math.random() - 0.5) * 40;
-      
-      // Dirección del movimiento
       const tx = (Math.random() - 0.5) * 200;
       const ty = (Math.random() - 0.5) * 150;
-      
-      // Estilo aleatorio
       const size = Math.random() * 3 + 2;
       const duration = 1000 + Math.random() * 1000;
       const color = Math.random() > 0.5 ? '#00f0ff' : '#ffffff';
@@ -501,7 +476,6 @@ export default class NotificationManager {
       
       parent.appendChild(bit);
       
-      // Limpieza
       setTimeout(() => {
         if (bit.parentNode) parent.removeChild(bit);
       }, duration + 100);
@@ -536,25 +510,6 @@ export default class NotificationManager {
       }
     } catch (e) {
       console.warn("Error checking overflow:", e);
-    }
-  }
-
-  /**
-   * Reproduce el sonido de logro
-   * @private
-   */
-  _playAchievementSound() {
-    // Verificar si hay configuración de sonidos (asumiendo que podría estar en this.config)
-    // Si no hay flag específica, reproducimos por defecto
-    try {
-        const audio = new Audio('sounds/logro2.mp3');
-        audio.volume = 0.5; // Volumen moderado
-        audio.play().catch(e => {
-            // Ignorar errores de autoplay (comunes si no hubo interacción previa)
-            if (this.config.DEBUG) console.warn('Sound play failed:', e);
-        });
-    } catch (e) {
-        console.warn('Audio error:', e);
     }
   }
 

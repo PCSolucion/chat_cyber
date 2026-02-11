@@ -48,6 +48,9 @@ export default class AudioManager {
         // 2. Level Up (Sincronizado con la animación real en el NotificationManager)
         EventManager.on(EVENTS.UI.LEVEL_UP_DISPLAYED, (data) => this.playLevelUp(data));
         
+        // 3. Achievements (Sincronizado con la animación)
+        EventManager.on(EVENTS.UI.ACHIEVEMENT_DISPLAYED, (data) => this.playAchievement(data));
+        
         // 4. Test sound
         EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());
     }
@@ -79,6 +82,25 @@ export default class AudioManager {
         else if (level <= 15) soundFile = 'sounds/level15.mp3';
         else if (level <= 20) soundFile = 'sounds/level20.mp3';
         else soundFile = 'sounds/level25.mp3';
+
+        this._playSoundFile(soundFile);
+    }
+
+    /**
+     * Reproduce sonidos de logros
+     * @param {Object} data - Datos del evento { achievement }
+     */
+    playAchievement(data) {
+        const rarity = data?.achievement?.rarity || 'common';
+        
+        // Mapeo de sonidos por rareza
+        let soundFile = 'sounds/logro2.mp3'; // Default common
+        
+        if (rarity === 'legendary' || rarity === 'epic') {
+            soundFile = 'sounds/logro3.mp3'; // Rare sound
+        } else if (rarity === 'common') {
+            soundFile = 'sounds/logro2.mp3';
+        }
 
         this._playSoundFile(soundFile);
     }
