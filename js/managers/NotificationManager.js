@@ -234,7 +234,6 @@ export default class NotificationManager {
    * @param {Object} eventData - { username, achievement }
    */
   _displayAchievement(eventData) {
-    const { username, achievement } = eventData;
     const container = document.getElementById("achievement-notifications");
 
     if (!container) {
@@ -242,16 +241,16 @@ export default class NotificationManager {
       return;
     }
 
+    // Decorar datos para uso seguro en HTML (Mover al inicio para tener acceso a variables)
+    const safeData = UIUtils.decorate(eventData);
+    const { username, achievement } = safeData;
+
     const notification = document.createElement("div");
     notification.className = "achievement-notification";
-    notification.setAttribute("data-rarity", achievement.rarity);
+    notification.setAttribute("data-rarity", eventData.achievement.rarity); // Usar eventData original para clases/logica si es seguro, o safeData si se prefiere (rarity suele ser safe string)
 
     // Usamos la imagen del logro (que ya viene con default.png si no tiene específica)
-    const imagePath = achievement.image || "img/logros/default.png";
-
-    const safeName = UIUtils.escapeHTML(achievement.name);
-    const safeDesc = UIUtils.escapeHTML(achievement.description);
-    const safeCond = UIUtils.escapeHTML(achievement.condition);
+    const imagePath = eventData.achievement.image || "img/logros/default.png";
 
     notification.innerHTML = `
             <div class="achievement-icon">
@@ -259,8 +258,8 @@ export default class NotificationManager {
             </div>
             <div class="achievement-content">
                 <div class="achievement-label">LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name"><span>${safeName}</span></div>
-                <div class="achievement-desc"><span>${safeDesc} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${safeCond}]</span></span></div>
+                <div class="achievement-name"><span>${achievement.name}</span></div>
+                <div class="achievement-desc"><span>${achievement.description} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${achievement.condition}]</span></span></div>
             </div>
             <div class="achievement-timer"></div>
         `;
@@ -312,18 +311,19 @@ export default class NotificationManager {
     const overlay = document.getElementById("cp-achievement-overlay");
     if (!overlay) return;
 
-    const { username, achievement } = eventData;
-    const safeUsername = UIUtils.escapeHTML(username);
-    const safeAchName = UIUtils.escapeHTML(achievement.name);
+    // Decorar datos para uso seguro en HTML
+    const safeData = UIUtils.decorate(eventData);
+    const { username, achievement } = safeData;
     
     const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
     
     // Forzamos que siempre sea la animación de logro raro (con diamante)
     const isRare = true;
-    const unlockedText = `${safeUsername} ha desbloqueado el logro`;
+    const unlockedText = `${username} ha desbloqueado el logro`;
 
-    // Calcular ancho dinámico basado en el texto más largo
-    const maxChars = Math.max(unlockedText.length, (achievement.name.length + 15));
+    // Calcular ancho dinámico basado en el texto más largo (usando datos sin escapar para el cálculo de longitud real)
+    const nameLength = eventData.achievement.name.length;
+    const maxChars = Math.max(unlockedText.length, (nameLength + 15));
     
     // Ancho base: 532px (1.5x del original 355px)
     let bannerWidth = 532;
@@ -336,11 +336,9 @@ export default class NotificationManager {
     const textWidth = bannerWidth - 150;
 
     // Cálculo dinámico de la traslación del círculo para que siempre quede en el borde izquierdo
-    // La fórmula es: -(mitad del ancho del banner - mitad del ancho del círculo[56.25px])
     const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
 
     // Estructura estilo Xbox One (Refinada v3 con soporte de rareza siempre activo)
-    // Inyectamos las variables directamente en el HTML para evitar problemas de herencia
     overlay.innerHTML = `
       <div class="achievement ${isRare ? 'rare' : ''}" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
         <div class="animation">
@@ -366,7 +364,7 @@ export default class NotificationManager {
                     <span class="acheive_score">${xpReward}</span>
                   </div>
                   <span class="hyphen_sep">-</span>
-                  <span class="achiev_name">${safeAchName}</span>
+                  <span class="achiev_name">${achievement.name}</span>
                 </div>
               </div>
             </div>

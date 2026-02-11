@@ -19,7 +19,7 @@ const UIUtils = {
      * @returns {string} Texto escapado
      */
     escapeHTML(text) {
-        if (!text) return '';
+        if (!text || typeof text !== 'string') return text || '';
         const map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -28,6 +28,46 @@ const UIUtils = {
             "'": '&#039;'
         };
         return text.replace(/[&<>"']/g, m => map[m]);
+    },
+
+    /**
+     * Sanitiza recursivamente todas las strings de un objeto
+     * Útil para limpiar datos de Gist o APIs antes de usarlos en UI
+     * 
+     * @param {Object} obj - Objeto a sanitizar
+     * @returns {Object} Clon del objeto con strings escapadas
+     */
+    sanitizeObject(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return typeof obj === 'string' ? this.escapeHTML(obj) : obj;
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sanitizeObject(item));
+        }
+
+        const sanitized = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (typeof value === 'string') {
+                sanitized[key] = this.escapeHTML(value);
+            } else if (typeof value === 'object' && value !== null) {
+                sanitized[key] = this.sanitizeObject(value);
+            } else {
+                sanitized[key] = value;
+            }
+        }
+        return sanitized;
+    },
+
+    /**
+     * "Decorador" de datos para plantillas. Escapa todo el objeto
+     * y permite acceder a los campos de forma segura.
+     * 
+     * @param {Object} data 
+     * @returns {Object}
+     */
+    decorate(data) {
+        return this.sanitizeObject(data);
     },
 
     /**
