@@ -32,7 +32,9 @@ export const EVENTS = {
         SYSTEM_MESSAGE: 'ui:systemMessage',
         SHOW_NOTIFICATION: 'ui:showNotification',
         FLASH_LED: 'ui:flashLed',
-        MESSAGE_HIDDEN: 'ui:messageHidden'
+        MESSAGE_HIDDEN: 'ui:messageHidden',
+        LEVEL_UP_DISPLAYED: 'ui:levelUpDisplayed',
+        ACHIEVEMENT_DISPLAYED: 'ui:achievementDisplayed'
     },
 
     // Eventos de Almacenamiento / Backend

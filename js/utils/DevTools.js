@@ -65,10 +65,7 @@ export default class DevTools {
                 newLevel: lvl || 10,
                 title: 'DEBUG RANK'
             };
-            if (xpDisplay) {
-                xpDisplay.showLevelUp(data);
-            }
-            // notificationManager está en app.processor
+            // notificationManager handles both top and inline animations now
             if (this.app.processor && this.app.processor.notificationManager) {
                 this.app.processor.notificationManager.showLevelUp(data);
             }
@@ -181,9 +178,6 @@ export default class DevTools {
                     newLevel: data.level || 10,
                     title: data.title || 'TEST RANK'
                 };
-                const xpDisp = this.app.processor.getManager('xpDisplay');
-                if (xpDisp) xpDisp.showLevelUp(testData);
-                
                 if (this.app.processor && this.app.processor.notificationManager) {
                     this.app.processor.notificationManager.showLevelUp(testData);
                 }

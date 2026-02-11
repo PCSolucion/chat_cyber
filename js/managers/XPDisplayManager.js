@@ -113,10 +113,8 @@ export default class XPDisplayManager {
      * Registra callbacks en el sistema de eventos
      */
     bindToExperienceService() {
-        // Suscribirse al evento global de level up
-        EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
-            this.showLevelUp(eventData);
-        });
+        // La animación de Level Up ahora se maneja exclusivamente a través 
+        // de NotificationManager para asegurar el orden y sincronización.
 
         // Suscribirse a ganancias de XP
         EventManager.on(EVENTS.USER.XP_GAINED, (data) => {

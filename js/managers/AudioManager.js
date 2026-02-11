@@ -45,8 +45,8 @@ export default class AudioManager {
         // 1. Chat Message (Con Throttling de 250ms por defecto)
         EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => this.playChatMessage());
         
-        // 2. Level Up (Prioridad alta, sin throttling estricto de chat)
-        EventManager.on(EVENTS.USER.LEVEL_UP, (data) => this.playLevelUp(data));
+        // 2. Level Up (Sincronizado con la animación real en el NotificationManager)
+        EventManager.on(EVENTS.UI.LEVEL_UP_DISPLAYED, (data) => this.playLevelUp(data));
         
         // 4. Test sound
         EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());

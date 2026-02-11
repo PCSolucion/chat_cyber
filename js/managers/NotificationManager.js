@@ -143,11 +143,15 @@ export default class NotificationManager {
         break;
 
       case "levelup":
-        // Llamar al XPDisplayManager para mostrar solo el overlay superior
+        // Llamar al XPDisplayManager para mostrar ambos overlays
         if (this.uiManager && this.uiManager.xpDisplay) {
           this.uiManager.xpDisplay.showTopLevelUp(notification.data);
+          this.uiManager.xpDisplay.showLevelUp(notification.data);
         }
         
+        // Emitir evento para sincronizar sonido con la animación real
+        EventManager.emit(EVENTS.UI.LEVEL_UP_DISPLAYED, notification.data);
+
         // Tiempo base del Level Up Overlay (6s) + margen
         totalWaitTime = 6500;
         break;
