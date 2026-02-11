@@ -20,6 +20,8 @@
 - fix: Resolve MIME type errors and asset loading issues in subfolder deployments
 - feat: Modernize technical HUD Dashboard and improve anti-spam heuristics
 
+## [1.1.2] - 2026-02-07
+
 ### Lista completa de cambios
 
 - feat: Centralize stream monitoring with `StreamMonitorService` to reduce redundant polling
