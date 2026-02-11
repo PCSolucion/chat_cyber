@@ -1,363 +1,319 @@
 /**
- * Test Panel - Script de Control
- * Comunica con el widget via postMessage o acceso directo al iframe
+ * Test Panel - System Control Controller
+ * Handles communication with the widget and UI interactions.
  */
+class TestPanelController {
+    constructor() {
+        this.widgetFrame = document.getElementById('widget-frame');
+        this.previewContainer = document.getElementById('preview-container');
+        this.simInterval = null;
+        this.simCount = 0;
+        this.broadcaster = null;
 
-// Referencia al iframe del widget
-const widgetFrame = document.getElementById('widget-frame');
-const previewContainer = document.getElementById('preview-container');
+        this.SIM_USERS = [
+            'NeonSamurai', 'CyberPunk2077', 'NetRunner_01', 'ArasakaSpy', 
+            'JohnnySilverhand', 'AltCunningham', 'RogueAmendiares', 'JudyAlvarez', 
+            'PanamPalmer', 'GoroTakemura', 'MeredithStout', 'ViktorVektor', 
+            'MistyOlszewski', 'JackieWelles', 'T-Bug', 'DexterDeShawn'
+        ];
 
-// --- OVERRIDE CONSOLE.LOG TO DISPLAY IN PANEL ---
-const originalLog = console.log;
-const originalWarn = console.warn;
-const originalError = console.error;
+        this.SIM_MESSAGES = [
+            "Wake up, Samurai! We have a city to burn.",
+            "Preem chrome, choom!",
+            "Just jacked in to the subnet.",
+            "Anyone want to hit Afterlife later?",
+            "Running low on eddies...",
+            "Corpo scum everywhere.",
+            "Nice rig! What specs?",
+            "LUL", "Kappa", "PogChamp", "monkaS",
+            "Glitch in the matrix detected.",
+            "System override imminent.",
+            "Downloading new shards...",
+            "Trauma Team is on the way!",
+            "Delta out of here!"
+        ];
 
-function appendLog(type, args) {
-    const logBox = document.getElementById('panel-logs');
-    if (!logBox) return;
-
-    const line = document.createElement('div');
-    line.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-    line.style.padding = '2px 0';
-    
-    // Convert args to string
-    const text = args.map(arg => {
-        if (typeof arg === 'object') return JSON.stringify(arg);
-        return String(arg);
-    }).join(' ');
-
-    let color = '#aaa';
-    if (type === 'warn') color = '#ffd700'; // Gold
-    if (type === 'error') color = '#ff003c'; // Red
-    
-    line.style.color = color;
-    line.textContent = `> ${text}`;
-    
-    logBox.appendChild(line);
-    
-    // Keep max 50 lines
-    if (logBox.children.length > 50) {
-        logBox.removeChild(logBox.firstChild);
-    }
-    
-    // Auto-scroll to bottom
-    logBox.scrollTop = logBox.scrollHeight;
-}
-
-console.log = function(...args) {
-    originalLog.apply(console, args);
-    appendLog('log', args);
-};
-
-console.warn = function(...args) {
-    originalWarn.apply(console, args);
-    appendLog('warn', args);
-};
-
-console.error = function(...args) {
-    originalError.apply(console, args);
-    appendLog('error', args);
-};
-
-// AUTO-SCALE FUNCTION
-function fitPreview() {
-    if (!widgetFrame || !previewContainer) return;
-    const containerWidth = previewContainer.getBoundingClientRect().width;
-    const scale = containerWidth / 2560;
-    widgetFrame.style.transform = `scale(${scale})`;
-    console.log(`🖥️ Preview rescaled to 2K: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
-}
-
-window.addEventListener('load', fitPreview);
-window.addEventListener('resize', fitPreview);
-
-widgetFrame.addEventListener('load', () => {
-    console.log('✅ Widget iframe loaded');
-    fitPreview();
-    setupBroadcasterButton();
-});
-
-function getWidgetWindow() {
-    return widgetFrame.contentWindow;
-}
-
-// Simple escape for test panel
-function escapeHTML(str) {
-    return str.replace(/[&<>"']/g, function(m) {
-        return {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        }[m];
-    });
-}
-
-function setupBroadcasterButton(retries = 0) {
-    const win = getWidgetWindow();
-    
-    // Check if widget and config are ready
-    if (!win || !win.WidgetDebug || !win.WidgetDebug.app || !win.WidgetDebug.app.config) {
-        if (retries < 20) setTimeout(() => setupBroadcasterButton(retries + 1), 500);
-        return;
+        this.init();
     }
 
-    const broadcaster = win.WidgetDebug.app.config.BROADCASTER_USERNAME;
-    if (broadcaster) {
-        const btn = document.getElementById('broadcaster-btn');
-        if (btn) {
-            btn.innerHTML = `👑 ${broadcaster.toUpperCase()}`;
-            btn.onclick = () => testUser(broadcaster);
-            console.log(`✅ Test button updated for broadcaster: ${broadcaster}`);
-        }
-    }
-}
+    init() {
+        // --- OVERRIDE CONSOLE.LOG ---
+        this.setupLogger();
 
-// --- REAL TIME TWITCH API CHECKER ---
+        // --- GLOBAL EVENT LISTENERS ---
+        window.addEventListener('load', () => this.fitPreview());
+        window.addEventListener('resize', () => this.fitPreview());
 
-async function checkSubStatus(channel, username) {
-    try {
-        // Normalizar entrada
-        const cleanChannel = channel.replace('#', '').trim();
-        const cleanUser = username.trim();
+        this.widgetFrame.addEventListener('load', () => {
+            console.log('✅ Widget iframe loaded');
+            this.fitPreview();
+            this.setupBroadcaster();
+        });
 
-        // Usamos IVR API (alternativa robusta a DecAPI) que devuelve JSON
-        // Endpoint: https://api.ivr.fi/v2/twitch/subage/{user}/{channel}
-        const url = `https://api.ivr.fi/v2/twitch/subage/${cleanUser}/${cleanChannel}`;
-        console.log(`📡 GET ${url}`);
-        
-        const response = await fetch(url);
-        
-        if (response.status === 404) {
-            // Usuario o canal no existen
-            return 0;
-        }
+        // --- DELEGATED EVENT LISTENERS (ACTION DISPATCHER) ---
+        document.body.addEventListener('click', (e) => this.handleAction(e));
 
-        if (!response.ok) {
-            console.warn(`⚠️ API Error ${response.status}:`, response.statusText);
-            return 0;
-        }
-
-        const data = await response.json();
-        console.log(`📥 API Response for ${cleanUser}:`, data);
-
-        // IVR API devuelve un objeto JSON claro
-        // { subscribed: boolean, cumulative: { months: number } }
-        
-        if (data.subscribed === true) {
-            const months = data.cumulative ? data.cumulative.months : 0;
-            // Si está suscrito pero retorna 0 meses (recién sub), devolvemos al menos 1
-            return months > 0 ? months : 1;
-        }
-
-        return 0;
-
-    } catch (e) {
-        console.warn('⚠️ Error consultando API de subs (IVR):', e);
-        return 0; 
-    }
-}
-
-// Simular mensaje con DATOS REALES
-async function testUser(username) {
-    const message = document.getElementById('test-message').value || 'Mensaje de prueba';
-    const win = getWidgetWindow();
-
-    if (!win || !win.WidgetDebug || !win.WidgetDebug.chat) {
-        console.log('Esperando a que cargue el widget...');
-        return;
-    }
-
-    // Intentar obtener el canal configurado en el widget
-    let channel = 'liiukiin'; // Fallback
-    if (win.WidgetDebug.app && win.WidgetDebug.app.config) {
-        channel = win.WidgetDebug.app.config.TWITCH_CHANNEL;
-    }
-
-    console.log(`🔍 Consultando estado real de ${username} en el canal ${channel}...`);
-    
-    // Feedback visual temporal en el botón (opcional, pero buena UX)
-    // Como no tenemos referencia al botón presionado fácil, usamos log
-    
-    const extraTags = {};
-
-    // Leer overrides manuales
-    const forceMod = document.getElementById('mod-toggle').checked;
-    const forceVip = document.getElementById('vip-toggle').checked;
-    const forceSub = document.getElementById('sub-toggle').checked;
-
-    if (forceMod) extraTags.mod = true;
-    if (forceVip) extraTags.vip = true;
-
-    if (forceSub) {
-        console.log(`🧪 Forzando estado SUSCRIPTOR para ${username}`);
-        extraTags.subscriber = true;
-        extraTags['badge-info'] = { subscriber: "1" };
-    } else {
-        const realMonths = await checkSubStatus(channel, username);
-        if (realMonths > 0) {
-            console.log(`✅ ¡CONFIRMADO! ${username} es suscriptor (${realMonths} meses)`);
-            extraTags.subscriber = true;
-            extraTags['badge-info'] = { subscriber: realMonths.toString() };
-        } else {
-            console.log(`👤 ${username} no parece estar suscrito (o API error)`);
-        }
-    }
-
-    win.WidgetDebug.chat.simulateMessage(username, message, extraTags);
-}
-
-// Test streak
-function testStreak(days) {
-    const win = getWidgetWindow();
-
-    if (!win || !win.WidgetDebug || !win.WidgetDebug.xp) {
-        console.error("Widget XP System not ready");
-        return;
-    }
-
-    if (win.WidgetDebug.xp.setStreak) {
-        win.WidgetDebug.xp.setStreak('StreakTester', parseInt(days));
-        win.WidgetDebug.chat.simulateMessage('StreakTester', `Testing streak: ${days} days!`);
-    } else {
-        console.log("setStreak not available in widget");
-    }
-}
-
-// Llamar función expuesta en el widget (Soporta dot notation)
-function callWidgetFunction(path) {
-    const win = getWidgetWindow();
-    if (!win || !win.WidgetDebug) {
-        console.warn('Widget window not found or WidgetDebug not ready');
-        return;
-    }
-
-    // Resolver el path (ej: "xp.exportData")
-    const parts = path.split('.');
-    let current = win.WidgetDebug;
-    let func = null;
-
-    for (let i = 0; i < parts.length; i++) {
-        if (current[parts[i]]) {
-            if (i === parts.length - 1) {
-                func = current[parts[i]];
-                // Para asegurar que el 'this' sea el objeto contenedor
-                func.call(current);
-            } else {
-                current = current[parts[i]];
+        // --- SYNC CHECKBOXES ---
+        document.getElementById('keep-visible-checkbox')?.addEventListener('change', (e) => {
+            const win = this.getWidgetWindow();
+            if (win) {
+                win.KEEP_WIDGET_VISIBLE = e.target.checked;
+                console.log('Keep Visible:', e.target.checked);
             }
-        } else {
-            console.warn(`Path ${path} not found in WidgetDebug at part: ${parts[i]}`);
-            break;
+        });
+    }
+
+    /**
+     * Centralized Action Handler (Replaces inline onclick)
+     */
+    handleAction(e) {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.getAttribute('data-action');
+        const value = target.getAttribute('data-value');
+
+        switch (action) {
+            case 'toggle-auto-chat':
+                this.toggleAutoChat();
+                break;
+            case 'change-bg':
+                this.changeBG(value);
+                break;
+            case 'send-message':
+                this.testUser(document.getElementById('custom-user')?.value);
+                break;
+            case 'send-broadcaster':
+                this.testUser(this.broadcaster || 'liiukiin');
+                break;
+            case 'set-streak':
+                this.testStreak(document.getElementById('streak-days')?.value);
+                break;
+            case 'test-level-up':
+                this.testLevelUp();
+                break;
+            case 'widget-call':
+                this.callWidgetFunction(value);
+                break;
+            default:
+                console.warn(`Unknown action: ${action}`);
         }
     }
-}
 
-// Sincronizar checkbox "mantener visible"
-document.getElementById('keep-visible-checkbox').addEventListener('change', function () {
-    const win = getWidgetWindow();
-    if (win) {
-        win.KEEP_WIDGET_VISIBLE = this.checked;
-        console.log('Keep Visible:', this.checked);
+    setupLogger() {
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        const appendLog = (type, args) => {
+            const logBox = document.getElementById('panel-logs');
+            if (!logBox) return;
+
+            const line = document.createElement('div');
+            line.className = 'log-entry';
+            
+            const text = args.map(arg => {
+                if (typeof arg === 'object') return JSON.stringify(arg);
+                return String(arg);
+            }).join(' ');
+
+            let color = '#aaa';
+            if (type === 'warn') color = '#ffd700';
+            if (type === 'error') color = '#ff003c';
+            
+            line.style.color = color;
+            line.innerHTML = `<span style="opacity: 0.3;">></span> ${text}`;
+            
+            logBox.appendChild(line);
+            if (logBox.children.length > 50) logBox.removeChild(logBox.firstChild);
+            logBox.scrollTop = logBox.scrollHeight;
+        };
+
+        console.log = (...args) => { originalLog.apply(console, args); appendLog('log', args); };
+        console.warn = (...args) => { originalWarn.apply(console, args); appendLog('warn', args); };
+        console.error = (...args) => { originalError.apply(console, args); appendLog('error', args); };
     }
-});
 
-// Test Level Up (Specific for Cyberpunk overlay)
-function testLevelUp() {
-    const win = getWidgetWindow();
-    if (win) {
-        // Use postMessage for cross-origin safety (local files)
+    fitPreview() {
+        if (!this.widgetFrame || !this.previewContainer) return;
+        const containerWidth = this.previewContainer.getBoundingClientRect().width;
+        const scale = containerWidth / 2560;
+        this.widgetFrame.style.transform = `scale(${scale})`;
+        console.log(`🖥️ Preview rescaled: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
+    }
+
+    getWidgetWindow() {
+        return this.widgetFrame.contentWindow;
+    }
+
+    setupBroadcaster(retries = 0) {
+        const win = this.getWidgetWindow();
+        if (!win || !win.WidgetDebug?.app?.config) {
+            if (retries < 20) setTimeout(() => this.setupBroadcaster(retries + 1), 500);
+            return;
+        }
+
+        this.broadcaster = win.WidgetDebug.app.config.BROADCASTER_USERNAME;
+        if (this.broadcaster) {
+            const btn = document.getElementById('broadcaster-btn');
+            if (btn) {
+                btn.innerHTML = `👑 ${this.broadcaster.toUpperCase()}`;
+                console.log(`✅ Controller synced with broadcaster: ${this.broadcaster}`);
+            }
+        }
+    }
+
+    async checkSubStatus(channel, username) {
+        try {
+            const cleanChannel = channel.replace('#', '').trim();
+            const cleanUser = username.trim();
+            const url = `https://api.ivr.fi/v2/twitch/subage/${cleanUser}/${cleanChannel}`;
+            
+            const response = await fetch(url);
+            if (response.status === 404) return 0;
+            if (!response.ok) return 0;
+
+            const data = await response.json();
+            if (data.subscribed === true) {
+                const months = data.cumulative ? data.cumulative.months : 0;
+                return months > 0 ? months : 1;
+            }
+            return 0;
+        } catch (e) {
+            console.warn('⚠️ API Error (IVR):', e);
+            return 0; 
+        }
+    }
+
+    async testUser(username) {
+        if (!username) return;
+        const message = document.getElementById('test-message')?.value || 'ACCESS_GRANTED';
+        const win = this.getWidgetWindow();
+
+        if (!win?.WidgetDebug?.chat) {
+            console.log('Waiting for widget instance...');
+            return;
+        }
+
+        let channel = win.WidgetDebug.app?.config?.TWITCH_CHANNEL || 'liiukiin';
+        console.log(`🔍 Checking REAL status for ${username} in ${channel}...`);
+        
+        const extraTags = {};
+        const forceMod = document.getElementById('mod-toggle')?.checked;
+        const forceVip = document.getElementById('vip-toggle')?.checked;
+        const forceSub = document.getElementById('sub-toggle')?.checked;
+
+        if (forceMod) extraTags.mod = true;
+        if (forceVip) extraTags.vip = true;
+
+        if (forceSub) {
+            extraTags.subscriber = true;
+            extraTags['badge-info'] = { subscriber: "1" };
+        } else {
+            const realMonths = await this.checkSubStatus(channel, username);
+            if (realMonths > 0) {
+                extraTags.subscriber = true;
+                extraTags['badge-info'] = { subscriber: realMonths.toString() };
+            }
+        }
+
+        win.WidgetDebug.chat.simulateMessage(username, message, extraTags);
+    }
+
+    testStreak(days) {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.xp) return;
+
+        days = parseInt(days) || 1;
+        win.WidgetDebug.xp.setStreak('StreakTester', days);
+        win.WidgetDebug.chat.simulateMessage('StreakTester', `Testing streak: ${days} days!`);
+    }
+
+    callWidgetFunction(path) {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug) return;
+
+        const parts = path.split('.');
+        let current = win.WidgetDebug;
+        let func = null;
+
+        for (let i = 0; i < parts.length; i++) {
+            if (current[parts[i]]) {
+                if (i === parts.length - 1) {
+                    func = current[parts[i]];
+                    func.call(current);
+                } else {
+                    current = current[parts[i]];
+                }
+            } else {
+                console.warn(`Path ${path} not found`);
+                break;
+            }
+        }
+    }
+
+    testLevelUp() {
+        const win = this.getWidgetWindow();
+        if (!win) return;
         win.postMessage({
             type: 'TEST_LEVEL_UP',
             username: 'NetRunner_Test',
             level: Math.floor(Math.random() * 50) + 10,
             title: 'LEGEND OF NIGHT CITY'
         }, '*');
-
-        console.log('Triggered Level Up Animation via postMessage');
-    } else {
-        console.warn('Widget window not found');
     }
-}
 
+    toggleAutoChat() {
+        const btn = document.getElementById('sim-start-btn');
+        const stats = document.getElementById('sim-stats');
+        const counter = document.getElementById('sim-count');
 
+        if (this.simInterval) {
+            clearInterval(this.simInterval);
+            this.simInterval = null;
+            if (btn) btn.innerHTML = '▶ START_AUTO_CHAT';
+            btn?.classList.remove('btn--red');
+            btn?.classList.add('btn--cyan');
+            if (stats) stats.style.display = 'none';
+        } else {
+            if (btn) btn.innerHTML = '⏹ ABORT_PROTOCOL';
+            btn?.classList.remove('btn--cyan');
+            btn?.classList.add('btn--red');
+            if (stats) stats.style.display = 'block';
 
-// --- TRAFFIC SIMULATION (AUTO-CHAT) ---
-let simInterval = null;
-let simCount = 0;
-const SIM_USERS = ['NeonSamurai', 'CyberPunk2077', 'NetRunner_01', 'ArasakaSpy', 'JohnnySilverhand', 'AltCunningham', 'RogueAmendiares', 'JudyAlvarez', 'PanamPalmer', 'GoroTakemura', 'MeredithStout', 'ViktorVektor', 'MistyOlszewski', 'JackieWelles', 'T-Bug', 'DexterDeShawn'];
-const SIM_MESSAGES = [
-    "Wake up, Samurai! We have a city to burn.",
-    "Preem chrome, choom!",
-    "Just jacked in to the subnet.",
-    "Anyone want to hit Afterlife later?",
-    "Running low on eddies...",
-    "Corpo scum everywhere.",
-    "Nice rig! What specs?",
-    "LUL", "Kappa", "PogChamp", "monkaS", // Common Twitch emotes
-    "Glitch in the matrix detected.",
-    "System override imminent.",
-    "Downloading new shards...",
-    "Trauma Team is on the way!",
-    "Delta out of here!"
-];
-
-function toggleAutoChat() {
-    const btn = document.getElementById('sim-start-btn');
-    const stats = document.getElementById('sim-stats');
-    const counter = document.getElementById('sim-count');
-
-    if (simInterval) {
-        // STOP
-        clearInterval(simInterval);
-        simInterval = null;
-        btn.innerHTML = '▶ START_PROTOCOL';
-        btn.classList.remove('btn--red');
-        btn.classList.add('btn--cyan');
-        stats.style.display = 'none';
-        console.log('🛑 Traffic Simulation STOPPED');
-    } else {
-        // START
-        btn.innerHTML = '⏹ ABORT_PROTOCOL';
-        btn.classList.remove('btn--cyan');
-        btn.classList.add('btn--red');
-        stats.style.display = 'block';
-        console.log('🚀 Traffic Simulation STARTED');
-
-        simInterval = setInterval(() => {
-            const user = SIM_USERS[Math.floor(Math.random() * SIM_USERS.length)];
-            const msg = SIM_MESSAGES[Math.floor(Math.random() * SIM_MESSAGES.length)];
-            
-            // Randomly decide if user is sub/mod/vip
-            const isSub = Math.random() > 0.7; // 30% chance
-            const isVip = Math.random() > 0.9; // 10% chance
-            const isMod = Math.random() > 0.95; // 5% chance
-
-            const win = getWidgetWindow();
-            if (win && win.WidgetDebug && win.WidgetDebug.chat) {
-                const extraTags = {};
-                if (isSub) { extraTags.subscriber = true; extraTags['badge-info'] = { subscriber: "1" }; }
-                if (isMod) extraTags.mod = true;
-                if (isVip) extraTags.vip = true;
-
-                win.WidgetDebug.chat.simulateMessage(user, msg, extraTags);
+            this.simInterval = setInterval(() => {
+                const user = this.SIM_USERS[Math.floor(Math.random() * this.SIM_USERS.length)];
+                const msg = this.SIM_MESSAGES[Math.floor(Math.random() * this.SIM_MESSAGES.length)];
                 
-                simCount++;
-                if (counter) counter.textContent = simCount;
-            }
-        }, Math.floor(Math.random() * 2000) + 500); // Random interval 0.5s - 2.5s
+                const win = this.getWidgetWindow();
+                if (win?.WidgetDebug?.chat) {
+                    const extraTags = {};
+                    if (Math.random() > 0.7) { 
+                        extraTags.subscriber = true; 
+                        extraTags['badge-info'] = { subscriber: "1" }; 
+                    }
+                    if (Math.random() > 0.9) extraTags.mod = true;
+                    if (Math.random() > 0.93) extraTags.vip = true;
+
+                    win.WidgetDebug.chat.simulateMessage(user, msg, extraTags);
+                    this.simCount++;
+                    if (counter) counter.textContent = this.simCount;
+                }
+            }, Math.floor(Math.random() * 2000) + 500);
+        }
+    }
+
+    changeBG(url) {
+        if (!this.previewContainer) return;
+        if (url) {
+            this.previewContainer.style.backgroundImage = `url("${url}")`;
+            this.previewContainer.style.backgroundColor = 'transparent';
+        } else {
+            this.previewContainer.style.backgroundImage = 'none';
+            this.previewContainer.style.backgroundColor = '#000';
+        }
     }
 }
 
-// --- BACKGROUND CHANGER ---
-function changeBG(url) {
-    const container = document.getElementById('preview-container');
-    if (url) {
-        container.style.backgroundImage = `url("${url}")`;
-        container.style.backgroundColor = 'transparent';
-    } else {
-        container.style.backgroundImage = 'none';
-        container.style.backgroundColor = '#000';
-    }
-}
+// Global initialization
+window.TestPanel = new TestPanelController();
