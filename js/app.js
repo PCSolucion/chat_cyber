@@ -57,7 +57,6 @@ class App {
         // 3. Inicializar Monitor de Stream
         if (this.twitchService) {
             this.streamMonitor = new StreamMonitorService(this.config, this.twitchService);
-            this._setupStreamListeners();
         }
     }
 
@@ -86,6 +85,12 @@ class App {
         // Conectar a Twitch
         if (this.twitchService) {
             console.log('📡 Connecting to Twitch...');
+            
+            // Inyectar TwitchService en el processor para WatchTimeService
+            if (this.processor) {
+                this.processor.setTwitchService(this.twitchService);
+            }
+
             this.twitchService.connect();
         }
 
@@ -95,27 +100,7 @@ class App {
         }
     }
 
-    /**
-     * Configura los listeners para el estado del stream
-     * @private
-     */
-    _setupStreamListeners() {
-        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
-            this.isStreamOnline = isOnline;
-            
-            if (isOnline) {
-                if (!this.watchTimeInterval) {
-                    console.log('📡 Stream is ONLINE. Starting Watch Time Tracker...');
-                    this.startWatchTimeTracker();
-                }
-            } else {
-                if (this.watchTimeInterval) {
-                    console.log('📡 Stream is OFFLINE. Stopping Watch Time Tracker...');
-                    this.stopWatchTimeTracker();
-                }
-            }
-        });
-    }
+
 
     /**
      * Handler principal de mensajes
@@ -126,60 +111,11 @@ class App {
     }
 
 
-    /**
-     * Inicia el tracker de tiempo de visualización
-     */
-    startWatchTimeTracker() {
-        if (this.watchTimeInterval) return;
 
-        const INTERVAL_MS = TIMING.WATCH_TIME_INTERVAL_MS; // 10 minutos
-
-        const trackTime = async () => {
-            if (!this.twitchService || !this.processor || !this.isStreamOnline) return;
-
-            console.log('⏱️ Watch Time Tracker: Ejecutando ciclo...');
-
-            try {
-                const chatters = await this.twitchService.fetchChatters();
-                if (!chatters || chatters.length === 0) return;
-
-                const xpService = this.processor.services ? this.processor.services.xp : null;
-                const sessionStats = this.processor.services ? this.processor.services.sessionStats : null;
-
-                if (xpService) {
-                    xpService.addWatchTimeBatch(chatters, 10);
-                }
-                
-                if (sessionStats) {
-                    sessionStats.trackSessionWatchTimeBatch(chatters, 10);
-                }
-
-                console.log(`✅ Watch Time asignado a ${chatters.length} usuarios.`);
-            } catch (error) {
-                console.error('❌ Error en Watch Time Tracker:', error);
-            }
-        };
-
-        this.watchTimeInterval = setInterval(trackTime, INTERVAL_MS);
-        
-        // Ejecución inicial diferida
-        setTimeout(trackTime, TIMING.WATCH_TIME_INITIAL_DELAY_MS);
-    }
-
-    /**
-     * Detiene el tracker de tiempo
-     */
-    stopWatchTimeTracker() {
-        if (this.watchTimeInterval) {
-            clearInterval(this.watchTimeInterval);
-            this.watchTimeInterval = null;
-        }
-    }
 
     async destroy() {
         console.log('🛑 Shutting down...');
         if (this.streamMonitor) this.streamMonitor.stop();
-        this.stopWatchTimeTracker();
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();
     }

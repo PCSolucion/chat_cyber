@@ -6,6 +6,7 @@ import ExperienceService from '../services/ExperienceService.js';
 import AchievementService from '../services/AchievementService.js';
 import ThirdPartyEmoteService from '../services/ThirdPartyEmoteService.js';
 import SessionStatsService from '../services/SessionStatsService.js';
+import WatchTimeService from '../services/WatchTimeService.js';
 
 import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
@@ -80,6 +81,9 @@ export default class MessageProcessor {
             }
 
             this.services.sessionStats = new SessionStatsService(this.config, this.services.xp, this.services.achievements);
+            
+            // Inicializar WatchTimeService (Requiere TwitchService inyectado después)
+            this.services.watchTime = new WatchTimeService(this.config, this.services.xp, this.services.sessionStats);
             
             EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.updateStreamStatus(isOnline));
         } catch (e) {
@@ -348,6 +352,11 @@ export default class MessageProcessor {
             this.streamStartTime = null;
         }
         this.isStreamOnline = isOnline;
+
+        // Notificar a WatchTimeService
+        if (this.services.watchTime) {
+            this.services.watchTime.updateStreamStatus(isOnline);
+        }
     }
 
     _checkIsStreamStart() {
@@ -359,9 +368,21 @@ export default class MessageProcessor {
         Logger.info('App', '🛑 MessageProcessor: Shutting down...');
         if (this.services.xp?.persistence) await this.services.xp.persistence.saveImmediately();
         if (this.services.sessionStats) this.services.sessionStats.destroy();
+        if (this.services.watchTime) this.services.watchTime.stop();
         if (this.managers.idleDisplay) this.managers.idleDisplay.stop();
     }
 
     getService(name) { return this.services[name]; }
     getManager(name) { return this.managers[name]; }
+
+    /**
+     * Inyecta el servicio de Twitch después de la inicialización de la app
+     * @param {TwitchService} twitchService 
+     */
+    setTwitchService(twitchService) {
+        this.services.twitch = twitchService;
+        if (this.services.watchTime) {
+            this.services.watchTime.setTwitchService(twitchService);
+        }
+    }
 }
