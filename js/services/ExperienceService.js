@@ -401,14 +401,14 @@ export default class ExperienceService {
             xpBeforeMultiplier,
             xpSources,
             totalXP: userData.xp,
-            xp: userData.xp,
+            // xp: userData.xp, // Redundante con totalXP
             level: userData.level,
             previousLevel: result.previousLevel,
             leveledUp: result.leveledUp,
             progress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
-            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+            // levelProgress: ... // Redundante con progress
             title: this.levelCalculator.getLevelTitle(userData.level),
-            levelTitle: this.levelCalculator.getLevelTitle(userData.level),
+            // levelTitle: ... // Redundante con title
             streakDays: userData.streakDays || 0,
             streakMultiplier,
             achievements: userData.achievements || [],

@@ -200,15 +200,7 @@ export default class MessageProcessor {
         this.pipeline.run(context);
     }
 
-    _handleBroProgress(username, message) {
-        if (/\bbro\b/i.test(message) && this.notificationManager) {
-            const stats = this.services.achievements.getUserStats(username);
-            const broCount = stats.broCount || 0;
-            const broMilestones = [1, 10, 20, 50, 100];
-            let nextM = broMilestones.find(m => m > broCount) || (Math.ceil((broCount + 1) / 100) * 100);
-            EventManager.emit(EVENTS.USER.BRO_PROGRESS, { current: broCount, max: nextM });
-        }
-    }
+
 
     /**
      * Carga datos asíncronos (Rankings, XP, Emotes de terceros)

@@ -184,7 +184,13 @@ class TestPanelController {
             const cleanUser = username.trim();
             const url = `https://api.ivr.fi/v2/twitch/subage/${cleanUser}/${cleanChannel}`;
             
-            const response = await fetch(url);
+            // Timeout de 2 segundos para no bloquear la UI en local/offline
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
             if (response.status === 404) return 0;
             if (!response.ok) return 0;
 
@@ -195,7 +201,11 @@ class TestPanelController {
             }
             return 0;
         } catch (e) {
-            console.warn('⚠️ API Error (IVR):', e);
+            if (e.name === 'AbortError') {
+                console.warn('⚠️ API Timeout (IVR): Skipping sub check');
+            } else {
+                console.warn('⚠️ API Error (IVR):', e);
+            }
             return 0; 
         }
     }

@@ -48,7 +48,7 @@ export const NOTIFICATIONS = {
     DISPLAY_TIME_MS: 11000,             // 9s render + 2s fade out
     FADE_TIME_MS: 500,                  // Animación de salida
     QUEUE_MAX_SIZE: 5,                  // Límite de notificaciones pendientes
-    BRO_PROGRESS_DISPLAY_TIME_MS: 4000  // Duración notifiación Bro
+    BRO_PROGRESS_DISPLAY_TIME_MS: 4000  // Duración notificación Bro
 };
 
 // Configuración del Modo Idle (Screensaver de estadísticas)

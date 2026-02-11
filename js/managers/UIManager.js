@@ -240,7 +240,7 @@ export default class UIManager {
             if (xpTitleEl) {
                 const subValue = subInfo.badgeInfo?.subscriber || '1';
                 UIUtils.scrambleText(xpTitleEl, 'EXCELSIOR USER', 30, false);
-                setTimeout(() => {
+                this.timers.goldMode = setTimeout(() => {
                     UIUtils.scrambleText(xpTitleEl, `SUB ${subValue} MESES`, 30, false);
                 }, 2000);
             }
