@@ -8,6 +8,7 @@ import ThirdPartyEmoteService from '../services/ThirdPartyEmoteService.js';
 import SessionStatsService from '../services/SessionStatsService.js';
 import WatchTimeService from '../services/WatchTimeService.js';
 import UserStateManager from '../services/UserStateManager.js';
+import SpamFilterService from '../services/SpamFilterService.js';
 
 import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
@@ -39,35 +40,6 @@ export default class MessageProcessor {
         
         // Nueva tubería de procesamiento
         this.pipeline = new MessagePipeline();
-
-        // Anti-Spam Shield State
-        this._spamState = {
-            // Historial por usuario: { username: [{ text, timestamp }] }
-            userHistory: new Map(),
-            // Historial global reciente: [{ text, username, timestamp }]
-            globalHistory: [],
-            // Copypasta tracker: { textHash: { count, firstTime, usernames, rendered } }
-            copypastaTracker: new Map(),
-            // Mensajes por usuario en ventana de tiempo: { username: [timestamps] }
-            floodTracker: new Map()
-        };
-
-        // Configuración Anti-Spam (overrideable via config)
-        this._spamConfig = {
-            maxRepeatMessages: 3,          // Mensajes iguales consecutivos para bloquear
-            charFloodThreshold: 0.8,       // 80% del mismo carácter = flood
-            charFloodMinLength: 8,         // Mínimo de caracteres para evaluar char flood
-            copypastaWindow: 10000,        // 10s ventana para detectar copypasta
-            copypastaMinUsers: 3,          // 3+ usuarios = copypasta
-            floodWindow: 10000,            // 10s ventana para flood por usuario
-            floodMaxMessages: 5,           // Max mensajes en la ventana
-            floodShowRatio: 3,             // Mostrar 1 de cada N cuando está en flood
-            historyMaxSize: 50,            // Tamaño máximo del buffer global
-            cleanupInterval: 30000         // Limpiar estado viejo cada 30s
-        };
-
-        // Limpieza periódica del estado de spam
-        this._spamCleanupTimer = setInterval(() => this._cleanupSpamState(), this._spamConfig.cleanupInterval);
     }
 
     /**
@@ -118,6 +90,9 @@ export default class MessageProcessor {
             
             // Inicializar WatchTimeService (Requiere TwitchService inyectado después)
             this.services.watchTime = new WatchTimeService(this.config, this.services.xp, this.services.sessionStats);
+
+            // Anti-Spam Shield
+            this.services.spamFilter = new SpamFilterService();
             
             EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.updateStreamStatus(isOnline));
         } catch (e) {
@@ -186,199 +161,10 @@ export default class MessageProcessor {
 
     /** 🛡️ Paso 1.7: Anti-Spam Shield */
     _mwSpamFilter(ctx, next) {
-        const lowerUser = ctx.username.toLowerCase();
-        const text = ctx.message.trim();
-        const now = ctx.timestamp || Date.now();
-
-        // --- 1. Detección de char flood (AAAAAAA) ---
-        if (this._isCharFlood(text)) {
-            Logger.info('SpamFilter', `Char flood blocked from ${ctx.username}`);
-            return; // Detiene pipeline
+        if (this.services.spamFilter?.shouldBlock(ctx.username, ctx.message, ctx.timestamp)) {
+            return; // Bloqueado por spam filter
         }
-
-        // --- 2. Mensajes repetidos del mismo usuario ---
-        if (this._isRepeatMessage(lowerUser, text, now)) {
-            Logger.info('SpamFilter', `Repeat message blocked from ${ctx.username}`);
-            return;
-        }
-
-        // --- 3. Copypasta detection (múltiples usuarios, mismo texto) ---
-        const copypastaResult = this._checkCopypasta(lowerUser, text, now);
-        if (copypastaResult === 'block') {
-            return; // Ya se mostró el primero, bloquear repeticiones
-        }
-
-        // --- 4. Flood throttle por usuario ---
-        if (this._isUserFlooding(lowerUser, now)) {
-            Logger.info('SpamFilter', `Flood throttled from ${ctx.username}`);
-            return;
-        }
-
-        // --- Registrar mensaje en historial ---
-        this._recordMessage(lowerUser, text, now);
-
         next();
-    }
-
-    /**
-     * Detecta si un mensaje es char flood (>80% del mismo carácter)
-     * @private
-     */
-    _isCharFlood(text) {
-        if (text.length < this._spamConfig.charFloodMinLength) return false;
-
-        const chars = Array.from(text.replace(/\s/g, ''));
-        if (chars.length === 0) return false;
-
-        // Contar frecuencia del carácter más común
-        const freq = {};
-        let maxCount = 0;
-        for (const c of chars) {
-            freq[c] = (freq[c] || 0) + 1;
-            if (freq[c] > maxCount) maxCount = freq[c];
-        }
-
-        return (maxCount / chars.length) >= this._spamConfig.charFloodThreshold;
-    }
-
-    /**
-     * Detecta mensajes repetidos del mismo usuario
-     * @private
-     */
-    _isRepeatMessage(username, text, now) {
-        const history = this._spamState.userHistory.get(username) || [];
-        const textLower = text.toLowerCase();
-
-        // Contar cuántos de los últimos mensajes son iguales
-        let repeatCount = 0;
-        for (let i = history.length - 1; i >= 0; i--) {
-            if (history[i].text === textLower) repeatCount++;
-            else break; // Dejar de contar al encontrar uno diferente
-        }
-
-        return repeatCount >= this._spamConfig.maxRepeatMessages;
-    }
-
-    /**
-     * Detecta copypasta (3+ usuarios enviando el mismo texto en <10s)
-     * @private
-     */
-    _checkCopypasta(username, text, now) {
-        const textLower = text.toLowerCase();
-        // Ignorar mensajes muy cortos (emotes, "lol", etc.)
-        if (textLower.length < 15) return 'pass';
-
-        let entry = this._spamState.copypastaTracker.get(textLower);
-
-        if (!entry) {
-            // Primera vez que se ve este texto
-            this._spamState.copypastaTracker.set(textLower, {
-                count: 1,
-                firstTime: now,
-                usernames: new Set([username]),
-                rendered: true // El primero siempre pasa
-            });
-            return 'pass';
-        }
-
-        // Si está fuera de la ventana, resetear
-        if (now - entry.firstTime > this._spamConfig.copypastaWindow) {
-            this._spamState.copypastaTracker.set(textLower, {
-                count: 1,
-                firstTime: now,
-                usernames: new Set([username]),
-                rendered: true
-            });
-            return 'pass';
-        }
-
-        // Dentro de la ventana: incrementar
-        entry.usernames.add(username);
-        entry.count++;
-
-        // Si supera el umbral, bloquear
-        if (entry.usernames.size >= this._spamConfig.copypastaMinUsers) {
-            Logger.info('SpamFilter', `Copypasta blocked (${entry.count} copies from ${entry.usernames.size} users)`);
-            return 'block';
-        }
-
-        return 'pass';
-    }
-
-    /**
-     * Detecta flood por usuario (>5 mensajes en 10s)
-     * @private
-     */
-    _isUserFlooding(username, now) {
-        const timestamps = this._spamState.floodTracker.get(username) || [];
-
-        // Limpiar timestamps antiguos
-        const recentTimestamps = timestamps.filter(t => now - t < this._spamConfig.floodWindow);
-        this._spamState.floodTracker.set(username, recentTimestamps);
-
-        if (recentTimestamps.length >= this._spamConfig.floodMaxMessages) {
-            // Throttle: mostrar solo 1 de cada N
-            const totalInWindow = recentTimestamps.length + 1;
-            return (totalInWindow % this._spamConfig.floodShowRatio) !== 0;
-        }
-
-        return false;
-    }
-
-    /**
-     * Registra un mensaje en los historiales
-     * @private
-     */
-    _recordMessage(username, text, now) {
-        const textLower = text.toLowerCase();
-
-        // Historial por usuario (últimos 5 mensajes)
-        const userHist = this._spamState.userHistory.get(username) || [];
-        userHist.push({ text: textLower, timestamp: now });
-        if (userHist.length > 5) userHist.shift();
-        this._spamState.userHistory.set(username, userHist);
-
-        // Historial global (buffer circular)
-        this._spamState.globalHistory.push({ text: textLower, username, timestamp: now });
-        if (this._spamState.globalHistory.length > this._spamConfig.historyMaxSize) {
-            this._spamState.globalHistory.shift();
-        }
-
-        // Flood tracker
-        const floodTs = this._spamState.floodTracker.get(username) || [];
-        floodTs.push(now);
-        this._spamState.floodTracker.set(username, floodTs);
-    }
-
-    /**
-     * Limpia estado antiguo de spam para evitar memory leaks
-     * @private
-     */
-    _cleanupSpamState() {
-        const now = Date.now();
-        const maxAge = 60000; // 1 minuto
-
-        // Limpiar copypasta tracker
-        for (const [key, entry] of this._spamState.copypastaTracker) {
-            if (now - entry.firstTime > maxAge) {
-                this._spamState.copypastaTracker.delete(key);
-            }
-        }
-
-        // Limpiar flood tracker (timestamps viejos)
-        for (const [user, timestamps] of this._spamState.floodTracker) {
-            const recent = timestamps.filter(t => now - t < maxAge);
-            if (recent.length === 0) {
-                this._spamState.floodTracker.delete(user);
-            } else {
-                this._spamState.floodTracker.set(user, recent);
-            }
-        }
-
-        // Limpiar historial global
-        this._spamState.globalHistory = this._spamState.globalHistory.filter(
-            entry => now - entry.timestamp < maxAge
-        );
     }
 
     /** 🧩 Paso 2: Extraer y normalizar emotes */
@@ -598,8 +384,8 @@ export default class MessageProcessor {
         if (this.services.stateManager) await this.services.stateManager.saveImmediately();
         if (this.services.sessionStats) this.services.sessionStats.destroy();
         if (this.services.watchTime) this.services.watchTime.stop();
+        if (this.services.spamFilter) this.services.spamFilter.destroy();
         if (this.managers.idleDisplay) this.managers.idleDisplay.stop();
-        if (this._spamCleanupTimer) clearInterval(this._spamCleanupTimer);
     }
 
     getService(name) { return this.services[name]; }
