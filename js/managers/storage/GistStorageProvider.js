@@ -15,8 +15,14 @@ export default class GistStorageProvider extends BaseStorageProvider {
     }
 
     async load(resourceName) {
-        // gistService.loadFile ya maneja errores internos y logs
-        return await this.gistService.loadFile(resourceName);
+        try {
+            // gistService.loadFile ya maneja errores internos y logs
+            const data = await this.gistService.loadFile(resourceName);
+            return data;
+        } catch (error) {
+            Logger.error('GistProvider', `Fallo crítico en load(${resourceName}):`, error);
+            return null;
+        }
     }
 
     async save(resourceName, data) {

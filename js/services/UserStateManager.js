@@ -38,24 +38,36 @@ export default class UserStateManager {
      */
     async load() {
         try {
+            console.group('📂 UserStateManager: Iniciando Carga');
             const data = await this.storage.load(this.fileName);
+            console.log('📦 Datos recibidos del Storage:', data);
 
-            if (data && data.users) {
-                Object.entries(data.users).forEach(([username, userData]) => {
-                    this.users.set(username.toLowerCase(), this._sanitizeUserData(userData));
-                });
+            if (data) {
+                // Soporte para estructura plana (sin .users) o envuelta
+                const usersToLoad = data.users || data;
+                
+                if (typeof usersToLoad === 'object' && !Array.isArray(usersToLoad)) {
+                    Object.entries(usersToLoad).forEach(([username, userData]) => {
+                        // Evitar cargar basura si la estructura es extraña
+                        if (userData && (userData.xp !== undefined || userData.level !== undefined)) {
+                            this.users.set(username.toLowerCase(), this._sanitizeUserData(userData));
+                        }
+                    });
+                }
             }
 
             this.isLoaded = true;
-            console.log(`✅ UserStateManager: ${this.users.size} usuarios cargados`);
+            console.log(`✅ Usuarios procesados: ${this.users.size}`);
+            console.groupEnd();
             
             // Integrar datos iniciales (subs importados)
             this._mergeInitialSubscribers();
             
             return true;
         } catch (error) {
-            console.error('❌ UserStateManager: Error cargando datos:', error);
-            this.isLoaded = true; // Evitar bloquear el sistema
+            console.error('❌ UserStateManager: Error crítico cargando datos:', error);
+            console.groupEnd();
+            this.isLoaded = true;
             this._mergeInitialSubscribers();
             return false;
         }

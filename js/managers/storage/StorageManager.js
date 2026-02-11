@@ -39,22 +39,37 @@ export default class StorageManager {
      * Carga datos intentando cada proveedor si el anterior falla
      */
     async load(resourceName) {
+        Logger.debug('Storage', `Intentando cargar recurso: ${resourceName}`);
+
         // Intentar con el activo primero
         if (this.activeProvider) {
-            const data = await this.activeProvider.load(resourceName);
-            if (data) return data;
-        }
-
-        // Si falla, buscar en los demás (fallback agresivo)
-        for (const provider of this.providers) {
-            if (provider === this.activeProvider) continue;
-            const data = await provider.load(resourceName);
-            if (data) {
-                Logger.warn('Storage', `Recurso ${resourceName} cargado desde fallback: ${provider.constructor.name}`);
-                return data;
+            try {
+                const data = await this.activeProvider.load(resourceName);
+                if (data) {
+                    Logger.debug('Storage', `Recurso ${resourceName} cargado desde proveedor activo: ${this.activeProvider.constructor.name}`);
+                    return data;
+                }
+            } catch (e) {
+                Logger.warn('Storage', `Error cargando desde proveedor activo (${this.activeProvider.constructor.name}):`, e);
             }
         }
 
+        // Si falla, buscar en los demás (fallback agresivo)
+        Logger.info('Storage', `Buscando ${resourceName} en proveedores de fallback...`);
+        for (const provider of this.providers) {
+            if (provider === this.activeProvider) continue;
+            try {
+                const data = await provider.load(resourceName);
+                if (data) {
+                    Logger.info('Storage', `✅ Recurso ${resourceName} RECUPERADO desde fallback: ${provider.constructor.name}`);
+                    return data;
+                }
+            } catch (e) {
+                Logger.warn('Storage', `Error en fallback ${provider.constructor.name}:`, e);
+            }
+        }
+
+        Logger.error('Storage', `❌ No se pudo cargar el recurso ${resourceName} desde ningún proveedor`);
         return null;
     }
 

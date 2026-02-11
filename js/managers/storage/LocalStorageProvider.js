@@ -13,7 +13,17 @@ export default class LocalStorageProvider extends BaseStorageProvider {
 
     async load(resourceName) {
         try {
-            const data = localStorage.getItem(this.prefix + resourceName);
+            // 1. Intentar con la nueva clave (Prefijada)
+            let data = localStorage.getItem(this.prefix + resourceName);
+            
+            // 2. Si no hay, y estamos cargando XP, intentar con la clave LEGACY (sin prefijo y nombre fijo)
+            if (!data && (resourceName === 'xp_data.json' || resourceName === 'xp_data')) {
+                data = localStorage.getItem('xp_data_backup');
+                if (data) {
+                    Logger.info('Storage', 'Se encontraron datos heredados (Legacy) en LocalStorage. Migrando...');
+                }
+            }
+
             if (data) {
                 Logger.debug('Storage', `Datos cargados desde LocalStorage: ${resourceName}`);
                 return JSON.parse(data);
