@@ -32,6 +32,7 @@ export default class SpamFilterService {
             historyMaxSize: SPAM.HISTORY_MAX_SIZE,
             cleanupInterval: SPAM.CLEANUP_INTERVAL_MS,
             maxEntryAge: SPAM.MAX_ENTRY_AGE_MS,
+            userHistoryMaxAge: SPAM.USER_HISTORY_MAX_AGE_MS,
             ...config
         };
 
@@ -254,5 +255,15 @@ export default class SpamFilterService {
         this._state.globalHistory = this._state.globalHistory.filter(
             entry => now - entry.timestamp < maxAge
         );
+        
+        // Historial por usuario
+        const userMaxAge = this._config.userHistoryMaxAge;
+        for (const [username, history] of this._state.userHistory) {
+            // El último mensaje es el más reciente (hist.length - 1)
+            const lastMessage = history[history.length - 1];
+            if (lastMessage && (now - lastMessage.timestamp > userMaxAge)) {
+                this._state.userHistory.delete(username);
+            }
+        }
     }
 }

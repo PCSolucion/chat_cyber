@@ -95,7 +95,8 @@ export const SPAM = {
     FLOOD_SHOW_RATIO: 3,                // Mostrar 1 de cada N en flood
     HISTORY_MAX_SIZE: 50,               // Buffer global
     CLEANUP_INTERVAL_MS: 30000,         // Limpieza cada 30s
-    MAX_ENTRY_AGE_MS: 60000             // Vida máxima de rastro (1 min)
+    MAX_ENTRY_AGE_MS: 60000,            // Vida máxima de rastro (1 min)
+    USER_HISTORY_MAX_AGE_MS: 1800000    // Vida máxima del historial de usuario (30 min)
 };
 
 // Configuración de Calidad de Mensajes (Quality Score)
