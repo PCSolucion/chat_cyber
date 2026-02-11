@@ -281,6 +281,75 @@ function testLevelUp() {
     }
 }
 
+
+
+// --- TRAFFIC SIMULATION (AUTO-CHAT) ---
+let simInterval = null;
+let simCount = 0;
+const SIM_USERS = ['NeonSamurai', 'CyberPunk2077', 'NetRunner_01', 'ArasakaSpy', 'JohnnySilverhand', 'AltCunningham', 'RogueAmendiares', 'JudyAlvarez', 'PanamPalmer', 'GoroTakemura', 'MeredithStout', 'ViktorVektor', 'MistyOlszewski', 'JackieWelles', 'T-Bug', 'DexterDeShawn'];
+const SIM_MESSAGES = [
+    "Wake up, Samurai! We have a city to burn.",
+    "Preem chrome, choom!",
+    "Just jacked in to the subnet.",
+    "Anyone want to hit Afterlife later?",
+    "Running low on eddies...",
+    "Corpo scum everywhere.",
+    "Nice rig! What specs?",
+    "LUL", "Kappa", "PogChamp", "monkaS", // Common Twitch emotes
+    "Glitch in the matrix detected.",
+    "System override imminent.",
+    "Downloading new shards...",
+    "Trauma Team is on the way!",
+    "Delta out of here!"
+];
+
+function toggleAutoChat() {
+    const btn = document.getElementById('sim-start-btn');
+    const stats = document.getElementById('sim-stats');
+    const counter = document.getElementById('sim-count');
+
+    if (simInterval) {
+        // STOP
+        clearInterval(simInterval);
+        simInterval = null;
+        btn.innerHTML = '▶ START_PROTOCOL';
+        btn.classList.remove('btn--red');
+        btn.classList.add('btn--cyan');
+        stats.style.display = 'none';
+        console.log('🛑 Traffic Simulation STOPPED');
+    } else {
+        // START
+        btn.innerHTML = '⏹ ABORT_PROTOCOL';
+        btn.classList.remove('btn--cyan');
+        btn.classList.add('btn--red');
+        stats.style.display = 'block';
+        console.log('🚀 Traffic Simulation STARTED');
+
+        simInterval = setInterval(() => {
+            const user = SIM_USERS[Math.floor(Math.random() * SIM_USERS.length)];
+            const msg = SIM_MESSAGES[Math.floor(Math.random() * SIM_MESSAGES.length)];
+            
+            // Randomly decide if user is sub/mod/vip
+            const isSub = Math.random() > 0.7; // 30% chance
+            const isVip = Math.random() > 0.9; // 10% chance
+            const isMod = Math.random() > 0.95; // 5% chance
+
+            const win = getWidgetWindow();
+            if (win && win.WidgetDebug && win.WidgetDebug.chat) {
+                const extraTags = {};
+                if (isSub) { extraTags.subscriber = true; extraTags['badge-info'] = { subscriber: "1" }; }
+                if (isMod) extraTags.mod = true;
+                if (isVip) extraTags.vip = true;
+
+                win.WidgetDebug.chat.simulateMessage(user, msg, extraTags);
+                
+                simCount++;
+                if (counter) counter.textContent = simCount;
+            }
+        }, Math.floor(Math.random() * 2000) + 500); // Random interval 0.5s - 2.5s
+    }
+}
+
 // --- BACKGROUND CHANGER ---
 function changeBG(url) {
     const container = document.getElementById('preview-container');

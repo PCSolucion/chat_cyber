@@ -19,6 +19,17 @@
     <div class="widget-container" id="preview-container">
         <span class="widget-label">LIVE_PREVIEW // 2K (1440p)</span>
         <iframe id="widget-frame" src="index.html"></iframe>
+        
+        <!-- Cyberpunk Terminal Overlay -->
+        <div class="cyber-terminal">
+            <div class="terminal-header">
+                <span class="blink">>></span> SYSTEM_LOGS // STREAM
+            </div>
+            <div id="panel-logs">
+                <div class="log-entry system">> _init_console... OK</div>
+                <div class="log-entry system">> _waiting_for_input...</div>
+            </div>
+        </div>
     </div>
 
     <!-- Test Panel -->
@@ -26,63 +37,64 @@
         <h3 class="panel-title">SYSTEM_CONSOLE</h3>
 
         <div class="panel-scroll-area">
+            <!-- Global Toggles -->
             <div class="panel-section">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="keep-visible-checkbox">
-                    OVR_VISIBILITY_LOCK
-                </label>
-
-                <div style="margin-bottom: 20px;">
-                    <label class="panel-label">ENVIRONMENT_SELECT:</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <button onclick="changeBG('img/fondo pruebas.webp')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_1</button>
-                        <button onclick="changeBG('img/fondo pruebas2.png')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_2</button>
-                    </div>
+                <div class="control-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="keep-visible-checkbox">
+                        OVR_VISIBILITY_LOCK
+                    </label>
                 </div>
+            </div>
 
-                <label class="panel-label">Input Buffer:</label>
+            <!-- Simulation Controls -->
+            <div class="panel-section">
+                <label class="section-label">TRAFFIC_SIM</label>
+                <div class="button-row">
+                    <button id="sim-start-btn" onclick="toggleAutoChat()" class="btn btn--full btn--cyan" style="text-align: center;">▶ START_AUTO_CHAT</button>
+                </div>
+                <div id="sim-stats" style="font-size: 9px; color: #555; text-align: center; margin-top: 6px; display: none; font-family: 'Share Tech Mono';">
+                    PACKETS: <span id="sim-count" style="color: var(--cyan);">0</span> // STATUS: <span style="color: #00ff64;">ACTIVE</span>
+                </div>
+            </div>
+
+            <!-- Environment Selection -->
+            <div class="panel-section">
+                <label class="section-label">ENVIRONMENT</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button onclick="changeBG('img/fondo pruebas.webp')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_1</button>
+                    <button onclick="changeBG('img/fondo pruebas2.png')" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_2</button>
+                </div>
+            </div>
+
+            <!-- Manual Triggering -->
+            <div class="panel-section">
+                <label class="section-label">MESSAGE_INJECTOR</label>
+                
+                <label class="panel-label">Input Buffer (Text to send):</label>
                 <input type="text" id="test-message" value="ACCESS_GRANTED: Initializing test protocol..." class="panel-input">
                 
-                <div style="display: flex; gap: 8px; margin-top: 12px; background: rgba(0,0,0,0.4); padding: 8px; border: 1px solid var(--border-glow);">
-                    <label class="checkbox-label" style="color: #00ff64; font-size: 10px; margin-bottom: 0; flex: 1;">
-                        <input type="checkbox" id="mod-toggle"> MOD
-                    </label>
-                    <label class="checkbox-label" style="color: var(--purple); font-size: 10px; margin-bottom: 0; flex: 1;">
-                        <input type="checkbox" id="vip-toggle"> VIP
-                    </label>
-                    <label class="checkbox-label" style="color: var(--gold); font-size: 10px; margin-bottom: 0; flex: 1;">
-                        <input type="checkbox" id="sub-toggle"> SUB
-                    </label>
+                <div class="tag-selector">
+                    <label class="tag-opt mod"><input type="checkbox" id="mod-toggle"> MOD</label>
+                    <label class="tag-opt vip"><input type="checkbox" id="vip-toggle"> VIP</label>
+                    <label class="tag-opt sub"><input type="checkbox" id="sub-toggle"> SUB</label>
+                </div>
+
+                <div class="button-list" style="margin-top: 10px;">
+                    <button id="broadcaster-btn" onclick="testUser('liiukiin')" class="btn btn--purple btn--full" style="text-align: center;">👑 BROADCASTER</button>
+                    <div class="button-row" style="margin-top: 5px;">
+                        <input type="text" id="custom-user" placeholder="USER_ID..." class="panel-input" style="flex: 1;">
+                        <button onclick="testUser(document.getElementById('custom-user').value)" class="btn btn--cyan" style="min-width: 60px;">SEND</button>
+                    </div>
                 </div>
             </div>
 
-
-            <div class="divider">
-                <label class="panel-label">Manual User Override:</label>
-                <div style="display: flex; gap: 5px; margin-bottom: 8px;">
-                     <button id="broadcaster-btn" onclick="testUser('liiukiin')" class="btn btn--purple btn--full" style="text-align: center;">👑 BROADCASTER</button>
-                </div>
+            <!-- System Features -->
+            <div class="panel-section">
+                <label class="section-label">SYSTEM_TESTS</label>
                 <div class="button-row">
-                    <input type="text" id="custom-user" placeholder="NAME_ENTRY..." class="panel-input" style="flex: 1;">
-                    <button onclick="testUser(document.getElementById('custom-user').value)"
-                        class="btn btn--cyan" style="min-width: 60px;">EXEC</button>
-                </div>
-            </div>
-
-            <div class="divider">
-                <label class="panel-label">Streak Simulation:</label>
-                <div class="button-row">
-                    <input type="number" id="streak-days" value="5" min="1"
-                        class="panel-input" style="flex: 1; color: var(--gold); border-color: rgba(255,215,0,0.2);">
-                    <button onclick="testStreak(document.getElementById('streak-days').value)" class="btn btn--gold">LOAD</button>
-                </div>
-            </div>
-
-            <div class="divider">
-                <label class="panel-label" style="color: var(--red);">System Data Controls:</label>
-                <div class="button-row">
-                    <button onclick="callWidgetFunction('xp.exportData')" class="btn btn--full btn--green"
-                        style="flex: 1; text-align: center;">EXPORT BACKUP (JSON)</button>
+                    <input type="number" id="streak-days" value="5" min="1" class="panel-input" style="flex: 1; color: var(--gold);">
+                    <button onclick="testStreak(document.getElementById('streak-days').value)" class="btn btn--gold">SET_STREAK</button>
                 </div>
                 <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <button onclick="callWidgetFunction('gist.testConnection')" class="btn btn--top1 btn--full" style="font-size: 9px;">📡 GIST</button>
@@ -91,37 +103,15 @@
                 <button onclick="testLevelUp()" class="btn btn--full btn--purple" style="margin-top: 8px; text-align: center;">🚀 TEST_LEVEL_UP</button>
             </div>
 
-            <div class="divider">
-                <label class="panel-label" style="color: var(--cyan);">Mode Overrides:</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button onclick="callWidgetFunction('idle.forceMode')" class="btn btn--top1 btn--full" style="font-size: 9px; text-align: center;">STATS</button>
-                    <button onclick="callWidgetFunction('emotes.showStats')" class="btn btn--purple btn--full" style="font-size: 9px; text-align: center;">EMOTES</button>
-                </div>
-                <button onclick="callWidgetFunction('emotes.testMessage')" class="btn btn--full btn--green" style="margin-top: 8px; text-align: center;">✨ SYNC_EMOTES</button>
+            <!-- Data & Export -->
+            <div class="panel-section">
+                <label class="section-label">DATA_MGMT</label>
+                <button onclick="callWidgetFunction('xp.exportData')" class="btn btn--full btn--green" style="text-align: center;">EXPORT_BACKUP_JSON</button>
             </div>
         </div>
 
-        <div class="divider">
-            <label class="panel-label">System Logs:</label>
-            <div id="panel-logs" style="
-                height: 100px; 
-                overflow-y: auto; 
-                background: rgba(0,0,0,0.5); 
-                border: 1px solid var(--border-glow); 
-                padding: 5px; 
-                font-family: 'Share Tech Mono'; 
-                font-size: 10px; 
-                color: #aaa;
-                display: flex;
-                flex-direction: column;
-            ">
-                <div>_init_console...</div>
-            </div>
-        </div>
-    </div>
-        
-        <div class="panel-footer" style="padding-top: 15px; border-top: 1px solid var(--border-glow); margin-top: auto; font-family: 'Share Tech Mono';">
-            PROTOCOL_CONNECTED // STANDBY
+        <div class="panel-footer">
+            PROTOCOL_V2 // IDLE
         </div>
     </div>
 

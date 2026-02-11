@@ -140,6 +140,37 @@ body {
     opacity: 0.8;
 }
 
+.control-group {
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border: 1px solid var(--border-glow);
+    margin-bottom: 10px;
+}
+
+.tag-selector {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.tag-opt {
+    flex: 1;
+    font-size: 10px;
+    padding: 6px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-glow);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.tag-opt.mod { color: #00ff64; }
+.tag-opt.vip { color: var(--purple); }
+.tag-opt.sub { color: var(--gold); }
+
+.tag-opt input { margin: 0; }
+
 .section-label {
     font-size: 11px;
     color: var(--cyan);
@@ -213,7 +244,7 @@ body {
     aspect-ratio: 16/9;
     max-height: calc(100vh - 40px);
     border: 1px solid var(--border-glow);
-    background: url('../img/fondo pruebas2.png') no-repeat center center;
+    background: url('../img/fondo pruebas.webp') no-repeat center center;
     background-size: cover;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
     z-index: 500;
@@ -241,3 +272,93 @@ body {
     letter-spacing: 2px;
     z-index: 10;
 }
+
+/* --- CYBERPUNK TERMINAL OVERLAY --- */
+.cyber-terminal {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    background: linear-gradient(to bottom, rgba(10, 10, 18, 0.8) 0%, rgba(10, 10, 18, 0.4) 100%);
+    border-left: 1px solid rgba(0, 246, 255, 0.1);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    font-family: 'Share Tech Mono', monospace;
+    z-index: 20;
+    pointer-events: auto;
+    /* Removed heavy transform and box-shadow for better integration */
+}
+
+.terminal-header {
+    font-size: 11px;
+    color: rgba(0, 246, 255, 0.7);
+    border-bottom: 1px solid rgba(0, 246, 255, 0.1);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercas;
+}
+
+.blink {
+    animation: blink 1s infinite;
+    color: var(--cyan);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+#panel-logs {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 11px; /* Slightly larger for readability */
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 5px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%); /* Fade edges */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%);
+}
+
+/* Minimal Scrollbar */
+#panel-logs::-webkit-scrollbar {
+    width: 2px;
+}
+#panel-logs::-webkit-scrollbar-track {
+    background: transparent;
+}
+#panel-logs::-webkit-scrollbar-thumb {
+    background: rgba(0, 246, 255, 0.2);
+}
+
+.log-entry { 
+    word-break: break-all; 
+    line-height: 1.5;
+    padding-left: 8px;
+    border-left: 1px solid transparent;
+    transition: all 0.2s;
+}
+.log-entry:hover {
+    border-left-color: rgba(0, 246, 255, 0.3);
+    background: rgba(0, 246, 255, 0.02);
+}
+.log-entry.system { color: rgba(255, 255, 255, 0.4); font-style: italic; }
+
+.panel-footer {
+    padding-top: 15px;
+    border-top: 1px solid var(--border-glow);
+    margin-top: auto;
+    font-family: 'Share Tech Mono';
+    font-size: 10px;
+    color: #555;
+}
+
+
