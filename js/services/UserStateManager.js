@@ -66,6 +66,11 @@ export default class UserStateManager {
 
             this.isLoaded = true;
             console.log(`✅ Usuarios procesados y listos: ${this.users.size}`);
+            
+            // Diagnóstico: Mostrar una pequeña muestra para verificar el contenido real
+            const sample = Array.from(this.users.entries()).slice(0, 3);
+            console.log('🔍 Muestra de datos cargados (primeros 3):', sample);
+            
             console.groupEnd();
             
             // Integrar datos iniciales (subs importados)
