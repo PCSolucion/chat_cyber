@@ -1,3 +1,5 @@
+import { QUALITY } from '../constants/AppConstants.js';
+
 /**
  * XPSourceEvaluator - Fábrica de evaluación de puntos de experiencia
  * 
@@ -122,7 +124,7 @@ export default class XPSourceEvaluator {
                     textWithoutEmotes = textWithoutEmotes.replace(new RegExp(emote.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
                 }
             }
-            if (textWithoutEmotes.trim().length <= 2) {
+            if (textWithoutEmotes.trim().length <= QUALITY.EMPTY_MSG_THRESHOLD) {
                 return config.lowEffortPenalty; // Solo emotes, sin texto
             }
         }
@@ -147,16 +149,16 @@ export default class XPSourceEvaluator {
 
         // Variedad de palabras (no spam repetitivo tipo "go go go go")
         const words = msg.toLowerCase().split(/\s+/).filter(w => w.length > 1);
-        if (words.length >= 4) {
+        if (words.length >= QUALITY.MIN_WORDS_DIVERSITY) {
             const uniqueWords = new Set(words);
             const diversity = uniqueWords.size / words.length;
-            if (diversity >= 0.6) {
+            if (diversity >= QUALITY.DIVERSITY_THRESHOLD) {
                 qualityScore++;
             }
         }
 
-        // Si cumple 2+ criterios de calidad → bonus
-        if (qualityScore >= 2) {
+        // Si cumple el mínimo de criterios de calidad → bonus
+        if (qualityScore >= QUALITY.CRITERIA_REQUIRED_FOR_BONUS) {
             return config.highQualityXP;
         }
 

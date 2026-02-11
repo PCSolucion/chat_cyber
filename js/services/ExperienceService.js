@@ -1,9 +1,10 @@
 import StreakManager from './StreakManager.js';
 import LevelCalculator from './LevelCalculator.js';
 import XPSourceEvaluator from './XPSourceEvaluator.js';
+import Logger from '../utils/Logger.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
-import { XP } from '../constants/AppConstants.js';
+import { XP, TIMING, QUALITY } from '../constants/AppConstants.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
 /**
@@ -206,12 +207,12 @@ export default class ExperienceService {
                 MSG_QUALITY: {
                     id: 'msg_quality',
                     name: 'Message Quality',
-                    highQualityXP: 3,       // Bonus por mensaje de alta calidad
-                    lowEffortPenalty: -2,    // Penalización por low-effort
-                    minLengthHigh: 20,      // Min chars para alta calidad
-                    maxLengthHigh: 200,     // Max chars para alta calidad
-                    minLengthLow: 1,        // Min chars para low-effort
-                    maxLengthLow: 4,        // Max chars para low-effort
+                    highQualityXP: QUALITY.HIGH_QUALITY_XP,
+                    lowEffortPenalty: QUALITY.LOW_EFFORT_PENALTY,
+                    minLengthHigh: QUALITY.MIN_LENGTH_HIGH,
+                    maxLengthHigh: QUALITY.MAX_LENGTH_HIGH,
+                    minLengthLow: QUALITY.MIN_LENGTH_LOW,
+                    maxLengthLow: QUALITY.MAX_LENGTH_LOW,
                     cooldownMs: 0,
                     enabled: true
                 }

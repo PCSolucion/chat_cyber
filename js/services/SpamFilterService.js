@@ -1,4 +1,5 @@
 import Logger from '../utils/Logger.js';
+import { SPAM } from '../constants/AppConstants.js';
 
 /**
  * SpamFilterService - Anti-Spam Shield
@@ -18,18 +19,19 @@ export default class SpamFilterService {
             floodTracker: new Map()       // { username: [timestamps] }
         };
 
-        // Configuración (overrideable via config)
+        // Configuración (centralizada en AppConstants.js)
         this._config = {
-            maxRepeatMessages: 3,
-            charFloodThreshold: 0.8,
-            charFloodMinLength: 8,
-            copypastaWindow: 10000,
-            copypastaMinUsers: 3,
-            floodWindow: 10000,
-            floodMaxMessages: 5,
-            floodShowRatio: 3,
-            historyMaxSize: 50,
-            cleanupInterval: 30000,
+            maxRepeatMessages: SPAM.MAX_REPEAT_MESSAGES,
+            charFloodThreshold: SPAM.CHAR_FLOOD_THRESHOLD,
+            charFloodMinLength: SPAM.CHAR_FLOOD_MIN_LENGTH,
+            copypastaWindow: SPAM.COPYPASTA_WINDOW_MS,
+            copypastaMinUsers: SPAM.COPYPASTA_MIN_USERS,
+            floodWindow: SPAM.FLOOD_WINDOW_MS,
+            floodMaxMessages: SPAM.FLOOD_MAX_MESSAGES,
+            floodShowRatio: SPAM.FLOOD_SHOW_RATIO,
+            historyMaxSize: SPAM.HISTORY_MAX_SIZE,
+            cleanupInterval: SPAM.CLEANUP_INTERVAL_MS,
+            maxEntryAge: SPAM.MAX_ENTRY_AGE_MS,
             ...config
         };
 
@@ -229,7 +231,7 @@ export default class SpamFilterService {
      */
     _cleanup() {
         const now = Date.now();
-        const maxAge = 60000; // 1 minuto
+        const maxAge = this._config.maxEntryAge; // Usar valor de config centralizada
 
         // Copypasta tracker
         for (const [key, entry] of this._state.copypastaTracker) {

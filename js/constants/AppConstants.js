@@ -82,6 +82,35 @@ export const XP = {
     }
 };
 
+// Configuración del Anti-Spam Shield
+export const SPAM = {
+    MAX_REPEAT_MESSAGES: 3,             // Mensajes iguales consecutivos
+    CHAR_FLOOD_THRESHOLD: 0.8,          // 80% del mismo carácter
+    CHAR_FLOOD_MIN_LENGTH: 8,           // Mínimo chars para evaluar
+    COPYPASTA_WINDOW_MS: 10000,         // 10s ventana
+    COPYPASTA_MIN_USERS: 3,             // 3+ usuarios = copypasta
+    FLOOD_WINDOW_MS: 10000,             // 10s ventana por usuario
+    FLOOD_MAX_MESSAGES: 5,              // Max mensajes en ventana
+    FLOOD_SHOW_RATIO: 3,                // Mostrar 1 de cada N en flood
+    HISTORY_MAX_SIZE: 50,               // Buffer global
+    CLEANUP_INTERVAL_MS: 30000,         // Limpieza cada 30s
+    MAX_ENTRY_AGE_MS: 60000             // Vida máxima de rastro (1 min)
+};
+
+// Configuración de Calidad de Mensajes (Quality Score)
+export const QUALITY = {
+    HIGH_QUALITY_XP: 3,                 // Bonus
+    LOW_EFFORT_PENALTY: -2,             // Penalización
+    MIN_LENGTH_HIGH: 20,
+    MAX_LENGTH_HIGH: 200,
+    MIN_LENGTH_LOW: 1,
+    MAX_LENGTH_LOW: 4,
+    MIN_WORDS_DIVERSITY: 4,             // Min palabras para calcular diversidad
+    DIVERSITY_THRESHOLD: 0.6,           // 60% palabras únicas
+    CRITERIA_REQUIRED_FOR_BONUS: 2,     // 2+ criterios para bonus
+    EMPTY_MSG_THRESHOLD: 2              // Máximo chars restantes tras quitar emotes
+};
+
 // Configuración de Audio
 export const AUDIO = {
     COOLDOWN_MESSAGE_MS: 250,           // Mínimo 250ms entre sonidos de chat
