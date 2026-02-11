@@ -206,12 +206,14 @@ export default class UIManager {
     }
 
     _revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime) {
-        const userRole = this.rankingSystem.getUserRole(username);
-        const xpInfo = xpResult || this.experienceService?.getUserXPInfo(username);
+        // Obtener datos de XP actuales (bien del resultado del mensaje o del servicio)
+        const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(username) : null);
         
-        if (xpInfo && username !== 'SYSTEM') {
-            userRole.rankTitle = { title: xpInfo.title || xpInfo.levelTitle, icon: 'icon-tech' };
-        }
+        // Obtener Rol Unificado (Rank + Nivel + Admin)
+        // Pasamos userData y la instancia de levelCalculator (accesible vía experienceService)
+        const levelCalculator = this.experienceService ? this.experienceService.levelCalculator : null;
+        
+        const userRole = this.rankingSystem.getUserRole(username, xpData, levelCalculator);
 
         // Actualizar UI de XP de forma SÍNCRONA con el mensaje
         if (this.xpDisplay) {

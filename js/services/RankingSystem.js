@@ -70,13 +70,15 @@ export default class RankingSystem {
     }
 
     /**
-     * Determina el rol completo de un usuario
-     * Incluye: role, badge, clases CSS, título Cyberpunk
+     * Determina el rol completo y título de un usuario, fusionando Ranking y Nivel
+     * Incluye: role, badge, clases CSS, título Cyberpunk final
      * 
      * @param {string} username - Nombre del usuario
+     * @param {Object} [userData] - Datos de usuario (opcional, para nivel)
+     * @param {Object} [levelCalculator] - Instancia de LevelCalculator (opcional)
      * @returns {Object} Objeto con información del rol
      */
-    getUserRole(username) {
+    getUserRole(username, userData = null, levelCalculator = null) {
         const lowerUser = username.toLowerCase();
 
         // ADMIN
@@ -86,14 +88,14 @@ export default class RankingSystem {
                 badge: 'ADMIN',
                 containerClass: 'admin-user',
                 badgeClass: 'admin',
-                rankTitle: this.getCyberpunkRankTitle('admin', 0)
+                rankTitle: { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' }
             };
         }
 
         // SYSTEM BOT
         if (lowerUser === 'system') {
             return {
-                role: 'admin', // Usamos rol admin para estilos
+                role: 'admin', 
                 badge: 'ROOT',
                 containerClass: 'admin-user',
                 badgeClass: 'admin',
@@ -101,66 +103,66 @@ export default class RankingSystem {
             };
         }
 
-        // Usuarios con ranking
         const rank = this.userRankings.get(lowerUser);
-        if (rank) {
-            // TOP 1 - Estilo especial
-            if (rank === 1) {
-                return {
-                    role: 'top',
-                    badge: 'TOP 1',
-                    containerClass: 'top-user',
-                    badgeClass: 'top-user',
-                    rankTitle: this.getCyberpunkRankTitle('top', 1)
-                };
-            }
-
-            // TOP 2-15 - VIP Style
-            if (rank <= 15) {
-                return {
-                    role: 'vip',
-                    badge: `TOP ${rank}`,
-                    containerClass: 'vip-user',
-                    badgeClass: 'vip',
-                    rankTitle: this.getCyberpunkRankTitle('vip', rank)
-                };
-            }
-
-            // TOP 16+ - Ranked
-            return {
-                role: 'ranked',
-                badge: `TOP ${rank}`,
-                containerClass: 'ranked-user',
-                badgeClass: 'ranked',
-                rankTitle: this.getCyberpunkRankTitle('ranked', rank)
-            };
-        }
-
-        // Sin ranking
-        return {
+        
+        // Estructura base
+        let result = {
             role: 'normal',
             badge: '',
             containerClass: '',
             badgeClass: '',
-            rankTitle: this.getCyberpunkRankTitle('normal', 0)
+            rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } // Default fallback
         };
+
+        // Lógica de Ranking (Top Users)
+        if (rank) {
+            if (rank === 1) {
+                result = {
+                    role: 'top',
+                    badge: 'TOP 1',
+                    containerClass: 'top-user',
+                    badgeClass: 'top-user',
+                    rankTitle: { title: 'LEGEND OF NIGHT CITY', icon: 'icon-max-tac' }
+                };
+            } else if (rank <= 15) {
+                result = {
+                    role: 'vip',
+                    badge: `TOP ${rank}`,
+                    containerClass: 'vip-user',
+                    badgeClass: 'vip',
+                    rankTitle: { title: 'ELITE MERCENARY', icon: 'icon-fixer' }
+                };
+            } else {
+                result = {
+                    role: 'ranked',
+                    badge: `TOP ${rank}`,
+                    containerClass: 'ranked-user',
+                    badgeClass: 'ranked',
+                    rankTitle: { title: 'KNOWN RUNNER', icon: 'icon-tech' }
+                };
+            }
+        }
+
+        // Lógica de Fusión con Nivel (Si no es Top 15/Admin)
+        // Permite que usuarios normales o rankeados bajos muestren su título de RPG
+        const isHighRank = rank && rank <= 15;
+        if (!isHighRank && userData && userData.level && levelCalculator) {
+            const levelTitle = levelCalculator.getLevelTitle(userData.level);
+            // Sobreescribimos el título genérico con el de nivel, manteniendo el icono si es apropiado
+            result.rankTitle = { 
+                title: levelTitle, 
+                icon: result.rankTitle.icon // Mantenemos icono de rank si tiene, o default
+            };
+        }
+
+        return result;
     }
 
     /**
-     * Asigna un título Cyberpunk basado en el rol y ranking
-     * 
-     * @param {string} role - Rol del usuario (admin, top, vip, ranked, normal)
-     * @param {number} rank - Ranking numérico
-     * @returns {Object} Objeto con título e icono
+     * @deprecated Usado internamente por getUserRole ahora
      */
     getCyberpunkRankTitle(role, rank) {
-        // ADMIN
-        if (role === 'admin') {
-            return { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' };
-        }
-
-        // Default para todos los demás (será sobreescrito por Nivel de XP si está activo)
-        return { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' };
+        return this.getUserRole('unknown').rankTitle; 
     }
 
     /**
