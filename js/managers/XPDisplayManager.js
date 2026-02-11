@@ -194,22 +194,41 @@ export default class XPDisplayManager {
             const streakDays = xpInfo.streakDays || (xpResult && xpResult.streakDays) || 0;
             const multiplier = xpInfo.streakMultiplier || (xpResult && xpResult.streakMultiplier) || 1;
 
-            // Solo mostrar si la racha es relevante (> 1 día)
-            if (streakDays > 1) {
-                streakContainer.style.display = 'flex';
+            // Determinar si es usuario que vuelve
+            const isReturning = xpResult && xpResult.isReturning;
+            const daysAway = xpResult && xpResult.daysAway || 0;
 
+            // Construir contenido del streak container
+            let streakHTML = '';
+
+            // Welcome Back tag (prioridad visual sobre streak)
+            if (isReturning && daysAway > 0) {
+                streakHTML += `
+                    <span class="reconnected-tag">
+                        <span class="reconnected-icon">⟐</span>
+                        <span class="reconnected-text">RECONNECTED</span>
+                        <span class="reconnected-days">${daysAway}d OFF</span>
+                    </span>
+                `;
+            }
+
+            // Solo mostrar streak si la racha es relevante (> 1 día)
+            if (streakDays > 1) {
                 // Formatear multiplicador: mostrar decimales solo si es necesario (x1.5 vs x2)
                 const multDisplay = multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1);
 
-                // Mostrar con etiquetas descriptivas
-                streakContainer.innerHTML = `
+                streakHTML += `
                     <span class="streak-label">RACHA:</span>
                     <span class="streak-days">${streakDays}d</span>
                     <span class="streak-mult" style="font-size: 0.75em;">x${multDisplay}</span>
                 `;
                 streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
+            }
+
+            if (streakHTML) {
+                streakContainer.style.display = 'flex';
+                streakContainer.innerHTML = streakHTML;
             } else {
-                // Ocultar si no hay racha relevante
                 streakContainer.style.display = 'none';
                 streakContainer.innerHTML = '';
             }

@@ -29,6 +29,9 @@ export default class ExperienceService {
         // Registro de mensajes del día actual (para bonus primer mensaje)
         this.dailyFirstMessage = new Map();
 
+        // Registro de usuarios que ya mostraron "Welcome Back" esta sesión
+        this.sessionReturningShown = new Set();
+
         // Configuración de XP (extensible)
         this.xpConfig = this.initXPConfig();
         
@@ -192,6 +195,13 @@ export default class ExperienceService {
                     xp: 10,
                     cooldownMs: 0, // Gestionado por intervalo de 10 min (1 XP/min)
                     enabled: true
+                },
+                RETURN_BONUS: {
+                    id: 'return_bonus',
+                    name: 'Welcome Back bonus',
+                    xp: XP.RETURN_BONUS_XP || 30,
+                    cooldownMs: 0,
+                    enabled: true
                 }
             },
 
@@ -261,7 +271,9 @@ export default class ExperienceService {
                 levelProgress: 0,
                 levelTitle: 'BLACKLISTED',
                 streakDays: 0,
-                streakMultiplier: 0
+                streakMultiplier: 0,
+                isReturning: false,
+                daysAway: 0
             };
         }
 
@@ -271,7 +283,21 @@ export default class ExperienceService {
         // Obtener datos del usuario
         let userData = this.getUserData(lowerUser);
 
-        // 2. Verificar cooldown global de XP (específico de mensajes)
+        // 2. Detectar usuario que vuelve tras ausencia prolongada
+        let isReturning = false;
+        let daysAway = 0;
+        const thresholdDays = XP.RETURN_THRESHOLD_DAYS || 7;
+
+        if (userData.lastActivity && !this.sessionReturningShown.has(lowerUser)) {
+            const msSinceLastActivity = Date.now() - userData.lastActivity;
+            daysAway = Math.floor(msSinceLastActivity / (1000 * 60 * 60 * 24));
+            if (daysAway >= thresholdDays) {
+                isReturning = true;
+                this.sessionReturningShown.add(lowerUser);
+            }
+        }
+
+        // 3. Verificar cooldown global de XP (específico de mensajes)
         const now = Date.now();
         if (userData.lastActivity && (now - userData.lastActivity) < this.xpConfig.settings.minTimeBetweenXP) {
             return {
@@ -286,11 +312,13 @@ export default class ExperienceService {
                 levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
                 levelTitle: this.levelCalculator.getLevelTitle(userData.level),
                 streakDays: userData.streakDays || 0,
-                streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0)
+                streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0),
+                isReturning: false,
+                daysAway: 0
             };
         }
 
-        // 3. Lógica de Racha
+        // 4. Lógica de Racha
         const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
             .map(u => u.toLowerCase())
             .includes(lowerUser);
@@ -305,7 +333,7 @@ export default class ExperienceService {
             streakResult = this.streakManager.updateStreak(userData);
         }
 
-        // 4. Evaluar XP base
+        // 5. Evaluar XP base
         const evaluationState = {
             isIgnoredForBonus: ignoredForBonus,
             isFirstMessageOfDay: !this.dailyFirstMessage.has(lowerUser),
@@ -314,31 +342,45 @@ export default class ExperienceService {
 
         const evaluation = this.xpEvaluator.evaluateMessage(context, evaluationState);
         let totalXP = evaluation.totalXP;
-        const xpSources = evaluation.sources;
+        const xpSources = [...evaluation.sources];
+
+        // 5.5 Bonus de Welcome Back (fuera del multiplicador de racha)
+        let returnBonusXP = 0;
+        if (isReturning && this.xpConfig.sources.RETURN_BONUS?.enabled) {
+            returnBonusXP = this.xpConfig.sources.RETURN_BONUS.xp;
+            xpSources.push({ id: 'return_bonus', name: 'Welcome Back', xp: returnBonusXP });
+        }
 
         if (evaluationState.isFirstMessageOfDay && !ignoredForBonus) {
             this.dailyFirstMessage.set(lowerUser, true);
         }
 
-        // 5. Multiplicador de racha
+        // 6. Multiplicador de racha
         const streakMultiplier = this.streakManager.getStreakMultiplier(streakResult.streakDays);
         const xpBeforeMultiplier = totalXP;
         totalXP = Math.floor(totalXP * streakMultiplier);
 
-        // Límite máximo
-        totalXP = Math.min(totalXP, this.xpConfig.settings.maxXPPerMessage * streakMultiplier);
+        // Añadir bonus de retorno (no afectado por multiplicador)
+        totalXP += returnBonusXP;
 
-        // 6. Aplicar actividad (Centralizado)
+        // Límite máximo (con margen para el bonus de retorno)
+        totalXP = Math.min(totalXP, (this.xpConfig.settings.maxXPPerMessage * streakMultiplier) + returnBonusXP);
+
+        // 7. Aplicar actividad (Centralizado)
         const result = this._applyActivity(lowerUser, {
             xp: totalXP,
             messages: 1,
-            suppressEvents: false // Queremos que _applyActivity emita los eventos
+            suppressEvents: false
         });
 
         // Actualizar datos de racha que no están en _applyActivity
         userData.streakDays = streakResult.streakDays;
         userData.lastStreakDate = streakResult.lastStreakDate;
         userData.bestStreak = streakResult.bestStreak || userData.bestStreak || 0;
+
+        if (isReturning && this.config.DEBUG) {
+            console.log(`🔄 Welcome Back: ${username} vuelve tras ${daysAway} días (+${returnBonusXP} XP bonus)`);
+        }
 
         return {
             username: lowerUser,
@@ -357,7 +399,9 @@ export default class ExperienceService {
             streakDays: userData.streakDays || 0,
             streakMultiplier,
             achievements: userData.achievements || [],
-            totalMessages: userData.totalMessages
+            totalMessages: userData.totalMessages,
+            isReturning,
+            daysAway
         };
     }
 

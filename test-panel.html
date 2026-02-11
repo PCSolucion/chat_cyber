@@ -96,11 +96,26 @@
                     <input type="number" id="streak-days" value="5" min="1" class="panel-input" style="flex: 1; color: var(--gold);">
                     <button data-action="set-streak" class="btn btn--gold">SET_STREAK</button>
                 </div>
+                <div class="button-row" style="margin-top: 8px;">
+                    <input type="number" id="welcome-back-days" value="14" min="7" class="panel-input" style="flex: 1; color: var(--cyan);">
+                    <button data-action="test-welcome-back" class="btn btn--cyan">TEST_WELCOME_BACK</button>
+                </div>
                 <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <button data-action="widget-call" data-value="gist.testConnection" class="btn btn--top1 btn--full" style="font-size: 9px;">📡 GIST</button>
                     <button data-action="widget-call" data-value="achievements.test" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
                 </div>
                 <button data-action="test-level-up" class="btn btn--full btn--purple" style="margin-top: 8px; text-align: center;">🚀 TEST_LEVEL_UP</button>
+            </div>
+
+            <!-- Spam Shield Tests -->
+            <div class="panel-section">
+                <label class="section-label">SPAM_SHIELD</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button data-action="test-spam-charflood" class="btn btn--red btn--full" style="font-size: 9px;">🔤 CHAR_FLOOD</button>
+                    <button data-action="test-spam-repeat" class="btn btn--red btn--full" style="font-size: 9px;">🔁 REPEAT_MSG</button>
+                    <button data-action="test-spam-flood" class="btn btn--red btn--full" style="font-size: 9px;">💥 USER_FLOOD</button>
+                    <button data-action="test-spam-copypasta" class="btn btn--red btn--full" style="font-size: 9px;">📋 COPYPASTA</button>
+                </div>
             </div>
 
             <!-- Data & Export -->

@@ -70,6 +70,8 @@ export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
     SAVE_DEBOUNCE_MS: 5000,             // Frecuencia máxima de guardado en Gist
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
+    RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
+    RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia
     // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
     ACHIEVEMENT_REWARDS: {
         common: 50,

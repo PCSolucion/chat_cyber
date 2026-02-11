@@ -92,6 +92,21 @@ class TestPanelController {
             case 'test-level-up':
                 this.testLevelUp();
                 break;
+            case 'test-welcome-back':
+                this.testWelcomeBack(document.getElementById('welcome-back-days')?.value);
+                break;
+            case 'test-spam-charflood':
+                this.testSpamCharFlood();
+                break;
+            case 'test-spam-repeat':
+                this.testSpamRepeat();
+                break;
+            case 'test-spam-flood':
+                this.testSpamFlood();
+                break;
+            case 'test-spam-copypasta':
+                this.testSpamCopypasta();
+                break;
             case 'widget-call':
                 this.callWidgetFunction(value);
                 break;
@@ -261,6 +276,85 @@ class TestPanelController {
             level: Math.floor(Math.random() * 50) + 10,
             title: 'LEGEND OF NIGHT CITY'
         }, '*');
+    }
+
+    testWelcomeBack(days) {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.xp) {
+            console.warn('⚠️ Widget XP system not ready');
+            return;
+        }
+        days = parseInt(days) || 14;
+        console.log(`🔄 Testing Welcome Back with ${days} days absence...`);
+        win.WidgetDebug.xp.testWelcomeBack(days);
+    }
+
+    // =========================================================================
+    // SPAM SHIELD TESTS
+    // =========================================================================
+
+    testSpamCharFlood() {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.chat) return;
+        console.log('🛡️ Testing Char Flood detection...');
+        // Primer mensaje normal (debe pasar)
+        win.WidgetDebug.chat.simulateMessage('SpamBot_01', 'This is a normal message, should pass');
+        // Char flood (debe bloquearse)
+        setTimeout(() => {
+            win.WidgetDebug.chat.simulateMessage('SpamBot_01', 'AAAAAAAAAAAAAAAAAAAAAAAAA');
+            console.log('→ Sent char flood (should be BLOCKED)');
+        }, 500);
+        setTimeout(() => {
+            win.WidgetDebug.chat.simulateMessage('SpamBot_01', 'JAJAJAJAJAJAJAJAJAJAJAJA');
+            console.log('→ Sent char flood 2 (should be BLOCKED)');
+        }, 1000);
+    }
+
+    testSpamRepeat() {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.chat) return;
+        console.log('🛡️ Testing Repeat Message detection...');
+        const repeatedMsg = 'Check out my stream link click here now!!!';
+        // Enviar 4 veces el mismo mensaje (el 4to debe bloquearse)
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+                win.WidgetDebug.chat.simulateMessage('SpamBot_02', repeatedMsg);
+                console.log(`→ Repeat #${i + 1} sent (${i < 3 ? 'should PASS' : 'should be BLOCKED'})`);
+            }, i * 400);
+        }
+    }
+
+    testSpamFlood() {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.chat) return;
+        console.log('🛡️ Testing User Flood detection...');
+        // Enviar 8 mensajes rápidos del mismo usuario
+        const messages = [
+            'First message', 'Second message', 'Third message',
+            'Fourth message', 'Fifth message', 'Sixth message',
+            'Seventh message', 'Eighth message'
+        ];
+        messages.forEach((msg, i) => {
+            setTimeout(() => {
+                win.WidgetDebug.chat.simulateMessage('FloodBot', msg);
+                console.log(`→ Flood #${i + 1}: "${msg}" (${i < 5 ? 'should PASS' : 'THROTTLED'})`);
+            }, i * 200);
+        });
+    }
+
+    testSpamCopypasta() {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.chat) return;
+        console.log('🛡️ Testing Copypasta detection...');
+        const pasta = 'This is a copypasta message that everyone is posting in chat right now omg';
+        const users = ['CopyUser_A', 'CopyUser_B', 'CopyUser_C', 'CopyUser_D'];
+        // 4 usuarios enviando el mismo texto
+        users.forEach((user, i) => {
+            setTimeout(() => {
+                win.WidgetDebug.chat.simulateMessage(user, pasta);
+                console.log(`→ Copypasta from ${user} (#${i + 1}) (${i < 3 ? 'should PASS' : 'should be BLOCKED'})`);
+            }, i * 300);
+        });
     }
 
     toggleAutoChat() {
