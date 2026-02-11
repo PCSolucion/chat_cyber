@@ -10,6 +10,17 @@ import WatchTimeService from '../services/WatchTimeService.js';
 import UserStateManager from '../services/UserStateManager.js';
 import SpamFilterService from '../services/SpamFilterService.js';
 
+// Middlewares
+import BlacklistMiddleware from './pipeline/middlewares/BlacklistMiddleware.js';
+import LanguageFilterMiddleware from './pipeline/middlewares/LanguageFilterMiddleware.js';
+import SpamFilterMiddleware from './pipeline/middlewares/SpamFilterMiddleware.js';
+import EmoteParserMiddleware from './pipeline/middlewares/EmoteParserMiddleware.js';
+import CommandFilterMiddleware from './pipeline/middlewares/CommandFilterMiddleware.js';
+import XPProcessorMiddleware from './pipeline/middlewares/XPProcessorMiddleware.js';
+import AchievementMiddleware from './pipeline/middlewares/AchievementMiddleware.js';
+import UIRendererMiddleware from './pipeline/middlewares/UIRendererMiddleware.js';
+import StatsTrackerMiddleware from './pipeline/middlewares/StatsTrackerMiddleware.js';
+
 import XPDisplayManager from './XPDisplayManager.js';
 import UIManager from './UIManager.js';
 import IdleDisplayManager from './IdleDisplayManager.js';
@@ -91,8 +102,8 @@ export default class MessageProcessor {
             // Inicializar WatchTimeService (Requiere TwitchService inyectado después)
             this.services.watchTime = new WatchTimeService(this.config, this.services.xp, this.services.sessionStats);
 
-            // Anti-Spam Shield
-            this.services.spamFilter = new SpamFilterService();
+            // Anti-Spam Shield (Inyectando config)
+            this.services.spamFilter = new SpamFilterService(this.config);
             
             EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.updateStreamStatus(isOnline));
         } catch (e) {
@@ -120,171 +131,30 @@ export default class MessageProcessor {
     }
 
     /**
-     * Configura el orden de procesamiento de los mensajes
+     * Configura el orden de procesamiento de los mensajes con los nuevos middlewares independientes
      * @private
      */
     _setupPipeline() {
         this.pipeline
-            .use('Blacklist', (ctx, next) => this._mwBlacklist(ctx, next))
-            .use('LanguageFilter', (ctx, next) => this._mwLanguageFilter(ctx, next))
-            .use('SpamFilter', (ctx, next) => this._mwSpamFilter(ctx, next))
-            .use('EmoteParser', (ctx, next) => this._mwEmoteParser(ctx, next))
-            .use('CommandFilter', (ctx, next) => this._mwCommandFilter(ctx, next))
-            .use('XPProcessor', (ctx, next) => this._mwXPProcessor(ctx, next))
-            .use('AchievementChecker', (ctx, next) => this._mwAchievementChecker(ctx, next))
-            .use('UIRenderer', (ctx, next) => this._mwUIRenderer(ctx, next))
-            .use('StatsTracker', (ctx, next) => this._mwStatsTracker(ctx, next));
-    }
-
-    // =========================================================================
-    // MIDDLEWARES DE PROCESAMIENTO
-    // =========================================================================
-
-    /** 🛑 Paso 1: Verificar usuarios bloqueados */
-    _mwBlacklist(ctx, next) {
-        const lowerUser = ctx.username.toLowerCase();
-        if (this.config.BLACKLISTED_USERS?.includes(lowerUser)) return;
-        next();
-    }
-
-    /** 🌐 Paso 1.5: Filtrar idiomas no deseados (CJK, etc.) */
-    _mwLanguageFilter(ctx, next) {
-        if (!this.config.LANGUAGE_FILTER_ENABLED) return next();
-
-        const foreignScriptRegex = /[^\u0000-\u024F\u2000-\u206F\u2E00-\u2E7F\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{2700}-\u{27BF}\u{1F000}-\u{1Faff}\s]/u;
-
-        if (foreignScriptRegex.test(ctx.message)) {
-            return;
-        }
-        next();
-    }
-
-    /** 🛡️ Paso 1.7: Anti-Spam Shield */
-    _mwSpamFilter(ctx, next) {
-        if (this.services.spamFilter?.shouldBlock(ctx.username, ctx.message, ctx.timestamp)) {
-            return; // Bloqueado por spam filter
-        }
-        next();
-    }
-
-    /** 🧩 Paso 2: Extraer y normalizar emotes */
-    _mwEmoteParser(ctx, next) {
-        ctx.emoteCount = 0;
-        ctx.emoteNames = [];
-
-        // Twitch Emotes
-        if (ctx.tags.emotes) {
-            Object.entries(ctx.tags.emotes).forEach(([id, positions]) => {
-                ctx.emoteCount += positions.length;
-                const pos = positions[0].split('-');
-                const emoteName = ctx.message.substring(parseInt(pos[0]), parseInt(pos[1]) + 1);
-                ctx.emoteNames.push({ 
-                    name: emoteName, 
-                    provider: 'twitch', 
-                    url: `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0` 
-                });
-            });
-        }
-
-        // Third Party (7TV, BTTV, FFZ)
-        if (this.services.thirdPartyEmotes) {
-            ctx.message.split(/\s+/).forEach(word => {
-                const data = this.services.thirdPartyEmotes.getEmote(word);
-                if (data) {
-                    ctx.emoteCount++;
-                    ctx.emoteNames.push({ name: word, provider: data.provider, url: data.url });
-                }
-            });
-        }
-        next();
-    }
-
-    /** 🛡️ Paso 3: Filtrar comandos (ejecución técnica pero salida visual) */
-    _mwCommandFilter(ctx, next) {
-        if (ctx.message.startsWith('!')) {
-            EventManager.emit(EVENTS.USER.ACTIVITY, ctx.username);
-            return; // Detiene el pipeline para comandos
-        }
-        next();
-    }
-
-    /** ✨ Paso 4: Calcular XP y Niveles */
-    _mwXPProcessor(ctx, next) {
-        if (!this.services.xp) return next();
-
-        const xpContext = {
-            hasEmotes: ctx.emoteCount > 0,
-            emoteCount: ctx.emoteCount,
-            emoteNames: ctx.emoteNames || [],
-            isStreamLive: this.isStreamOnline,
-            isStreamStart: this._checkIsStreamStart(),
-            hasMention: ctx.message.includes('@'),
-            message: ctx.message
-        };
-
-        ctx.xpResult = this.services.xp.trackMessage(ctx.username, xpContext);
-        ctx.xpContext = xpContext;
-
-        if (this.managers.xpDisplay) {
-            this.managers.xpDisplay.setVisible(true);
-            // ELIMINADO: updateXPDisplay se llama ahora desde UIManager al procesar la cola
-        }
-        next();
-    }
-
-    /** 🏆 Paso 5: Comprobar Logros */
-    _mwAchievementChecker(ctx, next) {
-        if (!this.services.achievements) return next();
-
-        const achContext = {
-            ...ctx.xpContext,
-            isFirstMessageOfDay: ctx.xpResult?.xpSources?.some(s => s.source === 'FIRST_MESSAGE_DAY'),
-            streakMultiplier: ctx.xpResult?.streakMultiplier || 1
-        };
-
-        this.services.achievements.checkAchievements(ctx.username, achContext);
-        
-        // Logros específicos: Progreso de Bro
-        this._handleBroProgress(ctx.username, ctx.message);
-
-        // Actualizar objeto de logros para el renderizado (Sincronización forzada)
-        if (ctx.xpResult) {
-            const freshData = this.services.xp.getUserData(ctx.username);
-            ctx.xpResult.achievements = freshData.achievements || [];
-            ctx.xpResult.level = freshData.level;
-            ctx.xpResult.xp = freshData.xp;
-            ctx.xpResult.totalXP = freshData.xp;
-        }
-        next();
-    }
-
-    /** 🖥️ Paso 6: Renderizar UI */
-    _mwUIRenderer(ctx, next) {
-        if (!this.managers.ui) return next();
-
-        const isSub = ctx.tags.subscriber === true || ctx.tags.subscriber === '1';
-        const subInfo = { isSubscriber: isSub, badges: ctx.tags.badges || {}, badgeInfo: ctx.tags['badge-info'] || {} };
-
-        // Actualizar suscripción en segundo plano
-        if (isSub && this.services.xp) {
-            const months = parseInt(subInfo.badgeInfo?.subscriber) || 1;
-            this.services.xp.updateSubscription(ctx.username, months);
-        }
-
-        this.managers.ui.displayMessage(ctx.username, ctx.message, ctx.tags.emotes, subInfo, ctx.xpResult);
-        next();
-    }
-
-    /** 📈 Paso 7: Trackear Estadísticas de sesión */
-    _mwStatsTracker(ctx, next) {
-        if (this.services.sessionStats) {
-            this.services.sessionStats.trackMessage(ctx.username, ctx.message, {
-                emoteCount: ctx.emoteCount,
-                emoteNames: ctx.emoteNames
-            });
-        }
-        EventManager.emit(EVENTS.USER.ACTIVITY, ctx.username);
-        next();
+            .use('Blacklist', new BlacklistMiddleware(this.config).execute.bind(new BlacklistMiddleware(this.config)))
+            .use('LanguageFilter', new LanguageFilterMiddleware(this.config).execute.bind(new LanguageFilterMiddleware(this.config)))
+            .use('SpamFilter', new SpamFilterMiddleware(this.services.spamFilter).execute.bind(new SpamFilterMiddleware(this.services.spamFilter)))
+            .use('EmoteParser', new EmoteParserMiddleware(this.services.thirdPartyEmotes).execute.bind(new EmoteParserMiddleware(this.services.thirdPartyEmotes)))
+            .use('CommandFilter', new CommandFilterMiddleware().execute.bind(new CommandFilterMiddleware()))
+            .use('XPProcessor', new XPProcessorMiddleware(
+                this.services.xp, 
+                this.managers.xpDisplay,
+                () => this.isStreamOnline,
+                () => this._checkIsStreamStart()
+            ).execute.bind(new XPProcessorMiddleware(
+                this.services.xp, 
+                this.managers.xpDisplay,
+                () => this.isStreamOnline,
+                () => this._checkIsStreamStart()
+            )))
+            .use('AchievementChecker', new AchievementMiddleware(this.services.achievements, this.services.xp).execute.bind(new AchievementMiddleware(this.services.achievements, this.services.xp)))
+            .use('UIRenderer', new UIRendererMiddleware(this.managers.ui, this.services.xp).execute.bind(new UIRendererMiddleware(this.managers.ui, this.services.xp)))
+            .use('StatsTracker', new StatsTrackerMiddleware(this.services.sessionStats).execute.bind(new StatsTrackerMiddleware(this.services.sessionStats)));
     }
 
     // =========================================================================
