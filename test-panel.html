@@ -402,14 +402,13 @@
             });
         }
 
-        function refreshTopUsers() {
+        function refreshTopUsers(retryCount = 0) {
             const win = getWidgetWindow();
             
             // Si el sistema no está listo, reintentamos un par de veces
             if (!win || !win.WidgetDebug || !win.WidgetDebug.xp) {
-                if (refreshRetries < 20) {
-                    refreshRetries++;
-                    setTimeout(refreshTopUsers, 500);
+                if (retryCount < 20) {
+                    setTimeout(() => refreshTopUsers(retryCount + 1), 500);
                 }
                 return;
             }
@@ -420,9 +419,8 @@
             // Si el sistema está listo pero el ranking viene vacío, 
             // puede ser porque los datos asíncronos aún se están descargando del Gist
             if (!topUsers || topUsers.length === 0) {
-                if (refreshRetries < 10) {
-                    refreshRetries++;
-                    setTimeout(refreshTopUsers, 1000);
+                if (retryCount < 10) {
+                    setTimeout(() => refreshTopUsers(retryCount + 1), 1000);
                 }
                 container.innerHTML = '<div style="font-size: 10px; color: #888; padding: 5px;">Cargando datos desde la nube...</div>';
                 return;
@@ -430,21 +428,24 @@
 
             container.innerHTML = '';
             topUsers.forEach((user, index) => {
-                const btn = document.createElement('button');
-                btn.className = `btn btn--full ${index === 0 ? 'btn--top1' : 'btn--top'}`;
-                const safeName = escapeHTML(user.username);
-                btn.innerHTML = `
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>${index === 0 ? '★' : '♛'} ${safeName}</span>
-                        <span style="opacity: 0.7;">LVL ${user.level}</span>
-                    </div>
-                `;
-                btn.onclick = () => testUser(user.username);
-                container.appendChild(btn);
+                container.appendChild(createRankUserButton(user, index));
             });
             
             console.log('✅ Top 5 users updated in panel');
-            refreshRetries = 0; // Reset para futuros refrescos manuales
+        }
+
+        function createRankUserButton(user, index) {
+            const btn = document.createElement('button');
+            btn.className = `btn btn--full ${index === 0 ? 'btn--top1' : 'btn--top'}`;
+            const safeName = escapeHTML(user.username);
+            btn.innerHTML = `
+                <div style="display: flex; justify-content: space-between;">
+                    <span>${index === 0 ? '★' : '♛'} ${safeName}</span>
+                    <span style="opacity: 0.7;">LVL ${user.level}</span>
+                </div>
+            `;
+            btn.onclick = () => testUser(user.username);
+            return btn;
         }
 
         // --- REAL TIME TWITCH API CHECKER ---
