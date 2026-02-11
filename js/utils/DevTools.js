@@ -3,6 +3,8 @@
  * 
  * Se encarga de exponer funciones al objeto global 'window' para permitir
  * realizar pruebas desde la consola del navegador o desde el panel de control.
+ * 
+ * Refactored: Ahora utiliza el objeto 'WidgetDebug' para organizar las herramientas.
  */
 export default class DevTools {
     /**
@@ -10,160 +12,189 @@ export default class DevTools {
      */
     constructor(app) {
         this.app = app;
+        this.xpService = null;
+        this.emoteService = null;
+        this.achievementService = null;
+        this.idleManager = null;
+        this.gistService = null;
+        this.notificationManager = null;
     }
 
     /**
      * Inicializa las herramientas de desarrollo
      */
     init() {
-        console.log('🛠️ DevTools: Inyectando herramientas de testing...');
+        console.log('🛠️ DevTools: Inicializando entorno de debugging...');
 
-        // 1. Simulación de Mensajes
-        window.simularMensaje = (usuario, mensaje, extraTags = {}) => {
-            console.log('🧪 Simulando mensaje de:', usuario, extraTags);
-            const tags = { 
-                'display-name': usuario, 
-                emotes: {},
-                ...extraTags 
-            };
-            this.app.onMessageReceived(tags, mensaje);
-        };
-
-        window.reloadRankings = async () => {
-            if (this.app.processor) {
-                await this.app.processor.loadAsyncData();
-            }
-        };
-
-        // 2. Herramientas de XP (Solo si el servicio está disponible)
         if (this.app.processor) {
-            this._setupXPTools();
-            this._setupEmoteTools();
-            this._setupAchievementTools();
-            this._setupIdleTools();
-            this._setupGistTools();
-            this._setupPostMessageListener();
+            this.xpService = this.app.processor.getService('xp');
+            this.emoteService = this.app.processor.getService('thirdPartyEmotes');
+            this.achievementService = this.app.processor.getService('achievements');
+            this.gistService = this.app.processor.getService('gist');
+            
+            this.idleManager = this.app.processor.getManager('idleDisplay');
+            this.notificationManager = this.app.processor.notificationManager;
         }
 
-        // Exponer la instancia de la app para debugging profundo
-        window.APP_INSTANCE = this.app;
+        // 1. Crear el nuevo objeto de debug organizado
+        window.WidgetDebug = {
+            app: this.app,
+            
+            chat: {
+                simulateMessage: (usuario, mensaje, extraTags = {}) => this._simulateMessage(usuario, mensaje, extraTags),
+                reloadRankings: () => this._reloadRankings()
+            },
+
+            xp: {
+                getStats: () => this.xpService?.getGlobalStats(),
+                getTopUsers: (limit) => this.xpService?.getXPLeaderboard(limit),
+                testLevelUp: (lvl) => this._testLevelUp(lvl),
+                resetAll: () => this._resetAllXP(),
+                exportData: () => this._exportXPData(),
+                setStreak: (user, days) => this._setTestStreak(user, days)
+            },
+
+            achievements: {
+                test: () => this._testAchievement()
+            },
+
+            emotes: {
+                showStats: () => this._showEmoteStats(),
+                testMessage: () => this._testEmoteMessage()
+            },
+
+            idle: {
+                forceMode: () => this.idleManager?._enterIdleMode()
+            },
+
+            gist: {
+                testConnection: () => this._testGistConnection()
+            }
+        };
+
+        // 2. Mantener ALIASES para compatibilidad con test-panel actual (Legacy Support)
+        this._setupLegacyAliases();
+
+        // 3. Listeners
+        this._setupPostMessageListener();
+
+        console.log('✅ DevTools: Objeto window.WidgetDebug listo.');
     }
 
-    /** @private */
-    _setupXPTools() {
-        const xpService = this.app.processor.getService('xp');
-        const xpDisplay = this.app.processor.getManager('xpDisplay');
+    /** --- IMPLEMENTACIONES --- **/
+
+    _simulateMessage(usuario, mensaje, extraTags = {}) {
+        console.log('🧪 Simulando mensaje de:', usuario, extraTags);
+        const tags = { 
+            'display-name': usuario, 
+            emotes: {},
+            ...extraTags 
+        };
+        this.app.onMessageReceived(tags, mensaje);
+    }
+
+    async _reloadRankings() {
+        if (this.app.processor) {
+            await this.app.processor.loadAsyncData();
+        }
+    }
+
+    _testLevelUp(lvl) {
+        const data = {
+            username: 'TestUser',
+            newLevel: lvl || 10,
+            title: 'DEBUG RANK'
+        };
+        this.notificationManager?.showLevelUp(data);
+    }
+
+    async _resetAllXP() {
+        if (confirm('⚠️ PELIGRO: ¿ESTÁS SEGURO?\n\nEsto BORRARÁ PERMANENTEMENTE todos los niveles y XP de TODOS los usuarios.')) {
+            await this.xpService?.resetAllData();
+            alert('✅ Todos los datos de XP han sido eliminados.');
+        }
+    }
+
+    _exportXPData() {
+        try {
+            const data = this.xpService?.getAllDataJSON();
+            if (!data) return;
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `xp_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            console.log('💾 Datos XP Exportados');
+        } catch (e) {
+            console.error('Error exportando:', e);
+        }
+    }
+
+    _setTestStreak(username, days) {
+        if (!this.xpService) return;
+        const userData = this.xpService.getUserData(username);
+        userData.streakDays = days;
+        userData.lastStreakDate = new Date().toLocaleDateString('en-CA');
+        this.xpService.usersXP.set(username.toLowerCase(), userData);
+        console.log(`🔥 Streak set for ${username}: ${days} days`);
+    }
+
+    _showEmoteStats() {
+        if (!this.emoteService) return;
+        const stats = this.emoteService.getStats();
+        console.log('🎭 Emote Stats:', stats);
+        alert(`🎭 Emotes: Total ${stats.total} | 7TV: ${stats.byProvider['7tv']} | BTTV: ${stats.byProvider['bttv']} | FFZ: ${stats.byProvider['ffz']}`);
+    }
+
+    _testEmoteMessage() {
+        if (!this.emoteService?.isLoaded) {
+            alert('❌ Espera a que carguen los emotes...');
+            return;
+        }
+        const samples = this.emoteService.listEmotes(3);
+        if (samples.length > 0) {
+            this._simulateMessage('EmoteTester', `Testing emotes: ${samples.join(' ')}`);
+        }
+    }
+
+    _testAchievement() {
+        if (!this.achievementService) return;
+        const testAchievements = [
+            { id: 'test_common', name: 'First Words', rarity: 'common', icon: '💬' },
+            { id: 'test_legendary', name: 'Netrunner Legend', rarity: 'legendary', icon: '🧠' }
+        ];
+        const random = testAchievements[Math.floor(Math.random() * testAchievements.length)];
+        this.achievementService.emitAchievementUnlocked('TestUser', random);
+    }
+
+    async _testGistConnection() {
+        if (!this.gistService) return;
+        console.log('📡 Verificando conexión Gist...');
+        const success = await this.gistService.testConnection();
+        alert(success ? '✅ Gist Conectado' : '❌ Error de Conexión Gist');
+    }
+
+    _setupLegacyAliases() {
+        const d = window.WidgetDebug;
         
-        if (!xpService) return;
-
-        window.getXPStats = () => xpService.getGlobalStats();
-        window.getTopUsers = (limit) => xpService.getXPLeaderboard(limit);
-
-        window.testLevelUp = (lvl) => {
-            const data = {
-                username: 'TestUser',
-                newLevel: lvl || 10,
-                title: 'DEBUG RANK'
-            };
-            // notificationManager handles both top and inline animations now
-            if (this.app.processor && this.app.processor.notificationManager) {
-                this.app.processor.notificationManager.showLevelUp(data);
-            }
-        };
-
-        window.resetAllXP = async () => {
-            if (confirm('⚠️ PELIGRO: ¿ESTÁS SEGURO?\n\nEsto BORRARÁ PERMANENTEMENTE todos los niveles y XP de TODOS los usuarios.')) {
-                await xpService.resetAllData();
-                alert('✅ Todos los datos de XP han sido eliminados.');
-            }
-        };
-
-        window.exportXPData = () => {
-            try {
-                const data = xpService.getAllDataJSON();
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `xp_backup_${new Date().toISOString().slice(0, 10)}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                console.log('💾 Datos XP Exportados');
-            } catch (e) {
-                console.error('Error exportando:', e);
-            }
-        };
-
-        window.setTestStreak = (username, days) => {
-            const userData = xpService.getUserData(username);
-            userData.streakDays = days;
-            userData.lastStreakDate = new Date().toLocaleDateString('en-CA');
-            xpService.usersXP.set(username.toLowerCase(), userData);
-            console.log(`🔥 Streak set for ${username}: ${days} days`);
-        };
-    }
-
-    /** @private */
-    _setupEmoteTools() {
-        const emoteService = this.app.processor.getService('thirdPartyEmotes');
-        if (!emoteService) return;
-
-        window.showEmoteStats = () => {
-            const stats = emoteService.getStats();
-            const emotes = emoteService.listEmotes(20);
-            console.log('🎭 Emote Stats:', stats);
-            alert(`🎭 Emotes: Total ${stats.total} | 7TV: ${stats.byProvider['7tv']} | BTTV: ${stats.byProvider['bttv']} | FFZ: ${stats.byProvider['ffz']}`);
-        };
-
-        window.testEmoteMessage = () => {
-            if (!emoteService.isLoaded) {
-                alert('❌ Espera a que carguen los emotes...');
-                return;
-            }
-            const samples = emoteService.listEmotes(3);
-            if (samples.length > 0) {
-                window.simularMensaje('EmoteTester', `Testing emotes: ${samples.join(' ')}`);
-            }
-        };
-    }
-
-    /** @private */
-    _setupAchievementTools() {
-        const achievementService = this.app.processor.getService('achievements');
-        if (!achievementService) return;
-
-        window.testAchievement = () => {
-            const testAchievements = [
-                { id: 'test_common', name: 'First Words', rarity: 'common', icon: '💬' },
-                { id: 'test_legendary', name: 'Netrunner Legend', rarity: 'legendary', icon: '🧠' }
-            ];
-            const random = testAchievements[Math.floor(Math.random() * testAchievements.length)];
-            achievementService.emitAchievementUnlocked('TestUser', random);
-        };
-    }
-
-    /** @private */
-    _setupIdleTools() {
-        const idleManager = this.app.processor.getManager('idleDisplay');
-        if (!idleManager) return;
-
-        window.testIdleMode = () => {
-            idleManager._enterIdleMode();
-            console.log('📊 TEST: Forzando modo idle');
-        };
-    }
-
-    /** @private */
-    _setupGistTools() {
-        const gistService = this.app.processor.getService('gist');
-        if (!gistService) return;
-
-        window.testGistConnection = async () => {
-            console.log('📡 Verificando conexión Gist...');
-            const success = await gistService.testConnection();
-            alert(success ? '✅ Gist Conectado' : '❌ Error de Conexión Gist');
-        };
+        // Globals sueltos (Deprecados)
+        window.simularMensaje = d.chat.simulateMessage;
+        window.reloadRankings = d.chat.reloadRankings;
+        window.getXPStats = d.xp.getStats;
+        window.getTopUsers = d.xp.getTopUsers;
+        window.testLevelUp = d.xp.testLevelUp;
+        window.resetAllXP = d.xp.resetAll;
+        window.exportXPData = d.xp.exportData;
+        window.setTestStreak = d.xp.setStreak;
+        window.showEmoteStats = d.emotes.showStats;
+        window.testEmoteMessage = d.emotes.testMessage;
+        window.testAchievement = d.achievements.test;
+        window.testIdleMode = d.idle.forceMode;
+        window.testGistConnection = d.gist.testConnection;
+        window.APP_INSTANCE = this.app;
     }
 
     /** @private */
@@ -173,14 +204,7 @@ export default class DevTools {
             if (!data || !data.type) return;
 
             if (data.type === 'TEST_LEVEL_UP') {
-                const testData = {
-                    username: data.username || 'Test',
-                    newLevel: data.level || 10,
-                    title: data.title || 'TEST RANK'
-                };
-                if (this.app.processor && this.app.processor.notificationManager) {
-                    this.app.processor.notificationManager.showLevelUp(testData);
-                }
+                this._testLevelUp(data.level);
             }
         });
     }

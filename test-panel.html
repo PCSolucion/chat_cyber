@@ -331,12 +331,12 @@
             <div class="divider">
                 <label class="panel-label" style="color: var(--red);">System Data Controls:</label>
                 <div class="button-row">
-                    <button onclick="callWidgetFunction('exportXPData')" class="btn btn--full btn--green"
+                    <button onclick="callWidgetFunction('xp.exportData')" class="btn btn--full btn--green"
                         style="flex: 1; text-align: center;">EXPORT BACKUP (JSON)</button>
                 </div>
                 <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button onclick="callWidgetFunction('testGistConnection')" class="btn btn--top1 btn--full" style="font-size: 9px;">📡 GIST</button>
-                    <button onclick="callWidgetFunction('testAchievement')" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
+                    <button onclick="callWidgetFunction('gist.testConnection')" class="btn btn--top1 btn--full" style="font-size: 9px;">📡 GIST</button>
+                    <button onclick="callWidgetFunction('achievements.test')" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
                 </div>
                 <button onclick="testLevelUp()" class="btn btn--full btn--purple" style="margin-top: 8px; text-align: center;">🚀 TEST_LEVEL_UP</button>
             </div>
@@ -344,10 +344,10 @@
             <div class="divider">
                 <label class="panel-label" style="color: var(--cyan);">Mode Overrides:</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button onclick="callWidgetFunction('testIdleMode')" class="btn btn--top1 btn--full" style="font-size: 9px; text-align: center;">STATS</button>
-                    <button onclick="callWidgetFunction('showEmoteStats')" class="btn btn--purple btn--full" style="font-size: 9px; text-align: center;">EMOTES</button>
+                    <button onclick="callWidgetFunction('idle.forceMode')" class="btn btn--top1 btn--full" style="font-size: 9px; text-align: center;">STATS</button>
+                    <button onclick="callWidgetFunction('emotes.showStats')" class="btn btn--purple btn--full" style="font-size: 9px; text-align: center;">EMOTES</button>
                 </div>
-                <button onclick="callWidgetFunction('testEmoteMessage')" class="btn btn--full btn--green" style="margin-top: 8px; text-align: center;">✨ SYNC_EMOTES</button>
+                <button onclick="callWidgetFunction('emotes.testMessage')" class="btn btn--full btn--green" style="margin-top: 8px; text-align: center;">✨ SYNC_EMOTES</button>
             </div>
         </div>
 
@@ -406,15 +406,15 @@
             const win = getWidgetWindow();
             
             // Si el sistema no está listo, reintentamos un par de veces
-            if (!win || !win.getTopUsers) {
-                if (refreshRetries < 10) {
+            if (!win || !win.WidgetDebug || !win.WidgetDebug.xp) {
+                if (refreshRetries < 20) {
                     refreshRetries++;
                     setTimeout(refreshTopUsers, 500);
                 }
                 return;
             }
 
-            const topUsers = win.getTopUsers(5);
+            const topUsers = win.WidgetDebug.xp.getTopUsers(5);
             const container = document.getElementById('top-users-list');
             
             // Si el sistema está listo pero el ranking viene vacío, 
@@ -497,15 +497,15 @@
             const message = document.getElementById('test-message').value || 'Mensaje de prueba';
             const win = getWidgetWindow();
 
-            if (!win || !win.simularMensaje) {
+            if (!win || !win.WidgetDebug || !win.WidgetDebug.chat) {
                 console.log('Esperando a que cargue el widget...');
                 return;
             }
 
             // Intentar obtener el canal configurado en el widget
             let channel = 'liiukiin'; // Fallback
-            if (win.APP_INSTANCE && win.APP_INSTANCE.config) {
-                channel = win.APP_INSTANCE.config.TWITCH_CHANNEL;
+            if (win.WidgetDebug.app && win.WidgetDebug.app.config) {
+                channel = win.WidgetDebug.app.config.TWITCH_CHANNEL;
             }
 
             console.log(`🔍 Consultando estado real de ${username} en el canal ${channel}...`);
@@ -538,34 +538,52 @@
                 }
             }
 
-            win.simularMensaje(username, message, extraTags);
+            win.WidgetDebug.chat.simulateMessage(username, message, extraTags);
         }
 
         // Test streak
         function testStreak(days) {
             const win = getWidgetWindow();
 
-            if (!win || !win.getXPStats) {
+            if (!win || !win.WidgetDebug || !win.WidgetDebug.xp) {
                 console.error("Widget XP System not ready");
                 return;
             }
 
-            if (win.setTestStreak) {
-                win.setTestStreak('StreakTester', parseInt(days));
-                win.simularMensaje('StreakTester', `Testing streak: ${days} days!`);
+            if (win.WidgetDebug.xp.setStreak) {
+                win.WidgetDebug.xp.setStreak('StreakTester', parseInt(days));
+                win.WidgetDebug.chat.simulateMessage('StreakTester', `Testing streak: ${days} days!`);
             } else {
-                console.log("setTestStreak not available in widget");
+                console.log("setStreak not available in widget");
             }
         }
 
-        // Llamar función expuesta en el widget
-        function callWidgetFunction(funcName) {
+        // Llamar función expuesta en el widget (Soporta dot notation)
+        function callWidgetFunction(path) {
             const win = getWidgetWindow();
+            if (!win || !win.WidgetDebug) {
+                console.warn('Widget window not found or WidgetDebug not ready');
+                return;
+            }
 
-            if (win && typeof win[funcName] === 'function') {
-                win[funcName]();
-            } else {
-                console.warn(`Function ${funcName} not available in widget`);
+            // Resolver el path (ej: "xp.exportData")
+            const parts = path.split('.');
+            let current = win.WidgetDebug;
+            let func = null;
+
+            for (let i = 0; i < parts.length; i++) {
+                if (current[parts[i]]) {
+                    if (i === parts.length - 1) {
+                        func = current[parts[i]];
+                        // Para asegurar que el 'this' sea el objeto contenedor
+                        func.call(current);
+                    } else {
+                        current = current[parts[i]];
+                    }
+                } else {
+                    console.warn(`Path ${path} not found in WidgetDebug at part: ${parts[i]}`);
+                    break;
+                }
             }
         }
 
