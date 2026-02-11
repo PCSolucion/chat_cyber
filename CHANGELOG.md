@@ -1,6 +1,24 @@
 # Changelog
 
-## [1.1.2] - 2026-02-07
+## [1.1.3] - 2026-02-11
+
+### Lista completa de cambios
+
+- refactor: Extract watch time tracking to dedicated `WatchTimeService`
+- refactor: Namespace `DevTools` under `WidgetDebug` for better organization
+- fix: Implement XSS protection and robust input sanitization across the app
+- refactor: Centralize achievement audio handling in `AudioManager` with hardware-based pooling
+- fix: Synchronize and consolidate level-up animations for consistent visual feedback
+- perf: Improve audio system with smart throttling and resource optimization
+- feat: Update XP system scaling tiers and progressive rewards logic
+- feat: Enhance test panel with dynamic ranking, 2K/4K scaling, and HUD aesthetic
+- feat: Implement hash routing and query-based navigation for static hosting
+- feat: Add Viewer Wiki, Catalog Search, and Profile Percentiles to viewer app
+- feat: Expand leaderboard with weekly and monthly ranking timeframes
+- refactor: Implement Strategy pattern for `IdleScreenRenderer`
+- feat: Redesign Xbox achievements and implement integrated XP reward system
+- fix: Resolve MIME type errors and asset loading issues in subfolder deployments
+- feat: Modernize technical HUD Dashboard and improve anti-spam heuristics
 
 ### Lista completa de cambios
 
