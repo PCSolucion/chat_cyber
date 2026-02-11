@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.4] - 2026-02-11
+
+### Lista completa de cambios
+
+- refactor: Clean up redundant code and CSS across test panel and services
+- fix: Implement timeout for external API calls to prevent UI blocking in test-panel
+- fix: Resolve race condition in UIManager gold mode animation tracking
+- refactor: Remove dead code and optimize property returns in ExperienceService
+- fix: Correct typographic errors in AppConstants
+
 ## [1.1.3] - 2026-02-11
 
 ### Lista completa de cambios
