@@ -241,30 +241,75 @@ export default class XPDisplayManager {
     }
 
     /**
-     * Muestra indicador de XP ganado (+XP)
+     * Muestra indicador de XP ganado de forma acumulativa (+XP)
+     * Si ya hay un indicador visible, suma la cantidad y reinicia el temporizador.
      * @param {number} xpGained - Cantidad de XP ganado
      */
     showXPGain(xpGained) {
-        if (!this.dom.xpGainContainer) return;
+        if (!this.dom.xpGainContainer || xpGained <= 0) return;
 
+        // Si ya hay un indicador activo y no se está desvaneciendo, acumulamos
+        if (this.currentGainElement && !this.currentGainElement.classList.contains('fade-out')) {
+            this._updateExistingGain(xpGained);
+        } else {
+            // Si no hay o se está yendo, creamos uno nuevo (limpiando el anterior si existe)
+            if (this.currentGainElement) {
+                this.currentGainElement.remove();
+                clearTimeout(this.gainTimer);
+            }
+            this._createNewGain(xpGained);
+        }
+    }
+
+    _createNewGain(amount) {
         const indicator = document.createElement('div');
         indicator.className = 'xp-gain-indicator';
-        indicator.textContent = `+${xpGained}`;
+        indicator.textContent = `+${amount}`;
+        indicator.dataset.amount = amount; // Guardamos valor base para sumar
 
         this.dom.xpGainContainer.appendChild(indicator);
+        this.currentGainElement = indicator;
 
-        // Triggerear animación
+        // Triggerear animación inicial
         requestAnimationFrame(() => {
             indicator.classList.add('show');
         });
 
-        // Remover después de la animación
-        setTimeout(() => {
-            indicator.classList.add('fade-out');
-            setTimeout(() => {
-                indicator.remove();
-            }, 300);
-        }, 1200);
+        this._scheduleGainRemoval();
+    }
+
+    _updateExistingGain(amount) {
+        const currentAmount = parseInt(this.currentGainElement.dataset.amount || 0);
+        const newTotal = currentAmount + amount;
+        
+        this.currentGainElement.dataset.amount = newTotal;
+        this.currentGainElement.textContent = `+${newTotal}`;
+        
+        // Pequeño efecto de "pulso" al actualizar
+        this.currentGainElement.classList.remove('show');
+        void this.currentGainElement.offsetWidth; // Trigger reflow
+        this.currentGainElement.classList.add('show');
+
+        // Reiniciar el temporizador de desaparición
+        this._scheduleGainRemoval();
+    }
+
+    _scheduleGainRemoval() {
+        if (this.gainTimer) clearTimeout(this.gainTimer);
+
+        this.gainTimer = setTimeout(() => {
+            if (this.currentGainElement) {
+                this.currentGainElement.classList.add('fade-out');
+                
+                // Limpieza final tras la transición CSS
+                setTimeout(() => {
+                    if (this.currentGainElement && this.currentGainElement.classList.contains('fade-out')) {
+                        this.currentGainElement.remove();
+                        this.currentGainElement = null;
+                    }
+                }, 300);
+            }
+        }, 1200); // 1.2 segundos de visibilidad antes de desvanecer
     }
 
     /**
