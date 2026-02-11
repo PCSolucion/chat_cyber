@@ -72,6 +72,7 @@ export const XP = {
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
     RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
     RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia
+    WATCH_TIME_XP: 10,                 // XP otorgada por cada intervalo de visualización
     // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
     ACHIEVEMENT_REWARDS: {
         common: 50,

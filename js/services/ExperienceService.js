@@ -193,7 +193,7 @@ export default class ExperienceService {
                 WATCH_TIME: {
                     id: 'watch_time',
                     name: 'Tiempo de visualización',
-                    xp: 10,
+                    xp: XP.WATCH_TIME_XP || 10,
                     cooldownMs: 0, // Gestionado por intervalo de 10 min (1 XP/min)
                     enabled: true
                 },
@@ -445,13 +445,26 @@ export default class ExperienceService {
     }
 
     /**
+     * Calcula la XP a otorgar por tiempo de visualización basado en la configuración
+     * @private
+     * @param {number} minutes 
+     * @returns {number}
+     */
+    _calculateWatchTimeXP(minutes) {
+        const minsPerInterval = (TIMING.WATCH_TIME_INTERVAL_MS || 600000) / 60000;
+        const xpPerInterval = this.xpConfig.sources.WATCH_TIME.xp || 10;
+        const xpPerMinute = xpPerInterval / minsPerInterval;
+        return Math.floor(minutes * xpPerMinute);
+    }
+
+    /**
      * Añade tiempo de visualización a un usuario y otorga XP pasiva
      * @param {string} username 
      * @param {number} minutes 
      */
     addWatchTime(username, minutes) {
         const lowerUser = username.toLowerCase();
-        const xpEarned = Math.floor(minutes * 1.5);
+        const xpEarned = this._calculateWatchTimeXP(minutes);
 
         const result = this._applyActivity(lowerUser, {
             xp: xpEarned,
@@ -688,8 +701,7 @@ export default class ExperienceService {
         if (!chatters || !Array.isArray(chatters)) return;
 
         let updatedCount = 0;
-        const xpPerMinute = 1.5;
-        const totalXP = Math.floor(minutes * xpPerMinute);
+        const totalXP = this._calculateWatchTimeXP(minutes);
 
         chatters.forEach(username => {
             const result = this._applyActivity(username, {
