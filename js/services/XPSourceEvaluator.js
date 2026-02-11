@@ -74,6 +74,17 @@ export default class XPSourceEvaluator {
             xpSources.push({ source: 'STREAK_BONUS', xp });
         }
 
+        // 8. Message Quality Score
+        if (this._isEnabled('MSG_QUALITY') && context.message) {
+            const qualityXP = this._evaluateMessageQuality(context);
+            if (qualityXP !== 0) {
+                // No permitir que el total baje de 1 XP
+                const adjustedXP = Math.max(-totalXP + 1, qualityXP);
+                totalXP += adjustedXP;
+                xpSources.push({ source: 'MSG_QUALITY', xp: adjustedXP });
+            }
+        }
+
         return { totalXP, sources: xpSources };
     }
 
@@ -83,5 +94,72 @@ export default class XPSourceEvaluator {
      */
     _isEnabled(sourceId) {
         return this.xpConfig.sources[sourceId] && this.xpConfig.sources[sourceId].enabled;
+    }
+
+    /**
+     * Evalúa la calidad de un mensaje y retorna bonus/penalty de XP
+     * @param {Object} context - Contexto del mensaje
+     * @returns {number} XP adjustment (positivo = bonus, negativo = penalty)
+     * @private
+     */
+    _evaluateMessageQuality(context) {
+        const config = this.xpConfig.sources.MSG_QUALITY;
+        const msg = context.message.trim();
+        const length = msg.length;
+
+        // --- Low Effort Detection ---
+        // Mensajes muy cortos (1-4 chars): "lol", "xd", "gg", "F"
+        if (length >= config.minLengthLow && length <= config.maxLengthLow) {
+            return config.lowEffortPenalty;
+        }
+
+        // Mensajes que son solo emotes (sin texto real)
+        if (context.hasEmotes && context.emoteCount > 0) {
+            // Quitar nombres de emotes del mensaje y ver si queda algo
+            let textWithoutEmotes = msg;
+            if (context.emoteNames) {
+                for (const emote of context.emoteNames) {
+                    textWithoutEmotes = textWithoutEmotes.replace(new RegExp(emote.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
+                }
+            }
+            if (textWithoutEmotes.trim().length <= 2) {
+                return config.lowEffortPenalty; // Solo emotes, sin texto
+            }
+        }
+
+        // --- High Quality Detection ---
+        let qualityScore = 0;
+
+        // Longitud óptima (conversación real)
+        if (length >= config.minLengthHigh && length <= config.maxLengthHigh) {
+            qualityScore++;
+        }
+
+        // Contiene pregunta (engagement)
+        if (msg.includes('?')) {
+            qualityScore++;
+        }
+
+        // Mención a otro usuario (interacción social)
+        if (context.hasMention) {
+            qualityScore++;
+        }
+
+        // Variedad de palabras (no spam repetitivo tipo "go go go go")
+        const words = msg.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+        if (words.length >= 4) {
+            const uniqueWords = new Set(words);
+            const diversity = uniqueWords.size / words.length;
+            if (diversity >= 0.6) {
+                qualityScore++;
+            }
+        }
+
+        // Si cumple 2+ criterios de calidad → bonus
+        if (qualityScore >= 2) {
+            return config.highQualityXP;
+        }
+
+        return 0; // Calidad normal, sin modificación
     }
 }

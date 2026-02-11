@@ -202,6 +202,18 @@ export default class ExperienceService {
                     xp: XP.RETURN_BONUS_XP || 30,
                     cooldownMs: 0,
                     enabled: true
+                },
+                MSG_QUALITY: {
+                    id: 'msg_quality',
+                    name: 'Message Quality',
+                    highQualityXP: 3,       // Bonus por mensaje de alta calidad
+                    lowEffortPenalty: -2,    // Penalización por low-effort
+                    minLengthHigh: 20,      // Min chars para alta calidad
+                    maxLengthHigh: 200,     // Max chars para alta calidad
+                    minLengthLow: 1,        // Min chars para low-effort
+                    maxLengthLow: 4,        // Max chars para low-effort
+                    cooldownMs: 0,
+                    enabled: true
                 }
             },
 

@@ -429,6 +429,7 @@ export default class MessageProcessor {
         const xpContext = {
             hasEmotes: ctx.emoteCount > 0,
             emoteCount: ctx.emoteCount,
+            emoteNames: ctx.emoteNames || [],
             isStreamLive: this.isStreamOnline,
             isStreamStart: this._checkIsStreamStart(),
             hasMention: ctx.message.includes('@'),
