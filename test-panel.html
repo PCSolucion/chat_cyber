@@ -389,8 +389,19 @@
             return widgetFrame.contentWindow;
         }
 
-        // --- DYNAMIC RANKING ---
-        let refreshRetries = 0;
+        // Simple escape for test panel
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+
         function refreshTopUsers() {
             const win = getWidgetWindow();
             
@@ -421,9 +432,10 @@
             topUsers.forEach((user, index) => {
                 const btn = document.createElement('button');
                 btn.className = `btn btn--full ${index === 0 ? 'btn--top1' : 'btn--top'}`;
+                const safeName = escapeHTML(user.username);
                 btn.innerHTML = `
                     <div style="display: flex; justify-content: space-between;">
-                        <span>${index === 0 ? '★' : '♛'} ${user.username}</span>
+                        <span>${index === 0 ? '★' : '♛'} ${safeName}</span>
                         <span style="opacity: 0.7;">LVL ${user.level}</span>
                     </div>
                 `;

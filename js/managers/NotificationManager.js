@@ -1,6 +1,7 @@
 import EventManager from "../utils/EventEmitter.js";
 import { EVENTS } from "../utils/EventTypes.js";
 import { NOTIFICATIONS, XP } from "../constants/AppConstants.js";
+import UIUtils from "../utils/UIUtils.js";
 
 /**
  * NotificationManager - Gestor de Notificaciones
@@ -247,14 +248,18 @@ export default class NotificationManager {
     // Usamos la imagen del logro (que ya viene con default.png si no tiene específica)
     const imagePath = achievement.image || "img/logros/default.png";
 
+    const safeName = UIUtils.escapeHTML(achievement.name);
+    const safeDesc = UIUtils.escapeHTML(achievement.description);
+    const safeCond = UIUtils.escapeHTML(achievement.condition);
+
     notification.innerHTML = `
             <div class="achievement-icon">
                 <img src="${imagePath}" alt="Achievement Icon" onerror="this.onerror=null;this.src='img/logros/default.png';">
             </div>
             <div class="achievement-content">
                 <div class="achievement-label">LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name"><span>${achievement.name}</span></div>
-                <div class="achievement-desc"><span>${achievement.description} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${achievement.condition}]</span></span></div>
+                <div class="achievement-name"><span>${safeName}</span></div>
+                <div class="achievement-desc"><span>${safeDesc} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${safeCond}]</span></span></div>
             </div>
             <div class="achievement-timer"></div>
         `;
@@ -305,11 +310,14 @@ export default class NotificationManager {
     if (!overlay) return;
 
     const { username, achievement } = eventData;
+    const safeUsername = UIUtils.escapeHTML(username);
+    const safeAchName = UIUtils.escapeHTML(achievement.name);
+    
     const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
     
     // Forzamos que siempre sea la animación de logro raro (con diamante)
     const isRare = true;
-    const unlockedText = `${username} ha desbloqueado el logro`;
+    const unlockedText = `${safeUsername} ha desbloqueado el logro`;
 
     // Calcular ancho dinámico basado en el texto más largo
     const maxChars = Math.max(unlockedText.length, (achievement.name.length + 15));
@@ -355,7 +363,7 @@ export default class NotificationManager {
                     <span class="acheive_score">${xpReward}</span>
                   </div>
                   <span class="hyphen_sep">-</span>
-                  <span class="achiev_name">${achievement.name}</span>
+                  <span class="achiev_name">${safeAchName}</span>
                 </div>
               </div>
             </div>
