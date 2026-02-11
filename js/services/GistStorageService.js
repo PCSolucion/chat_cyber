@@ -122,6 +122,15 @@ export default class GistStorageService {
                 return null;
             }
 
+            // Si el archivo es muy grande, GitHub trunca el contenido en la respuesta del objeto Gist.
+            // Debemos obtenerlo de la raw_url en esos casos.
+            if (file.truncated || !file.content) {
+                Logger.info('Storage', `Archivo ${fileName} truncado o sin contenido en el objeto Gist. Descargando desde raw_url...`);
+                const rawResponse = await fetch(file.raw_url);
+                if (!rawResponse.ok) throw new Error(`Error al descargar archivo raw: ${rawResponse.status}`);
+                return await rawResponse.json();
+            }
+
             return JSON.parse(file.content);
         } catch (error) {
             Logger.error('Storage', `Error al cargar ${fileName}:`, error);
