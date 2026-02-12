@@ -20,6 +20,7 @@ import XPProcessorMiddleware from './pipeline/middlewares/XPProcessorMiddleware.
 import AchievementMiddleware from './pipeline/middlewares/AchievementMiddleware.js';
 import UIRendererMiddleware from './pipeline/middlewares/UIRendererMiddleware.js';
 import StatsTrackerMiddleware from './pipeline/middlewares/StatsTrackerMiddleware.js';
+import UserLoaderMiddleware from './pipeline/middlewares/UserLoaderMiddleware.js';
 
 // Storage Management (Strategy Pattern)
 import StorageManager from './storage/StorageManager.js';
@@ -159,6 +160,7 @@ export default class MessageProcessor {
             .use('LanguageFilter', new LanguageFilterMiddleware(this.config).execute.bind(new LanguageFilterMiddleware(this.config)))
             .use('SpamFilter', new SpamFilterMiddleware(this.services.spamFilter).execute.bind(new SpamFilterMiddleware(this.services.spamFilter)))
             .use('EmoteParser', new EmoteParserMiddleware(this.services.thirdPartyEmotes).execute.bind(new EmoteParserMiddleware(this.services.thirdPartyEmotes)))
+            .use('UserLoader', new UserLoaderMiddleware(this.services.stateManager).execute.bind(new UserLoaderMiddleware(this.services.stateManager)))
             .use('CommandFilter', new CommandFilterMiddleware().execute.bind(new CommandFilterMiddleware()))
             .use('XPProcessor', new XPProcessorMiddleware(
                 this.services.xp, 
@@ -189,6 +191,7 @@ export default class MessageProcessor {
         const context = {
             tags,
             message,
+            userId: tags['user-id'], // El ID numérico de Twitch
             username: tags['display-name'] || tags.username,
             timestamp: Date.now()
         };

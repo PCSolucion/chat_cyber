@@ -1,0 +1,26 @@
+import Logger from '../../../utils/Logger.js';
+
+/**
+ * UserLoaderMiddleware - Asegura que los datos del usuario estén en memoria
+ * antes de pasarlos al resto de la tubería.
+ */
+export default class UserLoaderMiddleware {
+    constructor(stateManager) {
+        this.stateManager = stateManager;
+    }
+
+    async execute(ctx, next) {
+        if (!this.stateManager) return next();
+
+        try {
+            // Intentar precargar el usuario (On-Demand)
+            // ctx.userId es el ID numérico de Twitch
+            await this.stateManager.ensureUserLoaded(ctx.userId, ctx.username);
+        } catch (error) {
+            Logger.error('Pipeline', `Error precargando usuario ${ctx.username}:`, error);
+        }
+
+        // Continuar con el siguiente middleware (ahora el usuario está en memoria)
+        next();
+    }
+}

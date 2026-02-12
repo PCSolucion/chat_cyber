@@ -61,15 +61,15 @@ export default class ExperienceService {
      * Gestiona: XP, Nivel, Historial Diario, Persistencia y Eventos.
      * 
      * @private
+     * @param {string} userId
      * @param {string} username 
      * @param {Object} options 
      * @returns {Object|null} null si está blacklisted, de lo contrario datos del resultado
      */
-    _applyActivity(username, { xp = 0, messages = 0, watchTime = 0, passive = false, source = null, suppressEvents = false }) {
-        const lowerUser = username.toLowerCase();
-        if (this._isBlacklisted(lowerUser)) return null;
+    _applyActivity(userId, username, { xp = 0, messages = 0, watchTime = 0, passive = false, source = null, suppressEvents = false }) {
+        if (this._isBlacklisted(username)) return null;
 
-        const userData = this.getUserData(lowerUser);
+        const userData = this.getUserData(userId, username);
         const previousLevel = userData.level;
 
         // 1. Actualizar XP y Actividad básica
@@ -100,13 +100,14 @@ export default class ExperienceService {
         }
 
         // 4. Persistencia
-        this.stateManager.markDirty(lowerUser);
+        this.stateManager.markDirty(userId || username);
 
         // 5. Notificar Eventos
         if (!suppressEvents) {
             if (xp !== 0) {
                 EventManager.emit(EVENTS.USER.XP_GAINED, {
-                    username: lowerUser,
+                    userId,
+                    username: username.toLowerCase(),
                     amount: xp,
                     total: userData.xp,
                     passive: passive || (xp > 0 && messages === 0),
@@ -116,6 +117,7 @@ export default class ExperienceService {
 
             if (leveledUp) {
                 EventManager.emit(EVENTS.USER.LEVEL_UP, {
+                    userId,
                     username: username, // Original casing if possible
                     oldLevel: previousLevel,
                     newLevel,
@@ -267,7 +269,7 @@ export default class ExperienceService {
      * @param {boolean} context.hasMention - Si menciona a otro usuario
      * @returns {Object} Resultado del tracking
      */
-    trackMessage(username, context = {}) {
+    trackMessage(userId, username, context = {}) {
         const lowerUser = username.toLowerCase();
 
         // 1. Verificar blacklist
@@ -294,7 +296,7 @@ export default class ExperienceService {
         this.checkDayReset();
 
         // Obtener datos del usuario
-        let userData = this.getUserData(lowerUser);
+        let userData = this.getUserData(userId, username);
 
         // 2. Detectar usuario que vuelve tras ausencia prolongada
         let isReturning = false;
@@ -380,7 +382,7 @@ export default class ExperienceService {
         totalXP = Math.min(totalXP, (this.xpConfig.settings.maxXPPerMessage * streakMultiplier) + returnBonusXP);
 
         // 7. Aplicar actividad (Centralizado)
-        const result = this._applyActivity(lowerUser, {
+        const result = this._applyActivity(userId, username, {
             xp: totalXP,
             messages: 1,
             suppressEvents: false
@@ -420,11 +422,12 @@ export default class ExperienceService {
 
     /**
      * Obtiene los datos de un usuario delegando al stateManager
-     * @param {string} username - Nombre del usuario (lowercase)
+     * @param {string} userId
+     * @param {string} username - Nombre del usuario
      * @returns {Object}
      */
-    getUserData(username) {
-        return this.stateManager.getUser(username);
+    getUserData(userId, username) {
+        return this.stateManager.getUser(userId, username);
     }
 
     /**
@@ -433,14 +436,12 @@ export default class ExperienceService {
      * @param {number} months 
      */
     updateSubscription(username, months) {
-        const lowerUser = username.toLowerCase();
-        const userData = this.getUserData(lowerUser);
-
+        const userData = this.getUserData(null, username);
         // Si el valor es nuevo o mayor, actualizar y guardar
         // (A veces la API devuelve 0 o null si es gift sub reciente, pero si tenemos un valor mayor guardado, lo mantenemos)
         if (months > (userData.subMonths || 0)) {
             userData.subMonths = months;
-            this.stateManager.markDirty(lowerUser);
+            this.stateManager.markDirty(username);
         }
     }
 
@@ -466,7 +467,7 @@ export default class ExperienceService {
         const lowerUser = username.toLowerCase();
         const xpEarned = this._calculateWatchTimeXP(minutes);
 
-        const result = this._applyActivity(lowerUser, {
+        const result = this._applyActivity(null, username, {
             xp: xpEarned,
             watchTime: minutes,
             passive: true
@@ -492,7 +493,7 @@ export default class ExperienceService {
         const lowerUser = username.toLowerCase();
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
-        const result = this._applyActivity(lowerUser, {
+        const result = this._applyActivity(null, username, {
             xp: xpToGain,
             passive: true,
             source: 'achievement',
@@ -524,8 +525,8 @@ export default class ExperienceService {
      * @param {string} username - Nombre del usuario
      * @returns {Object} Información de XP
      */
-    getUserXPInfo(username) {
-        const userData = this.getUserData(username.toLowerCase());
+    getUserXPInfo(userId, username) {
+        const userData = this.getUserData(userId, username);
         const progress = this.levelCalculator.getLevelProgress(userData.xp, userData.level);
 
         return {
@@ -547,8 +548,8 @@ export default class ExperienceService {
      * @param {string} period - Periodo ('total', 'week', 'month') - Por ahora solo soporta 'total'
      * @returns {number} Minutos visualizados
      */
-    getWatchTimeStats(username, period = 'total') {
-        const userData = this.getUserData(username);
+    getWatchTimeStats(userId, username, period = 'total') {
+        const userData = this.getUserData(userId, username);
 
         // Por ahora retornamos el total. 
         // Implementar lógica de periodos si activityHistory se parsea correctamente.
@@ -557,8 +558,9 @@ export default class ExperienceService {
 
     getXPLeaderboard(limit = 10) {
         const users = Array.from(this.stateManager.getAllUsers().entries())
-            .map(([username, data]) => ({
-                username,
+            .map(([id, data]) => ({
+                userId: id,
+                username: data.displayName || id,
                 xp: data.xp,
                 level: data.level,
                 title: this.levelCalculator.getLevelTitle(data.level)
@@ -618,9 +620,10 @@ export default class ExperienceService {
         }
 
         // 2. Iterar sobre todos los usuarios del ranking actual
-        rankingMap.forEach((rank, username) => {
-            const lowerUser = username.toLowerCase();
-            const userData = this.getUserData(lowerUser); // Crea usuario si no existe
+        rankingMap.forEach((rank, idOrName) => {
+            const userData = this.stateManager.users.get(String(idOrName).toLowerCase());
+            if (!userData) return;
+            const lowerUser = (userData.displayName || idOrName).toLowerCase();
             const stats = userData.achievementStats || {};
 
             const previousRank = stats.currentRank || 999;
@@ -676,11 +679,12 @@ export default class ExperienceService {
             // Guardar y notificar si hubo cambios relevantes
             if (statsChanged) {
                 userData.achievementStats = stats;
-                this.stateManager.markDirty(lowerUser);
+                this.stateManager.markDirty(idOrName);
                 changesCount++;
 
                 // Emitir evento para verificar logros de ranking
                 EventManager.emit(EVENTS.USER.RANKING_UPDATED, { 
+                    userId: String(idOrName),
                     username: lowerUser, 
                     isInitialLoad 
                 });
@@ -693,18 +697,23 @@ export default class ExperienceService {
     }
 
     /**
-     * Añade tiempo de visualización a los usuarios activos (Batch)
+     * Añade tiempo de visualización a los usuarios activos (Batch) - Async para soporte On-Demand
      * @param {Array} chatters - Lista de nombres de usuario
      * @param {number} minutes - Minutos a añadir (default: 1)
      */
-    addWatchTimeBatch(chatters, minutes = 1) {
+    async addWatchTimeBatch(chatters, minutes = 1) {
         if (!chatters || !Array.isArray(chatters)) return;
 
         let updatedCount = 0;
         const totalXP = this._calculateWatchTimeXP(minutes);
 
+        // Pre-cargar todos los usuarios necesarios en paralelo para ahorrar tiempo y lecturas redundantes
+        await Promise.all(chatters.map(username => 
+            this.stateManager.ensureUserLoaded(null, username)
+        ));
+
         chatters.forEach(username => {
-            const result = this._applyActivity(username, {
+            const result = this._applyActivity(null, username, {
                 xp: totalXP,
                 watchTime: minutes,
                 passive: true
@@ -747,8 +756,8 @@ export default class ExperienceService {
 
     getAllDataJSON() {
         const usersData = {};
-        this.stateManager.getAllUsers().forEach((data, username) => {
-            usersData[username] = data;
+        this.stateManager.getAllUsers().forEach((data, id) => {
+            usersData[id] = data;
         });
 
         return JSON.stringify({

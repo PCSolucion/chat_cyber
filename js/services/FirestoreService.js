@@ -6,7 +6,8 @@ import {
     setDoc, 
     collection, 
     getDocs, 
-    writeBatch 
+    writeBatch,
+    enableMultiTabIndexedDbPersistence 
 } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
@@ -59,6 +60,16 @@ export default class FirestoreService {
 
             this.app = initializeApp(firebaseConfig);
             this.db = getFirestore(this.app);
+            
+            // Habilitar persistencia offline (Cache IndexedDB) multi-pestaña
+            enableMultiTabIndexedDbPersistence(this.db).catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn('Firestore Persistence: Multiple tabs open, using single-tab mode');
+                } else if (err.code === 'unimplemented') {
+                    console.warn('Firestore Persistence: Not supported by browser');
+                }
+            });
+
             this.isConfigured = true;
 
             Logger.info('Firestore', 'FirestoreService configurado correctamente');
@@ -92,6 +103,13 @@ export default class FirestoreService {
                 return await this._loadHistoryCollection();
             }
 
+            // Caso Especial: Leaderboard (Ranking resumido)
+            if (fileName === 'leaderboard.json' || fileName === 'leaderboard') {
+                const lbRef = doc(this.db, this.collections.SYSTEM, 'leaderboard');
+                const lbSnap = await getDoc(lbRef);
+                return lbSnap.exists() ? lbSnap.data() : null;
+            }
+
             // Otros documentos (System config, etc)
             const docId = fileName.replace(/\.json$/, '');
             const docRef = doc(this.db, this.collections.SYSTEM, docId);
@@ -109,92 +127,33 @@ export default class FirestoreService {
     }
 
     /**
-     * Carga todos los usuarios de la colección individual
-     * @private
+     * Carga un documento de usuario específico por ID
+     * @param {string} userId - El ID numérico (o antiguo username) del usuario
      */
-    async _loadUsersCollection() {
+    async loadUserDoc(userId) {
+        if (!this.isConfigured) return null;
         try {
-            const querySnapshot = await getDocs(collection(this.db, this.collections.USERS));
-            const users = {};
-            
-            querySnapshot.forEach((doc) => {
-                users[doc.id] = doc.data();
-            });
-
-            // MIGRACIÓN: Si la colección está vacía, intentamos cargar el documento monolítico antiguo
-            if (Object.keys(users).length === 0) {
-                Logger.info('Firestore', 'Colección "users" vacía. Buscando datos en formato antiguo (Legacy)...');
-                const legacyRef = doc(this.db, 'app_data', 'xp_data');
-                const legacySnap = await getDoc(legacyRef);
-
-                if (legacySnap.exists()) {
-                    const raw = legacySnap.data();
-                    if (raw._serialized) {
-                        try {
-                            const parsed = JSON.parse(raw._serialized);
-                            Logger.info('Firestore', '🟢 Datos Legacy encontrados y preparados para migración');
-                            return { ...parsed, version: '1.2-migrated' };
-                        } catch (e) {
-                            Logger.error('Firestore', 'Error parseando datos legacy:', e);
-                        }
-                    }
-                }
-            }
-
-            Logger.info('Firestore', `Colección de usuarios cargada: ${Object.keys(users).length} documentos`);
-            
-            // Retornar en formato compatible con UserStateManager
-            return {
-                users: users,
-                lastUpdated: new Date().toISOString(),
-                version: '1.2'
-            };
+            const userRef = doc(this.db, this.collections.USERS, String(userId));
+            const userSnap = await getDoc(userRef);
+            return userSnap.exists() ? userSnap.data() : null;
         } catch (error) {
-            Logger.error('Firestore', 'Error cargando colección de usuarios:', error);
-            throw error;
+            Logger.error('Firestore', `Error cargando usuario ${userId}:`, error);
+            return null;
         }
     }
 
     /**
-     * Carga todo el historial desde la colección individual
+     * Carga todos los usuarios de la colección individual
      * @private
      */
+    async _loadUsersCollection() {
+        Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de usuarios.');
+        return {};
+    }
     async _loadHistoryCollection() {
-        try {
-            const querySnapshot = await getDocs(collection(this.db, this.collections.HISTORY));
-            const history = {};
-            
-            querySnapshot.forEach((doc) => {
-                history[doc.id] = doc.data();
-            });
-
-            // MIGRACIÓN: Si la colección está vacía, intentamos cargar el documento monolítico antiguo
-            if (Object.keys(history).length === 0) {
-                Logger.info('Firestore', 'Colección "history" vacía. Buscando datos en formato antiguo (Legacy)...');
-                const legacyRef = doc(this.db, 'app_data', 'stream_history');
-                const legacySnap = await getDoc(legacyRef);
-
-                if (legacySnap.exists()) {
-                    const raw = legacySnap.data();
-                    if (raw._serialized) {
-                        try {
-                            const parsed = JSON.parse(raw._serialized);
-                            Logger.info('Firestore', '🟢 Historial Legacy encontrado y preparado para migración');
-                            return { ...parsed, _isMigrated: true };
-                        } catch (e) {
-                            Logger.error('Firestore', 'Error parseando historial legacy:', e);
-                        }
-                    }
-                    return { ...raw, _isMigrated: true };
-                }
-            }
-
-            Logger.info('Firestore', `Colección de historial cargada: ${Object.keys(history).length} documentos`);
-            return history;
-        } catch (error) {
-            Logger.error('Firestore', 'Error cargando colección de historial:', error);
-            throw error;
-        }
+        // OPTIMIZACIÓN CRÍTICA: No cargamos todo el historial al iniciar.
+        Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de historial.');
+        return {};
     }
 
     /**
@@ -219,6 +178,16 @@ export default class FirestoreService {
                 return await this._saveHistory(data, dirtyKeys);
             }
 
+            // Caso Especial: Leaderboard
+            if (fileName === 'leaderboard.json' || fileName === 'leaderboard') {
+                const lbRef = doc(this.db, this.collections.SYSTEM, 'leaderboard');
+                await setDoc(lbRef, {
+                    ...data,
+                    lastUpdated: new Date().toISOString()
+                });
+                return true;
+            }
+
             // Guardado estándar para otros archivos
             const docId = fileName.replace(/\.json$/, '');
             const docRef = doc(this.db, this.collections.SYSTEM, docId);
@@ -239,24 +208,27 @@ export default class FirestoreService {
      * @private
      */
     async _saveUsers(allUsers, dirtyKeys = null) {
+        // Asegurar que tenemos algo que guardar
+        if (!allUsers) return true;
+
         // Si tenemos dirtyKeys, solo guardamos esos. Si no, todos (migración).
-        const keysToSave = dirtyKeys ? Array.from(dirtyKeys) : Object.keys(allUsers);
+        const keysToSave = dirtyKeys ? Array.from(dirtyKeys) : 
+                          (allUsers instanceof Map ? Array.from(allUsers.keys()) : Object.keys(allUsers));
         
         if (keysToSave.length === 0) return true;
 
         Logger.info('Firestore', `Iniciando guardado de ${keysToSave.length} usuarios...`);
 
         // Firestore tiene un límite de 500 operaciones por batch.
-        // Procesamos en trozos de 400 por seguridad.
         const CHUNK_SIZE = 400;
         for (let i = 0; i < keysToSave.length; i += CHUNK_SIZE) {
             const chunk = keysToSave.slice(i, i + CHUNK_SIZE);
             const batch = writeBatch(this.db);
             
-            chunk.forEach(username => {
-                const userData = allUsers[username.toLowerCase()];
+            chunk.forEach(id => {
+                const userData = (allUsers instanceof Map) ? allUsers.get(id) : allUsers[id];
                 if (userData) {
-                    const userRef = doc(this.db, this.collections.USERS, username.toLowerCase());
+                    const userRef = doc(this.db, this.collections.USERS, String(id));
                     batch.set(userRef, userData, { merge: true });
                 }
             });

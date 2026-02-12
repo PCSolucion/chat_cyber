@@ -85,7 +85,7 @@ export default class WatchTimeService {
 
             // 1. Asignar XP Pasivo en ExperienceService
             if (this.xpService) {
-                this.xpService.addWatchTimeBatch(chatters, this.minutesPerCycle);
+                await this.xpService.addWatchTimeBatch(chatters, this.minutesPerCycle);
             }
             
             // 2. Trackear en estadísticas de sesión en SessionStatsService

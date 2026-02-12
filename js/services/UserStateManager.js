@@ -1,5 +1,5 @@
 import PersistenceManager from './PersistenceManager.js';
-import { XP } from '../constants/AppConstants.js';
+import { XP, TIMING } from '../constants/AppConstants.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
 /**
@@ -21,16 +21,45 @@ export default class UserStateManager {
         this.storage = storage;
         this.fileName = config.XP_DATA_FILENAME || 'xp_data.json';
 
-        // Base de datos de usuarios en memoria
+        // Colección principal de usuarios
         this.users = new Map();
+
+        // Mappings auxiliares
+        this.nameMap = new Map(); // lowercaseUsername -> userId
         this.isLoaded = false;
 
         // Configuración de persistencia
         this.persistence = new PersistenceManager({
             saveCallback: (dirtyKeys) => this._performSaveTask(dirtyKeys),
-            debounceMs: XP.SAVE_DEBOUNCE_MS || 5000,
+            debounceMs: XP.SAVE_DEBOUNCE_MS || 120000,
             debug: this.config.DEBUG
         });
+
+        // Caché de ranking resumido (Top 50)
+        this.leaderboard = [];
+        this.lastSystemUpdate = 0; // Para throttling de stats globales
+
+        // Estadísticas globales de la comunidad
+        this.communityStats = {
+            totalXP: 0,
+            totalMessages: 0,
+            totalUsers: 0,
+            averageLevel: 1,
+            lastCalculated: null
+        };
+
+        // Tracker de sincronización para evitar datos anticuados (On-Demand)
+        this.userLoadTimestamps = new Map(); // id -> timestamp
+
+        // BROADCAST CHANNEL: Sincronización entre pestañas (OBS <-> Panel)
+        this.channel = new BroadcastChannel('chat_twitch_sync');
+        this.channel.onmessage = (event) => this._handleSyncMessage(event);
+
+        // MEMORY EVICTION: Limpieza de usuarios inactivos en RAM
+        this.lastAccessMap = new Map(); // id -> timestamp
+        
+        // Iniciar ciclo de limpieza (cada 30 min)
+        setInterval(() => this._evictInactiveUsers(), 1800000);
     }
 
     /**
@@ -51,13 +80,23 @@ export default class UserStateManager {
                 const usersToLoad = data.users || data;
                 
                 if (typeof usersToLoad === 'object' && !Array.isArray(usersToLoad)) {
-                    Object.entries(usersToLoad).forEach(([username, userData]) => {
-                        // Evitar cargar basura si la estructura es extraña
+                    Object.entries(usersToLoad).forEach(([id, userData]) => {
+                        // Evitar cargar basura
                         if (userData && (userData.xp !== undefined || userData.level !== undefined)) {
-                            this.users.set(username.toLowerCase(), this._sanitizeUserData(userData));
+                            const sanitized = this._sanitizeUserData(userData);
+                            this.users.set(id, sanitized);
+                            
+                            // Poblar nameMap para búsquedas por nombre (UI/Legacy)
+                            if (sanitized.displayName) {
+                                this.nameMap.set(sanitized.displayName.toLowerCase(), id);
+                            } else if (isNaN(id)) {
+                                // Es un ID de estilo antiguo (nombre de usuario)
+                                this.nameMap.set(id.toLowerCase(), id);
+                            }
                         }
                     });
-                } else {
+                }
+ else {
                     console.warn('⚠️ La estructura de datos recibida no es un objeto válido de usuarios:', usersToLoad);
                 }
             } else {
@@ -79,6 +118,33 @@ export default class UserStateManager {
             
             // Integrar datos iniciales (subs importados)
             this._mergeInitialSubscribers();
+
+            // Cargar Leaderboard (Ranking resumido) para respuesta inmediata
+            try {
+                const lbData = await this.storage.load('leaderboard.json');
+                if (lbData && lbData.topUsers) {
+                    this.leaderboard = lbData.topUsers;
+                    console.log(`🏆 Leaderboard cargado: ${this.leaderboard.length} usuarios en el Top`);
+                }
+
+                // Cargar Snapshot de Comunidad
+                const commData = await this.storage.load('community_snapshot.json');
+                if (commData) {
+                    this.communityStats = { ...this.communityStats, ...commData };
+                    console.log(`🌐 Stats de Comunidad cargadas: ${this.communityStats.totalXP} XP global`);
+                }
+
+                // INICIALIZACIÓN PROACTIVA: Si tenemos usuarios pero no documentos de sistema
+                // generamos la primera versión ahora mismo para que aparezcan en Firestore.
+                if (this.users.size > 0 && (this.leaderboard.length === 0 || !this.communityStats.lastCalculated)) {
+                    console.info('🛠️ UserStateManager: Documentos de sistema no encontrados. Generando iniciales...');
+                    // Esperamos a que ambos se creen para asegurar que aparecen en la consola
+                    await this._updateLeaderboard();
+                    await this._updateCommunityStats();
+                }
+            } catch (e) {
+                console.warn('⚠️ No se pudieron cargar o inicializar datos globales:', e);
+            }
             
             return true;
         } catch (error) {
@@ -86,43 +152,227 @@ export default class UserStateManager {
             console.groupEnd();
             this.isLoaded = true;
             this._mergeInitialSubscribers();
-            return false;
         }
     }
 
     /**
-     * Obtiene los datos de un usuario (los crea si no existen)
-     * @param {string} username 
+     * Asegura que un usuario esté cargado en memoria.
+     * Si no está, lo intenta cargar desde el storage de forma asíncrona.
+     * @param {string} userId - ID de Twitch
+     * @param {string} username - Nombre de usuario
      */
-    getUser(username) {
-        const lowerUser = username.toLowerCase();
+    async ensureUserLoaded(userId, username) {
+        if (!userId && !username) return false;
 
-        if (!this.users.has(lowerUser)) {
-            this.users.set(lowerUser, {
-                xp: 0,
-                level: 1,
-                lastActivity: null,
-                streakDays: 0,
-                bestStreak: 0,
-                lastStreakDate: null,
-                totalMessages: 0,
-                achievements: [],
-                achievementStats: {},
-                activityHistory: {},
-                watchTimeMinutes: 0,
-                subMonths: 0
+        const strId = userId ? String(userId) : null;
+        const lowerName = username ? username.toLowerCase() : null;
+        const now = Date.now();
+        const refreshInterval = TIMING.USER_REFRESH_INTERVAL_MS || 86400000;
+
+        // 1. Ya está en memoria
+        if ((strId && this.users.has(strId)) || (lowerName && this.nameMap.has(lowerName))) {
+            const id = strId || this.nameMap.get(lowerName);
+            const lastLoad = this.userLoadTimestamps.get(id) || 0;
+            
+            // Si el dato es fresco (menos de 24h), no hacemos nada
+            if (now - lastLoad < refreshInterval) {
+                return true;
+            }
+            // Si es antiguo (> 24h), continuamos para re-cargar del servidor
+            Logger.debug('UserStateManager', `🔄 Refrescando datos de ${username} (Cache > 24h)`);
+        }
+
+        // 2. No está en memoria o es antiguo, cargar desde Firestore
+        const idToLoad = strId || lowerName;
+        try {
+            const userData = await this.storage.loadUser(idToLoad);
+            if (userData) {
+                const sanitized = this._sanitizeUserData(userData);
+                const finalId = strId || idToLoad;
+                
+                this.users.set(finalId, sanitized);
+                this.userLoadTimestamps.set(finalId, now);
+                this.lastAccessMap.set(finalId, now); // Para evitar eviction inmediato
+                
+                if (sanitized.displayName) {
+                    this.nameMap.set(sanitized.displayName.toLowerCase(), finalId);
+                }
+                return true;
+            }
+        } catch (e) {
+            console.warn(`UserStateManager: Usuario ${idToLoad} no encontrado en remoto o error.`);
+        }
+
+        return false;
+    }
+
+    /**
+     * Obtiene los datos de un usuario por ID de Twitch.
+     * Implementa 'Lazy Migration' para transferir datos de nombres de usuario antiguos a IDs numéricos.
+     * 
+     * @param {string} userId - ID numérico de Twitch
+     * @param {string} username - Nombre de usuario actual
+     */
+    getUser(userId, username) {
+        if (!userId) {
+            // Fallback para sistemas que aún no pasan el ID (ej: bots o comandos manuales)
+            // Intentamos buscar por nombre
+            const existingId = this.nameMap.get(username.toLowerCase());
+            if (existingId) return this.users.get(existingId);
+            
+            // Si no existe, usamos el username como ID temporal (Legacy compatible)
+            userId = username.toLowerCase();
+        }
+
+        const strId = String(userId);
+        const lowerName = username.toLowerCase();
+
+        // 1. Caso Ideal: El usuario ya está indexado por su ID numérico
+        if (this.users.has(strId)) {
+            // Actualizar timestamp de acceso (Eviction)
+            this.lastAccessMap.set(strId, Date.now());
+            
+            const data = this.users.get(strId);
+            // Actualizar nombre visible por si cambió en Twitch
+            data.displayName = username; 
+            this.nameMap.set(lowerName, strId);
+            return data;
+        }
+
+        // 2. MIGRACIÓN PEREZOSA: Buscar si existe un documento antiguo con el nombre de usuario
+        if (this.nameMap.has(lowerName)) {
+            const oldId = this.nameMap.get(lowerName);
+            if (isNaN(oldId) || oldId === lowerName) {
+                // Encontramos datos bajo el nombre del usuario (Estilo antiguo)
+                console.info(`🔄 Migrando usuario ${username} de ID '${oldId}' a ID numérico '${strId}'`);
+                const data = this.users.get(oldId);
+                
+                // Mover datos a la nueva clave numérica
+                data.displayName = username;
+                this.users.set(strId, data);
+                this.users.delete(oldId);
+                
+                // Actualizar mapeos
+                this.nameMap.set(lowerName, strId);
+                
+                // Marcar como "sucio" para que se guarde el nuevo ID en Firestore
+                this.markDirty(strId);
+                return data;
+            }
+        }
+
+        // 3. Usuario totalmente nuevo
+        const newUser = {
+            displayName: username,
+            xp: 0,
+            level: 1,
+            lastActivity: null,
+            streakDays: 0,
+            bestStreak: 0,
+            lastStreakDate: null,
+            totalMessages: 0,
+            achievements: [],
+            achievementStats: {},
+            activityHistory: {},
+            watchTimeMinutes: 0,
+            subMonths: 0
+        };
+
+        this.users.set(strId, newUser);
+        this.nameMap.set(lowerName, strId);
+        return newUser;
+    }
+
+    /**
+     * Marca a un usuario como modificado usando su ID
+     * @param {string} userIdOrName 
+     */
+    markDirty(userIdOrName) {
+        const id = String(userIdOrName).toLowerCase();
+        // Si nos pasan un nombre, intentamos resolver el ID real
+        const finalId = this.users.has(id) ? id : (this.nameMap.get(id) || id);
+
+        // Actualizar acceso para Eviction System
+        this.lastAccessMap.set(finalId, Date.now());
+
+        // Emitir cambio a otras pestañas
+        const userData = this.users.get(finalId);
+        if (userData) {
+            this.channel.postMessage({
+                type: 'USER_UPDATE',
+                id: finalId,
+                data: userData,
+                timestamp: Date.now()
             });
         }
-
-        return this.users.get(lowerUser);
+        
+        this.persistence.markDirty(finalId);
     }
 
     /**
-     * Marca a un usuario como modificado para programar guardado
-     * @param {string} username 
+     * Maneja mensajes de sincronización de otras pestañas
+     * @private
      */
-    markDirty(username) {
-        this.persistence.markDirty(username.toLowerCase());
+    _handleSyncMessage(event) {
+        const { type, id, data, timestamp } = event.data;
+        if (type === 'USER_UPDATE' && id && data) {
+            // Si la otra pestaña tiene datos más recientes, actualizamos la memoria local
+            const localData = this.users.get(id);
+            // Solo actualizamos si no tenemos el dato o si el dato remoto es más nuevo
+            // (Usamos timestamp del evento como proxy de versión)
+            if (!localData || !localData.lastUpdated || localData.lastUpdated < timestamp) {
+                // Actualizamos en memoria
+                this.users.set(id, data);
+                if (data.displayName) {
+                    this.nameMap.set(data.displayName.toLowerCase(), id);
+                }
+                // Actualizamos timestamp de acceso local también para que no se borre
+                this.lastAccessMap.set(id, Date.now());
+                this.userLoadTimestamps.set(id, Date.now()); // Lo tratamos como recién cargado
+            }
+        }
+    }
+
+    /**
+     * Limpia usuarios inactivos de la memoria RAM (pero siguen en disco IndexedDB)
+     * @private
+     */
+    _evictInactiveUsers() {
+        const now = Date.now();
+        const EVICTION_THRESHOLD = 3600000; // 1 hora de inactividad
+        let evictedCount = 0;
+
+        // Solo limpiamos si hay bastantes usuarios en memoria (> 200) para no perder tiempo
+        if (this.users.size < 200) return;
+
+        // Iterar sobre lastAccessMap para encontrar candidatos
+        for (const [id, lastAccess] of this.lastAccessMap.entries()) {
+            if (now - lastAccess > EVICTION_THRESHOLD) {
+                // CRÍTICO: Verificar que NO tenga cambios pendientes de guardar
+                if (!this.persistence.dirtyKeys.has(id)) {
+                    // Borrar de memoria principal
+                    this.users.delete(id);
+                    // Borrar de mapeos auxiliares
+                    this.lastAccessMap.delete(id);
+                    this.userLoadTimestamps.delete(id); 
+                    
+                    // Nota: No limpiamos nameMap porque es ligero y útil para resoluciones rápidas
+                    evictedCount++;
+                }
+            }
+        }
+
+        if (evictedCount > 0 && this.config.DEBUG) {
+            console.debug(`🧹 UserStateManager: Liberados ${evictedCount} usuarios inactivos de la RAM.`);
+        }
+    }
+
+    /**
+     * Obtiene un usuario por nombre (Helper para búsquedas)
+     */
+    getUserByName(username) {
+        const id = this.nameMap.get(username.toLowerCase());
+        return id ? this.users.get(id) : null;
     }
 
     /**
@@ -133,34 +383,55 @@ export default class UserStateManager {
     }
 
     /**
-     * Sanitiza los datos de un usuario al cargar
+     * Sanitiza y valida los datos de un usuario para garantizar el esquema correcto.
+     * Repara campos faltantes o tipos de datos incorrectos (Sanity Check).
      * @private
      */
     _sanitizeUserData(data) {
-        // Deduplicar logros si vinieran corruptos
-        let achievements = data.achievements || [];
-        if (Array.isArray(achievements) && achievements.length > 0) {
-            const achMap = new Map();
-            achievements.forEach(ach => {
-                const id = typeof ach === 'string' ? ach : ach.id;
-                if (id && !achMap.has(id)) achMap.set(id, ach);
+        if (!data || typeof data !== 'object') return this.getUser('default_new_user');
+
+        // 1. Asegurar tipos numéricos básicos
+        const xp = Math.max(0, parseInt(data.xp) || 0);
+        const level = Math.max(1, parseInt(data.level) || 1);
+        const totalMessages = Math.max(0, parseInt(data.totalMessages) || 0);
+        const watchTimeMinutes = Math.max(0, parseInt(data.watchTimeMinutes) || 0);
+        const subMonths = Math.max(0, parseInt(data.subMonths) || 0);
+        const streakDays = Math.max(0, parseInt(data.streakDays) || 0);
+        const bestStreak = Math.max(streakDays, parseInt(data.bestStreak) || 0);
+
+        // 2. Limpiar y deduplicar logros
+        let achievements = Array.isArray(data.achievements) ? data.achievements : [];
+        if (achievements.length > 0) {
+            const achSet = new Set();
+            achievements = achievements.filter(ach => {
+                const id = typeof ach === 'string' ? ach : (ach && ach.id);
+                if (id && !achSet.has(id)) {
+                    achSet.add(id);
+                    return true;
+                }
+                return false;
             });
-            achievements = Array.from(achMap.values());
         }
 
+        // 3. Validar objetos anidados
+        const achievementStats = (data.achievementStats && typeof data.achievementStats === 'object') ? data.achievementStats : {};
+        const activityHistory = (data.activityHistory && typeof data.activityHistory === 'object') ? data.activityHistory : {};
+
+        // 4. Retornar objeto garantizado (Estructura de Night City)
         return {
-            xp: data.xp || 0,
-            level: data.level || 1,
+            displayName: data.displayName || null, // Guardamos el nombre para visualización
+            xp,
+            level,
+            totalMessages,
+            watchTimeMinutes,
+            subMonths,
+            streakDays,
+            bestStreak,
             lastActivity: data.lastActivity || null,
-            streakDays: data.streakDays || 0,
-            bestStreak: data.bestStreak || data.streakDays || 0,
             lastStreakDate: data.lastStreakDate || null,
-            totalMessages: data.totalMessages || 0,
-            achievements: achievements,
-            achievementStats: data.achievementStats || {},
-            activityHistory: data.activityHistory || {},
-            watchTimeMinutes: data.watchTimeMinutes || 0,
-            subMonths: data.subMonths || 0
+            achievements,
+            achievementStats,
+            activityHistory
         };
     }
 
@@ -182,13 +453,15 @@ export default class UserStateManager {
             // Si hay dirtyKeys específicos, solo esos. 
             // Si es null, es un guardado forzado/migración (todos).
             if (dirtyKeys && dirtyKeys.size > 0) {
-                dirtyKeys.forEach(username => {
-                    const data = this.users.get(username.toLowerCase());
-                    if (data) usersSnapshot[username.toLowerCase()] = data;
+                dirtyKeys.forEach(id => {
+                    const data = this.users.get(id);
+                    if (data) {
+                        usersSnapshot[id] = this._sanitizeUserData(data);
+                    }
                 });
             } else {
-                this.users.forEach((data, username) => {
-                    usersSnapshot[username] = data;
+                this.users.forEach((data, id) => {
+                    usersSnapshot[id] = this._sanitizeUserData(data);
                 });
             }
 
@@ -200,6 +473,15 @@ export default class UserStateManager {
                     lastUpdated: new Date().toISOString(),
                     version: '1.2'
                 }, dirtyKeys);
+
+                // ACTUALIZACIÓN DE LEADERBOARD Y STATS (Con Throttling de 12 horas)
+                const now = Date.now();
+                const interval = TIMING.SYSTEM_UPDATE_INTERVAL_MS || 43200000;
+                if (now - this.lastSystemUpdate > interval || dirtyKeys === null) {
+                    await this._updateLeaderboard();
+                    await this._updateCommunityStats();
+                    this.lastSystemUpdate = now;
+                }
             }
 
         } catch (error) {
@@ -209,16 +491,90 @@ export default class UserStateManager {
     }
 
     /**
+     * Calcula y guarda el Top 50 en un documento independiente
+     * @private
+     */
+    async _updateLeaderboard() {
+        try {
+            // 1. Calcular el Top 50 desde la memoria actual (Limpiando undefineds)
+            const top50 = Array.from(this.users.entries())
+                .map(([id, data]) => ({
+                    id,
+                    username: data.displayName || id,
+                    xp: data.xp || 0,
+                    level: data.level || 1
+                }))
+                .sort((a, b) => {
+                    const levelDiff = (b.level || 0) - (a.level || 0);
+                    if (levelDiff !== 0) return levelDiff;
+                    return (b.xp || 0) - (a.xp || 0);
+                })
+                .slice(0, 50);
+
+            this.leaderboard = top50;
+
+            // 2. Guardar en Firestore como documento único
+            const success = await this.storage.save('leaderboard.json', {
+                topUsers: top50,
+                count: this.users.size
+            });
+
+            if (success && this.config.DEBUG) console.log('🏆 Leaderboard (Top 50) actualizado con éxito');
+        } catch (error) {
+            console.error('❌ Error actualizando leaderboard:', error);
+        }
+    }
+
+    /**
+     * Calcula y guarda las estadísticas globales de la comunidad
+     * @private
+     */
+    async _updateCommunityStats() {
+        try {
+            let totalXP = 0;
+            let totalMessages = 0;
+            let sumLevels = 0;
+            const count = this.users.size;
+
+            this.users.forEach(u => {
+                totalXP += (u.xp || 0);
+                totalMessages += (u.totalMessages || 0);
+                sumLevels += (u.level || 1);
+            });
+
+            const stats = {
+                totalXP,
+                totalMessages,
+                totalUsers: count,
+                averageLevel: count > 0 ? Math.round((sumLevels / count) * 10) / 10 : 1,
+                lastCalculated: new Date().toISOString()
+            };
+
+            this.communityStats = stats;
+
+            // Guardar en Firestore como snapshot de sistema
+            await this.storage.save('community_snapshot.json', stats);
+
+            if (this.config.DEBUG) console.log('🌐 Snapshot de comunidad actualizado en Firestore');
+        } catch (error) {
+            console.error('❌ Error actualizando community stats:', error);
+        }
+    }
+
+    /**
      * Fusiona cambios remotos sin perder progreso local nuevo
      * @private
      */
     _mergeRemoteChanges(remoteUsers) {
-        Object.entries(remoteUsers).forEach(([username, remoteData]) => {
-            const lowerUser = username.toLowerCase();
-            const localData = this.users.get(lowerUser);
+        Object.entries(remoteUsers).forEach(([id, remoteData]) => {
+            const localData = this.users.get(id);
 
             if (!localData) {
-                this.users.set(lowerUser, remoteData);
+                this.users.set(id, remoteData);
+                // Si es un ID numérico, intentar registrarlo en el nameMap si tiene displayName
+                if (!isNaN(id) && remoteData.displayName) {
+                    this.nameMap.set(remoteData.displayName.toLowerCase(), id);
+                }
             } else {
                 // Conservar siempre el mayor progreso
                 localData.xp = Math.max(localData.xp || 0, remoteData.xp || 0);
@@ -246,7 +602,7 @@ export default class UserStateManager {
                 const localTime = localData.lastActivity ? new Date(localData.lastActivity).getTime() : 0;
                 localData.lastActivity = Math.max(localTime, remoteTime);
                 
-                this.users.set(lowerUser, localData);
+                this.users.set(id, localData);
             }
         });
     }

@@ -30,7 +30,7 @@ export const TIMING = {
 
     // Stream History
     STREAM_CHECK_INTERVAL_MS: 60000,     // 1 min
-    STREAM_SAVE_COOLDOWN_MS: 300000,     // 5 min
+    STREAM_SAVE_COOLDOWN_MS: 600000,     // 10 min
 
     // XP System
     STREAM_START_WINDOW_MS: 600000,      // 10 min (ventana para bonus de inicio)
@@ -41,6 +41,12 @@ export const TIMING = {
 
     // Animación
     ANIMATION_COOLDOWN_MS: 30000,        // Tiempo sin mensajes para animación completa
+
+    // Actualización de documentos globales (Leaderboard, Community Stats)
+    SYSTEM_UPDATE_INTERVAL_MS: 43200000, // 12 horas
+
+    // Ciclo de refresco forzado para usuarios (para evitar datos anticuados en cache)
+    USER_REFRESH_INTERVAL_MS: 86400000,   // 24 horas
 };
 
 // Configuración de Notificaciones
@@ -68,7 +74,7 @@ export const STATS = {
 // Configuración del Sistema de XP
 export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
-    SAVE_DEBOUNCE_MS: 5000,             // Frecuencia máxima de guardado en Firestore
+    SAVE_DEBOUNCE_MS: 480000,           // 8 minutos: Maximiza el ahorro de cuota acumulando cambios en memoria
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
     RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
     RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia
