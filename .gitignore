@@ -19,6 +19,7 @@ Thumbs.db
 # Configuration files with secrets
 js/config.js
 achievements-viewer/js/config.js
+viewer/js/config.js
 
 # Documentación local (no incluir en el repositorio)
 documentacion/
