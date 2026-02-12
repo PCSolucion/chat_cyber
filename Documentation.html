@@ -959,7 +959,7 @@
                     </tr>
                     <tr>
                         <td>Persistencia</td>
-                        <td>GitHub Gist API + localStorage (backup)</td>
+                        <td>Firebase Firestore + localStorage (backup)</td>
                     </tr>
                 </table>
             </div>
@@ -1025,8 +1025,8 @@
                         <div class="component-icon">💾</div>
                         <div class="component-title">Persistencia Mejorada</div>
                     </div>
-                    <p>Resolución de conflictos HTTP 409 en <code>GistStorageService</code> para
-                    mayor estabilidad en entornos de baja latencia.</p>
+                    <p>Migración a <code>FirestoreService</code> para persistencia robusta
+                    con mejor escalabilidad y eliminación de conflictos HTTP.</p>
                 </div>
             </div>
         </section>
@@ -1211,8 +1211,8 @@
                     </tr>
                     <tr>
                         <td>6. Persistencia</td>
-                        <td>GistStorageService</td>
-                        <td>Almacenamiento en GitHub Gist + localStorage (mejorado v1.1.1 con resolución de conflictos)</td>
+                        <td>FirestoreService</td>
+                        <td>Almacenamiento en Firebase Firestore + localStorage (migrado desde Gist en v1.1.4)</td>
                     </tr>
                 </table>
             </div>
@@ -1665,16 +1665,19 @@
                     <div class="component-icon">💾</div>
                     <div class="component-title">02. Sistema de XP y Logros</div>
                 </div>
-                <p>Este widget guarda el progreso de tus espectadores en un <strong>GitHub Gist</strong>. Es necesario configurar tus propias credenciales para que los datos se guarden correctamente.</p>
+                <p>Este widget guarda el progreso de tus espectadores en <strong>Firebase Firestore</strong>. Es necesario configurar tu proyecto de Firebase para que los datos se guarden correctamente.</p>
                 <ul style="margin-top: 10px;">
-                    <li>Crea un Gist en <a href="https://gist.github.com" style="color: var(--cyber-cyan);">gist.github.com</a> (un archivo llamado <code>xp_data.json</code>).</li>
-                    <li>Copia el <strong>ID del Gist</strong> (la cadena de caracteres al final de la URL).</li>
-                    <li>Genera un <strong>Personal Access Token (classic)</strong> en GitHub con permisos de <code>gist</code>.</li>
-                    <li>En el archivo <code>js/config.js</code>, actualiza los campos:</li>
+                    <li>Crea un proyecto en <a href="https://console.firebase.google.com" style="color: var(--cyber-cyan);">Firebase Console</a>.</li>
+                    <li>Activa <strong>Cloud Firestore</strong> en tu proyecto.</li>
+                    <li>Copia la <strong>configuración del SDK</strong> desde la consola de Firebase.</li>
+                    <li>En el archivo <code>js/config.js</code>, actualiza los campos de Firebase:</li>
                 </ul>
                 <div class="code-block">
-<span class="code-function">XP_GIST_ID</span>: <span class="code-string">'tu_id_de_gist_aqui'</span>,
-<span class="code-function">XP_GIST_TOKEN</span>: <span class="code-string">'tu_token_de_github_aqui'</span>,</div>
+<span class="code-function">FIREBASE</span>: {
+  <span class="code-function">apiKey</span>: <span class="code-string">'tu-api-key'</span>,
+  <span class="code-function">projectId</span>: <span class="code-string">'tu-proyecto'</span>,
+  ...
+},</div>
                 <div class="highlight-box">
                     <strong>ADVERTENCIA:</strong> No compartas tu Token con nadie. Si planeas subir este código a un repositorio público, usa variables de entorno o asegúrate de excluir el archivo de configuración.
                 </div>

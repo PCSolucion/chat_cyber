@@ -105,6 +105,7 @@ export default class MessageProcessor {
                 this.services.ranking.setStateManager(this.services.stateManager);
                 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
+                await this.services.streamHistory.init().catch(e => console.error(e));
                 
                 // Inyectar stateManager en los servicios que lo necesitan
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager);

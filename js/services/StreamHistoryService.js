@@ -24,8 +24,29 @@ export default class StreamHistoryService {
         };
 
         this.DEBUG = config.DEBUG || false;
-        
+    }
+    /**
+     * Inicialización asíncrona - Carga datos y verifica migraciones
+     */
+    async init() {
         this._setupListeners();
+        
+        try {
+            const history = await this.storage.load(this.fileName) || {};
+            // Si FirestoreService nos marca que estos datos vienen del formato antiguo
+            if (history._isMigrated) {
+                console.info('🚀 StreamHistoryService: Ejecutando migración de historial...');
+                // Guardamos todo el objeto (null en dirtyKeys) para crear documentos individuales
+                await this.storage.save(this.fileName, history, null);
+                console.log('✅ Historial migrado a la nueva estructura de Firestore');
+            }
+            
+            if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
+            return true;
+        } catch (e) {
+            console.error('❌ Error inicializando StreamHistoryService:', e);
+            return false;
+        }
     }
 
     _setupListeners() {
@@ -115,7 +136,8 @@ export default class StreamHistoryService {
                         date: this.activeDate,
                         duration: oldInitial + minsOldDay
                     };
-                    await this.storage.save(this.fileName, history);
+                    // Pasamos el set con la fecha afectada para guardado granular
+                    await this.storage.save(this.fileName, history, new Set([this.activeDate]));
                 }
 
                 // Reiniciar ancla de tiempo para el nuevo día
@@ -129,6 +151,9 @@ export default class StreamHistoryService {
 
             const history = await this.storage.load(this.fileName) || {};
             
+            // Si es una migración detectada por FirestoreService
+            const isMigrating = history._isMigrated;
+
             // Inicializar o recargar duración del día si es undefined
             if (this.initialDayDuration === undefined) {
                 if (history[today]) {
@@ -151,9 +176,13 @@ export default class StreamHistoryService {
                 count: this.dayCount
             };
 
-            const success = await this.storage.save(this.fileName, history);
+            // Si estamos migrando, guardamos todo el objeto para crear los documentos individuales.
+            // Si no, solo la fecha de hoy para ahorrar ancho de banda.
+            const dirtyKeys = isMigrating ? null : new Set([today]);
+            const success = await this.storage.save(this.fileName, history, dirtyKeys);
+            
             if (success) {
-                console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m`);
+                console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m ${isMigrating ? '(Migración completada)' : ''}`);
                 if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
             }
         } catch (error) {

@@ -27,7 +27,7 @@ export default class UserStateManager {
 
         // Configuración de persistencia
         this.persistence = new PersistenceManager({
-            saveCallback: () => this._performSaveTask(),
+            saveCallback: (dirtyKeys) => this._performSaveTask(dirtyKeys),
             debounceMs: XP.SAVE_DEBOUNCE_MS || 5000,
             debug: this.config.DEBUG
         });
@@ -67,6 +67,14 @@ export default class UserStateManager {
             this.isLoaded = true;
             console.log(`✅ Usuarios procesados y listos: ${this.users.size}`);
             
+            // Si venimos de una migración legacy, forzamos un guardado inmediato 
+            // para que el usuario pueda ver las nuevas colecciones en su consola de Firebase.
+            if (data && data.version === '1.2-migrated') {
+                console.info('🚀 UserStateManager: Ejecutando guardado post-migración...');
+                // Forzamos el guardado incluso si no hay 'dirtyKeys' porque es una migración masiva
+                await this.saveImmediately(true);
+            }
+
             console.groupEnd();
             
             // Integrar datos iniciales (subs importados)
@@ -158,29 +166,41 @@ export default class UserStateManager {
 
     /**
      * Tarea de guardado (Estrategia Fetch-before-write)
+     * @param {Set} dirtyKeys - Conjunto de usuarios que han cambiado
      * @private
      */
-    async _performSaveTask() {
+    async _performSaveTask(dirtyKeys = null) {
         try {
-            // 1. Sincronizar con el servidor para no sobreescribir otros cambios (Opcional, pero mantenemos la lógica)
-            const remoteData = await this.storage.load(this.fileName);
-            
-            if (remoteData && remoteData.users) {
-                this._mergeRemoteChanges(remoteData.users);
+            // Caso especial: Si viene de PersistenceManager como un Set vacío, no hay nada que hacer
+            if (dirtyKeys instanceof Set && dirtyKeys.size === 0) {
+                return;
             }
 
-            // 2. Preparar snapshot
+            // 1. Preparar snapshot (Optimizado)
             const usersSnapshot = {};
-            this.users.forEach((data, username) => {
-                usersSnapshot[username] = data;
-            });
+            
+            // Si hay dirtyKeys específicos, solo esos. 
+            // Si es null, es un guardado forzado/migración (todos).
+            if (dirtyKeys && dirtyKeys.size > 0) {
+                dirtyKeys.forEach(username => {
+                    const data = this.users.get(username.toLowerCase());
+                    if (data) usersSnapshot[username.toLowerCase()] = data;
+                });
+            } else {
+                this.users.forEach((data, username) => {
+                    usersSnapshot[username] = data;
+                });
+            }
 
-            // 3. Guardar
-            await this.storage.save(this.fileName, {
-                users: usersSnapshot,
-                lastUpdated: new Date().toISOString(),
-                version: '1.1'
-            });
+            const count = Object.keys(usersSnapshot).length;
+            if (count > 0) {
+                console.log(`💾 UserStateManager: Guardando snapshot de ${count} usuarios...`);
+                await this.storage.save(this.fileName, {
+                    users: usersSnapshot,
+                    lastUpdated: new Date().toISOString(),
+                    version: '1.2'
+                }, dirtyKeys);
+            }
 
         } catch (error) {
             console.error('❌ UserStateManager: Fallo en ciclo de persistencia:', error);
@@ -272,9 +292,10 @@ export default class UserStateManager {
 
     /**
      * Fuerza el guardado inmediato de los datos
+     * @param {boolean} force - Forzar el guardado aunque no haya cambios pendientes
      */
-    async saveImmediately() {
-        await this.persistence.saveImmediately();
+    async saveImmediately(force = false) {
+        await this.persistence.saveImmediately(force);
     }
 
     /**

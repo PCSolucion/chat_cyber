@@ -81,13 +81,13 @@ export default class StorageManager {
     /**
      * Guarda datos en el proveedor activo
      */
-    async save(resourceName, data) {
+    async save(resourceName, data, dirtyKeys = null) {
         if (!this.activeProvider) {
             Logger.error('Storage', 'Intentando guardar sin proveedor activo');
             return false;
         }
 
-        const success = await this.activeProvider.save(resourceName, data);
+        const success = await this.activeProvider.save(resourceName, data, dirtyKeys);
         
         if (success) {
             EventManager.emit(EVENTS.STORAGE.DATA_SAVED, { resource: resourceName });

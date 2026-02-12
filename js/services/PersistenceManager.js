@@ -60,23 +60,25 @@ export default class PersistenceManager {
 
     /**
      * Ejecuta el guardado de forma inmediata (saltando el debounce)
+     * @param {boolean} force - Si es true, ignora si hay cambios pendientes o no
      * @returns {Promise<void>}
      */
-    async saveImmediately() {
+    async saveImmediately(force = false) {
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
             this.saveTimeout = null;
         }
-        return await this._performSave();
+        return await this._performSave(force);
     }
 
     /**
      * Lógica interna de guardado con control de concurrencia
+     * @param {boolean} force - Forzar el guardado
      * @private
      */
-    async _performSave() {
-        // 1. Si no hay cambios y no ha habido fallos previos, cancelar
-        if (this.pendingChanges.size === 0 && !this.queuedSave) {
+    async _performSave(force = false) {
+        // 1. Si no hay cambios, no ha habido fallos previos y no es forzado, cancelar
+        if (!force && this.pendingChanges.size === 0 && !this.queuedSave) {
             return;
         }
 
@@ -89,14 +91,17 @@ export default class PersistenceManager {
         this.isSaving = true;
         this.queuedSave = false;
         
-        const changesSnapshot = new Set(this.pendingChanges);
+        // 3. Capturar cambios actuales (Snapshot)
+        // Si no hay cambios pero el guardado es forzado, pasamos null para indicar "guardado completo/migración"
+        const changesSnapshot = this.pendingChanges.size > 0 ? new Set(this.pendingChanges) : null;
         this.pendingChanges.clear();
 
         try {
-            if (this.debug) console.log('💾 PersistenceManager: Iniciando guardado...');
+            if (this.debug) console.log(`💾 PersistenceManager: Iniciando guardado (${changesSnapshot ? changesSnapshot.size : 'Masivo/Completo'})...`);
             
             // Ejecutar la función de guardado real provista por el servicio
-            await this.saveCallback();
+            // Ahora pasamos el snapshot de cambios para guardados parciales
+            await this.saveCallback(changesSnapshot);
 
             if (this.debug) console.log('✅ PersistenceManager: Datos guardados con éxito');
 
