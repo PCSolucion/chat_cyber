@@ -75,6 +75,20 @@ export default class StorageManager {
         }
 
         Logger.error('Storage', `❌ No se pudo cargar el recurso ${resourceName} desde ningún origen.`);
+    }
+
+    /**
+     * Carga un usuario específico intentando con los proveedores disponibles
+     * @param {string} userId - ID del usuario
+     */
+    async loadUser(userId) {
+        if (this.activeProvider && typeof this.activeProvider.loadUser === 'function') {
+            try {
+                return await this.activeProvider.loadUser(userId);
+            } catch (e) {
+                Logger.error('Storage', `Error cargando usuario desde proveedor activo:`, e);
+            }
+        }
         return null;
     }
 

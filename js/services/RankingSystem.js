@@ -46,6 +46,22 @@ export default class RankingSystem {
             }
 
             const allUsers = this.stateManager.getAllUsers();
+            
+            // OPTIMIZACIÓN: Si ya tenemos un leaderboard cargado en el stateManager, lo usamos como base rápida
+            if (this.stateManager.leaderboard && this.stateManager.leaderboard.length > 0) {
+                console.log(`🏆 RankingSystem: Usando ${this.stateManager.leaderboard.length} usuarios del leaderboard pre-cargado`);
+                this.userRankings.clear();
+                this.stateManager.leaderboard.forEach((user, index) => {
+                    // El leaderboard ahora nos da el nombre, pero necesitamos mapear de alguna forma
+                    // Si el stateManager tiene el nameMap, podemos usarlo
+                    const userId = this.stateManager.nameMap.get(user.username.toLowerCase()) || user.username.toLowerCase();
+                    this.userRankings.set(userId, index + 1);
+                });
+                this.isLoaded = true;
+                // Si ya cargamos el leaderboard, y no hay más usuarios en memoria, terminamos aquí
+                if (!allUsers || allUsers.size === 0) return;
+            }
+
             if (!allUsers || allUsers.size === 0) {
                 console.warn('⚠️ RankingSystem: No hay datos de usuarios cargados aún');
                 return;
@@ -53,10 +69,11 @@ export default class RankingSystem {
 
             // Convertir a array y ordenar por nivel (desc), luego XP (desc) como desempate
             const sorted = Array.from(allUsers.entries())
-                .filter(([username, data]) => {
+                .filter(([id, data]) => {
                     // Filtrar bots y usuarios sin nivel
                     const blacklist = this.config.BLACKLISTED_USERS || [];
-                    return data.level > 0 && !blacklist.includes(username.toLowerCase());
+                    const name = (data.displayName || id).toLowerCase();
+                    return data.level > 0 && !blacklist.includes(name);
                 })
                 .sort((a, b) => {
                     const levelDiff = (b[1].level || 0) - (a[1].level || 0);
@@ -66,8 +83,8 @@ export default class RankingSystem {
 
             // Construir mapa de rankings
             this.userRankings.clear();
-            sorted.forEach(([username, _data], index) => {
-                this.userRankings.set(username.toLowerCase(), index + 1);
+            sorted.forEach(([id, _data], index) => {
+                this.userRankings.set(id, index + 1);
             });
 
             this.isLoaded = true;
@@ -78,13 +95,9 @@ export default class RankingSystem {
         }
     }
 
-    /**
-     * Obtiene el ranking de un usuario
-     * @param {string} username - Nombre del usuario
-     * @returns {number|null} Ranking del usuario o null si no tiene
-     */
-    getUserRank(username) {
-        return this.userRankings.get(username.toLowerCase()) || null;
+    getUserRank(userId, username) {
+        const id = userId || (username ? this.stateManager.nameMap.get(username.toLowerCase()) : null) || username?.toLowerCase();
+        return this.userRankings.get(String(id)) || null;
     }
 
     /**
@@ -96,8 +109,9 @@ export default class RankingSystem {
      * @param {Object} [levelCalculator] - Instancia de LevelCalculator (opcional)
      * @returns {Object} Objeto con información del rol
      */
-    getUserRole(username, userData = null, levelCalculator = null) {
-        const lowerUser = username.toLowerCase();
+    getUserRole(userId, username, userData = null, levelCalculator = null) {
+        const lowerUser = username ? username.toLowerCase() : '';
+        const id = userId || (username ? this.stateManager.nameMap.get(lowerUser) : null) || lowerUser;
 
         // ADMIN
         if (lowerUser === this.adminUser) {
@@ -121,7 +135,7 @@ export default class RankingSystem {
             };
         }
 
-        const rank = this.userRankings.get(lowerUser);
+        const rank = this.userRankings.get(String(id));
         
         // Estructura base
         let result = {

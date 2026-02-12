@@ -19,14 +19,14 @@ export default class AchievementMiddleware {
             streakMultiplier: ctx.xpResult?.streakMultiplier || 1
         };
 
-        this.achievementService.checkAchievements(ctx.username, achContext);
+        this.achievementService.checkAchievements(ctx.userId, ctx.username, achContext);
         
         // Logros específicos: Progreso de Bro
-        this._handleBroProgress(ctx.username, ctx.message);
+        this._handleBroProgress(ctx.userId, ctx.username, ctx.message);
 
         // Actualizar objeto de logros para el renderizado
         if (ctx.xpResult) {
-            const freshData = this.xpService.getUserData(ctx.username);
+            const freshData = this.xpService.getUserData(ctx.userId, ctx.username);
             ctx.xpResult.achievements = freshData.achievements || [];
             ctx.xpResult.level = freshData.level;
             ctx.xpResult.xp = freshData.xp;
@@ -36,9 +36,9 @@ export default class AchievementMiddleware {
         next();
     }
 
-    _handleBroProgress(username, message) {
+    _handleBroProgress(userId, username, message) {
         if (/\bbro\b/i.test(message)) {
-            const stats = this.achievementService.getUserStats(username);
+            const stats = this.achievementService.getUserStats(userId, username);
             const broCount = stats.broCount || 0;
             const broMilestones = [1, 10, 20, 50, 100];
             let nextM = broMilestones.find(m => m > broCount) || (Math.ceil((broCount + 1) / 100) * 100);

@@ -20,9 +20,12 @@ export default class StreamHistoryService {
         this.currentSession = {
             duration: 0,
             category: '',
-            title: ''
+            title: '',
+            xp: 0,
+            messages: 0
         };
 
+        this.currentSessionId = null;
         this.DEBUG = config.DEBUG || false;
     }
     /**
@@ -74,16 +77,40 @@ export default class StreamHistoryService {
                 this._autoSave();
             }
         });
+
+        // Trackear XP generado en la sesión
+        EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
+            if (this.isTracking) {
+                this.currentSession.xp += (data.amount || 0);
+            }
+        });
+
+        // Trackear mensajes enviados en la sesión
+        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
+            if (this.isTracking) {
+                this.currentSession.messages++;
+            }
+        });
     }
 
     _handleStreamStart() {
         if (this.isTracking) return;
         
-        console.log('🔴 Historial: Stream ONLINE detectado. Iniciando tracking...');
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const time = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
+        
+        console.log(`🔴 Historial: Stream ONLINE detectado. Iniciando sesión: ${today}_${time}`);
+        
         this.isTracking = true;
-        this.sessionStartTime = Date.now();
-        this.initialDayDuration = undefined; // Resetear para recalcular en el primer save
-        this.activeDate = undefined; // Resetear fecha activa
+        this.sessionStartTime = now.getTime();
+        this.currentSessionId = `${today}_${time}`;
+        this.activeDate = today;
+        
+        // Resetear contadores de esta sesión específica
+        this.currentSession.xp = 0;
+        this.currentSession.messages = 0;
+        this.initialDayDuration = undefined; 
     }
 
     async _handleStreamEnd() {
@@ -121,72 +148,65 @@ export default class StreamHistoryService {
 
             // 2. Detectar cambio de día (Medianoche UTC) durante el directo
             if (this.activeDate !== today) {
-                console.log(`📅 Cambio de día detectado en historial (${this.activeDate} -> ${today}). Dividiendo sesión...`);
+                console.log(`📅 Cambio de día detectado en historial (${this.activeDate} -> ${today}). Finalizando parte de sesión...`);
                 
-                // Calcular minutos que pertenecen al día anterior (hasta las 00:00:00 UTC)
-                const midnightUTC = new Date(today + "T00:00:00Z").getTime();
-                const minsOldDay = Math.floor((midnightUTC - this.sessionStartTime) / TIMING.MINUTE_MS);
-                
-                if (minsOldDay > 0) {
-                    const history = await this.storage.load(this.fileName) || {};
-                    const oldInitial = (history[this.activeDate] && history[this.activeDate].duration) || 0;
-                    
-                    history[this.activeDate] = {
-                        ...(history[this.activeDate] || {}),
-                        date: this.activeDate,
-                        duration: oldInitial + minsOldDay
-                    };
-                    // Pasamos el set con la fecha afectada para guardado granular
-                    await this.storage.save(this.fileName, history, new Set([this.activeDate]));
-                }
+                // 1. Guardar la parte del día anterior con el ID actual
+                await this._saveCurrentSnapshot(now, true);
 
-                // Reiniciar ancla de tiempo para el nuevo día
-                this.sessionStartTime = midnightUTC;
-                this.initialDayDuration = undefined; 
+                // 2. Iniciar nueva parte de sesión para el nuevo día
+                this.sessionStartTime = new Date(today + "T00:00:00Z").getTime();
                 this.activeDate = today;
+                this.currentSessionId = `${today}_0000`; // Marca el inicio del día
+                this.initialDayDuration = undefined;
+                
+                // Los contadores de XP y mensajes siguen acumulándose o podrías resetearlos si prefieres
+                // estadísticas por "trozo de día". Los mantendremos acumulados por ahora.
+                console.log(`🚀 Iniciada nueva parte de sesión: ${this.currentSessionId}`);
             }
 
-            const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
-            if (sessionMinutes < 1 && !this.DEBUG && !final) return;
-
-            const history = await this.storage.load(this.fileName) || {};
-            
-            // Si es una migración detectada por FirestoreService
-            const isMigrating = history._isMigrated;
-
-            // Inicializar o recargar duración del día si es undefined
-            if (this.initialDayDuration === undefined) {
-                if (history[today]) {
-                    this.initialDayDuration = history[today].duration || 0;
-                    this.dayCount = history[today].count || 0;
-                } else {
-                    this.initialDayDuration = 0;
-                    this.dayCount = 0;
-                }
-                if (this.isTracking) this.dayCount++;
-            }
-
-            const totalDuration = this.initialDayDuration + sessionMinutes;
-
-            history[today] = {
-                date: today,
-                duration: totalDuration,
-                category: this.currentSession.category,
-                title: this.currentSession.title,
-                count: this.dayCount
-            };
-
-            // Si estamos migrando, guardamos todo el objeto para crear los documentos individuales.
-            // Si no, solo la fecha de hoy para ahorrar ancho de banda.
-            const dirtyKeys = isMigrating ? null : new Set([today]);
-            const success = await this.storage.save(this.fileName, history, dirtyKeys);
-            
-            if (success) {
-                console.log(`✅ Historial actualizado: ${today} - ${totalDuration}m ${isMigrating ? '(Migración completada)' : ''}`);
-                if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
-            }
+            await this._saveCurrentSnapshot(now, final);
         } catch (error) {
             console.error('❌ Error al guardar historial de stream:', error);
+        }
+    }
+
+    /**
+     * Helper para guardar el estado actual de la sesión
+     * @private
+     */
+    async _saveCurrentSnapshot(now, final = false) {
+        const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
+        if (sessionMinutes < 1 && !this.DEBUG && !final) return;
+
+        const history = await this.storage.load(this.fileName) || {};
+        
+        // Calcular mensajes por hora (MPH)
+        const hours = Math.max(0.1, sessionMinutes / 60);
+        const mph = Math.round(this.currentSession.messages / hours);
+
+        const sessionData = {
+            id: this.currentSessionId,
+            date: this.activeDate,
+            startTime: new Date(this.sessionStartTime).toISOString(),
+            endTime: final ? new Date(now).toISOString() : null,
+            duration: sessionMinutes,
+            xpGenerated: this.currentSession.xp,
+            messages: this.currentSession.messages,
+            messagesPerHour: mph,
+            category: this.currentSession.category,
+            title: this.currentSession.title,
+            isOnline: !final,
+            lastUpdate: new Date(now).toISOString()
+        };
+
+        // Guardar usando el sessionId único como clave principal
+        history[this.currentSessionId] = sessionData;
+
+        const success = await this.storage.save(this.fileName, history, new Set([this.currentSessionId]));
+        
+        if (success) {
+            if (this.DEBUG) console.log(`✅ Sesión ${this.currentSessionId} actualizada (${sessionMinutes}m)`);
+            if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
         }
     }
 

@@ -104,15 +104,15 @@ export default class UIManager {
     /**
      * Punto de entrada principal para mostrar mensajes (Añade a cola)
      */
-    displayMessage(username, message, emotes, subscriberInfo = {}, xpResult = null) {
+    displayMessage(userId, username, message, emotes, subscriberInfo = {}, xpResult = null) {
         if (this.isIdle) {
             // Si estamos en idle, despertar al manager (esto disparará activity y eventualmente saldrá de idle)
-            EventManager.emit(EVENTS.USER.ACTIVITY, username);
+            EventManager.emit(EVENTS.USER.ACTIVITY, { userId, username });
         }
 
         try {
             // Añadir a la cola
-            this.queue.add({ username, message, emotes, subscriberInfo, xpResult });
+            this.queue.add({ userId, username, message, emotes, subscriberInfo, xpResult });
 
             // Si no estamos procesando o si el widget ya es visible (y queremos swap rápido)
             if (!this.isProcessingQueue || this.display.isVisibleState()) {
@@ -145,7 +145,7 @@ export default class UIManager {
         const msgObj = this.queue.getNext();
         if (!msgObj) return;
 
-        const { username, message, emotes, subscriberInfo, xpResult } = msgObj;
+        const { userId, username, message, emotes, subscriberInfo, xpResult } = msgObj;
 
         // Resetear visualización de XP antes de mostrar el nuevo usuario
         if (this.xpDisplay) {
@@ -166,9 +166,9 @@ export default class UIManager {
             const displayTime = this.queue.calculateDisplayTime(msgObj);
 
             if (shouldShowFullAnim) {
-                this._fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime);
+                this._fullIncomingSequence(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
             } else {
-                this._fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime);
+                this._fastTransition(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
             }
 
         } catch (error) {
@@ -177,12 +177,12 @@ export default class UIManager {
         }
     }
 
-    _fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _fastTransition(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
         this.identity.dom.username.style.opacity = '0';
         this.message.fade(0);
 
         this.timers.transition = setTimeout(() => {
-            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
+            this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
             requestAnimationFrame(() => {
                 this.identity.dom.username.style.opacity = '1';
                 this.message.fade(1);
@@ -190,7 +190,7 @@ export default class UIManager {
         }, 200);
     }
 
-    _fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _fullIncomingSequence(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
         // Preparar estado de desencriptado sin vaciar completamente y causar saltos
         this.identity.dom.username.classList.add('decrypting');
         this.identity.dom.username.textContent = "SIGNAL DETECTED";
@@ -201,19 +201,18 @@ export default class UIManager {
         this.timers.decrypt = setTimeout(() => {
             this.identity.dom.username.classList.remove('decrypting');
             this.message.setDecrypting(false);
-            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
+            this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
         }, 800);
     }
 
-    _revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
         // Obtener datos de XP actuales (bien del resultado del mensaje o del servicio)
-        const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(username) : null);
+        const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(userId, username) : null);
         
         // Obtener Rol Unificado (Rank + Nivel + Admin)
-        // Pasamos userData y la instancia de levelCalculator (accesible vía experienceService)
         const levelCalculator = this.experienceService ? this.experienceService.levelCalculator : null;
         
-        const userRole = this.rankingSystem.getUserRole(username, xpData, levelCalculator);
+        const userRole = this.rankingSystem.getUserRole(userId, username, xpData, levelCalculator);
 
         // Actualizar UI de XP de forma SÍNCRONA con el mensaje
         if (this.xpDisplay) {

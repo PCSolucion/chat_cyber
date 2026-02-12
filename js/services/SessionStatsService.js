@@ -131,12 +131,14 @@ export default class SessionStatsService {
 
     /**
      * Trackea un mensaje entrante
+     * @param {string} userId - ID numérico de Twitch
      * @param {string} username - Nombre del usuario
      * @param {string} message - Contenido del mensaje
      * @param {Object} context - Contexto adicional
      */
-    trackMessage(username, message, context = {}) {
+    trackMessage(userId, username, message, context = {}) {
         const lowerUser = username.toLowerCase();
+        const id = userId || lowerUser;
 
         // Verificar blacklist
         if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) {
@@ -145,13 +147,13 @@ export default class SessionStatsService {
 
         // Contadores básicos
         this.stats.totalMessages++;
-        this.stats.uniqueUsers.add(lowerUser);
+        this.stats.uniqueUsers.add(id);
         this.lastMinuteMessages++;
-        this.lastMinuteUsers.add(lowerUser);
+        this.lastMinuteUsers.add(id);
 
         // Mensajes por usuario
-        const currentCount = this.stats.userMessageCounts.get(lowerUser) || 0;
-        this.stats.userMessageCounts.set(lowerUser, currentCount + 1);
+        const currentCount = this.stats.userMessageCounts.get(id) || 0;
+        this.stats.userMessageCounts.set(id, currentCount + 1);
 
         // Trackear emotes usados (cantidad total)
         if (context.emoteCount && context.emoteCount > 0) {
@@ -175,9 +177,9 @@ export default class SessionStatsService {
         // Actualizar rachas si están disponibles
         if (this.experienceService) {
             try {
-                const userData = this.experienceService.getUserData(lowerUser);
+                const userData = this.experienceService.getUserData(userId, username);
                 if (userData && userData.streakDays > 0) {
-                    this.stats.currentActiveStreaks.set(lowerUser, userData.streakDays);
+                    this.stats.currentActiveStreaks.set(id, userData.streakDays);
                 }
             } catch (e) {
                 // Ignorar errores
@@ -190,16 +192,17 @@ export default class SessionStatsService {
      * @param {string} username 
      * @param {number} minutes 
      */
-    trackSessionWatchTime(username, minutes) {
+    trackSessionWatchTime(userId, username, minutes) {
         const lowerUser = username.toLowerCase();
+        const id = userId || lowerUser;
 
         // Verificar blacklist y justinfan
         if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
             return;
         }
 
-        const current = this.stats.sessionWatchTime.get(lowerUser) || 0;
-        this.stats.sessionWatchTime.set(lowerUser, current + minutes);
+        const current = this.stats.sessionWatchTime.get(id) || 0;
+        this.stats.sessionWatchTime.set(id, current + minutes);
     }
 
     /**
@@ -337,25 +340,29 @@ export default class SessionStatsService {
      */
     _getTopUsers(n = 20) {
         return Array.from(this.stats.userMessageCounts.entries())
-            .filter(([username]) => {
-                // Filtrar usuarios blacklisted y justinfan (aunque trackMessage ya lo hace, doble seguridad)
-                if (username.startsWith('justinfan')) return false;
-                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return false;
+            .filter(([id]) => {
+                // Filtrar usuarios blacklisted y justinfan
+                if (String(id).startsWith('justinfan')) return false;
+                // Si el ID es un nombre, verificar blacklist. Si es numérico, intentamos buscar nombre.
+                const name = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(name.toLowerCase())) return false;
                 return true;
             })
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)
-            .map(([username, count]) => {
+            .map(([id, count]) => {
                 // Obtener datos adicionales si están disponibles
                 let level = 1;
                 let title = 'CIVILIAN';
+                let displayName = isNaN(id) ? id : id;
 
                 if (this.experienceService) {
                     try {
-                        const xpInfo = this.experienceService.getUserXPInfo(username);
-                        if (xpInfo) {
-                            level = xpInfo.level;
-                            title = xpInfo.title;
+                        const userData = this.stateManager?.users.get(id);
+                        if (userData) {
+                            level = userData.level;
+                            title = this.experienceService.levelCalculator.getLevelTitle(level);
+                            displayName = userData.displayName || id;
                         }
                     } catch (e) {
                         // Ignorar
@@ -363,7 +370,7 @@ export default class SessionStatsService {
                 }
 
                 return {
-                    username: username.charAt(0).toUpperCase() + username.slice(1),
+                    username: UIUtils.formatUsername(displayName),
                     messages: count,
                     level,
                     title
@@ -398,17 +405,18 @@ export default class SessionStatsService {
         if (!this.stateManager) return [];
 
         return Array.from(this.stateManager.getAllUsers().entries())
-            .filter(([username, data]) => {
+            .filter(([id, data]) => {
                 // Excluir al streamer y filtrar por meses > 0
                 const broadcaster = this.config.BROADCASTER_USERNAME || this.config.TWITCH_CHANNEL || 'liiukiin';
+                const name = data.displayName || id;
                 
-                if (username.toLowerCase() === broadcaster.toLowerCase()) return false;
+                if (name.toLowerCase() === broadcaster.toLowerCase()) return false;
                 return data.subMonths && data.subMonths > 0;
             })
             .sort((a, b) => (b[1].subMonths || 0) - (a[1].subMonths || 0))
             .slice(0, n)
-            .map(([username, data]) => ({
-                username: UIUtils.formatUsername(username),
+            .map(([id, data]) => ({
+                username: UIUtils.formatUsername(data.displayName || id),
                 months: data.subMonths,
                 level: data.level
             }));

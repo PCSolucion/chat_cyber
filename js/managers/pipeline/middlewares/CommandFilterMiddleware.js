@@ -8,7 +8,7 @@ export default class CommandFilterMiddleware {
     execute(ctx, next) {
         if (ctx.message.startsWith('!')) {
             // Notificar actividad aunque sea comando
-            EventManager.emit(EVENTS.USER.ACTIVITY, ctx.username);
+            EventManager.emit(EVENTS.USER.ACTIVITY, { userId: ctx.userId, username: ctx.username });
             
             // Aquí podríamos procesar el comando o dejarlo pasar para que otro lo procese.
             // Por ahora, detenemos el pipeline para los comandos de Twitch.

@@ -11,14 +11,14 @@ export default class StatsTrackerMiddleware {
 
     execute(ctx, next) {
         if (this.sessionStats) {
-            this.sessionStats.trackMessage(ctx.username, ctx.message, {
+            this.sessionStats.trackMessage(ctx.userId, ctx.username, ctx.message, {
                 emoteCount: ctx.emoteCount,
                 emoteNames: ctx.emoteNames
             });
         }
         
         // Emitir actividad global
-        EventManager.emit(EVENTS.USER.ACTIVITY, ctx.username);
+        EventManager.emit(EVENTS.USER.ACTIVITY, { userId: ctx.userId, username: ctx.username });
         
         next();
     }

@@ -24,6 +24,10 @@ export default class FirestoreStorageProvider extends BaseStorageProvider {
         }
     }
 
+    async loadUser(userId) {
+        return await this.firestoreService.loadUserDoc(userId);
+    }
+
     async save(resourceName, data, dirtyKeys = null) {
         return await this.firestoreService.saveFile(resourceName, data, dirtyKeys);
     }

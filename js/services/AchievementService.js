@@ -51,9 +51,10 @@ export default class AchievementService {
         EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline));
         EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category));
         EventManager.on(EVENTS.USER.RANKING_UPDATED, (data) => {
-            const username = typeof data === 'string' ? data : data.username;
-            const isInitialLoad = typeof data === 'object' ? data.isInitialLoad : false;
-            this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
+            const userId = data.userId;
+            const username = data.username;
+            const isInitialLoad = data.isInitialLoad || false;
+            this.checkAchievements(userId, username, { isRankingUpdate: true, isInitialLoad });
         });
     }
 
@@ -211,18 +212,24 @@ export default class AchievementService {
     /**
      * Obtiene o crea las estadísticas de un usuario
      * Sincroniza con userData.achievementStats de Firestore
-     * @param {string} username 
+     * @param {string} userId - ID numérico de Twitch
+     * @param {string} username - Nombre de usuario
      * @returns {Object}
      */
-    getUserStats(username) {
-        const lowerUser = username.toLowerCase();
+    getUserStats(userId, username) {
+        // Si no tenemos userId, intentamos resolverlo vía stateManager
+        const id = userId || (username ? this.stateManager.nameMap.get(username.toLowerCase()) : null) || username?.toLowerCase();
+        if (!id) return {};
+
+        const strId = String(id);
+        const lowerName = username ? username.toLowerCase() : null;
 
         // Si no está en cache, cargar desde userData (Firestore)
-        if (!this.userStats.has(lowerUser)) {
-            const userData = this.stateManager.getUser(lowerUser);
+        if (!this.userStats.has(strId)) {
+            const userData = this.stateManager.getUser(id, username);
             const savedStats = userData.achievementStats || {};
 
-            this.userStats.set(lowerUser, {
+            this.userStats.set(strId, {
                 // Mensajes
                 firstMessageDays: savedStats.firstMessageDays || 0,
                 messagesWithEmotes: savedStats.messagesWithEmotes || 0,
@@ -281,18 +288,18 @@ export default class AchievementService {
                 lastWitcher3Date: savedStats.lastWitcher3Date || null
             });
         }
-
-        return this.userStats.get(lowerUser);
+ 
+        return this.userStats.get(strId);
     }
 
     /**
      * Actualiza estadísticas del usuario basado en el contexto del mensaje
+     * @param {string} userId
      * @param {string} username 
      * @param {Object} context - Contexto del mensaje
      */
-    updateUserStats(username, context = {}) {
-        const lowerUser = username.toLowerCase();
-        const stats = this.getUserStats(lowerUser);
+    updateUserStats(userId, username, context = {}) {
+        const stats = this.getUserStats(userId, username);
         const now = new Date();
 
         // ===== MENSAJES =====
@@ -390,12 +397,12 @@ export default class AchievementService {
             }
         }
 
-        this.userStats.set(lowerUser, stats);
+        this.userStats.set(String(userId || username).toLowerCase(), stats);
 
         // Sincronizar con userData para guardar en Firestore
-        const userData = this.stateManager.getUser(lowerUser);
+        const userData = this.stateManager.getUser(userId, username);
         userData.achievementStats = stats;
-        this.stateManager.markDirty(lowerUser);
+        this.stateManager.markDirty(userId || username);
     }
 
 
@@ -468,19 +475,18 @@ export default class AchievementService {
 
     /**
      * Verifica y desbloquea logros para un usuario después de un mensaje
+     * @param {string} userId
      * @param {string} username 
      * @param {Object} context - Contexto del mensaje
      * @returns {Array} Lista de logros desbloqueados
      */
-    checkAchievements(username, context = {}) {
-        const lowerUser = username.toLowerCase();
-
+    checkAchievements(userId, username, context = {}) {
         // Actualizar estadísticas primero
-        this.updateUserStats(lowerUser, context);
-
+        this.updateUserStats(userId, username, context);
+ 
         // Obtener datos del usuario desde StateManager
-        const userData = this.stateManager.getUser(lowerUser);
-        const userStats = this.getUserStats(lowerUser);
+        const userData = this.stateManager.getUser(userId, username);
+        const userStats = this.getUserStats(userId, username);
 
         // Lista de logros desbloqueados en esta verificación
         const unlockedNow = [];
@@ -526,12 +532,12 @@ export default class AchievementService {
         // Guardar logros actualizados si hay nuevos
         if (unlockedNow.length > 0) {
             userData.achievements = existingAchievements;
-            this.stateManager.markDirty(lowerUser);
+            this.stateManager.markDirty(userId || username);
 
             // Emitir eventos para cada logro desbloqueado
             if (!context.isInitialLoad) {
                 unlockedNow.forEach(achievement => {
-                    this.emitAchievementUnlocked(username, achievement);
+                    this.emitAchievementUnlocked(userId, username, achievement);
                 });
             }
         }
@@ -543,21 +549,17 @@ export default class AchievementService {
         return EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, callback);
     }
 
-    emitAchievementUnlocked(username, achievement) {
+    emitAchievementUnlocked(userId, username, achievement) {
         EventManager.emit(EVENTS.USER.ACHIEVEMENT_UNLOCKED, {
+            userId,
             username,
             achievement,
             timestamp: Date.now()
         });
     }
 
-    /**
-     * Obtiene los logros desbloqueados de un usuario
-     * @param {string} username 
-     * @returns {Array}
-     */
-    getUserAchievements(username) {
-        const userData = this.stateManager.getUser(username.toLowerCase());
+    getUserAchievements(userId, username) {
+        const userData = this.stateManager.getUser(userId, username);
         const achievementData = userData.achievements || [];
 
         // Normalize: handle both old format (string ID) and new format (object with id/unlockedAt)
