@@ -20,6 +20,14 @@ class App {
         // 0. Validar integridad de la configuración
         this.config = ConfigValidator.validate(CONFIG);
         
+        // DETECCIÓN DE MODO TEST (Panel de Pruebas Offline)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'test') {
+            console.warn('🧪 MODO TEST ACTIVO: Firestore DESACTIVADO (Solo IndexedDB/Local)');
+            this.config.TEST_MODE = true;
+            this.config.FIREBASE = null; // Anular config de Firebase para asegurar desconexión
+        }
+
         // 1. Inicializar Logger
         Logger.init(this.config);
         Logger.info('App', '🚀 Booting Twitch Chat Overlay...');
@@ -100,6 +108,10 @@ class App {
         if (this.streamMonitor) {
             this.streamMonitor.start();
         }
+
+        // Notificar que el widget está listo (para Test Panel)
+        window.dispatchEvent(new CustomEvent('widget-ready'));
+        console.log('✅ Widget Initialization Complete');
     }
 
 

@@ -237,7 +237,7 @@ export default class XPDisplayManager {
         // Actualizar Contadores de Logros
         if (this.dom.xpAchievements && this.totalAchievements > 0) {
             // Siempre obtener los logros reales del servicio para evitar datos incompletos en xpResult
-            const realUserData = this.experienceService.getUserData(username);
+            const realUserData = this.experienceService.getUserData(null, username);
             const unlockedCount = (realUserData.achievements || []).length;
             const percentage = Math.min(100, Math.max(0, (unlockedCount / this.totalAchievements) * 100));
 

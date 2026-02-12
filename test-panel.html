@@ -17,7 +17,7 @@
     <!-- Widget Preview -->
     <div class="widget-container" id="preview-container">
         <span class="widget-label">LIVE_PREVIEW // 2K (1440p)</span>
-        <iframe id="widget-frame" src="index.html"></iframe>
+        <iframe id="widget-frame" src="index.html?mode=test"></iframe>
         
         <!-- Cyberpunk Terminal Overlay -->
         <div class="cyber-terminal">
@@ -52,8 +52,8 @@
                 <div class="button-row">
                     <button id="sim-start-btn" data-action="toggle-auto-chat" class="btn btn--full btn--cyan" style="text-align: center;">▶ START_AUTO_CHAT</button>
                 </div>
-                <div id="sim-stats" style="font-size: 9px; color: #555; text-align: center; margin-top: 6px; display: none; font-family: 'Share Tech Mono';">
-                    PACKETS: <span id="sim-count" style="color: var(--cyan);">0</span> // STATUS: <span style="color: #00ff64;">ACTIVE</span>
+                <div id="sim-stats" style="font-size: 9px; color: rgba(0, 246, 255, 0.6); text-align: center; display: none; font-family: 'Share Tech Mono';">
+                    PACKETS: <span id="sim-count" style="color: var(--cyan);">0</span> // STATUS: <span style="color: var(--cyan);">ACTIVE</span>
                 </div>
             </div>
 
@@ -70,8 +70,10 @@
             <div class="panel-section">
                 <label class="section-label">MESSAGE_INJECTOR</label>
                 
-                <label class="panel-label">Input Buffer (Text to send):</label>
-                <input type="text" id="test-message" value="ACCESS_GRANTED: Initializing test protocol..." class="panel-input">
+                <div class="input-group">
+                    <label class="panel-label">Input Buffer (Text to send):</label>
+                    <input type="text" id="test-message" value="ACCESS_GRANTED: Initializing test protocol..." class="panel-input">
+                </div>
                 
                 <div class="tag-selector">
                     <label class="tag-opt mod"><input type="checkbox" id="mod-toggle"> MOD</label>
@@ -79,9 +81,9 @@
                     <label class="tag-opt sub"><input type="checkbox" id="sub-toggle" checked> SUB</label>
                 </div>
 
-                <div class="button-list" style="margin-top: 10px;">
+                <div class="button-list">
                     <button id="broadcaster-btn" data-action="send-broadcaster" class="btn btn--purple btn--full" style="text-align: center;">👑 BROADCASTER</button>
-                    <div class="button-row" style="margin-top: 5px;">
+                    <div class="button-row">
                         <input type="text" id="custom-user" placeholder="USER_ID..." class="panel-input" style="flex: 1;">
                         <button data-action="send-message" class="btn btn--cyan" style="min-width: 60px;">SEND</button>
                     </div>
@@ -92,18 +94,18 @@
             <div class="panel-section">
                 <label class="section-label">SYSTEM_TESTS</label>
                 <div class="button-row">
-                    <input type="number" id="streak-days" value="5" min="1" class="panel-input" style="flex: 1; color: var(--gold);">
+                    <input type="number" id="streak-days" value="5" min="1" class="panel-input" style="flex: 1;">
                     <button data-action="set-streak" class="btn btn--gold">SET_STREAK</button>
                 </div>
-                <div class="button-row" style="margin-top: 8px;">
-                    <input type="number" id="welcome-back-days" value="14" min="7" class="panel-input" style="flex: 1; color: var(--cyan);">
+                <div class="button-row">
+                    <input type="number" id="welcome-back-days" value="14" min="7" class="panel-input" style="flex: 1;">
                     <button data-action="test-welcome-back" class="btn btn--cyan">TEST_WELCOME_BACK</button>
                 </div>
-                <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <button data-action="widget-call" data-value="firestore.testConnection" class="btn btn--top1 btn--full" style="font-size: 9px;">🔥 FIRESTORE</button>
                     <button data-action="widget-call" data-value="achievements.test" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
                 </div>
-                <button data-action="test-level-up" class="btn btn--full btn--purple" style="margin-top: 8px; text-align: center;">🚀 TEST_LEVEL_UP</button>
+                <button data-action="test-level-up" class="btn btn--full btn--purple" style="text-align: center;">🚀 TEST_LEVEL_UP</button>
             </div>
 
             <!-- Spam Shield Tests -->
@@ -120,7 +122,7 @@
             <!-- Data & Export -->
             <div class="panel-section">
                 <label class="section-label">DATA_MGMT</label>
-                <button data-action="widget-call" data-value="xp.exportData" class="btn btn--full btn--green" style="text-align: center;">EXPORT_BACKUP_JSON</button>
+                <!-- Backup removed as per user request -->
             </div>
         </div>
 

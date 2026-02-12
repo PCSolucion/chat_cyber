@@ -2,363 +2,476 @@
    CYBER-HUD MODERN TEST PANEL
    ========================================= */
 :root {
-    --cyan: #00f6ff;
-    --red: #ff003c;
-    --gold: #ffd700;
-    --purple: #bf00ff;
-    --bg-dark: #0a0a12;
-    --panel-bg: rgba(10, 10, 18, 0.95);
-    --border-glow: rgba(0, 246, 255, 0.2);
+  --cyan: #00f6ff;
+  --red: #00f6ff; /* Unified to cyan */
+  --gold: #00f6ff; /* Unified to cyan */
+  --purple: #00f6ff; /* Unified to cyan */
+  --bg-dark: #0a0a12;
+  --panel-bg: rgba(10, 10, 18, 0.95);
+  --border-glow: rgba(0, 246, 255, 0.2);
 }
 
 body {
-    background: var(--bg-dark);
-    background-image: 
-        radial-gradient(circle at 50% 50%, rgba(0, 246, 255, 0.05) 0%, transparent 70%),
-        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.05));
-    background-size: 100% 100%, 100% 2px, 3px 100%;
-    padding: 20px;
-    overflow-x: hidden;
-    height: 100vh;
+  background: var(--bg-dark);
+  background-image:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 246, 255, 0.05) 0%,
+      transparent 70%
+    ),
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.05),
+      rgba(0, 255, 0, 0.01),
+      rgba(0, 0, 255, 0.05)
+    );
+  background-size:
+    100% 100%,
+    100% 2px,
+    3px 100%;
+  padding: 20px;
+  overflow-x: hidden;
+  height: 100vh;
 }
 
 #test-panel {
-    position: fixed;
-    right: 20px;
-    top: 20px;
-    bottom: 20px;
-    width: 320px;
-    background: var(--panel-bg);
-    border: 1px solid rgba(0, 246, 255, 0.2);
-    border-left: 4px solid var(--cyan);
-    padding: 20px;
-    font-family: 'Rajdhani', sans-serif;
-    color: #fff;
-    z-index: 1000;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 246, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    backdrop-filter: blur(10px);
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  bottom: 20px;
+  width: 320px;
+  background: var(--panel-bg);
+  border: 1px solid rgba(0, 246, 255, 0.2);
+  border-left: 4px solid var(--cyan);
+  padding: 20px;
+  font-family: "Rajdhani", sans-serif;
+  color: #fff;
+  z-index: 1000;
+  box-shadow:
+    -10px 0 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(0, 246, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(10px);
 }
 
 #test-panel::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(0deg, transparent 0%, rgba(0, 246, 255, 0.02) 50%, transparent 100%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: -1;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(0, 246, 255, 0.02) 50%,
+    transparent 100%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .panel-title {
-    margin: 0 0 20px;
-    color: var(--cyan);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-glow);
-    padding-bottom: 10px;
+  margin: 0 0 20px;
+  color: var(--cyan);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-glow);
+  padding-bottom: 10px;
 }
 
 .panel-title::after {
-    content: "v2.0";
-    font-size: 10px;
-    opacity: 0.5;
-    font-family: 'Share Tech Mono', monospace;
+  content: "v2.0";
+  font-size: 10px;
+  opacity: 0.5;
+  font-family: "Share Tech Mono", monospace;
 }
 
 .panel-scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 10px;
-    margin-right: -10px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
 }
 
 /* Custom Scrollbar */
 .panel-scroll-area::-webkit-scrollbar {
-    width: 4px;
+  width: 4px;
 }
 .panel-scroll-area::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 .panel-scroll-area::-webkit-scrollbar-thumb {
-    background: var(--cyan);
-    box-shadow: 0 0 5px var(--cyan);
+  background: var(--cyan);
+  box-shadow: 0 0 5px var(--cyan);
 }
 
 .panel-section {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
 }
 
 .panel-label {
-    display: block;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: 600;
+  display: block;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .panel-input {
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 246, 255, 0.2);
-    color: #fff;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    transition: all 0.3s ease;
-    outline: none;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 246, 255, 0.2);
+  color: #fff;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  outline: none;
 }
 
 .panel-input:focus {
-    border-color: var(--cyan);
-    box-shadow: 0 0 10px rgba(0, 246, 255, 0.2);
-    background: rgba(0, 246, 255, 0.05);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 246, 255, 0.2);
+  background: rgba(0, 246, 255, 0.05);
 }
 
 .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--cyan);
-    margin-bottom: 15px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--cyan);
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-weight: 500;
 }
 
 .checkbox-label:hover {
-    opacity: 0.8;
+  opacity: 0.8;
 }
 
 .control-group {
-    background: rgba(0,0,0,0.3);
-    padding: 10px;
-    border: 1px solid var(--border-glow);
-    margin-bottom: 10px;
+  background: rgba(0, 246, 255, 0.05);
+  padding: 10px;
+  border: 1px solid var(--border-glow);
+  margin-bottom: 10px;
+  display: flex; /* Ensure flex for items inside if needed */
+  align-items: center;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
 }
 
 .tag-selector {
-    display: flex;
-    gap: 4px;
-    margin-top: 10px;
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
 }
 
 .tag-opt {
-    flex: 1;
-    font-size: 10px;
-    padding: 6px;
-    background: rgba(0,0,0,0.4);
-    border: 1px solid var(--border-glow);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
+  flex: 1;
+  font-size: 10px;
+  padding: 6px;
+  background: rgba(0, 246, 255, 0.05);
+  border: 1px solid var(--border-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.tag-opt.mod { color: #00ff64; }
-.tag-opt.vip { color: var(--purple); }
-.tag-opt.sub { color: var(--gold); }
+.tag-opt:hover {
+  background: rgba(0, 246, 255, 0.1);
+  color: var(--cyan);
+}
 
-.tag-opt input { margin: 0; }
+.tag-opt:has(input:checked) {
+  background: rgba(0, 246, 255, 0.2);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  text-shadow: 0 0 5px var(--cyan);
+}
+
+.tag-opt.mod {
+  color: inherit;
+}
+.tag-opt.vip {
+  color: inherit;
+}
+.tag-opt.sub {
+  color: inherit;
+}
+
+.tag-opt input {
+  margin: 0;
+}
 
 .section-label {
-    font-size: 11px;
-    color: var(--cyan);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
+  font-size: 11px;
+  color: var(--cyan);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .section-label::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--border-glow), transparent);
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-glow), transparent);
 }
 
 .button-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
 }
 
 .btn {
-    padding: 8px 12px;
-    cursor: pointer;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: left;
-    border: 1px solid;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--border-glow);
+  background: rgba(0, 246, 255, 0.05);
+  color: var(--cyan);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn:hover {
-    transform: translateX(3px);
-    filter: brightness(1.2);
+  background: rgba(0, 246, 255, 0.2);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .btn:active {
-    transform: scale(0.98);
+  transform: translateY(1px);
 }
 
-.btn--top1 { background: rgba(0, 246, 255, 0.1); border-color: var(--cyan); color: var(--cyan); }
-.btn--top { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); color: var(--gold); }
-.btn--cyan { background: rgba(0, 246, 255, 0.2); border-color: var(--cyan); color: var(--cyan); text-align: center; }
-.btn--gold { background: rgba(255, 215, 0, 0.2); border-color: var(--gold); color: var(--gold); text-align: center; }
-.btn--green { background: rgba(0, 255, 100, 0.1); border-color: #00ff64; color: #00ff64; }
-.btn--red { background: rgba(255, 0, 60, 0.1); border-color: var(--red); color: var(--red); }
-.btn--purple { background: rgba(191, 0, 255, 0.1); border-color: var(--purple); color: var(--purple); }
+/* Remove specific colored buttons, unify all to base cyan style, 
+   but keep classes for compatibility if needed or just override them */
+.btn--top1, .btn--top, .btn--cyan, .btn--gold, .btn--green, .btn--purple {
+    background: rgba(0, 246, 255, 0.05); 
+    border-color: var(--border-glow); 
+    color: var(--cyan);
+}
 
-.btn--full { width: 100%; border-radius: 0; }
+.btn--red {
+    background: rgba(0, 246, 255, 0.2);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 15px rgba(0, 246, 255, 0.15);
+}
+
+.btn--top1:hover,
+.btn--top:hover,
+.btn--cyan:hover,
+.btn--gold:hover,
+.btn--green:hover,
+.btn--red:hover,
+.btn--purple:hover {
+  background: rgba(0, 246, 255, 0.25);
+  border-color: var(--cyan);
+  color: #fff;
+  text-shadow: 0 0 5px var(--cyan);
+}
+
+.btn--full {
+  width: 100%;
+  border-radius: 0;
+}
 
 .divider {
-    margin-top: 15px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-glow);
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-glow);
 }
 
 .widget-container {
-    position: fixed;
-    left: 20px;
-    top: 20px;
-    width: calc(100% - 380px);
-    aspect-ratio: 16/9;
-    max-height: calc(100vh - 40px);
-    border: 1px solid var(--border-glow);
-    background: url('../img/fondo pruebas.webp') no-repeat center center;
-    background-size: cover;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-    z-index: 500;
-    overflow: hidden;
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  width: calc(100% - 380px);
+  aspect-ratio: 16/9;
+  max-height: calc(100vh - 40px);
+  border: 1px solid var(--border-glow);
+  background: url("../img/fondo pruebas.webp") no-repeat center center;
+  background-size: cover;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  z-index: 500;
+  overflow: hidden;
 }
 
 .widget-container iframe {
-    width: 2560px;
-    height: 1440px;
-    border: none;
-    transform-origin: 0 0;
-    pointer-events: auto;
+  width: 2560px;
+  height: 1440px;
+  border: none;
+  transform-origin: 0 0;
+  pointer-events: auto;
 }
 
 .widget-label {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    font-size: 10px;
-    color: var(--cyan);
-    background: rgba(0, 246, 255, 0.1);
-    border: 1px solid var(--cyan);
-    padding: 4px 10px;
-    font-family: 'Share Tech Mono', monospace;
-    letter-spacing: 2px;
-    z-index: 10;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 10px;
+  color: var(--cyan);
+  background: rgba(0, 246, 255, 0.1);
+  border: 1px solid var(--cyan);
+  padding: 4px 10px;
+  font-family: "Share Tech Mono", monospace;
+  letter-spacing: 2px;
+  z-index: 10;
 }
 
 /* --- CYBERPUNK TERMINAL OVERLAY --- */
 .cyber-terminal {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    bottom: 0;
-    width: 320px;
-    background: linear-gradient(to bottom, rgba(10, 10, 18, 0.8) 0%, rgba(10, 10, 18, 0.4) 100%);
-    border-left: 1px solid rgba(0, 246, 255, 0.1);
-    backdrop-filter: blur(2px);
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
-    font-family: 'Share Tech Mono', monospace;
-    z-index: 20;
-    pointer-events: auto;
-    /* Removed heavy transform and box-shadow for better integration */
+  position: absolute;
+  top: 0; /* Expanded to full height */
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 18, 0.9) 0%, /* Slightly darker for better readability */
+    rgba(10, 10, 18, 0.6) 100%
+  );
+  border-left: 1px solid rgba(0, 246, 255, 0.1);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  font-family: "Share Tech Mono", monospace;
+  z-index: 20;
+  pointer-events: auto;
 }
 
 .terminal-header {
-    font-size: 11px;
-    color: rgba(0, 246, 255, 0.7);
-    border-bottom: 1px solid rgba(0, 246, 255, 0.1);
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    letter-spacing: 1px;
-    text-transform: uppercas;
+  font-size: 11px;
+  color: rgba(0, 246, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 246, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .blink {
-    animation: blink 1s infinite;
-    color: var(--cyan);
+  animation: blink 1s infinite;
+  color: var(--cyan);
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 #panel-logs {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 11px; /* Slightly larger for readability */
-    color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-right: 5px;
-    mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%); /* Fade edges */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%);
+  flex: 1;
+  overflow-y: auto;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 5px;
+  /* Adjusted mask to use full height better */
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%, 
+    black 95%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 95%,
+    transparent 100%
+  );
 }
 
 /* Minimal Scrollbar */
 #panel-logs::-webkit-scrollbar {
-    width: 2px;
+  width: 2px;
 }
 #panel-logs::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 #panel-logs::-webkit-scrollbar-thumb {
-    background: rgba(0, 246, 255, 0.2);
+  background: rgba(0, 246, 255, 0.2);
 }
 
-.log-entry { 
-    word-break: break-all; 
-    line-height: 1.5;
-    padding-left: 8px;
-    border-left: 1px solid transparent;
-    transition: all 0.2s;
+.log-entry {
+  word-break: break-all;
+  line-height: 1.5;
+  padding-left: 8px;
+  border-left: 1px solid transparent;
+  transition: all 0.2s;
 }
 .log-entry:hover {
-    border-left-color: rgba(0, 246, 255, 0.3);
-    background: rgba(0, 246, 255, 0.02);
+  border-left-color: rgba(0, 246, 255, 0.3);
+  background: rgba(0, 246, 255, 0.02);
 }
-.log-entry.system { color: rgba(255, 255, 255, 0.4); font-style: italic; }
+.log-entry.system {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
 
 .panel-footer {
-    padding-top: 15px;
-    border-top: 1px solid var(--border-glow);
-    margin-top: auto;
-    font-family: 'Share Tech Mono';
-    font-size: 10px;
-    color: #555;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-glow);
+  margin-top: auto;
+  font-family: "Share Tech Mono";
+  font-size: 10px;
+  color: #555;
 }
-
-

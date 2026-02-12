@@ -1,13 +1,15 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js';
 import { 
-    getFirestore, 
+    initializeFirestore,
+    getFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager,
     doc, 
     getDoc, 
     setDoc, 
     collection, 
     getDocs, 
-    writeBatch,
-    enableMultiTabIndexedDbPersistence 
+    writeBatch 
 } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
@@ -59,16 +61,19 @@ export default class FirestoreService {
             }
 
             this.app = initializeApp(firebaseConfig);
-            this.db = getFirestore(this.app);
             
-            // Habilitar persistencia offline (Cache IndexedDB) multi-pestaña
-            enableMultiTabIndexedDbPersistence(this.db).catch((err) => {
-                if (err.code === 'failed-precondition') {
-                    console.warn('Firestore Persistence: Multiple tabs open, using single-tab mode');
-                } else if (err.code === 'unimplemented') {
-                    console.warn('Firestore Persistence: Not supported by browser');
-                }
-            });
+            // Inicialización moderna con Caché Persistente Multi-Tab (Fix deprecation warning settings.cache)
+            try {
+                this.db = initializeFirestore(this.app, {
+                    localCache: persistentLocalCache({
+                        tabManager: persistentMultipleTabManager()
+                    })
+                });
+            } catch (err) {
+                console.warn('Firestore: Error inicializando caché persistente, usando configuración por defecto:', err);
+                // Fallback seguro si la caché falla (raro, pero posible en entornos restrictivos)
+                this.db = getFirestore(this.app);
+            }
 
             this.isConfigured = true;
 
@@ -146,10 +151,15 @@ export default class FirestoreService {
      * Carga todos los usuarios de la colección individual
      * @private
      */
+    /**
+     * Carga todos los usuarios de la colección individual
+     * @private
+     */
     async _loadUsersCollection() {
         Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de usuarios.');
         return {};
     }
+
     async _loadHistoryCollection() {
         // OPTIMIZACIÓN CRÍTICA: No cargamos todo el historial al iniciar.
         Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de historial.');

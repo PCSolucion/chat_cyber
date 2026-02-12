@@ -88,15 +88,21 @@ export default class MessageProcessor {
         try {
             this.services.ranking = new RankingSystem(this.config);
             
-            // Configurar Estrategia de Almacenamiento (Firestore)
-            this.services.firestore = new FirestoreService(this.config);
-            this.services.firestore.configure(this.config.FIREBASE);
+            // Si NO estamos en modo test, configurar Firestore
+            if (!this.config.TEST_MODE) {
+                this.services.firestore = new FirestoreService(this.config);
+                this.services.firestore.configure(this.config.FIREBASE);
+                
+                this.storageManager.addProvider(new FirestoreStorageProvider(this.services.firestore));
+            } else {
+                Logger.warn('App', '🚫 FIRESTORE DISABLED (TEST MODE)');
+            }
 
-            this.storageManager
-                .addProvider(new FirestoreStorageProvider(this.services.firestore))
-                .addProvider(new LocalStorageProvider());
+            // LocalStorage siempre activo
+            this.storageManager.addProvider(new LocalStorageProvider());
 
             await this.storageManager.init();
+
 
             if (this.config.XP_SYSTEM_ENABLED) {
                 // Nuevo Gestor de Estado Centralizado usando el StorageManager (Strategy)

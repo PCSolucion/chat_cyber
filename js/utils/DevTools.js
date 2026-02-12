@@ -118,17 +118,18 @@ export default class DevTools {
 
     _exportXPData() {
         try {
-            const data = this.xpService?.getAllDataJSON();
+            const data = this.xpService?.getAllDataJSON(); // Solo memoria de la sesión actual
             if (!data) return;
+            
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `xp_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `session_backup_${new Date().toISOString().slice(0, 10)}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            console.log('💾 Datos XP Exportados');
+            console.log('💾 Datos Sesión Exportados');
         } catch (e) {
             console.error('Error exportando:', e);
         }

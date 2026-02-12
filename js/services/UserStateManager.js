@@ -55,6 +55,13 @@ export default class UserStateManager {
         this.channel = new BroadcastChannel('chat_twitch_sync');
         this.channel.onmessage = (event) => this._handleSyncMessage(event);
 
+        // Seguridad: En modo test, deshabilitar la EMISIÓN de mensajes para no contaminar al widget real
+        if (this.config.TEST_MODE) {
+             // Sobrescribir postMessage con un stub vacío
+             this.channel.postMessage = () => { /* Bloqueado en Modo Test */ };
+             console.log('🔒 UserStateManager: BroadcastChannel saliente BLOQUEADO (Modo Test)');
+        }
+
         // MEMORY EVICTION: Limpieza de usuarios inactivos en RAM
         this.lastAccessMap = new Map(); // id -> timestamp
         
@@ -117,7 +124,11 @@ export default class UserStateManager {
             console.groupEnd();
             
             // Integrar datos iniciales (subs importados)
-            this._mergeInitialSubscribers();
+            try {
+                this._mergeInitialSubscribers();
+            } catch(e) {
+                console.warn('⚠️ Error fusionando suscriptores iniciales:', e);
+            }
 
             // Cargar Leaderboard (Ranking resumido) para respuesta inmediata
             try {
@@ -225,7 +236,7 @@ export default class UserStateManager {
         }
 
         const strId = String(userId);
-        const lowerName = username.toLowerCase();
+        const lowerName = username ? username.toLowerCase() : null;
 
         // 1. Caso Ideal: El usuario ya está indexado por su ID numérico
         if (this.users.has(strId)) {
@@ -233,14 +244,16 @@ export default class UserStateManager {
             this.lastAccessMap.set(strId, Date.now());
             
             const data = this.users.get(strId);
-            // Actualizar nombre visible por si cambió en Twitch
-            data.displayName = username; 
-            this.nameMap.set(lowerName, strId);
+            // Actualizar nombre visible por si cambió en Twitch (Solo si tenemos un nombre válido)
+            if (username && lowerName) {
+                data.displayName = username; 
+                this.nameMap.set(lowerName, strId);
+            }
             return data;
         }
 
         // 2. MIGRACIÓN PEREZOSA: Buscar si existe un documento antiguo con el nombre de usuario
-        if (this.nameMap.has(lowerName)) {
+        if (lowerName && this.nameMap.has(lowerName)) {
             const oldId = this.nameMap.get(lowerName);
             if (isNaN(oldId) || oldId === lowerName) {
                 // Encontramos datos bajo el nombre del usuario (Estilo antiguo)
@@ -638,8 +651,14 @@ export default class UserStateManager {
         if (!INITIAL_SUBSCRIBERS) return;
 
         Object.entries(INITIAL_SUBSCRIBERS).forEach(([username, months]) => {
-            const userData = this.getUser(username);
-            if (!userData.subMonths || userData.subMonths < months) {
+            if (!username) return; // Validación básica
+            
+            // getUser maneja internamente la lógica de ID.
+            // Al ser una importación inicial estática, asumimos que el username 
+            // es lo suficientemente bueno para buscar/crear el registro.
+            const userData = this.getUser(null, username); 
+            
+            if (userData && (!userData.subMonths || userData.subMonths < months)) {
                 userData.subMonths = months;
                 this.markDirty(username);
             }
@@ -657,6 +676,12 @@ export default class UserStateManager {
     /**
      * Reset total (Uso administrativo)
      */
+    async resetAll() {
+        this.users.clear();
+        await this.saveImmediately();
+        console.warn('⚠️ UserStateManager: Base de datos reseteada');
+    }
+
     async resetAll() {
         this.users.clear();
         await this.saveImmediately();

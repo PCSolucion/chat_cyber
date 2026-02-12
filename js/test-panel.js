@@ -37,16 +37,23 @@ class TestPanelController {
     }
 
     init() {
-        // --- OVERRIDE CONSOLE.LOG ---
-        this.setupLogger();
+        // --- OVERRIDE CONSOLE.LOG (Global & Iframe) ---
+        this.captureConsole(window);
 
         // --- GLOBAL EVENT LISTENERS ---
+        // Forzar ajuste inicial
+        this.fitPreview();
         window.addEventListener('load', () => this.fitPreview());
         window.addEventListener('resize', () => this.fitPreview());
+        
+        // Backup: Reintentar ajuste a los 500ms por si el CSS tardó en cargar
+        setTimeout(() => this.fitPreview(), 500);
 
         this.widgetFrame.addEventListener('load', () => {
             console.log('✅ Widget iframe loaded');
+            this.captureConsole(this.widgetFrame.contentWindow); 
             this.fitPreview();
+            this._attachToWidget();
             this.setupBroadcaster();
         });
 
@@ -115,46 +122,149 @@ class TestPanelController {
         }
     }
 
-    setupLogger() {
-        const originalLog = console.log;
-        const originalWarn = console.warn;
-        const originalError = console.error;
+    /**
+     * Captura los logs de una ventana específica (Main o Iframe)
+     * y los redirige al panel de logs del sistema
+     */
+    captureConsole(targetWindow) {
+        if (!targetWindow || targetWindow._isConsoleCaptured) return;
 
-        const appendLog = (type, args) => {
-            const logBox = document.getElementById('panel-logs');
-            if (!logBox) return;
+        const originalLog = targetWindow.console.log;
+        const originalWarn = targetWindow.console.warn;
+        const originalError = targetWindow.console.error;
 
-            const line = document.createElement('div');
-            line.className = 'log-entry';
-            
-            const text = args.map(arg => {
-                if (typeof arg === 'object') return JSON.stringify(arg);
-                return String(arg);
-            }).join(' ');
-
-            let color = '#aaa';
-            if (type === 'warn') color = '#ffd700';
-            if (type === 'error') color = '#ff003c';
-            
-            line.style.color = color;
-            line.innerHTML = `<span style="opacity: 0.3;">></span> ${text}`;
-            
-            logBox.appendChild(line);
-            if (logBox.children.length > 50) logBox.removeChild(logBox.firstChild);
-            logBox.scrollTop = logBox.scrollHeight;
+        targetWindow.console.log = (...args) => {
+            originalLog.apply(targetWindow.console, args);
+            this.appendLogToPanel('log', args);
         };
 
-        console.log = (...args) => { originalLog.apply(console, args); appendLog('log', args); };
-        console.warn = (...args) => { originalWarn.apply(console, args); appendLog('warn', args); };
-        console.error = (...args) => { originalError.apply(console, args); appendLog('error', args); };
+        targetWindow.console.warn = (...args) => {
+            originalWarn.apply(targetWindow.console, args);
+            this.appendLogToPanel('warn', args);
+        };
+
+        targetWindow.console.error = (...args) => {
+            originalError.apply(targetWindow.console, args);
+            this.appendLogToPanel('error', args);
+        };
+
+        targetWindow._isConsoleCaptured = true;
+    }
+
+    appendLogToPanel(type, args) {
+        const logBox = document.getElementById('panel-logs');
+        if (!logBox) return;
+
+        const line = document.createElement('div');
+        line.className = 'log-entry';
+        
+        const text = args.map(arg => {
+            try {
+                if (typeof arg === 'object') {
+                    // Intento simple de stringify para objetos
+                    return JSON.stringify(arg, (key, value) => {
+                         if (key === 'source' || key === 'target') return '[DOM/Window]'; // Evitar circulares comunes en eventos
+                         return value;
+                    });
+                }
+                return String(arg);
+            } catch (e) {
+                return '[Complex Object]';
+            }
+        }).join(' ');
+
+        // --- FILTROS DE LOGS ---
+        if (text.includes('Preview scaled')) return; // IGNORAR
+        // -----------------------
+
+        let color = 'rgba(255, 255, 255, 0.7)';
+        let bg = 'transparent';
+
+        if (type === 'warn') {
+            color = 'rgba(255, 215, 0, 0.9)'; // Gold
+            bg = 'rgba(255, 215, 0, 0.05)';
+        }
+        if (type === 'error') {
+            color = 'rgba(255, 60, 60, 0.9)'; // Red
+            bg = 'rgba(255, 0, 0, 0.1)';
+        }
+        
+        // Detección automática de éxito (verde)
+        if (text.includes('✅') || text.includes('Success') || text.includes('Connected')) {
+             color = 'rgba(0, 255, 128, 0.9)'; // Green
+             bg = 'rgba(0, 255, 128, 0.05)';
+        }
+        
+        line.style.color = color;
+        line.style.background = bg;
+        line.innerHTML = `<span style="opacity: 0.3;">></span> ${text}`;
+        
+        logBox.appendChild(line);
+        // Mantener solo los últimos 100 logs
+        if (logBox.children.length > 100) logBox.removeChild(logBox.firstChild);
+        logBox.scrollTop = logBox.scrollHeight;
     }
 
     fitPreview() {
-        if (!this.widgetFrame || !this.previewContainer) return;
-        const containerWidth = this.previewContainer.getBoundingClientRect().width;
-        const scale = containerWidth / 2560;
-        this.widgetFrame.style.transform = `scale(${scale})`;
-        console.log(`🖥️ Preview rescaled: ${Math.round(containerWidth)}px width (Scale: ${scale.toFixed(3)})`);
+        const container = document.getElementById('preview-container');
+        const iframe = document.getElementById('widget-frame');
+        
+        if (!container || !iframe) return;
+
+        // Forzar recalculo si el contenedor no está listo
+        const containerWidth = container.clientWidth || (window.innerWidth - 380);
+        
+        // El widget original es 2560px (2K)
+        const ORIGINAL_WIDTH = 2560; 
+        const scale = containerWidth / ORIGINAL_WIDTH;
+        
+        iframe.style.transformOrigin = '0 0'; // CRÍTICO: Escalar desde la esquina superior izquierda
+        iframe.style.transform = `scale(${scale})`;
+        
+        // REINTENTAR CONEXIÓN SI FALLÓ AL INICIO
+        if (!this.app) {
+             this._attachToWidget();
+        }
+    }
+
+    _attachToWidget() {
+        if (this.app && this.widgetDebugReady) return; // Ya conectado y listo
+
+        const win = this.getWidgetWindow();
+        if (win) {
+            // INTENTO 1: Directo (Solo si WidgetDebug ya existe)
+            if (win.WidgetDebug) {
+                this.app = win.APP_INSTANCE;
+                this.widgetDebugReady = true;
+                console.log('✅ Widget Connected & Debug Tools Ready (Direct)');
+                return;
+            } 
+            
+            // INTENTO 2: Evento (Si aún está cargando)
+            if (!this._waitingForEvent) {
+                this._waitingForEvent = true;
+                console.log('⏳ Waiting for Widget Debug Tools...');
+                
+                // Opción A: Evento oficial
+                win.addEventListener('widget-ready', () => {
+                    this.app = win.APP_INSTANCE;
+                    this.widgetDebugReady = true;
+                    console.log('✅ Widget Connected (Event)');
+                    this._waitingForEvent = false;
+                }, { once: true });
+
+                // Opción B: Polling de respaldo (por si el evento ya pasó pero WidgetDebug tardó un ms más)
+                const polling = setInterval(() => {
+                    if (win.WidgetDebug) {
+                        this.app = win.APP_INSTANCE;
+                        this.widgetDebugReady = true;
+                        console.log('✅ Widget Connected (Polling)');
+                        this._waitingForEvent = false;
+                        clearInterval(polling);
+                    }
+                }, 500);
+            }
+        }
     }
 
     getWidgetWindow() {
@@ -163,12 +273,13 @@ class TestPanelController {
 
     setupBroadcaster(retries = 0) {
         const win = this.getWidgetWindow();
-        if (!win || !win.WidgetDebug?.app?.config) {
+        // Ahora dependemos de WidgetDebug, no solo de app.config
+        if (!win || !win.WidgetDebug) {
             if (retries < 20) setTimeout(() => this.setupBroadcaster(retries + 1), 500);
             return;
         }
 
-        this.broadcaster = win.WidgetDebug.app.config.BROADCASTER_USERNAME;
+        this.broadcaster = win.WidgetDebug.app?.config?.BROADCASTER_USERNAME;
         if (this.broadcaster) {
             const btn = document.getElementById('broadcaster-btn');
             if (btn) {
