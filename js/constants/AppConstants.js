@@ -74,7 +74,7 @@ export const STATS = {
 // Configuración del Sistema de XP
 export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
-    SAVE_DEBOUNCE_MS: 480000,           // 8 minutos: Maximiza el ahorro de cuota acumulando cambios en memoria
+    SAVE_DEBOUNCE_MS: 1800000,          // 30 minutos: Maximiza el ahorro de cuota acumulando cambios en memoria
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
     RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
     RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia

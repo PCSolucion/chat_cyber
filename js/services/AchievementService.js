@@ -390,7 +390,7 @@ export default class AchievementService {
                 if (stats.lastWitcher3Date !== todayStr) {
                     stats.witcher3Streams = (stats.witcher3Streams || 0) + 1;
                     stats.lastWitcher3Date = todayStr;
-                    if (this.config.DEBUG) {
+                    if (this.config.DEBUG && !context.isInitialLoad) {
                         console.log(`🐺 ${username} asistió a un nuevo directo de TW3. Total: ${stats.witcher3Streams}`);
                     }
                 }
@@ -520,7 +520,7 @@ export default class AchievementService {
                     existingAchievements.push(unlockedAchievement);
                     unlockedNow.push(achievement);
 
-                    if (this.config.DEBUG) {
+                    if (this.config.DEBUG && !context.isInitialLoad) {
                         console.log(`🏆 LOGRO DESBLOQUEADO: ${username} -> ${achievement.name}`);
                     }
                 }

@@ -88,7 +88,7 @@ export default class RankingSystem {
             });
 
             this.isLoaded = true;
-            console.log(`✅ Rankings calculados desde Firestore: ${this.userRankings.size} usuarios`);
+            console.log(`✅ Rankings calculados con éxito: ${this.userRankings.size} usuarios`);
 
         } catch (error) {
             console.error('❌ Error al calcular rankings:', error);

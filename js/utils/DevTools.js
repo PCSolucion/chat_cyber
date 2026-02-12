@@ -30,7 +30,6 @@ export default class DevTools {
             this.xpService = this.app.processor.getService('xp');
             this.emoteService = this.app.processor.getService('thirdPartyEmotes');
             this.achievementService = this.app.processor.getService('achievements');
-            this.firestoreService = this.app.processor.getService('firestore');
             
             this.idleManager = this.app.processor.getManager('idleDisplay');
             this.notificationManager = this.app.processor.notificationManager;
@@ -66,10 +65,6 @@ export default class DevTools {
 
             idle: {
                 forceMode: () => this.idleManager?._enterIdleMode()
-            },
-
-            firestore: {
-                testConnection: () => this._testFirestoreConnection()
             }
         };
 
@@ -187,18 +182,18 @@ export default class DevTools {
     _testAchievement() {
         if (!this.achievementService) return;
         const testAchievements = [
-            { id: 'test_common', name: 'First Words', rarity: 'common', icon: '💬' },
-            { id: 'test_legendary', name: 'Netrunner Legend', rarity: 'legendary', icon: '🧠' }
+            { id: 'test_common', name: 'First Words', rarity: 'common', description: 'Simulated common achievement', condition: 'DEBUG' },
+            { id: 'test_legendary', name: 'Netrunner Legend', rarity: 'legendary', description: 'Simulated legendary achievement', condition: 'DEBUG' }
         ];
         const random = testAchievements[Math.floor(Math.random() * testAchievements.length)];
-        this.achievementService.emitAchievementUnlocked('TestUser', random);
+        // Pasar: userId, username, achievement
+        this.achievementService.emitAchievementUnlocked('99999', 'TestUser', random);
     }
 
-    async _testFirestoreConnection() {
-        if (!this.firestoreService) return;
-        console.log('📡 Verificando conexión Firestore...');
-        const success = await this.firestoreService.testConnection();
-        alert(success ? '✅ Firestore Conectado' : '❌ Error de Conexión Firestore');
+    async _reloadRankings() {
+        if (this.app.processor) {
+            await this.app.processor.loadAsyncData();
+        }
     }
 
     _setupLegacyAliases() {
@@ -217,7 +212,6 @@ export default class DevTools {
         window.testEmoteMessage = d.emotes.testMessage;
         window.testAchievement = d.achievements.test;
         window.testIdleMode = d.idle.forceMode;
-        window.testFirestoreConnection = d.firestore.testConnection;
         window.APP_INSTANCE = this.app;
     }
 

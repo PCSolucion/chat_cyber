@@ -1,4 +1,5 @@
 import PersistenceManager from './PersistenceManager.js';
+import Logger from '../utils/Logger.js';
 import { XP, TIMING } from '../constants/AppConstants.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
 
@@ -70,7 +71,7 @@ export default class UserStateManager {
     }
 
     /**
-     * Carga inicial de datos desde Firestore
+     * Carga inicial de datos desde el Storage configurado
      */
     async load() {
         try {
@@ -565,10 +566,10 @@ export default class UserStateManager {
 
             this.communityStats = stats;
 
-            // Guardar en Firestore como snapshot de sistema
+            // Guardar en Storage disponible (Firestore o Local)
             await this.storage.save('community_snapshot.json', stats);
 
-            if (this.config.DEBUG) console.log('🌐 Snapshot de comunidad actualizado en Firestore');
+            if (this.config.DEBUG) console.log('🌐 Snapshot de comunidad actualizado');
         } catch (error) {
             console.error('❌ Error actualizando community stats:', error);
         }
@@ -676,12 +677,6 @@ export default class UserStateManager {
     /**
      * Reset total (Uso administrativo)
      */
-    async resetAll() {
-        this.users.clear();
-        await this.saveImmediately();
-        console.warn('⚠️ UserStateManager: Base de datos reseteada');
-    }
-
     async resetAll() {
         this.users.clear();
         await this.saveImmediately();

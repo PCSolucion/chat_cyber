@@ -34,6 +34,28 @@ export default class LocalStorageProvider extends BaseStorageProvider {
         return null;
     }
 
+    /**
+     * Carga datos de un usuario específico desde el snapshot local
+     * @param {string} userId 
+     */
+    async loadUser(userId) {
+        // En LocalStorage guardamos todo en una sola clave "users" dentro de xp_data
+        const data = await this.load('xp_data.json');
+        if (data && data.users) {
+            const id = String(userId);
+            // Intentar por ID
+            if (data.users[id]) return data.users[id];
+            
+            // Intentar búsqueda por displayName si es un username
+            const byName = Object.values(data.users).find(u => 
+                (u.displayName && u.displayName.toLowerCase() === id.toLowerCase()) ||
+                (u.username && u.username.toLowerCase() === id.toLowerCase())
+            );
+            return byName || null;
+        }
+        return null;
+    }
+
     async save(resourceName, data) {
         try {
             localStorage.setItem(this.prefix + resourceName, JSON.stringify(data));

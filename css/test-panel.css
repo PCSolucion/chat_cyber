@@ -399,6 +399,36 @@ body {
   gap: 8px;
   letter-spacing: 1px;
   text-transform: uppercase;
+  justify-content: space-between;
+}
+
+.log-counters {
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  margin-left: auto;
+}
+
+.log-count {
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-weight: bold;
+  min-width: 14px;
+  text-align: center;
+}
+
+.log-count.success {
+  color: #00ff80;
+  background: rgba(0, 255, 128, 0.1);
+  border: 1px solid rgba(0, 255, 128, 0.3);
+  text-shadow: 0 0 5px rgba(0, 255, 128, 0.5);
+}
+
+.log-count.error {
+  color: #ff3c3c;
+  background: rgba(255, 60, 60, 0.1);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  text-shadow: 0 0 5px rgba(255, 60, 60, 0.5);
 }
 
 .blink {

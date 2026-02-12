@@ -23,6 +23,10 @@
         <div class="cyber-terminal">
             <div class="terminal-header">
                 <span class="blink">>></span> SYSTEM_LOGS // STREAM
+                <div class="log-counters">
+                    <span id="log-count-success" class="log-count success">0</span>
+                    <span id="log-count-error" class="log-count error">0</span>
+                </div>
             </div>
             <div id="panel-logs">
                 <div class="log-entry system">> _init_console... OK</div>
@@ -101,9 +105,8 @@
                     <input type="number" id="welcome-back-days" value="14" min="7" class="panel-input" style="flex: 1;">
                     <button data-action="test-welcome-back" class="btn btn--cyan">TEST_WELCOME_BACK</button>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button data-action="widget-call" data-value="firestore.testConnection" class="btn btn--top1 btn--full" style="font-size: 9px;">🔥 FIRESTORE</button>
-                    <button data-action="widget-call" data-value="achievements.test" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV</button>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                    <button data-action="widget-call" data-value="achievements.test" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV_EMULATOR</button>
                 </div>
                 <button data-action="test-level-up" class="btn btn--full btn--purple" style="text-align: center;">🚀 TEST_LEVEL_UP</button>
             </div>

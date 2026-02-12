@@ -1,311 +1,172 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js';
-import { 
-    initializeFirestore,
-    getFirestore,
-    persistentLocalCache,
-    persistentMultipleTabManager,
-    doc, 
-    getDoc, 
-    setDoc, 
-    collection, 
-    getDocs, 
-    writeBatch 
-} from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import Logger from '../utils/Logger.js';
 
 /**
- * FirestoreService - Servicio de Persistencia con Firebase Firestore
- * 
- * REFACTORIZADO (v1.1.5): Ahora utiliza una estructura de documentos individuales
- * por usuario en lugar de un único documento monolítico.
- * 
- * Ventajas:
- * - Supera el límite de 1MB por documento.
- * - Lecturas y escrituras atómicas por usuario.
- * - Mayor escalabilidad.
- * 
- * @class FirestoreService
+ * FirestoreService - Night City Edition
+ * Gestiona la persistencia en Firebase Firestore con protecciones de cuota.
  */
 export default class FirestoreService {
-    /**
-     * @param {Object} config - Configuración global de la app
-     */
     constructor(config) {
         this.config = config;
-        this.app = null;
         this.db = null;
+        this.app = null;
+        this.sdk = null;
         this.isConfigured = false;
         this.lastError = null;
 
-        // Nombres de colecciones
+        // Contador de seguridad para evitar runaway operations
+        this.opCounts = { reads: 0, writes: 0 };
+        this.MAX_READS_PER_SESSION = 2000;
+        this.MAX_WRITES_PER_SESSION = 1000;
+
         this.collections = {
             USERS: 'users',
-            HISTORY: 'stream_history',
-            SYSTEM: 'system_data'
+            SYSTEM: 'system',
+            HISTORY: 'stream_history'
         };
     }
 
     /**
-     * Inicializa Firebase y Firestore con la configuración proporcionada
-     * @param {Object} firebaseConfig - Objeto de configuración de Firebase
+     * Inicializa Firebase dinámicamente solo si no estamos en modo test
      */
-    configure(firebaseConfig) {
-        try {
-            if (!firebaseConfig || !firebaseConfig.projectId) {
-                Logger.warn('Firestore', 'Configuración de Firebase incompleta');
-                this.lastError = 'Configuración de Firebase incompleta (Revisa config.js)';
-                this.isConfigured = false;
-                return;
-            }
+    async configure(firebaseConfig) {
+        if (this.config.TEST_MODE) {
+            Logger.warn('Firestore', '🚫 MODO TEST: Firestore no se inicializará.');
+            return;
+        }
 
+        if (this.isConfigured) return;
+
+        try {
+            Logger.info('Firestore', '📡 Cargando SDK de Firebase...');
+            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js');
+            const SDK = await import('https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js');
+            
+            this.sdk = SDK;
             this.app = initializeApp(firebaseConfig);
             
-            // Inicialización moderna con Caché Persistente Multi-Tab (Fix deprecation warning settings.cache)
             try {
-                this.db = initializeFirestore(this.app, {
-                    localCache: persistentLocalCache({
-                        tabManager: persistentMultipleTabManager()
+                this.db = SDK.initializeFirestore(this.app, {
+                    localCache: SDK.persistentLocalCache({
+                        tabManager: SDK.persistentMultipleTabManager()
                     })
                 });
             } catch (err) {
-                console.warn('Firestore: Error inicializando caché persistente, usando configuración por defecto:', err);
-                // Fallback seguro si la caché falla (raro, pero posible en entornos restrictivos)
-                this.db = getFirestore(this.app);
+                this.db = SDK.getFirestore(this.app);
             }
 
             this.isConfigured = true;
-
-            Logger.info('Firestore', 'FirestoreService configurado correctamente');
+            Logger.info('Firestore', '✅ FirestoreService ONLINE');
         } catch (error) {
-            Logger.error('Firestore', 'Error al inicializar Firebase:', error);
-            this.lastError = `Error de inicialización: ${error.message}`;
+            Logger.error('Firestore', 'Fallo al cargar Firebase:', error);
             this.isConfigured = false;
         }
     }
 
-    /**
-     * Carga datos desde Firestore. 
-     * Si es 'xp_data.json', recupera toda la colección de usuarios.
-     * @param {string} fileName - Nombre del recurso (ej: "xp_data.json")
-     * @returns {Promise<Object|null>}
-     */
-    async loadFile(fileName) {
-        if (!this.isConfigured) {
-            Logger.error('Firestore', 'Servicio no configurado');
-            return null;
+    _checkQuota(type = 'read') {
+        if (type === 'read' && this.opCounts.reads >= this.MAX_READS_PER_SESSION) {
+            Logger.error('Firestore', '🚨 LÍMITE DE SEGURIDAD ALCANZADO: Bloqueando LECTURAS para proteger cuota.');
+            return false;
         }
+        if (type === 'write' && this.opCounts.writes >= this.MAX_WRITES_PER_SESSION) {
+            Logger.error('Firestore', '🚨 LÍMITE DE SEGURIDAD ALCANZADO: Bloqueando ESCRITURAS para proteger cuota.');
+            return false;
+        }
+        return true;
+    }
+
+    async loadFile(fileName) {
+        if (!this.isConfigured || !this._checkQuota('read')) return null;
 
         try {
-            // Caso Especial: XP Data (Colección de usuarios)
             if (fileName === 'xp_data.json' || fileName === 'xp_data') {
-                return await this._loadUsersCollection();
+                Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de usuarios.');
+                return { users: {}, history: {}, version: '1.2' };
             }
 
-            // Caso Especial: Stream History (Colección de sesiones)
-            if (fileName === 'stream_history.json' || fileName === 'stream_history') {
-                return await this._loadHistoryCollection();
-            }
+            this.opCounts.reads++;
+            Logger.debug('Firestore', `[READ #${this.opCounts.reads}] Archivo: ${fileName}`);
 
-            // Caso Especial: Leaderboard (Ranking resumido)
             if (fileName === 'leaderboard.json' || fileName === 'leaderboard') {
-                const lbRef = doc(this.db, this.collections.SYSTEM, 'leaderboard');
-                const lbSnap = await getDoc(lbRef);
-                return lbSnap.exists() ? lbSnap.data() : null;
+                const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, 'leaderboard');
+                const snap = await this.sdk.getDoc(docRef);
+                return snap.exists() ? snap.data() : null;
             }
 
-            // Otros documentos (System config, etc)
             const docId = fileName.replace(/\.json$/, '');
-            const docRef = doc(this.db, this.collections.SYSTEM, docId);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                return docSnap.data();
-            }
-            return null;
+            const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, docId);
+            const snap = await this.sdk.getDoc(docRef);
+            return snap.exists() ? snap.data() : null;
         } catch (error) {
-            Logger.error('Firestore', `Error al cargar ${fileName}:`, error);
-            this.lastError = error.message;
+            Logger.error('Firestore', `Error cargando ${fileName}:`, error);
             return null;
         }
     }
 
-    /**
-     * Carga un documento de usuario específico por ID
-     * @param {string} userId - El ID numérico (o antiguo username) del usuario
-     */
     async loadUserDoc(userId) {
-        if (!this.isConfigured) return null;
+        if (!this.isConfigured || !this._checkQuota('read')) return null;
+        if (!userId) return null;
+
         try {
-            const userRef = doc(this.db, this.collections.USERS, String(userId));
-            const userSnap = await getDoc(userRef);
-            return userSnap.exists() ? userSnap.data() : null;
+            this.opCounts.reads++;
+            Logger.debug('Firestore', `[READ #${this.opCounts.reads}] Carga de usuario: ${userId}`);
+
+            const userRef = this.sdk.doc(this.db, this.collections.USERS, String(userId));
+            const snap = await this.sdk.getDoc(userRef);
+            return snap.exists() ? snap.data() : null;
         } catch (error) {
             Logger.error('Firestore', `Error cargando usuario ${userId}:`, error);
             return null;
         }
     }
 
-    /**
-     * Carga todos los usuarios de la colección individual
-     * @private
-     */
-    /**
-     * Carga todos los usuarios de la colección individual
-     * @private
-     */
-    async _loadUsersCollection() {
-        Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de usuarios.');
-        return {};
-    }
-
-    async _loadHistoryCollection() {
-        // OPTIMIZACIÓN CRÍTICA: No cargamos todo el historial al iniciar.
-        Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de historial.');
-        return {};
-    }
-
-    /**
-     * Guarda datos en Firestore.
-     * Si es 'xp_data.json', guarda los usuarios modificados de forma individual.
-     * @param {string} fileName - Nombre del recurso
-     * @param {Object} data - Datos JSON a guardar
-     * @param {Set|Array} [dirtyKeys] - Opcional: Lista de IDs que realmente han cambiado
-     * @returns {Promise<boolean>}
-     */
     async saveFile(fileName, data, dirtyKeys = null) {
-        if (!this.isConfigured) return false;
+        if (!this.isConfigured || !this._checkQuota('write')) return false;
 
         try {
-            // Caso Especial: Usuarios
+            this.opCounts.writes++;
+            Logger.debug('Firestore', `[WRITE #${this.opCounts.writes}] Guardado de archivo: ${fileName}`);
+
             if (fileName === 'xp_data.json' || fileName === 'xp_data') {
-                return await this._saveUsers(data.users, dirtyKeys);
+                return await this._saveUsersBatch(data.users, dirtyKeys);
             }
 
-            // Caso Especial: Historial
-            if (fileName === 'stream_history.json' || fileName === 'stream_history') {
-                return await this._saveHistory(data, dirtyKeys);
-            }
-
-            // Caso Especial: Leaderboard
-            if (fileName === 'leaderboard.json' || fileName === 'leaderboard') {
-                const lbRef = doc(this.db, this.collections.SYSTEM, 'leaderboard');
-                await setDoc(lbRef, {
-                    ...data,
-                    lastUpdated: new Date().toISOString()
-                });
-                return true;
-            }
-
-            // Guardado estándar para otros archivos
             const docId = fileName.replace(/\.json$/, '');
-            const docRef = doc(this.db, this.collections.SYSTEM, docId);
-            await setDoc(docRef, {
-                ...data,
-                lastUpdated: new Date().toISOString()
-            });
-
+            const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, docId);
+            await this.sdk.setDoc(docRef, { ...data, lastUpdated: new Date().toISOString() });
             return true;
         } catch (error) {
-            Logger.error('Firestore', `Error al guardar ${fileName}:`, error);
-            throw error;
+            Logger.error('Firestore', `Error guardando ${fileName}:`, error);
+            return false;
         }
     }
 
-    /**
-     * Guarda usuarios de forma individual usando Batch para eficiencia.
-     * @private
-     */
-    async _saveUsers(allUsers, dirtyKeys = null) {
-        // Asegurar que tenemos algo que guardar
-        if (!allUsers) return true;
+    async _saveUsersBatch(allUsers, dirtyKeys) {
+        const keys = dirtyKeys ? Array.from(dirtyKeys) : Object.keys(allUsers);
+        if (keys.length === 0) return true;
 
-        // Si tenemos dirtyKeys, solo guardamos esos. Si no, todos (migración).
-        const keysToSave = dirtyKeys ? Array.from(dirtyKeys) : 
-                          (allUsers instanceof Map ? Array.from(allUsers.keys()) : Object.keys(allUsers));
-        
-        if (keysToSave.length === 0) return true;
-
-        Logger.info('Firestore', `Iniciando guardado de ${keysToSave.length} usuarios...`);
-
-        // Firestore tiene un límite de 500 operaciones por batch.
         const CHUNK_SIZE = 400;
-        for (let i = 0; i < keysToSave.length; i += CHUNK_SIZE) {
-            const chunk = keysToSave.slice(i, i + CHUNK_SIZE);
-            const batch = writeBatch(this.db);
+        for (let i = 0; i < keys.length; i += CHUNK_SIZE) {
+            const chunk = keys.slice(i, i + CHUNK_SIZE);
+            const batch = this.sdk.writeBatch(this.db);
             
             chunk.forEach(id => {
-                const userData = (allUsers instanceof Map) ? allUsers.get(id) : allUsers[id];
+                const userData = allUsers[id];
                 if (userData) {
-                    const userRef = doc(this.db, this.collections.USERS, String(id));
+                    const userRef = this.sdk.doc(this.db, this.collections.USERS, String(id));
                     batch.set(userRef, userData, { merge: true });
                 }
             });
 
             await batch.commit();
-            Logger.debug('Firestore', `Batch procesado: ${i + chunk.length}/${keysToSave.length}`);
+            this.opCounts.writes++; // Cada batch cuenta como una operación lógica (aunque Firebase cuente documentos)
         }
-
-        Logger.info('Firestore', '✅ Guardado masivo completado con éxito');
-        EventManager.emit(EVENTS.STORAGE.DATA_SAVED);
         return true;
     }
 
-    /**
-     * Guarda el historial de forma individual.
-     * @private
-     */
-    async _saveHistory(allHistory, dirtyKeys = null) {
-        const batch = writeBatch(this.db);
-        let count = 0;
-
-        // Si tenemos dirtyKeys, solo esos. Si no (migración), extraemos las claves del objeto
-        // pero quitamos las metas (version, lastUpdated, _isMigrated)
-        const keysToSave = dirtyKeys ? Array.from(dirtyKeys) : Object.keys(allHistory).filter(k => k !== 'version' && k !== 'lastUpdated' && k !== '_isMigrated');
-
-        for (const dateId of keysToSave) {
-            const sessionData = allHistory[dateId];
-            if (!sessionData) continue;
-
-            const historyRef = doc(this.db, this.collections.HISTORY, dateId);
-            batch.set(historyRef, sessionData, { merge: true });
-            count++;
-
-            if (count >= 450) break; 
-        }
-
-        if (count > 0) {
-            await batch.commit();
-            Logger.debug('Firestore', `History Batch completado: ${count} días actualizados`);
-            EventManager.emit(EVENTS.STORAGE.DATA_SAVED);
-            return true;
-        }
-
-        return true;
-    }
-
-
-    /**
-     * Verifica la conexión con Firestore
-     * @returns {Promise<boolean>}
-     */
     async testConnection() {
-        if (!this.isConfigured) {
-            return false;
-        }
-
-        try {
-            // Intentamos leer un documento de prueba para verificar conectividad
-            // Usamos la colección de sistema para el test
-            const testRef = doc(this.db, this.collections.SYSTEM, '_connection_test');
-            await getDoc(testRef);
-            Logger.info('Firestore', '✅ Conexión con Firestore verificada');
-            return true;
-        } catch (error) {
-            Logger.error('Firestore', '❌ Error al verificar conexión:', error);
-            this.lastError = error.message;
-            return false;
-        }
+        // Test rápido sin lectura real para ahorrar cuota
+        return this.isConfigured && !!this.db;
     }
 }

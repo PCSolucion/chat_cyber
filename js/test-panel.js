@@ -9,6 +9,7 @@ class TestPanelController {
         this.simInterval = null;
         this.simCount = 0;
         this.broadcaster = null;
+        this.logCounts = { success: 0, error: 0 };
 
         this.SIM_USERS = [
             'NeonSamurai', 'CyberPunk2077', 'NetRunner_01', 'ArasakaSpy', 
@@ -184,13 +185,13 @@ class TestPanelController {
             color = 'rgba(255, 215, 0, 0.9)'; // Gold
             bg = 'rgba(255, 215, 0, 0.05)';
         }
-        if (type === 'error') {
+        if (type === 'error' || text.includes('❌') || text.includes('[ERROR]') || text.includes('Error:')) {
             color = 'rgba(255, 60, 60, 0.9)'; // Red
             bg = 'rgba(255, 0, 0, 0.1)';
         }
         
         // Detección automática de éxito (verde)
-        if (text.includes('✅') || text.includes('Success') || text.includes('Connected')) {
+        if (this._isSuccessLog(text) && color !== 'rgba(255, 60, 60, 0.9)') {
              color = 'rgba(0, 255, 128, 0.9)'; // Green
              bg = 'rgba(0, 255, 128, 0.05)';
         }
@@ -203,6 +204,38 @@ class TestPanelController {
         // Mantener solo los últimos 100 logs
         if (logBox.children.length > 100) logBox.removeChild(logBox.firstChild);
         logBox.scrollTop = logBox.scrollHeight;
+
+        // Actualizar contadores
+        this._updateCounters(type, text);
+    }
+
+    _updateCounters(type, text) {
+        const isErrorInText = text.includes('❌') || text.includes('[ERROR]') || text.includes('Error:');
+        
+        if (type === 'error' || isErrorInText) {
+            this.logCounts.error++;
+            const el = document.getElementById('log-count-error');
+            if (el) el.textContent = this.logCounts.error;
+        } else if (this._isSuccessLog(text)) {
+            this.logCounts.success++;
+            const el = document.getElementById('log-count-success');
+            if (el) el.textContent = this.logCounts.success;
+        }
+    }
+
+    /**
+     * Determina si un log debe considerarse exitoso/positivo
+     * @private
+     */
+    _isSuccessLog(text) {
+        // Lista expandida de emojis y palabras clave positivas
+        const successMarkers = [
+            '✅', '🚀', '✨', '📦', '🏆', '🌐', '📊', '🎭', '💤', '🛠️', '📡', '🎮', 
+            '🔍', '🔊', '⚙️', '📢', '📂', '🔌', '📄', 'ℹ️',
+            'Success', 'Connected', 'OK', '[INFO]', 'initialized', 'Joined', 'Executing command', 'info:'
+        ];
+        
+        return successMarkers.some(marker => text.includes(marker));
     }
 
     fitPreview() {
