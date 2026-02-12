@@ -1,19 +1,25 @@
 /**
  * Configuration for Achievements Viewer
- * Uses the same Gist storage as the main widget
+ * Uses Firebase Firestore (same as main widget)
  */
 const VIEWER_CONFIG = {
-    // GitHub Gist Storage (same as widget)
-    // GitHub Gist Storage (same as widget)
-    GIST_ID: '16f750fb60b890aa9b06e53cc97cc49e',
-    GIST_USERNAME: 'PCSolucion', // Added for Raw URL access
-    // Token removed for security - using Raw URLs instead
-    GIST_FILENAME: 'xp_data.json',
-    GIST_ACHIEVEMENTS_FILENAME: 'achievements.json',
-    GIST_HISTORY_FILENAME: 'stream_history.json',
+    // Firebase Firestore (same as widget)
+    FIREBASE: {
+        apiKey: 'AIzaSyDHPLiCrpodIrVnkbgbFMXaPz5UKWfDQGU',
+        authDomain: 'chat-twitch-c629c.firebaseapp.com',
+        projectId: 'chat-twitch-c629c',
+        storageBucket: 'chat-twitch-c629c.firebasestorage.app',
+        messagingSenderId: '456930494969',
+        appId: '1:456930494969:web:936d0ea6c746c34d7bd528'
+    },
+
+    // Firestore collection & document names
+    FIRESTORE_COLLECTION: 'app_data',
+    XP_DOC: 'xp_data',
+    ACHIEVEMENTS_DOC: 'achievements',
+    HISTORY_DOC: 'stream_history',
 
     // API Settings
-    API_BASE: 'https://api.github.com',
     CACHE_TTL: 60000, // 1 minute cache
 
     // Level Titles (same as widget)

@@ -1069,7 +1069,7 @@ const StreamFeatures = (function () {
         // Start with hardcoded data (historical base)
         _streamData.history = { ...RAW_STREAM_DATA };
 
-        // Merge dynamic data from Gist on top
+        // Merge dynamic data from Firestore on top
         if (window.STREAM_HISTORY && Object.keys(window.STREAM_HISTORY).length > 0) {
             Object.assign(_streamData.history, window.STREAM_HISTORY);
             console.log('✅ Stream Features: Merged global history with local base');

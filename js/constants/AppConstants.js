@@ -22,8 +22,8 @@ export const TIMING = {
     WATCH_TIME_INTERVAL_MS: 600000,     // 10 min
     WATCH_TIME_INITIAL_DELAY_MS: 5000,  // 5 seg (arranque diferido)
     
-    // Cache de Gist Storage
-    GIST_CACHE_TTL_MS: 60000,           // 1 min de vida para la cache local
+    // Cache de Storage
+    STORAGE_CACHE_TTL_MS: 60000,           // 1 min de vida para la cache local
 
     // Session Stats
     ACTIVITY_TRACKER_INTERVAL_MS: 60000, // 1 min
@@ -68,7 +68,7 @@ export const STATS = {
 // Configuración del Sistema de XP
 export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
-    SAVE_DEBOUNCE_MS: 5000,             // Frecuencia máxima de guardado en Gist
+    SAVE_DEBOUNCE_MS: 5000,             // Frecuencia máxima de guardado en Firestore
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
     RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
     RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia
@@ -132,11 +132,10 @@ export const DEFAULTS = {
     MESSAGE_DISPLAY_TIME: TIMING.MESSAGE_DISPLAY_TIME_MS,
     AUDIO_URL: 'sounds/radiof1.mp3',
     AUDIO_VOLUME: 1.0,
-    TOP_DATA_URL: 'https://gist.githubusercontent.com/PCSolucion/550afe48a9954f54462ec201e49c851b/raw',
     EMOTE_SIZE: '1.2em',
     ANIMATION_COOLDOWN_MS: TIMING.ANIMATION_COOLDOWN_MS,
     XP_SYSTEM_ENABLED: true,
-    XP_GIST_FILENAME: 'xp_data.json',
+    XP_DATA_FILENAME: 'xp_data.json',
     XP_LEVELUP_DISPLAY_TIME: 4000,
     XP_IGNORED_USERS_FOR_BONUS: ['wizebot', 'liiukiin'],
     IDLE_TIMEOUT_MS: IDLE.DEFAULT_TIMEOUT_MS,

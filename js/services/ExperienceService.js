@@ -599,7 +599,7 @@ export default class ExperienceService {
 
     /**
      * Actualiza las estadísticas de ranking de los usuarios y emite eventos
-     * @param {Map} rankingMap - Mapa de username -> rank (desde RankingSystem)
+     * @param {Map} rankingMap - Mapa de username -> rank (desde RankingSystem dinámico)
      * @param {boolean} isInitialLoad - Si es la carga inicial (para suprimir notificaciones)
      */
     updateRankingStats(rankingMap, isInitialLoad = false) {

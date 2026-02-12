@@ -39,8 +39,8 @@ export const EVENTS = {
 
     // Eventos de Almacenamiento / Backend
     STORAGE: {
-        DATA_SAVED: 'gist:dataSaved',
-        DATA_ERROR: 'gist:dataError'
+        DATA_SAVED: 'storage:dataSaved',
+        DATA_ERROR: 'storage:dataError'
     },
 
     // Eventos de Sistema / Diagnóstico

@@ -19,8 +19,8 @@ viewer/
 ├── css/
 │   └── main.css        # Estilos completos (cyberpunk theme)
 ├── js/
-│   ├── config.js       # Configuración (credenciales Gist)
-│   ├── api.js          # Comunicación con GitHub Gist
+│   ├── config.js       # Configuración (Firebase Firestore)
+│   ├── api.js          # Comunicación con Firebase Firestore
 │   ├── router.js       # Enrutador History API
 │   ├── utils.js        # Funciones de utilidad
 │   ├── components.js   # Generadores de HTML
@@ -34,7 +34,7 @@ Este módulo centraliza los datos para todo el proyecto:
 
 - **AchievementsData.js**: Ubicado en `data/AchievementsData.js` (Fuente Única de Verdad)
 - **Imágenes de logros**: Se referencian desde `../img/logros/`
-- **Credenciales Gist**: Las mismas que usa el widget principal
+- **Firebase Config**: La misma configuración de Firebase que usa el widget principal
 
 ## 🚀 Despliegue
 
@@ -67,14 +67,19 @@ Alternativamente, puedes modificar las rutas en `index.html` y `components.js` p
 
 Edita `js/config.js` para cambiar:
 
-- **GIST_ID**: ID del Gist donde se almacenan los datos
-- **GIST_TOKEN**: Token de acceso personal de GitHub
+- **FIREBASE**: Objeto de configuración de Firebase (mismo que el widget)
+- **FIRESTORE_COLLECTION**: Nombre de la colección en Firestore
 - **LEVEL_TITLES**: Nombres de los rangos por nivel
 
 ```javascript
 const VIEWER_CONFIG = {
-  GIST_ID: "tu-gist-id",
-  GIST_TOKEN: "tu-token",
+  FIREBASE: {
+    apiKey: "tu-api-key",
+    authDomain: "tu-proyecto.firebaseapp.com",
+    projectId: "tu-proyecto",
+    // ...
+  },
+  FIRESTORE_COLLECTION: "app_data",
   // ...
 };
 ```
@@ -112,11 +117,11 @@ La página es completamente responsiva:
 
 ## 🔐 Seguridad
 
-⚠️ **Importante**: El token de GitHub está expuesto en el código cliente. Este token solo tiene permisos de lectura/escritura a un Gist específico, pero considera:
+⚠️ **Importante**: La configuración de Firebase está expuesta en el código cliente. Esto es normal para aplicaciones frontend de Firebase, pero considera:
 
-- Usar un token con permisos mínimos
-- Renovar el token periódicamente
-- Considerar un backend proxy para producción
+- Configurar Firestore Security Rules apropiadas
+- Limitar el acceso a lectura pública y escritura autenticada
+- Monitorear el uso y las cuotas del proyecto
 
 ## 📝 Changelog
 

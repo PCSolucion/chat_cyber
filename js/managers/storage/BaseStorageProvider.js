@@ -1,7 +1,7 @@
 /**
  * BaseStorageProvider - Interfaz base para proveedores de persistencia.
  * Sigue el patrón Strategy para permitir cambiar el destino de guardado 
- * (Gist, LocalStorage, Firebase, etc.) de forma transparente.
+ * (Firestore, LocalStorage, etc.) de forma transparente.
  */
 export default class BaseStorageProvider {
     /**

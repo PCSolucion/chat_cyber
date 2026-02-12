@@ -7,7 +7,7 @@ import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
  * 
  * Responsabilidades:
  * - Mantener el mapa global de datos de usuarios (Persistence Layer)
- * - Gestionar la carga, guardado y sincronización con GitHub Gist
+ * - Gestionar la carga, guardado y sincronización con Firestore
  * - Implementar el merge inteligente de datos remotos/locales
  * - Centralizar el control de persistencia (markDirty)
  */
@@ -19,7 +19,7 @@ export default class UserStateManager {
     constructor(config, storage) {
         this.config = config;
         this.storage = storage;
-        this.fileName = config.XP_GIST_FILENAME || 'xp_data.json';
+        this.fileName = config.XP_DATA_FILENAME || 'xp_data.json';
 
         // Base de datos de usuarios en memoria
         this.users = new Map();
@@ -34,7 +34,7 @@ export default class UserStateManager {
     }
 
     /**
-     * Carga inicial de datos desde el Gist
+     * Carga inicial de datos desde Firestore
      */
     async load() {
         try {

@@ -1,6 +1,6 @@
 import MessagePipeline from './pipeline/MessagePipeline.js';
 import RankingSystem from '../services/RankingSystem.js';
-import GistStorageService from '../services/GistStorageService.js';
+import FirestoreService from '../services/FirestoreService.js';
 import StreamHistoryService from '../services/StreamHistoryService.js';
 import ExperienceService from '../services/ExperienceService.js';
 import AchievementService from '../services/AchievementService.js';
@@ -23,7 +23,7 @@ import StatsTrackerMiddleware from './pipeline/middlewares/StatsTrackerMiddlewar
 
 // Storage Management (Strategy Pattern)
 import StorageManager from './storage/StorageManager.js';
-import GistStorageProvider from './storage/GistStorageProvider.js';
+import FirestoreStorageProvider from './storage/FirestoreStorageProvider.js';
 import LocalStorageProvider from './storage/LocalStorageProvider.js';
 
 import XPDisplayManager from './XPDisplayManager.js';
@@ -87,12 +87,12 @@ export default class MessageProcessor {
         try {
             this.services.ranking = new RankingSystem(this.config);
             
-            // Configurar Estrategia de Almacenamiento
-            this.services.gist = new GistStorageService(this.config);
-            this.services.gist.configure(this.config.XP_GIST_ID, this.config.XP_GIST_TOKEN, this.config.XP_GIST_FILENAME);
+            // Configurar Estrategia de Almacenamiento (Firestore)
+            this.services.firestore = new FirestoreService(this.config);
+            this.services.firestore.configure(this.config.FIREBASE);
 
             this.storageManager
-                .addProvider(new GistStorageProvider(this.services.gist))
+                .addProvider(new FirestoreStorageProvider(this.services.firestore))
                 .addProvider(new LocalStorageProvider());
 
             await this.storageManager.init();
@@ -100,6 +100,9 @@ export default class MessageProcessor {
             if (this.config.XP_SYSTEM_ENABLED) {
                 // Nuevo Gestor de Estado Centralizado usando el StorageManager (Strategy)
                 this.services.stateManager = new UserStateManager(this.config, this.storageManager);
+                
+                // Inyectar stateManager en RankingSystem para rankings dinámicos
+                this.services.ranking.setStateManager(this.services.stateManager);
                 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
                 
@@ -206,20 +209,24 @@ export default class MessageProcessor {
      * Carga datos asíncronos (Rankings, XP, Emotes de terceros)
      */
     async loadAsyncData() {
-        if (this.services.ranking) await this.services.ranking.loadRankings().catch(e => console.error(e));
-
+        // 1. Cargar datos XP primero (los rankings dependen de esto)
         if (this.services.xp) {
             await this.services.xp.loadData().catch(e => console.error(e));
-            
-            // Si el ranking está cargado, actualizar estadísticas de ranking en XP service
-            if (this.services.ranking && this.services.ranking.isLoaded) {
-                 this.services.xp.updateRankingStats(this.services.ranking.userRankings, true);
-            }
 
-            if (this.services.gist?.isConfigured) {
-                this.services.gist.testConnection().then(conn => {
-                    Logger.info('XP', conn ? '✅ Gist connected' : '⚠️ Local mode only');
+            if (this.services.firestore?.isConfigured) {
+                this.services.firestore.testConnection().then(conn => {
+                    Logger.info('XP', conn ? '✅ Firestore connected' : '⚠️ Local mode only');
                 });
+            }
+        }
+
+        // 2. Calcular rankings dinámicos desde los datos cargados
+        if (this.services.ranking) {
+            await this.services.ranking.loadRankings().catch(e => console.error(e));
+            
+            // Actualizar estadísticas de ranking en XP service
+            if (this.services.xp && this.services.ranking.isLoaded) {
+                 this.services.xp.updateRankingStats(this.services.ranking.userRankings, true);
             }
         }
 

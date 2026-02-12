@@ -2,10 +2,12 @@
  * RankingSystem - Sistema de Gestión de Rankings y Roles
  * 
  * Responsabilidades:
- * - Cargar rankings desde fuente externa
+ * - Calcular rankings dinámicos desde Firestore (por nivel/XP)
  * - Determinar roles de usuarios (Admin, Top, VIP, etc.)
  * - Asignar títulos Cyberpunk según ranking
  * - Gestionar iconos de rango
+ * 
+ * Migrado de Gist estático → Firestore dinámico (v1.1.4)
  * 
  * @class RankingSystem
  */
@@ -19,44 +21,60 @@ export default class RankingSystem {
         this.userRankings = new Map();
         this.adminUser = 'liiukiin';
         this.isLoaded = false;
+        this.stateManager = null;
     }
 
     /**
-     * Carga los rankings desde una URL externa
-     * Formato esperado: "RANK\tUSERNAME" por línea
+     * Inyecta la referencia al UserStateManager
+     * @param {UserStateManager} stateManager
+     */
+    setStateManager(stateManager) {
+        this.stateManager = stateManager;
+    }
+
+    /**
+     * Calcula los rankings dinámicamente desde los datos de Firestore.
+     * Ordena usuarios por nivel (desc), usando XP total como desempate.
      * 
      * @returns {Promise<void>}
      */
     async loadRankings() {
         try {
-            const response = await fetch(this.config.TOP_DATA_URL);
-
-            if (!response.ok) {
-                console.warn(`⚠️ No se pudo cargar rankings desde ${this.config.TOP_DATA_URL}`);
+            if (!this.stateManager) {
+                console.warn('⚠️ RankingSystem: No stateManager inyectado, rankings no disponibles');
                 return;
             }
 
-            const text = await response.text();
-            const lines = text.trim().split('\n');
+            const allUsers = this.stateManager.getAllUsers();
+            if (!allUsers || allUsers.size === 0) {
+                console.warn('⚠️ RankingSystem: No hay datos de usuarios cargados aún');
+                return;
+            }
 
-            // Parsear cada línea
-            lines.forEach(line => {
-                const parts = line.trim().split('\t');
-                if (parts.length >= 2) {
-                    const rank = parseInt(parts[0]);
-                    const username = parts[1].toLowerCase();
+            // Convertir a array y ordenar por nivel (desc), luego XP (desc) como desempate
+            const sorted = Array.from(allUsers.entries())
+                .filter(([username, data]) => {
+                    // Filtrar bots y usuarios sin nivel
+                    const blacklist = this.config.BLACKLISTED_USERS || [];
+                    return data.level > 0 && !blacklist.includes(username.toLowerCase());
+                })
+                .sort((a, b) => {
+                    const levelDiff = (b[1].level || 0) - (a[1].level || 0);
+                    if (levelDiff !== 0) return levelDiff;
+                    return (b[1].xp || 0) - (a[1].xp || 0);
+                });
 
-                    if (!isNaN(rank) && username) {
-                        this.userRankings.set(username, rank);
-                    }
-                }
+            // Construir mapa de rankings
+            this.userRankings.clear();
+            sorted.forEach(([username, _data], index) => {
+                this.userRankings.set(username.toLowerCase(), index + 1);
             });
 
             this.isLoaded = true;
-            console.log(`✅ Rankings cargados: ${this.userRankings.size} usuarios`);
+            console.log(`✅ Rankings calculados desde Firestore: ${this.userRankings.size} usuarios`);
 
         } catch (error) {
-            console.error('❌ Error al cargar rankings:', error);
+            console.error('❌ Error al calcular rankings:', error);
         }
     }
 

@@ -16,7 +16,7 @@ export default class DevTools {
         this.emoteService = null;
         this.achievementService = null;
         this.idleManager = null;
-        this.gistService = null;
+        this.firestoreService = null;
         this.notificationManager = null;
     }
 
@@ -30,7 +30,7 @@ export default class DevTools {
             this.xpService = this.app.processor.getService('xp');
             this.emoteService = this.app.processor.getService('thirdPartyEmotes');
             this.achievementService = this.app.processor.getService('achievements');
-            this.gistService = this.app.processor.getService('gist');
+            this.firestoreService = this.app.processor.getService('firestore');
             
             this.idleManager = this.app.processor.getManager('idleDisplay');
             this.notificationManager = this.app.processor.notificationManager;
@@ -68,8 +68,8 @@ export default class DevTools {
                 forceMode: () => this.idleManager?._enterIdleMode()
             },
 
-            gist: {
-                testConnection: () => this._testGistConnection()
+            firestore: {
+                testConnection: () => this._testFirestoreConnection()
             }
         };
 
@@ -193,11 +193,11 @@ export default class DevTools {
         this.achievementService.emitAchievementUnlocked('TestUser', random);
     }
 
-    async _testGistConnection() {
-        if (!this.gistService) return;
-        console.log('📡 Verificando conexión Gist...');
-        const success = await this.gistService.testConnection();
-        alert(success ? '✅ Gist Conectado' : '❌ Error de Conexión Gist');
+    async _testFirestoreConnection() {
+        if (!this.firestoreService) return;
+        console.log('📡 Verificando conexión Firestore...');
+        const success = await this.firestoreService.testConnection();
+        alert(success ? '✅ Firestore Conectado' : '❌ Error de Conexión Firestore');
     }
 
     _setupLegacyAliases() {
@@ -216,7 +216,7 @@ export default class DevTools {
         window.testEmoteMessage = d.emotes.testMessage;
         window.testAchievement = d.achievements.test;
         window.testIdleMode = d.idle.forceMode;
-        window.testGistConnection = d.gist.testConnection;
+        window.testFirestoreConnection = d.firestore.testConnection;
         window.APP_INSTANCE = this.app;
     }
 

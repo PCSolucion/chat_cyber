@@ -1,5 +1,5 @@
 /**
- * API Module - Handles communication with GitHub Gist
+ * API Module - Handles communication with Firebase Firestore
  * Provides data access for the achievements viewer
  */
 const API = (function () {
@@ -8,16 +8,60 @@ const API = (function () {
     let cacheTimestamp = null;
     let isLoading = false;
 
+    // Firebase instances (initialized lazily)
+    let db = null;
+
     /**
-     * Get authorization headers for GitHub API
+     * Initialize Firebase & Firestore (called once)
      */
-    function getHeaders() {
-        return {
-            // 'Authorization': `Bearer ${VIEWER_CONFIG.GIST_TOKEN}`, // Token removed to avoid 401 errors on public gist
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json',
-            'X-GitHub-Api-Version': '2022-11-28'
-        };
+    function initFirestore() {
+        if (db) return db;
+
+        if (!window._firebaseApp) {
+            window._firebaseApp = firebase.initializeApp(VIEWER_CONFIG.FIREBASE);
+        }
+        db = firebase.firestore();
+        return db;
+    }
+
+    /**
+     * Load a document from Firestore, handling serialized data
+     */
+    async function loadDoc(docId) {
+        const firestore = initFirestore();
+        const snap = await firestore
+            .collection(VIEWER_CONFIG.FIRESTORE_COLLECTION)
+            .doc(docId)
+            .get();
+
+        if (!snap.exists) return null;
+
+        const raw = snap.data();
+
+        // If data was serialized (large objects), deserialize
+        if (raw._serialized) {
+            try {
+                const parsed = JSON.parse(raw._serialized);
+                
+                // For xp_data: _serialized contains only the users map
+                // (FirestoreService.saveFile serializes data.users)
+                // We need to reconstruct: { users: {...}, lastUpdated, version }
+                if (docId === VIEWER_CONFIG.XP_DOC) {
+                    return {
+                        users: parsed,
+                        lastUpdated: raw.lastUpdated,
+                        version: raw.version
+                    };
+                }
+                
+                return parsed;
+            } catch (e) {
+                console.error(`Error deserializing "${docId}":`, e);
+                return raw;
+            }
+        }
+
+        return raw;
     }
 
     /**
@@ -30,7 +74,7 @@ const API = (function () {
     }
 
     /**
-     * Fetch XP data from Gist
+     * Fetch XP data from Firestore
      * @param {boolean} forceRefresh - Skip cache
      * @returns {Promise<Object>}
      */
@@ -50,22 +94,18 @@ const API = (function () {
         isLoading = true;
 
         try {
-            // Construct Raw URL Base
-            const baseUrl = `https://gist.githubusercontent.com/${VIEWER_CONFIG.GIST_USERNAME}/${VIEWER_CONFIG.GIST_ID}/raw`;
-            const timestamp = Date.now(); // Cache buster
-
-            // Fetch XP and history, but achievements.json is optional (handled locally)
-            const [xpResponse, achResponse, historyResponse] = await Promise.all([
-                fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_FILENAME}?t=${timestamp}`),
-                fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_ACHIEVEMENTS_FILENAME}?t=${timestamp}`).catch(e => ({ ok: false })),
-                fetch(`${baseUrl}/${VIEWER_CONFIG.GIST_HISTORY_FILENAME}?t=${timestamp}`)
+            // Fetch all 3 documents in parallel
+            const [xpData, achData, historyData] = await Promise.all([
+                loadDoc(VIEWER_CONFIG.XP_DOC),
+                loadDoc(VIEWER_CONFIG.ACHIEVEMENTS_DOC).catch(() => null),
+                loadDoc(VIEWER_CONFIG.HISTORY_DOC).catch(() => null)
             ]);
 
-            if (!xpResponse.ok) {
-                throw new Error(`GitHub Raw Error: ${xpResponse.status}`);
+            if (!xpData) {
+                throw new Error('xp_data document not found in Firestore');
             }
 
-            cachedData = await xpResponse.json();
+            cachedData = xpData;
 
             // Handle XP Data Filtering
             if (cachedData.users) {
@@ -98,25 +138,15 @@ const API = (function () {
             if (VIEWER_CONFIG.DEBUG) console.log('✅ XP Data loaded & Filtered', cachedData);
 
             // Handle Achievements Data
-            if (achResponse.ok) {
-                try {
-                    const achData = await achResponse.json();
-                    window.DYNAMIC_ACHIEVEMENTS = achData;
-                    console.log('🏆 Achievements Definitions loaded from Gist');
-                } catch (e) {
-                    console.error('Failed to parse achievements.json', e);
-                }
+            if (achData) {
+                window.DYNAMIC_ACHIEVEMENTS = achData;
+                console.log('🏆 Achievements Definitions loaded from Firestore');
             }
 
             // Handle Stream History
-            if (historyResponse.ok) {
-                try {
-                    const historyData = await historyResponse.json();
-                    window.STREAM_HISTORY = historyData;
-                    console.log('📅 Stream History loaded from Gist');
-                } catch (e) {
-                    console.error('Failed to parse stream_history.json', e);
-                }
+            if (historyData) {
+                window.STREAM_HISTORY = historyData;
+                console.log('📅 Stream History loaded from Firestore');
             }
 
             return cachedData;
@@ -134,12 +164,8 @@ const API = (function () {
         }
     }
 
-    // Historical data is now fully managed via Gist
+    // Historical data is now fully managed via Firestore
 
-    /**
-     * Get all users sorted by achievements count
-     * @returns {Promise<Array>}
-     */
     /**
      * Calculate XP earned in the last N days
      * @param {Object} history - Activity history object
@@ -191,7 +217,7 @@ const API = (function () {
             // Get best streak
             const bestStreak = userData.bestStreak || userData.streakDays || 0;
 
-            // Watch Time (Source of Truth: Gist)
+            // Watch Time (Source of Truth: Firestore)
             const watchTimeMinutes = userData.watchTimeMinutes || 0;
 
             return {
@@ -251,8 +277,6 @@ const API = (function () {
 
         if (!entry) return null;
 
-
-
         const [name, userData] = entry;
 
         // Normalize achievements: handle both old format (string ID) and new format (object)
@@ -268,7 +292,7 @@ const API = (function () {
         const activities = Object.keys(userData.activityHistory || {});
         const latestActivity = activities.length > 0 ? activities.sort().pop() : null;
 
-        // Watch Time (Source of Truth: Gist)
+        // Watch Time (Source of Truth: Firestore)
         const watchTimeMinutes = userData.watchTimeMinutes || 0;
 
         return {
@@ -319,7 +343,7 @@ const API = (function () {
      */
     function getAchievementsData() {
         // ALWAYS prioritize local ACHIEVEMENTS_DATA to allow local edits (images, etc) 
-        // to take effect immediately without needing to update the Gist.
+        // to take effect immediately without needing to update Firestore.
         if (typeof ACHIEVEMENTS_DATA !== 'undefined') {
             return ACHIEVEMENTS_DATA;
         }
@@ -448,10 +472,6 @@ const API = (function () {
             const details = allAchievements[id];
             if (!details) return;
 
-            // Determine if this achievement is "rarer"
-            // 1. Fewer unlocks is better (Standard rarity definition)
-            // 2. If tie in unlocks, Higher Rarity Tier is better (User preference: Legendary > Common)
-            
             let isRarer = false;
 
             if (rarest === null) {

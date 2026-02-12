@@ -4,7 +4,7 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 /**
  * StreamHistoryService
- * Automatiza el registro del historial de streams en GitHub Gist.
+ * Automatiza el registro del historial de streams en Firestore.
  * REFACTORED: Ahora es reactivo y depende de StreamMonitorService.
  */
 export default class StreamHistoryService {

@@ -11,9 +11,16 @@ const CONFIG = {
     BROADCASTER_USERNAME: 'tu_usuario',
     
     // 2. SISTEMA DE EXPERIENCIA Y PERSISTENCIA (OBLIGATORIO)
-    // Crea un Gist privado y obtén un Token en https://github.com/settings/tokens
-    XP_GIST_ID: 'TU_GIST_ID_AQUI',
-    XP_GIST_TOKEN: 'TU_TOKEN_AQUI', 
+    // Crea un proyecto en https://console.firebase.google.com/
+    // Habilita Firestore y copia aquí tu configuración web:
+    FIREBASE: {
+        apiKey: 'TU_API_KEY',
+        authDomain: 'TU_PROYECTO.firebaseapp.com',
+        projectId: 'TU_PROJECT_ID',
+        storageBucket: 'TU_PROYECTO.firebasestorage.app',
+        messagingSenderId: 'TU_SENDER_ID',
+        appId: 'TU_APP_ID'
+    },
 
     // 3. PERSONALIZACIÓN VISUAL (OPCIONAL)
     UI: {

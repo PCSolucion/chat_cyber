@@ -32,7 +32,7 @@ const UIUtils = {
 
     /**
      * Sanitiza recursivamente todas las strings de un objeto
-     * Útil para limpiar datos de Gist o APIs antes de usarlos en UI
+     * Útil para limpiar datos de APIs antes de usarlos en UI
      * 
      * @param {Object} obj - Objeto a sanitizar
      * @returns {Object} Clon del objeto con strings escapadas

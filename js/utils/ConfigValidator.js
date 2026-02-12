@@ -18,8 +18,7 @@ export default class ConfigValidator {
         return {
             // Campos Críticos (Si faltan, la app falla)
             TWITCH_CHANNEL: { required: true, type: 'string', description: 'Canal de Twitch' },
-            XP_GIST_ID: { required: true, type: 'string', description: 'ID del Gist de GitHub' },
-            XP_GIST_TOKEN: { required: true, type: 'string', description: 'Token de acceso de GitHub' },
+            FIREBASE: { required: true, type: 'object', description: 'Configuración de Firebase' },
             
             // La mayoría de los otros campos ahora se toman de DEFAULTS si no están presentes
             BROADCASTER_USERNAME: { required: false, type: 'string' },
@@ -52,7 +51,11 @@ export default class ConfigValidator {
             const value = userConfig[key];
 
             if (rules.required) {
-                if (!value || value === '' || value.includes('_AQUI') || value.includes('tu_')) {
+                if (rules.type === 'object') {
+                    if (!value || typeof value !== 'object' || !Object.keys(value).length) {
+                        errors.push(`Falta campo CRÍTICO: ${key} (${rules.description || ''})`);
+                    }
+                } else if (!value || value === '' || String(value).includes('_AQUI') || String(value).includes('tu_')) {
                     errors.push(`Falta campo CRÍTICO: ${key} (${rules.description || ''})`);
                 }
             }
@@ -135,7 +138,7 @@ export default class ConfigValidator {
                     ${errors.map(e => `<p style="margin: 10px 0;">> ${e}</p>`).join('')}
                 </div>
                 <p style="margin-top: 30px; color: #fff;">Por favor, actualiza tu archivo <b>js/config.js</b> con los datos correctos.</p>
-                <p style="color: #666; font-size: 12px; margin-top: 10px;">Asegúrate de configurar tu Canal de Twitch y el Token de GitHub Gist.</p>
+                <p style="color: #666; font-size: 12px; margin-top: 10px;">Asegúrate de configurar tu Canal de Twitch y el objeto FIREBASE en config.js.</p>
             `;
             
             document.body.appendChild(errorDiv);

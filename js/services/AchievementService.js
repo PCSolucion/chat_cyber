@@ -210,14 +210,14 @@ export default class AchievementService {
 
     /**
      * Obtiene o crea las estadísticas de un usuario
-     * Sincroniza con userData.achievementStats del Gist
+     * Sincroniza con userData.achievementStats de Firestore
      * @param {string} username 
      * @returns {Object}
      */
     getUserStats(username) {
         const lowerUser = username.toLowerCase();
 
-        // Si no está en cache, cargar desde userData (Gist)
+        // Si no está en cache, cargar desde userData (Firestore)
         if (!this.userStats.has(lowerUser)) {
             const userData = this.stateManager.getUser(lowerUser);
             const savedStats = userData.achievementStats || {};
@@ -392,7 +392,7 @@ export default class AchievementService {
 
         this.userStats.set(lowerUser, stats);
 
-        // Sincronizar con userData para guardar en Gist
+        // Sincronizar con userData para guardar en Firestore
         const userData = this.stateManager.getUser(lowerUser);
         userData.achievementStats = stats;
         this.stateManager.markDirty(lowerUser);
@@ -605,7 +605,7 @@ export default class AchievementService {
     }
 
     /**
-     * Obtiene estadísticas para guardar en Gist
+     * Obtiene estadísticas para guardar en Firestore
      * @param {string} username 
      * @returns {Object}
      */
