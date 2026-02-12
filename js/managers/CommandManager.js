@@ -106,6 +106,7 @@ export default class CommandManager {
             command,
             commandName,
             username,
+            userId: tags?.['user-id'], // El ID numérico de Twitch
             args,
             tags,
             message,
@@ -122,9 +123,12 @@ export default class CommandManager {
             } else {
                 // Ejecución final del comando
                 try {
+                    console.log(`[CommandManager] 🛠️ Executing command: !${commandName} for ${context.username}`);
                     await command.execute(context);
                 } catch (error) {
                     console.error(`❌ Error executing command !${commandName}:`, error);
+                    // Emitir error visual para el usuario
+                    EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, `⚠️ ERROR: !${commandName} could not be executed.`);
                 }
             }
         };

@@ -82,7 +82,8 @@ export default class UIManager {
         
         EventManager.on(EVENTS.UI.SYSTEM_MESSAGE, (data) => {
             const text = typeof data === 'string' ? data : data.text;
-            this.displayMessage('SYSTEM', text, {}, { isSubscriber: false });
+            // Corregido: 'SYSTEM' como ID, 'SYSTEM' como nombre, y el texto como CUERPO del mensaje
+            this.displayMessage('SYSTEM', 'SYSTEM', text, {}, { isSubscriber: false });
         });
 
         // Escuchar cuando un mensaje termina para procesar el siguiente en la cola
@@ -105,6 +106,10 @@ export default class UIManager {
      * Punto de entrada principal para mostrar mensajes (Añade a cola)
      */
     displayMessage(userId, username, message, emotes, subscriberInfo = {}, xpResult = null) {
+        if (this.config.DEBUG) {
+            console.log(`[UIManager] 📩 Incoming display: ${username} (ID: ${userId}) -> "${message}"`);
+        }
+
         if (this.isIdle) {
             // Si estamos en idle, despertar al manager (esto disparará activity y eventualmente saldrá de idle)
             EventManager.emit(EVENTS.USER.ACTIVITY, { userId, username });

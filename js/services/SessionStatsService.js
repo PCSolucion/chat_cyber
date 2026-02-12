@@ -214,7 +214,7 @@ export default class SessionStatsService {
         if (!chatters || !Array.isArray(chatters)) return;
 
         chatters.forEach(username => {
-            this.trackSessionWatchTime(username, minutes);
+            this.trackSessionWatchTime(null, username, minutes);
         });
     }
 

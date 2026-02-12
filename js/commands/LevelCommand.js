@@ -7,22 +7,29 @@ export default class LevelCommand extends BaseCommand {
         super('nivel', ['level', 'xp', 'rank']);
     }
 
-    execute({ username, services }) {
+    execute({ userId, username, services }) {
         if (!services.xp) return;
 
-        const xpInfo = services.xp.getUserXPInfo(username);
-        if (!xpInfo) return;
+        try {
+            const xpInfo = services.xp.getUserXPInfo(userId, username);
+            if (!xpInfo) {
+                console.warn(`[LevelCommand] No XP info found for ${username}`);
+                return;
+            }
 
-        // Aquí podríamos emitir un mensaje de sistema o responder en el chat si tuviéramos un bot
-        // Por ahora, usamos el sistema de notificaciones local para mostrarle su nivel al usuario (o a todos en el overlay)
-        
-        // Opción: Emitir un evento para que el UIManager muestre un "toast" o mensaje especial
-        // O simplemente loguearlo por ahora ya que el overlay es visual passivo mayormente
-        console.log(`📊 !nivel solicitado por ${username}: Nivel ${xpInfo.level} (${xpInfo.currentXP}/${xpInfo.nextLevelXP})`);
+            const level = xpInfo.level || 1;
+            const title = xpInfo.title || 'MERC';
+            const xpProgress = xpInfo.progress || { xpInCurrentLevel: 0, xpNeededForNext: 100 };
 
-        const message = `@${username} -> Nivel ${xpInfo.level} | ${xpInfo.title} | XP: ${Math.floor(xpInfo.progress.xpInCurrentLevel)}/${Math.floor(xpInfo.progress.xpNeededForNext)}`;
+            console.log(`📊 !nivel solicitado por ${username}: Nivel ${level} (${title})`);
 
-        // Emitir evento para mostrar en UI
-        EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
+            const msg = `@${username} -> Nivel ${level} | ${title} | XP: ${Math.floor(xpProgress.xpInCurrentLevel)}/${Math.floor(xpProgress.xpNeededForNext)}`;
+
+            // Emitir evento para mostrar en UI
+            EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, msg);
+        } catch (error) {
+            console.error('[LevelCommand] Error:', error);
+            throw error; // Let CommandManager handle it
+        }
     }
 }

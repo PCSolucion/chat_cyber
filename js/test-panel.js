@@ -149,7 +149,37 @@ class TestPanelController {
             this.appendLogToPanel('error', args);
         };
 
+        // Escuchar actualizaciones de cuota enviadas desde el iframe
+        targetWindow.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'QUOTA_UPDATE') {
+                this.updateQuota(event.data.reads, event.data.writes, event.data.isBlocked);
+            }
+        });
+
         targetWindow._isConsoleCaptured = true;
+    }
+
+    /**
+     * Actualiza los contadores de cuota de Firebase
+     */
+    updateQuota(reads, writes, isBlocked = false) {
+        const readsEl = document.getElementById('quota-reads');
+        const writesEl = document.getElementById('quota-writes');
+        const warningEl = document.getElementById('quota-warning');
+
+        if (readsEl) readsEl.textContent = reads;
+        if (writesEl) writesEl.textContent = writes;
+
+        if (warningEl) {
+            warningEl.style.display = isBlocked ? 'block' : 'none';
+        }
+
+        // Color de advertencia si nos acercamos al límite
+        if (reads > 1500) { if(readsEl) readsEl.style.color = '#ff003c'; }
+        else if (readsEl) readsEl.style.color = '';
+        
+        if (writes > 800) { if(writesEl) writesEl.style.color = '#ff003c'; }
+        else if (writesEl) writesEl.style.color = '';
     }
 
     appendLogToPanel(type, args) {

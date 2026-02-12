@@ -7,14 +7,14 @@ export default class StatsCommand extends BaseCommand {
         super('stats', ['me', 'session', 'misdatos']);
     }
 
-    execute({ username, services }) {
+    execute({ userId, username, services }) {
         if (!services.sessionStats) return;
 
-        // Force lowercase for lookup as per SessionStatsService
         const lowerUser = username.toLowerCase();
+        const id = userId || lowerUser;
         
-        const msgCount = services.sessionStats.stats.userMessageCounts.get(lowerUser) || 0;
-        const watchTimeMinutes = services.sessionStats.stats.sessionWatchTime.get(lowerUser) || 0;
+        const msgCount = services.sessionStats.stats.userMessageCounts.get(id) || 0;
+        const watchTimeMinutes = services.sessionStats.stats.sessionWatchTime.get(id) || 0;
         
         // Format duration
         const hours = Math.floor(watchTimeMinutes / 60);

@@ -74,7 +74,29 @@ export default class DevTools {
         // 3. Listeners
         this._setupPostMessageListener();
 
+        // 4. Polling de Cuota (Monitor en tiempo real)
+        if (this.app.processor) {
+            this.firestoreService = this.app.processor.getService('firestore');
+            if (this.firestoreService) {
+                setInterval(() => this._sendQuotaUpdate(), 2000);
+            }
+        }
+
         console.log('✅ DevTools: Objeto window.WidgetDebug listo.');
+    }
+
+    _sendQuotaUpdate() {
+        if (!this.firestoreService) return;
+        const counts = this.firestoreService.opCounts;
+        const maxReads = this.firestoreService.MAX_READS_PER_SESSION;
+        const isBlocked = counts.reads >= maxReads;
+
+        window.parent.postMessage({
+            type: 'QUOTA_UPDATE',
+            reads: counts.reads,
+            writes: counts.writes,
+            isBlocked: isBlocked
+        }, '*');
     }
 
     /** --- IMPLEMENTACIONES --- **/

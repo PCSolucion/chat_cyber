@@ -7,10 +7,10 @@ export default class StreakCommand extends BaseCommand {
         super('racha', ['streak', 'dias']);
     }
 
-    execute({ username, services }) {
+    execute({ userId, username, services }) {
         if (!services.xp) return;
 
-        const userData = services.xp.getUserData(username);
+        const userData = services.xp.getUserData(userId, username);
         const streakDays = userData.streakDays || 0;
         
         let message = '';

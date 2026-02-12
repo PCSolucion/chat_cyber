@@ -7,10 +7,10 @@ export default class AchievementsCommand extends BaseCommand {
         super('logros', ['achievements', 'tros']);
     }
 
-    execute({ username, services }) {
+    execute({ userId, username, services }) {
         if (!services.achievements) return;
 
-        const userAchievements = services.achievements.getUserAchievements(username) || [];
+        const userAchievements = services.achievements.getUserAchievements(userId, username) || [];
         const progress = {
             unlocked: userAchievements.length,
             total: services.achievements.getTotalAchievements()

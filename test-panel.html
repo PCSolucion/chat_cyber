@@ -40,6 +40,22 @@
         <h3 class="panel-title">SYSTEM_CONSOLE</h3>
 
         <div class="panel-scroll-area">
+            <!-- Quota Monitor -->
+            <div class="panel-section quota-monitor">
+                <label class="section-label">QUOTA_MONITOR // FIREBASE</label>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-label">READS</span>
+                        <span id="quota-reads" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">WRITES</span>
+                        <span id="quota-writes" class="stat-value">0</span>
+                    </div>
+                </div>
+                <div id="quota-warning" class="quota-warning" style="display: none;">🚨 LÍMITE DE SEGURIDAD ALCANZADO</div>
+            </div>
+
             <!-- Global Toggles -->
             <div class="panel-section">
                 <div class="control-group">

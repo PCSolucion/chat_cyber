@@ -121,6 +121,67 @@ body {
   gap: 8px;
 }
 
+/* Quota Monitor CSS */
+.quota-monitor {
+    background: rgba(0, 246, 255, 0.05);
+    border: 1px solid rgba(0, 246, 255, 0.15);
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.quota-monitor::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 3px; height: 100%;
+    background: var(--cyan);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid rgba(0, 246, 255, 0.1);
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--cyan);
+    opacity: 0.8;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: bold;
+    color: #ffd700; /* Gold/Yellow for value */
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.quota-warning {
+    margin-top: 10px;
+    color: #ff003c;
+    font-size: 0.7rem;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    animation: quota-blink 1s infinite;
+}
+
+@keyframes quota-blink {
+    50% { opacity: 0.2; }
+}
+
 .input-group {
     display: flex;
     flex-direction: column;
