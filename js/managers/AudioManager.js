@@ -20,7 +20,7 @@ export default class AudioManager {
         
         // Sonidos por defecto
         this.defaultSounds = {
-            notification: this.config.AUDIO_URL || 'sounds/cyberpunk-message.mp3',
+            notification: this.config.AUDIO_URL || 'sounds/radiof1.mp3',
             achievement: 'sounds/logro.mp3'
         };
 

@@ -177,24 +177,24 @@ export default class FirestoreService {
     }
 
     /**
-     * Carga un documento de la colección 'system_data'
+     * Carga un documento de la colección 'system'
      * @param {string} docId 
      */
     async getSystemData(docId) {
         if (!this.isConfigured || !docId) return null;
         try {
             this.metrics.reads++;
-            const ref = doc(this.db, 'system_data', docId);
+            const ref = doc(this.db, 'system', docId);
             const snap = await getDoc(ref);
             return snap.exists() ? snap.data() : null;
         } catch (e) {
-            Logger.error('Firestore', `Error cargando system_data/${docId}:`, e);
+            Logger.error('Firestore', `Error cargando system/${docId}:`, e);
             return null;
         }
     }
 
     /**
-     * Guarda un documento en la colección 'system_data'
+     * Guarda un documento en la colección 'system'
      * @param {string} docId 
      * @param {Object} data 
      */
@@ -202,12 +202,12 @@ export default class FirestoreService {
         if (!this.isConfigured || !docId) return false;
         try {
             this.metrics.writes++;
-            const ref = doc(this.db, 'system_data', docId);
+            const ref = doc(this.db, 'system', docId);
             const cleanData = JSON.parse(JSON.stringify(data));
             await setDoc(ref, cleanData, { merge: true });
             return true;
         } catch (e) {
-            Logger.error('Firestore', `Error guardando system_data/${docId}:`, e);
+            Logger.error('Firestore', `Error guardando system/${docId}:`, e);
             return false;
         }
     }

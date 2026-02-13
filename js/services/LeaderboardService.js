@@ -8,7 +8,7 @@ import { EVENTS } from '../utils/EventTypes.js';
  * Responsabilidades:
  * - Mantener la lista de los 100 mejores usuarios sincronizada con Firestore.
  * - Proporcionar una fuente de verdad para el RankingSystem sin cargar miles de documentos.
- * - Actualizar el documento global 'system_data/leaderboard' eficientemente.
+ * - Actualizar el documento global 'system/leaderboard' eficientemente.
  */
 export default class LeaderboardService {
     constructor(config, firestore) {
