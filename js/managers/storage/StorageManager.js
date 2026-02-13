@@ -82,13 +82,32 @@ export default class StorageManager {
      * @param {string} userId - ID del usuario
      */
     async loadUser(userId) {
+        // 1. Intentar con el proveedor activo (prioridad)
         if (this.activeProvider && typeof this.activeProvider.loadUser === 'function') {
             try {
-                return await this.activeProvider.loadUser(userId);
+                const data = await this.activeProvider.loadUser(userId);
+                if (data) return data;
             } catch (e) {
-                Logger.error('Storage', `Error cargando usuario desde proveedor activo:`, e);
+                Logger.error('Storage', `Error cargando usuario ${userId} desde proveedor activo:`, e);
             }
         }
+
+        // 2. Fallback: Intentar con el resto de proveedores
+        for (const provider of this.providers) {
+            if (provider === this.activeProvider) continue;
+            if (typeof provider.loadUser === 'function') {
+                try {
+                    const data = await provider.loadUser(userId);
+                    if (data) {
+                        Logger.info('Storage', `Usuario ${userId} recuperado de fallback: ${provider.constructor.name}`);
+                        return data;
+                    }
+                } catch (e) {
+                    Logger.error('Storage', `Error en fallback loadUser (${provider.constructor.name}):`, e);
+                }
+            }
+        }
+
         return null;
     }
 

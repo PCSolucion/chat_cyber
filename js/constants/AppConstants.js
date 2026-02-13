@@ -19,7 +19,7 @@ export const TIMING = {
     MESSAGE_DISPLAY_TIME_MS: 14000,      // Tiempo que el mensaje es visible
 
     // Watch Time Tracker (Sistema de XP por tiempo)
-    WATCH_TIME_INTERVAL_MS: 600000,     // 10 min
+    WATCH_TIME_INTERVAL_MS: 1800000,     // 30 min (Cambio solicitado de 10 a 30)
     WATCH_TIME_INITIAL_DELAY_MS: 5000,  // 5 seg (arranque diferido)
     
     // Cache de Storage
@@ -74,11 +74,11 @@ export const STATS = {
 // Configuración del Sistema de XP
 export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
-    SAVE_DEBOUNCE_MS: 1800000,          // 30 minutos: Maximiza el ahorro de cuota acumulando cambios en memoria
+    SAVE_DEBOUNCE_MS: 45000,            // 45 segundos: Más reactivo para el usuario, sigue siendo seguro para la cuota.
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
     RETURN_THRESHOLD_DAYS: 7,           // Días de ausencia para considerar "Welcome Back"
     RETURN_BONUS_XP: 30,               // XP bonus por volver tras ausencia
-    WATCH_TIME_XP: 10,                 // XP otorgada por cada intervalo de visualización
+    WATCH_TIME_XP: 30,                 // XP otorgada por cada intervalo de 30 min (1 XP/min)
     // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
     ACHIEVEMENT_REWARDS: {
         common: 50,

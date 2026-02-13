@@ -14,50 +14,7 @@ export default class StreakManager {
         this.xpConfig = xpConfig;
     }
 
-    /**
-     * Actualiza la racha de un usuario basado en su última actividad
-     * @param {Object} userData - Datos actuales del usuario
-     * @returns {Object} Resultado con racha nivelada
-     */
-    updateStreak(userData) {
-        const today = this.getCurrentDay();
-        const lastDate = userData.lastStreakDate;
 
-        let streakDays = userData.streakDays || 0;
-        let bestStreak = userData.bestStreak || 0;
-        let bonusAwarded = false;
-
-        if (lastDate === today) {
-            // Ya participó hoy, no cambiar racha
-            return { streakDays, lastStreakDate: today, bonusAwarded: false, bestStreak };
-        }
-
-        const yesterday = this.getYesterday();
-
-        if (lastDate === yesterday) {
-            // Racha continúa
-            streakDays += 1;
-
-            // Actualizar mejor racha si es nueva marca
-            if (streakDays > bestStreak) {
-                bestStreak = streakDays;
-            }
-
-            // Bonus si alcanza el umbral (ej: cada 7 días)
-            const streakBonusConfig = this.xpConfig.sources.STREAK_BONUS;
-            if (streakBonusConfig && streakBonusConfig.enabled && 
-                streakDays >= streakBonusConfig.streakDays &&
-                streakDays % streakBonusConfig.streakDays === 0) {
-                bonusAwarded = true;
-            }
-        } else {
-            // Racha rota, reiniciar a 1 (hoy es su primer día de nueva racha)
-            streakDays = 1;
-            if (streakDays > bestStreak) bestStreak = streakDays;
-        }
-
-        return { streakDays, lastStreakDate: today, bonusAwarded, bestStreak };
-    }
 
     /**
      * Calcula el multiplicador de XP basado en los días de racha
@@ -98,13 +55,75 @@ export default class StreakManager {
     }
 
     /**
-     * Formateador interno de fecha
+     * Formateador interno de fecha robusto
      * @private
      */
     _formatDate(date) {
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
+        if (!date) return null;
+        
+        let d = date;
+        
+        // Soporte para Firestore Timestamp (tiene método toDate)
+        if (typeof date.toDate === 'function') {
+            d = date.toDate();
+        } else if (typeof date === 'string') {
+            // Intentar parsear release ISO
+            d = new Date(date);
+        } else if (typeof date === 'number') {
+            d = new Date(date);
+        }
+
+        if (isNaN(d.getTime())) return null;
+
+        const year = d.getUTCFullYear();
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * Actualiza la racha de un usuario basado en su última actividad
+     * @param {Object} userData - Datos actuales del usuario
+     * @returns {Object} Resultado con racha nivelada
+     */
+    updateStreak(userData) {
+        const today = this.getCurrentDay();
+        // Parsear fecha guardada (puede venir como Timestamp, string o número)
+        const lastDate = this._formatDate(userData.lastStreakDate);
+
+        let streakDays = userData.streakDays || 0;
+        let bestStreak = userData.bestStreak || 0;
+        let bonusAwarded = false;
+
+        if (lastDate === today) {
+            // Ya participó hoy, no cambiar racha
+            return { streakDays, lastStreakDate: today, bonusAwarded: false, bestStreak };
+        }
+
+        const yesterday = this.getYesterday();
+
+        if (lastDate === yesterday) {
+            // Racha continúa
+            streakDays += 1;
+
+            // Actualizar mejor racha si es nueva marca
+            if (streakDays > bestStreak) {
+                bestStreak = streakDays;
+            }
+
+            // Bonus si alcanza el umbral
+            const streakBonusConfig = this.xpConfig.sources.STREAK_BONUS;
+            if (streakBonusConfig && streakBonusConfig.enabled && 
+                streakDays >= streakBonusConfig.streakDays &&
+                streakDays % streakBonusConfig.streakDays === 0) {
+                bonusAwarded = true;
+            }
+        } else {
+            // Racha rota, reiniciar a 1
+            streakDays = 1;
+            if (streakDays > bestStreak) bestStreak = streakDays;
+        }
+
+        return { streakDays, lastStreakDate: today, bonusAwarded, bestStreak };
     }
 }

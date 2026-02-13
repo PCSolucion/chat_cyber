@@ -42,14 +42,19 @@ export default class LocalStorageProvider extends BaseStorageProvider {
         // En LocalStorage guardamos todo en una sola clave "users" dentro de xp_data
         const data = await this.load('xp_data.json');
         if (data && data.users) {
-            const id = String(userId);
-            // Intentar por ID
+            const id = String(userId).toLowerCase();
+            
+            // 1. Intentar por clave exacta (ID numérico o nombre exacto)
             if (data.users[id]) return data.users[id];
             
-            // Intentar búsqueda por displayName si es un username
+            // 2. Intentar buscar en las CLAVES (por si es un nombre de usuario antiguo)
+            const keyFound = Object.keys(data.users).find(k => k.toLowerCase() === id);
+            if (keyFound) return data.users[keyFound];
+            
+            // 3. Intentar búsqueda por displayName o username dentro del objeto
             const byName = Object.values(data.users).find(u => 
-                (u.displayName && u.displayName.toLowerCase() === id.toLowerCase()) ||
-                (u.username && u.username.toLowerCase() === id.toLowerCase())
+                (u.displayName && u.displayName.toLowerCase() === id) ||
+                (u.username && u.username.toLowerCase() === id)
             );
             return byName || null;
         }

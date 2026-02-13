@@ -18,7 +18,8 @@ export const EVENTS = {
         BRO_PROGRESS: 'user:broProgress',
         ACHIEVEMENT_UNLOCKED: 'user:achievementUnlocked',
         XP_GAINED: 'user:xpGained',
-        RANKING_UPDATED: 'user:rankingUpdated'
+        RANKING_UPDATED: 'user:rankingUpdated',
+        LOADED: 'user:loaded'
     },
 
     // Eventos de Stream (Twitch)

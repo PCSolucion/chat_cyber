@@ -1,3 +1,6 @@
+import EventManager from '../utils/EventEmitter.js';
+import { EVENTS } from '../utils/EventTypes.js';
+
 /**
  * RankingSystem - Sistema de Gestión de Rankings y Roles
  * 
@@ -22,6 +25,15 @@ export default class RankingSystem {
         this.adminUser = 'liiukiin';
         this.isLoaded = false;
         this.stateManager = null;
+        this.leaderboardService = null;
+
+        // Escuchar carga de usuarios para actualización reactiva
+        EventManager.on(EVENTS.USER.LOADED, () => {
+            if (this.isLoaded && !this.leaderboardService) {
+                // Solo auto-calcular si no tenemos el servicio de leaderboard global
+                this.loadRankings(); 
+            }
+        });
     }
 
     /**
@@ -33,44 +45,40 @@ export default class RankingSystem {
     }
 
     /**
+     * Inyecta la referencia al LeaderboardService
+     * @param {LeaderboardService} leaderboardService
+     */
+    setLeaderboardService(leaderboardService) {
+        this.leaderboardService = leaderboardService;
+        this.isLoaded = true; // El leaderboard service ya viene con datos o los carga él mismo
+    }
+
+    /**
      * Calcula los rankings dinámicamente desde los datos de Firestore.
-     * Ordena usuarios por nivel (desc), usando XP total como desempate.
+     * OR RE-SYNCS from LeaderboardService.
      * 
      * @returns {Promise<void>}
      */
     async loadRankings() {
         try {
-            if (!this.stateManager) {
-                console.warn('⚠️ RankingSystem: No stateManager inyectado, rankings no disponibles');
-                return;
-            }
-
-            const allUsers = this.stateManager.getAllUsers();
-            
-            // OPTIMIZACIÓN: Si ya tenemos un leaderboard cargado en el stateManager, lo usamos como base rápida
-            if (this.stateManager.leaderboard && this.stateManager.leaderboard.length > 0) {
-                console.log(`🏆 RankingSystem: Usando ${this.stateManager.leaderboard.length} usuarios del leaderboard pre-cargado`);
+            // Si tenemos LeaderboardService, el ranking viene de ahí (Top 100 Global)
+            if (this.leaderboardService) {
                 this.userRankings.clear();
-                this.stateManager.leaderboard.forEach((user, index) => {
-                    // El leaderboard ahora nos da el nombre, pero necesitamos mapear de alguna forma
-                    // Si el stateManager tiene el nameMap, podemos usarlo
-                    const userId = this.stateManager.nameMap.get(user.username.toLowerCase()) || user.username.toLowerCase();
-                    this.userRankings.set(userId, index + 1);
+                const tops = this.leaderboardService.getTopUsers();
+                tops.forEach((u, index) => {
+                    this.userRankings.set(u.username.toLowerCase(), index + 1);
                 });
                 this.isLoaded = true;
-                // Si ya cargamos el leaderboard, y no hay más usuarios en memoria, terminamos aquí
-                if (!allUsers || allUsers.size === 0) return;
-            }
-
-            if (!allUsers || allUsers.size === 0) {
-                console.warn('⚠️ RankingSystem: No hay datos de usuarios cargados aún');
                 return;
             }
 
-            // Convertir a array y ordenar por nivel (desc), luego XP (desc) como desempate
+            // Fallback: Calcular basándose en lo que hay en RAM (menos preciso)
+            if (!this.stateManager) return;
+            const allUsers = this.stateManager.getAllUsers();
+            if (!allUsers || allUsers.size === 0) return;
+
             const sorted = Array.from(allUsers.entries())
                 .filter(([id, data]) => {
-                    // Filtrar bots y usuarios sin nivel
                     const blacklist = this.config.BLACKLISTED_USERS || [];
                     const name = (data.displayName || id).toLowerCase();
                     return data.level > 0 && !blacklist.includes(name);
@@ -81,23 +89,31 @@ export default class RankingSystem {
                     return (b[1].xp || 0) - (a[1].xp || 0);
                 });
 
-            // Construir mapa de rankings
             this.userRankings.clear();
             sorted.forEach(([id, _data], index) => {
-                this.userRankings.set(id, index + 1);
+                this.userRankings.set(id.toLowerCase(), index + 1);
             });
 
             this.isLoaded = true;
-            console.log(`✅ Rankings calculados con éxito: ${this.userRankings.size} usuarios`);
-
         } catch (error) {
             console.error('❌ Error al calcular rankings:', error);
         }
     }
 
+    /**
+     * Obtiene el rango de un usuario (1-100 o null)
+     */
     getUserRank(userId, username) {
-        const id = userId || (username ? this.stateManager.nameMap.get(username.toLowerCase()) : null) || username?.toLowerCase();
-        return this.userRankings.get(String(id)) || null;
+        if (!username) return null;
+        const lowerName = username.toLowerCase();
+
+        // 1. Intentar desde LeaderboardService si existe (El más fiable)
+        if (this.leaderboardService) {
+            return this.leaderboardService.getUserRank(lowerName);
+        }
+
+        // 2. Fallback a tabla local mapeada
+        return this.userRankings.get(lowerName) || null;
     }
 
     /**
@@ -111,7 +127,7 @@ export default class RankingSystem {
      */
     getUserRole(userId, username, userData = null, levelCalculator = null) {
         const lowerUser = username ? username.toLowerCase() : '';
-        const id = userId || (username ? this.stateManager.nameMap.get(lowerUser) : null) || lowerUser;
+        const id = lowerUser; // En esta versión, ID == Nombre Minúsculo
 
         // ADMIN
         if (lowerUser === this.adminUser) {
@@ -135,7 +151,7 @@ export default class RankingSystem {
             };
         }
 
-        const rank = this.userRankings.get(String(id));
+        const rank = this.userRankings.get(id);
         
         // Estructura base
         let result = {
@@ -194,7 +210,7 @@ export default class RankingSystem {
      * @deprecated Usado internamente por getUserRole ahora
      */
     getCyberpunkRankTitle(role, rank) {
-        return this.getUserRole('unknown').rankTitle; 
+        return this.getUserRole('unknown', 'unknown').rankTitle; 
     }
 
     /**

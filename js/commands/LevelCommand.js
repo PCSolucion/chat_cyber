@@ -7,11 +7,21 @@ export default class LevelCommand extends BaseCommand {
         super('nivel', ['level', 'xp', 'rank']);
     }
 
-    execute({ userId, username, services }) {
-        if (!services.xp) return;
+    async execute({ userId, username, services }) {
+        if (!services.xp || !services.stateManager) return;
+        
+        // Usamos username como clave
+        const key = username; 
 
         try {
-            const xpInfo = services.xp.getUserXPInfo(userId, username);
+            // FORZAR CONSULTA A FIRESTORE: Asegurar datos frescos antes de responder el comando
+            // Llamada simple: el StateManager ya sabe que es un username
+            await services.stateManager.ensureUserLoaded(key);
+            
+            // Getting info delegates to ExperienceService -> StateManager
+            // We pass null as ID to force username usage
+            const xpInfo = services.xp.getUserXPInfo(null, key);
+            
             if (!xpInfo) {
                 console.warn(`[LevelCommand] No XP info found for ${username}`);
                 return;
@@ -19,6 +29,7 @@ export default class LevelCommand extends BaseCommand {
 
             const level = xpInfo.level || 1;
             const title = xpInfo.title || 'MERC';
+            // ExperienceService devuelve 'progress' con los datos calculados
             const xpProgress = xpInfo.progress || { xpInCurrentLevel: 0, xpNeededForNext: 100 };
 
             console.log(`📊 !nivel solicitado por ${username}: Nivel ${level} (${title})`);

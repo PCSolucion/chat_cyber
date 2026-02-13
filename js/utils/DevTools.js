@@ -87,8 +87,12 @@ export default class DevTools {
 
     _sendQuotaUpdate() {
         if (!this.firestoreService) return;
-        const counts = this.firestoreService.opCounts;
-        const maxReads = this.firestoreService.MAX_READS_PER_SESSION;
+        
+        // FirestoreService usa .metrics {reads, writes}, no .opCounts
+        const counts = this.firestoreService.metrics || { reads: 0, writes: 0 };
+        
+        // MAX_READS_PER_SESSION no está definido en el servicio, usamos un valor informativo.
+        const maxReads = 50000; // Límite diario de plan gratuito Firebase como referencia
         const isBlocked = counts.reads >= maxReads;
 
         window.parent.postMessage({
@@ -154,9 +158,12 @@ export default class DevTools {
 
     _setTestStreak(username, days) {
         if (!this.xpService) return;
-        const userData = this.xpService.getUserData(username);
-        userData.streakDays = days;
-        userData.lastStreakDate = new Date().toLocaleDateString('en-CA');
+        // getUserData espera (userId, username)
+        const userData = this.xpService.getUserData(null, username);
+        if (!userData) return;
+        
+        userData.streakDays = parseInt(days);
+        userData.lastStreakDate = new Date().toISOString().split('T')[0];
         this.xpService.stateManager.markDirty(username);
         console.log(`🔥 Streak set for ${username}: ${days} days`);
     }
@@ -168,7 +175,9 @@ export default class DevTools {
         }
 
         const testUser = 'ReturningRunner';
-        const userData = this.xpService.getUserData(testUser);
+        // getUserData espera (userId, username)
+        const userData = this.xpService.getUserData(null, testUser);
+        if (!userData) return;
 
         // Simular que el usuario estuvo inactivo N días
         const msAway = daysAway * 24 * 60 * 60 * 1000;

@@ -15,12 +15,18 @@ export default class UserLoaderMiddleware {
         try {
             // Intentar precargar el usuario (On-Demand)
             // ctx.userId es el ID numérico de Twitch
-            await this.stateManager.ensureUserLoaded(ctx.userId, ctx.username);
+            const loaded = await this.stateManager.ensureUserLoaded(ctx.userId, ctx.username);
+            
+            if (!loaded) {
+                Logger.warn('Pipeline', `⚠️ Saltando mensaje: No se pudo verificar la identidad de ${ctx.username}`);
+                return; // Detener ejecución de este mensaje
+            }
         } catch (error) {
-            Logger.error('Pipeline', `Error precargando usuario ${ctx.username}:`, error);
+            Logger.error('Pipeline', `❌ ABORTANDO: Error crítico cargando usuario ${ctx.username}.`, error);
+            return; // DETENER: No procesar para evitar inconsistencias (Nivel 1, etc)
         }
 
         // Continuar con el siguiente middleware (ahora el usuario está en memoria)
-        next();
+        await next();
     }
 }

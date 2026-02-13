@@ -52,7 +52,8 @@ export default class WatchTimeService {
         this.watchTimeInterval = setInterval(() => this._performTrackCycle(), this.intervalMs);
         
         // Ejecución inicial con retraso de seguridad (evita ráfagas al arrancar)
-        setTimeout(() => this._performTrackCycle(), TIMING.WATCH_TIME_INITIAL_DELAY_MS);
+        // Eliminamos ejecución inicial inmediata para evitar regalar 30m de XP al segundo 1
+        // setTimeout(() => this._performTrackCycle(), TIMING.WATCH_TIME_INITIAL_DELAY_MS);
     }
 
     /**

@@ -38,10 +38,18 @@ export default class ExperienceService {
         
         // Inicializar Gestores Especializados
         this.streakManager = new StreakManager(this.xpConfig);
-        this.levelCalculator = new LevelCalculator();
         this.xpEvaluator = new XPSourceEvaluator(this.xpConfig);
-        
+        this.levelCalculator = new LevelCalculator();
+
         this.currentDay = this.streakManager.getCurrentDay();
+        this.leaderboardService = null;
+    }
+
+    /**
+     * Inyecta el LeaderboardService para actualizaciones de ranking global
+     */
+    setLeaderboardService(service) {
+        this.leaderboardService = service;
     }
 
     /**
@@ -100,14 +108,22 @@ export default class ExperienceService {
         }
 
         // 4. Persistencia
-        this.stateManager.markDirty(userId || username);
+        // Usamos saveUserResult directamente al StateManager, pasando null como ID numérico
+        this.stateManager.saveUserResult(null, username, { 
+            xp: userData.xp, 
+            level: userData.level,
+            totalMessages: userData.totalMessages,
+            watchTimeMinutes: userData.watchTimeMinutes,
+            activityHistory: userData.activityHistory,
+            lastActivity: userData.lastActivity
+        });
 
         // 5. Notificar Eventos
         if (!suppressEvents) {
             if (xp !== 0) {
                 EventManager.emit(EVENTS.USER.XP_GAINED, {
                     userId,
-                    username: username.toLowerCase(),
+                    username: username, // Mantener caja original para UI
                     amount: xp,
                     total: userData.xp,
                     passive: passive || (xp > 0 && messages === 0),
@@ -126,6 +142,11 @@ export default class ExperienceService {
                     timestamp: Date.now()
                 });
             }
+        }
+
+        // 6. Actualizar Ranking Global (Top 100) si el servicio está disponible
+        if (this.leaderboardService && !passive) {
+            this.leaderboardService.updateUserEntry(userData);
         }
 
         return { userData, leveledUp, previousLevel, newLevel };
@@ -334,7 +355,7 @@ export default class ExperienceService {
         }
 
         // 4. Lógica de Racha
-        const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
+        const isBot = (this.config.BLACKLISTED_USERS || [])
             .map(u => u.toLowerCase())
             .includes(lowerUser);
 
@@ -344,11 +365,16 @@ export default class ExperienceService {
             bonusAwarded: false
         };
 
-        if (!ignoredForBonus) {
+        // Todos los usuarios reales tienen racha, aunque algunos no ganen bonus (evaluador)
+        if (!isBot) {
             streakResult = this.streakManager.updateStreak(userData);
         }
 
         // 5. Evaluar XP base
+        const ignoredForBonus = (this.config.XP_IGNORED_USERS_FOR_BONUS || [])
+            .map(u => u.toLowerCase())
+            .includes(lowerUser);
+
         const evaluationState = {
             isIgnoredForBonus: ignoredForBonus,
             isFirstMessageOfDay: !this.dailyFirstMessage.has(lowerUser),
@@ -435,10 +461,12 @@ export default class ExperienceService {
      * @param {string} username 
      * @param {number} months 
      */
-    updateSubscription(username, months) {
+    async updateSubscription(username, months) {
+        // Asegurar carga antes de modificar para evitar sobrescrituras de nivel 1
+        await this.stateManager.ensureUserLoaded(null, username);
         const userData = this.getUserData(null, username);
+        
         // Si el valor es nuevo o mayor, actualizar y guardar
-        // (A veces la API devuelve 0 o null si es gift sub reciente, pero si tenemos un valor mayor guardado, lo mantenemos)
         if (months > (userData.subMonths || 0)) {
             userData.subMonths = months;
             this.stateManager.markDirty(username);
@@ -463,23 +491,21 @@ export default class ExperienceService {
      * @param {string} username 
      * @param {number} minutes 
      */
-    addWatchTime(username, minutes) {
+    async addWatchTime(username, minutes) {
+        // Asegurar carga antes de añadir XP pasiva
+        await this.stateManager.ensureUserLoaded(null, username);
+        
         const lowerUser = username.toLowerCase();
         const xpEarned = this._calculateWatchTimeXP(minutes);
 
         const result = this._applyActivity(null, username, {
             xp: xpEarned,
             watchTime: minutes,
-            passive: true
+            passive: true,
+            source: 'watchtime'
         });
 
-        if (!result) return null;
-
-        return {
-            totalTime: result.userData.watchTimeMinutes,
-            xpAdded: xpEarned,
-            userData: result.userData
-        };
+        return result;
     }
 
     /**
@@ -489,7 +515,8 @@ export default class ExperienceService {
      * @param {Object} options - Opciones adicionales (ej. { suppressEvents: boolean })
      * @returns {number} XP ganada
      */
-    addAchievementXP(username, rarity, options = {}) {
+    async addAchievementXP(username, rarity, options = {}) {
+        await this.stateManager.ensureUserLoaded(null, username);
         const lowerUser = username.toLowerCase();
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
@@ -526,11 +553,13 @@ export default class ExperienceService {
      * @returns {Object} Información de XP
      */
     getUserXPInfo(userId, username) {
+        // Soporte para llamadas con un solo argumento (userId as name)
+        const finalUsername = username || userId;
         const userData = this.getUserData(userId, username);
         const progress = this.levelCalculator.getLevelProgress(userData.xp, userData.level);
-
+    
         return {
-            username: username.toLowerCase(),
+            username: userData.displayName || finalUsername,
             xp: userData.xp,
             level: userData.level,
             title: this.levelCalculator.getLevelTitle(userData.level),
@@ -550,6 +579,7 @@ export default class ExperienceService {
      */
     getWatchTimeStats(userId, username, period = 'total') {
         const userData = this.getUserData(userId, username);
+        if (!userData) return 0;
 
         // Por ahora retornamos el total. 
         // Implementar lógica de periodos si activityHistory se parsea correctamente.
@@ -557,6 +587,19 @@ export default class ExperienceService {
     }
 
     getXPLeaderboard(limit = 10) {
+        // 1. Si tenemos LeaderboardService, usar los datos reales del ranking global
+        if (this.leaderboardService) {
+            return this.leaderboardService.getTopUsers(limit).map(u => ({
+                userId: u.username,
+                username: u.displayName || u.username,
+                xp: u.xp,
+                level: u.level,
+                messages: u.messages || 0,
+                title: this.levelCalculator.getLevelTitle(u.level)
+            }));
+        }
+
+        // 2. Fallback: Solo usuarios cargados en RAM
         const users = Array.from(this.stateManager.getAllUsers().entries())
             .map(([id, data]) => ({
                 userId: id,
@@ -721,6 +764,11 @@ export default class ExperienceService {
 
             if (result) updatedCount++;
         });
+        
+        // [FIX] Forzar guardado inmediato en Firestore para todo el grupo tras el ciclo de 30m
+        if (this.stateManager && typeof this.stateManager.saveImmediately === 'function') {
+            await this.stateManager.saveImmediately();
+        }
 
         if (this.config.DEBUG && updatedCount > 0) {
             console.log(`⏱️ Watch time updated for ${updatedCount} users (+${minutes}m, +${totalXP}xp)`);

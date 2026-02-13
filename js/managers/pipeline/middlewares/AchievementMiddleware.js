@@ -10,8 +10,8 @@ export default class AchievementMiddleware {
         this.xpService = xpService;
     }
 
-    execute(ctx, next) {
-        if (!this.achievementService) return next();
+    async execute(ctx, next) {
+        if (!this.achievementService) return await next();
 
         const achContext = {
             ...ctx.xpContext,
@@ -19,7 +19,8 @@ export default class AchievementMiddleware {
             streakMultiplier: ctx.xpResult?.streakMultiplier || 1
         };
 
-        this.achievementService.checkAchievements(ctx.userId, ctx.username, achContext);
+        // checkAchievements ya es async y tiene su propia protección de carga interna
+        await this.achievementService.checkAchievements(ctx.userId, ctx.username, achContext);
         
         // Logros específicos: Progreso de Bro
         this._handleBroProgress(ctx.userId, ctx.username, ctx.message);
@@ -33,7 +34,7 @@ export default class AchievementMiddleware {
             ctx.xpResult.totalXP = freshData.xp;
         }
 
-        next();
+        await next();
     }
 
     _handleBroProgress(userId, username, message) {

@@ -10,7 +10,8 @@ export default class AchievementsCommand extends BaseCommand {
     execute({ userId, username, services }) {
         if (!services.achievements) return;
 
-        const userAchievements = services.achievements.getUserAchievements(userId, username) || [];
+        // Pasamos null como userId para forzar uso de username
+        const userAchievements = services.achievements.getUserAchievements(null, username) || [];
         const progress = {
             unlocked: userAchievements.length,
             total: services.achievements.getTotalAchievements()

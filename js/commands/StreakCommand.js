@@ -10,7 +10,8 @@ export default class StreakCommand extends BaseCommand {
     execute({ userId, username, services }) {
         if (!services.xp) return;
 
-        const userData = services.xp.getUserData(userId, username);
+        // Pasamos null como userId para forzar uso de username
+        const userData = services.xp.getUserData(null, username);
         const streakDays = userData.streakDays || 0;
         
         let message = '';

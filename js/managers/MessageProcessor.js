@@ -9,6 +9,7 @@ import SessionStatsService from '../services/SessionStatsService.js';
 import WatchTimeService from '../services/WatchTimeService.js';
 import UserStateManager from '../services/UserStateManager.js';
 import SpamFilterService from '../services/SpamFilterService.js';
+import LeaderboardService from '../services/LeaderboardService.js';
 
 // Middlewares
 import BlacklistMiddleware from './pipeline/middlewares/BlacklistMiddleware.js';
@@ -88,18 +89,19 @@ export default class MessageProcessor {
         try {
             this.services.ranking = new RankingSystem(this.config);
             
-            // Si NO estamos en modo test, configurar Firestore
+            // PROTOCOLO "CLOUD ONLY": Solo Firestore
+            // Eliminamos LocalStorage para evitar datos corruptos entre pestañas.
             if (!this.config.TEST_MODE) {
                 this.services.firestore = new FirestoreService(this.config);
-                this.services.firestore.configure(this.config.FIREBASE);
+                // CRÍTICO: Esperar a que Firestore esté configurado antes de seguir
+                await this.services.firestore.configure(this.config.FIREBASE);
                 
                 this.storageManager.addProvider(new FirestoreStorageProvider(this.services.firestore));
+                Logger.info('App', '☁️ Persistence: CLOUD ONLY MODE (Firestore)');
             } else {
-                Logger.warn('App', '🚫 FIRESTORE DISABLED (TEST MODE)');
+                Logger.warn('App', '🧪 MODO TEST: Usando LocalStorage (Firestore desactivado)');
+                this.storageManager.addProvider(new LocalStorageProvider());
             }
-
-            // LocalStorage siempre activo
-            this.storageManager.addProvider(new LocalStorageProvider());
 
             await this.storageManager.init();
 
@@ -107,15 +109,25 @@ export default class MessageProcessor {
             if (this.config.XP_SYSTEM_ENABLED) {
                 // Nuevo Gestor de Estado Centralizado usando el StorageManager (Strategy)
                 this.services.stateManager = new UserStateManager(this.config, this.storageManager);
+                await this.services.stateManager.init(); // [FIX] Inicializar para configurar Firestore interno
                 
-                // Inyectar stateManager en RankingSystem para rankings dinámicos
+                // Nuevo Servicio de Leaderboard Global (Top 100)
+                this.services.leaderboard = new LeaderboardService(this.config, this.services.firestore);
+                await this.services.leaderboard.init();
+
+                // Inyectar servicios en RankingSystem
                 this.services.ranking.setStateManager(this.services.stateManager);
+                this.services.ranking.setLeaderboardService(this.services.leaderboard);
                 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
                 await this.services.streamHistory.init().catch(e => console.error(e));
                 
                 // Inyectar stateManager en los servicios que lo necesitan
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager);
+                
+                // Vincular XP con Leaderboard para actualizaciones automáticas
+                this.services.xp.setLeaderboardService(this.services.leaderboard);
+
                 this.services.achievements = new AchievementService(this.config, this.services.xp, this.services.stateManager);
             }
 
@@ -161,27 +173,35 @@ export default class MessageProcessor {
      * @private
      */
     _setupPipeline() {
+        // Instanciar middlewares
+        const blacklist = new BlacklistMiddleware(this.config);
+        const languageFilter = new LanguageFilterMiddleware(this.config);
+        const spamFilter = new SpamFilterMiddleware(this.services.spamFilter);
+        const emoteParser = new EmoteParserMiddleware(this.services.thirdPartyEmotes);
+        const userLoader = new UserLoaderMiddleware(this.services.stateManager);
+        const commandFilter = new CommandFilterMiddleware();
+        const xpProcessor = new XPProcessorMiddleware(
+            this.services.xp, 
+            this.managers.xpDisplay,
+            () => this.isStreamOnline,
+            () => this._checkIsStreamStart()
+        );
+        const achievementChecker = new AchievementMiddleware(this.services.achievements, this.services.xp);
+        const uiRenderer = new UIRendererMiddleware(this.managers.ui, this.services.xp);
+        const statsTracker = new StatsTrackerMiddleware(this.services.sessionStats);
+
+        // Configurar la Tubería
         this.pipeline
-            .use('Blacklist', new BlacklistMiddleware(this.config).execute.bind(new BlacklistMiddleware(this.config)))
-            .use('LanguageFilter', new LanguageFilterMiddleware(this.config).execute.bind(new LanguageFilterMiddleware(this.config)))
-            .use('SpamFilter', new SpamFilterMiddleware(this.services.spamFilter).execute.bind(new SpamFilterMiddleware(this.services.spamFilter)))
-            .use('EmoteParser', new EmoteParserMiddleware(this.services.thirdPartyEmotes).execute.bind(new EmoteParserMiddleware(this.services.thirdPartyEmotes)))
-            .use('UserLoader', new UserLoaderMiddleware(this.services.stateManager).execute.bind(new UserLoaderMiddleware(this.services.stateManager)))
-            .use('CommandFilter', new CommandFilterMiddleware().execute.bind(new CommandFilterMiddleware()))
-            .use('XPProcessor', new XPProcessorMiddleware(
-                this.services.xp, 
-                this.managers.xpDisplay,
-                () => this.isStreamOnline,
-                () => this._checkIsStreamStart()
-            ).execute.bind(new XPProcessorMiddleware(
-                this.services.xp, 
-                this.managers.xpDisplay,
-                () => this.isStreamOnline,
-                () => this._checkIsStreamStart()
-            )))
-            .use('AchievementChecker', new AchievementMiddleware(this.services.achievements, this.services.xp).execute.bind(new AchievementMiddleware(this.services.achievements, this.services.xp)))
-            .use('UIRenderer', new UIRendererMiddleware(this.managers.ui, this.services.xp).execute.bind(new UIRendererMiddleware(this.managers.ui, this.services.xp)))
-            .use('StatsTracker', new StatsTrackerMiddleware(this.services.sessionStats).execute.bind(new StatsTrackerMiddleware(this.services.sessionStats)));
+            .use('Blacklist', blacklist.execute.bind(blacklist))
+            .use('LanguageFilter', languageFilter.execute.bind(languageFilter))
+            .use('SpamFilter', spamFilter.execute.bind(spamFilter))
+            .use('EmoteParser', emoteParser.execute.bind(emoteParser))
+            .use('UserLoader', userLoader.execute.bind(userLoader))
+            .use('CommandFilter', commandFilter.execute.bind(commandFilter))
+            .use('XPProcessor', xpProcessor.execute.bind(xpProcessor))
+            .use('AchievementChecker', achievementChecker.execute.bind(achievementChecker))
+            .use('UIRenderer', uiRenderer.execute.bind(uiRenderer))
+            .use('StatsTracker', statsTracker.execute.bind(statsTracker));
     }
 
     // =========================================================================
@@ -191,7 +211,7 @@ export default class MessageProcessor {
     /**
      * Punto de entrada principal para mensajes entrantes
      */
-    process(tags, message) {
+    async process(tags, message) {
         if (!this.isInitialized) return;
 
         const context = {
@@ -209,8 +229,8 @@ export default class MessageProcessor {
             tags 
         });
 
-        // Lanzar la tubería
-        this.pipeline.run(context);
+        // Lanzar la tubería y esperar a que termine (Evitar race conditions)
+        await this.pipeline.run(context);
     }
 
 

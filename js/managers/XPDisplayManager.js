@@ -50,6 +50,7 @@ export default class XPDisplayManager {
         
         // El usuario que se está mostrando actualmente en el widget
         this.currentUsername = null;
+        this.currentUserId = null;
 
         // Inicializar cuando DOM esté listo
         if (document.readyState === 'loading') {
@@ -119,10 +120,14 @@ export default class XPDisplayManager {
         // Suscribirse a ganancias de XP
         EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
             // SOLO actualizar si el usuario que ganó XP es el que está actualmente en el mensaje
-            // O si no hay nadie pero la sección de XP está activa (poco probable con el nuevo sistema de colas)
-            if (this.currentUsername && data.username === this.currentUsername) {
+            // Comparamos nombres de usuario (case-insensitive)
+            const isMatch = (this.currentUsername && data.username && 
+                           data.username.toLowerCase() === this.currentUsername.toLowerCase());
+            
+            if (isMatch) {
                 if (this.dom.xpSection && this.dom.xpSection.style.display !== 'none') {
-                    this.updateXPDisplay(data.username);
+                    // Pasamos null como userId para mantener consistencia
+                    this.updateXPDisplay(null, data.username);
                 }
             }
         });
@@ -130,19 +135,26 @@ export default class XPDisplayManager {
 
     /**
      * Actualiza toda la UI de XP para un usuario
+     * @param {string} userId - ID numérico de Twitch
      * @param {string} username - Nombre del usuario
      * @param {Object} xpResult - Resultado del tracking de XP (opcional)
      */
-    updateXPDisplay(username, xpResult = null) {
+    updateXPDisplay(userId, username, xpResult = null) {
         if (!this.experienceService) return;
         
-        // Registrar quién es el usuario activo para futuros eventos
+        console.log(`[XPDisplay] 🖼️ Updating Display: User=${username}, ResultLevel=${xpResult?.level}, ResultXP=${xpResult?.totalXP}`);
+
+        // Registrar quién es el usuario activo (Normalizamos a NULL el ID numérico)
         this.currentUsername = username;
+        this.currentUserId = null;
+
+        // Asegurar que la sección de XP sea visible
+        if (this.dom.xpSection && this.dom.xpSection.style.display === 'none') {
+            this.dom.xpSection.style.display = 'block';
+        }
 
         // Obtener info de XP - usar xpResult directamente si está disponible
-        // trackMessage devuelve: { level, levelProgress, levelTitle, ... }
-        // getUserXPInfo devuelve: { level, progress, title, ... }
-        const xpInfo = xpResult || this.experienceService.getUserXPInfo(username);
+        const xpInfo = xpResult || this.experienceService.getUserXPInfo(userId, username);
 
         // Normalizar nombres de propiedades (trackMessage usa levelProgress, getUserXPInfo usa progress)
         const progress = xpInfo.levelProgress || xpInfo.progress;
@@ -200,7 +212,6 @@ export default class XPDisplayManager {
 
             // Construir contenido del streak container
             let streakHTML = '';
-
             // Welcome Back tag (prioridad visual sobre streak)
             if (isReturning && daysAway > 0) {
                 streakHTML += `
@@ -212,9 +223,8 @@ export default class XPDisplayManager {
                 `;
             }
 
-            // Solo mostrar streak si la racha es relevante (> 1 día)
-            if (streakDays > 1) {
-                // Formatear multiplicador: mostrar decimales solo si es necesario (x1.5 vs x2)
+            // Mostrar siempre que haya al menos 1 día de racha (consistencia visual)
+            if (streakDays >= 1) {
                 const multDisplay = multiplier % 1 === 0 ? multiplier : multiplier.toFixed(1);
 
                 streakHTML += `
@@ -222,15 +232,15 @@ export default class XPDisplayManager {
                     <span class="streak-days">${streakDays}d</span>
                     <span class="streak-mult" style="font-size: 0.75em;">x${multDisplay}</span>
                 `;
-                streakContainer.title = `Racha: ${streakDays} días consecutivos (Bonus de XP: x${multDisplay})`;
             }
 
+            streakContainer.innerHTML = streakHTML;
             if (streakHTML) {
                 streakContainer.style.display = 'flex';
-                streakContainer.innerHTML = streakHTML;
+                streakContainer.classList.add('active');
             } else {
                 streakContainer.style.display = 'none';
-                streakContainer.innerHTML = '';
+                streakContainer.classList.remove('active');
             }
         }
 
@@ -465,6 +475,7 @@ export default class XPDisplayManager {
      */
     reset() {
         this.currentUsername = null;
+        this.currentUserId = null;
         if (this.dom.xpGainContainer) {
             this.dom.xpGainContainer.innerHTML = '';
         }

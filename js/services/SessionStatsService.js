@@ -138,7 +138,8 @@ export default class SessionStatsService {
      */
     trackMessage(userId, username, message, context = {}) {
         const lowerUser = username.toLowerCase();
-        const id = userId || lowerUser;
+        // FORCE USERNAME AS ID: El sistema ahora es username-centric
+        const id = lowerUser;
 
         // Verificar blacklist
         if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) {
@@ -194,7 +195,8 @@ export default class SessionStatsService {
      */
     trackSessionWatchTime(userId, username, minutes) {
         const lowerUser = username.toLowerCase();
-        const id = userId || lowerUser;
+        // FORCE USERNAME AS ID
+        const id = lowerUser;
 
         // Verificar blacklist y justinfan
         if ((this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) || lowerUser.startsWith('justinfan')) {
@@ -331,6 +333,14 @@ export default class SessionStatsService {
     }
 
     /**
+     * Obtiene el ranking global de los 10 mejores
+     */
+    getGlobalLeaderboard(limit = 10) {
+        if (!this.experienceService) return [];
+        return this.experienceService.getXPLeaderboard(limit);
+    }
+
+    /**
      * Obtiene los top N usuarios más activos
      * @private
      */
@@ -384,17 +394,23 @@ export default class SessionStatsService {
      */
     _getTopActiveStreaks(n = 2) {
         return Array.from(this.stats.currentActiveStreaks.entries())
-            .filter(([username]) => {
-                if (username.startsWith('justinfan')) return false;
-                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(username)) return false;
+            .filter(([id]) => {
+                if (String(id).startsWith('justinfan')) return false;
+                
+                // Resolver nombre para filtrar por blacklist
+                const name = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(String(name).toLowerCase())) return false;
                 return true;
             })
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)
-            .map(([username, days]) => ({
-                username: UIUtils.formatUsername(username),
-                days
-            }));
+            .map(([id, days]) => {
+                const displayName = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                return {
+                    username: UIUtils.formatUsername(displayName),
+                    days
+                };
+            });
     }
 
     /**
@@ -435,29 +451,37 @@ export default class SessionStatsService {
                 .map(([username, minutes]) => ({ username, minutes }));
         } else if (this.stateManager) {
             // Iterar sobre todos los usuarios conocidos por StateManager
-            const allUsers = this.stateManager.getAllUsers();
-            users = Array.from(allUsers.keys()).map(username => ({
-                username,
-                minutes: this.experienceService.getWatchTimeStats(username, period)
+            // Usar entries para tener el objeto de datos y evitar llamadas innecesarias a getUser
+            users = Array.from(this.stateManager.getAllUsers().entries()).map(([id, data]) => ({
+                id,
+                username: data.displayName || id,
+                minutes: this.experienceService.getWatchTimeStats(id, data.displayName, period)
             }));
         }
 
         // Sort y slice
         return users
             .filter(u => {
-                const lowerUser = u.username.toLowerCase();
+                const lowerUser = String(u.username).toLowerCase();
                 // Filtrar usuarios blacklisted y justinfan
                 if (lowerUser.startsWith('justinfan')) return false;
-                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(lowerUser)) return false;
+                
+                // El nombre de u.username puede ser un ID en el periodo de sesión
+                const resolvedName = isNaN(u.username) ? u.username : (this.stateManager?.users.get(u.username)?.displayName || u.username);
+                if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(String(resolvedName).toLowerCase())) return false;
+                
                 return u.minutes > 0;
             })
             .sort((a, b) => b.minutes - a.minutes)
             .slice(0, n)
-            .map(u => ({
-                username: UIUtils.formatUsername(u.username),
-                minutes: u.minutes,
-                formatted: UIUtils.formatDuration(u.minutes * TIMING.MINUTE_MS) // Convert back to ms for format
-            }));
+            .map(u => {
+                const finalName = isNaN(u.username) ? u.username : (this.stateManager?.users.get(u.username)?.displayName || u.username);
+                return {
+                    username: UIUtils.formatUsername(finalName),
+                    minutes: u.minutes,
+                    formatted: UIUtils.formatDuration(u.minutes * (TIMING.SECOND_MS * 60))
+                };
+            });
     }
 
     /**

@@ -120,6 +120,33 @@ class App {
      * Handler principal de mensajes
      */
     onMessageReceived(tags, message) {
+        const username = tags['display-name'] || tags.username;
+        if (!username) {
+             console.error('[App] ❌ FATAL: Mensaje recibido sin usuario:', tags);
+             return;
+        }
+
+        console.log(`[App DEBUG] 📨 PROCESANDO: '${username}' (Raw: ${tags.username})`);
+        
+        // [DEBUG] Comando de emergencia para probar Firestore directamente
+        if (message.startsWith('!debugfire')) {
+            console.log('🔥 EJECUTANDO DEBUG FIRESTORE MANUAL');
+            const targetUser = message.split(' ')[1] || username;
+            
+            if (this.processor && this.processor.services && this.processor.services.stateManager) {
+                const firestore = this.processor.services.stateManager.firestore;
+                if (firestore) {
+                    firestore.getUser(targetUser).then(u => {
+                        console.log('🔥 [RESULTADO DEBUG] Usuario:', u);
+                        console.log('LEVEL:', u ? u.level : 'NULL');
+                    }).catch(e => console.error('🔥 [ERROR DEBUG]', e));
+                } else {
+                    console.error('🔥 Firestore Service no disponible');
+                }
+            }
+            return;
+        }
+
         if (!this.processor) return;
         this.processor.process(tags, message);
     }

@@ -1,172 +1,279 @@
-import EventManager from '../utils/EventEmitter.js';
-import { EVENTS } from '../utils/EventTypes.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, limit, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import Logger from '../utils/Logger.js';
 
 /**
- * FirestoreService - Night City Edition
- * Gestiona la persistencia en Firebase Firestore con protecciones de cuota.
+ * FirestoreService - Implementación Username-Centric
+ * 
+ * Gestiona la conexión y operaciones CRUD básicas con Firestore.
+ * Utiliza el Nombre de Usuario (lowercase) como ID de documento por simplicidad.
  */
 export default class FirestoreService {
     constructor(config) {
         this.config = config;
         this.db = null;
-        this.app = null;
-        this.sdk = null;
         this.isConfigured = false;
-        this.lastError = null;
-
-        // Contador de seguridad para evitar runaway operations
-        this.opCounts = { reads: 0, writes: 0 };
-        this.MAX_READS_PER_SESSION = 2000;
-        this.MAX_WRITES_PER_SESSION = 1000;
-
-        this.collections = {
-            USERS: 'users',
-            SYSTEM: 'system',
-            HISTORY: 'stream_history'
-        };
+        
+        // Métricas básicas para debugging
+        this.metrics = { reads: 0, writes: 0 };
     }
 
     /**
-     * Inicializa Firebase dinámicamente solo si no estamos en modo test
+     * Inicializa la conexión con Firestore
      */
     async configure(firebaseConfig) {
         if (this.config.TEST_MODE) {
-            Logger.warn('Firestore', '🚫 MODO TEST: Firestore no se inicializará.');
+            console.warn('[Firestore] Test Mode: Disabled');
             return;
         }
 
-        if (this.isConfigured) return;
+        // Intenta obtener la config si no se pasa explícitamente (Auto-Fix)
+        const activeConfig = firebaseConfig || this.config.FIREBASE_CONFIG || this.config.FIREBASE;
+
+        if (!activeConfig) {
+            Logger.error('FirestoreService', '❌ Falta configuración de Firebase. Revise config.js');
+            return;
+        }
 
         try {
-            Logger.info('Firestore', '📡 Cargando SDK de Firebase...');
-            const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js');
-            const SDK = await import('https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js');
-            
-            this.sdk = SDK;
-            this.app = initializeApp(firebaseConfig);
-            
-            try {
-                this.db = SDK.initializeFirestore(this.app, {
-                    localCache: SDK.persistentLocalCache({
-                        tabManager: SDK.persistentMultipleTabManager()
-                    })
-                });
-            } catch (err) {
-                this.db = SDK.getFirestore(this.app);
+            // PATRÓN SINGLETON: Verificar si la app ya está inicializada para evitar errores de duplicado
+            let app;
+            if (getApps().length === 0) {
+                app = initializeApp(activeConfig);
+            } else {
+                app = getApp();
             }
+
+            // Usamos getFirestore estándar (sin persistencia offline forzada para mantenerlo simple y RAM-only)
+            this.db = getFirestore(app);
 
             this.isConfigured = true;
-            Logger.info('Firestore', '✅ FirestoreService ONLINE');
-        } catch (error) {
-            Logger.error('Firestore', 'Fallo al cargar Firebase:', error);
-            this.isConfigured = false;
+            Logger.info('FirestoreService', '🔥 Conectado (Modo: Username Key)');
+
+
+
+        } catch (e) {
+            Logger.error('FirestoreService', 'Error crítico inicializando:', e);
         }
     }
 
-    _checkQuota(type = 'read') {
-        if (type === 'read' && this.opCounts.reads >= this.MAX_READS_PER_SESSION) {
-            Logger.error('Firestore', '🚨 LÍMITE DE SEGURIDAD ALCANZADO: Bloqueando LECTURAS para proteger cuota.');
-            return false;
-        }
-        if (type === 'write' && this.opCounts.writes >= this.MAX_WRITES_PER_SESSION) {
-            Logger.error('Firestore', '🚨 LÍMITE DE SEGURIDAD ALCANZADO: Bloqueando ESCRITURAS para proteger cuota.');
-            return false;
-        }
-        return true;
-    }
-
-    async loadFile(fileName) {
-        if (!this.isConfigured || !this._checkQuota('read')) return null;
+    /**
+     * Obtiene un documento de usuario por Username directamente
+     * @param {string} username - Nombre de usuario (Clave única)
+     */
+    async getUser(arg1, arg2) {
+        // Soporta: (username) o (userId, username)
+        const username = arg2 || arg1;
+        const userId = arg2 ? arg1 : null;
+        
+        if (!this.isConfigured || !username) return null;
+        
+        // Limpieza agresiva del nombre de usuario para evitar problemas de espacios o caracteres invisibles
+        const key = String(username).trim().toLowerCase();
 
         try {
-            if (fileName === 'xp_data.json' || fileName === 'xp_data') {
-                Logger.info('Firestore', '🔄 Modo On-Demand: Saltando carga masiva de usuarios.');
-                return { users: {}, history: {}, version: '1.2' };
-            }
-
-            this.opCounts.reads++;
-            Logger.debug('Firestore', `[READ #${this.opCounts.reads}] Archivo: ${fileName}`);
-
-            if (fileName === 'leaderboard.json' || fileName === 'leaderboard') {
-                const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, 'leaderboard');
-                const snap = await this.sdk.getDoc(docRef);
-                return snap.exists() ? snap.data() : null;
-            }
-
-            const docId = fileName.replace(/\.json$/, '');
-            const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, docId);
-            const snap = await this.sdk.getDoc(docRef);
-            return snap.exists() ? snap.data() : null;
-        } catch (error) {
-            Logger.error('Firestore', `Error cargando ${fileName}:`, error);
-            return null;
-        }
-    }
-
-    async loadUserDoc(userId) {
-        if (!this.isConfigured || !this._checkQuota('read')) return null;
-        if (!userId) return null;
-
-        try {
-            this.opCounts.reads++;
-            Logger.debug('Firestore', `[READ #${this.opCounts.reads}] Carga de usuario: ${userId}`);
-
-            const userRef = this.sdk.doc(this.db, this.collections.USERS, String(userId));
-            const snap = await this.sdk.getDoc(userRef);
-            return snap.exists() ? snap.data() : null;
-        } catch (error) {
-            Logger.error('Firestore', `Error cargando usuario ${userId}:`, error);
-            return null;
-        }
-    }
-
-    async saveFile(fileName, data, dirtyKeys = null) {
-        if (!this.isConfigured || !this._checkQuota('write')) return false;
-
-        try {
-            this.opCounts.writes++;
-            Logger.debug('Firestore', `[WRITE #${this.opCounts.writes}] Guardado de archivo: ${fileName}`);
-
-            if (fileName === 'xp_data.json' || fileName === 'xp_data') {
-                return await this._saveUsersBatch(data.users, dirtyKeys);
-            }
-
-            const docId = fileName.replace(/\.json$/, '');
-            const docRef = this.sdk.doc(this.db, this.collections.SYSTEM, docId);
-            await this.sdk.setDoc(docRef, { ...data, lastUpdated: new Date().toISOString() });
-            return true;
-        } catch (error) {
-            Logger.error('Firestore', `Error guardando ${fileName}:`, error);
-            return false;
-        }
-    }
-
-    async _saveUsersBatch(allUsers, dirtyKeys) {
-        const keys = dirtyKeys ? Array.from(dirtyKeys) : Object.keys(allUsers);
-        if (keys.length === 0) return true;
-
-        const CHUNK_SIZE = 400;
-        for (let i = 0; i < keys.length; i += CHUNK_SIZE) {
-            const chunk = keys.slice(i, i + CHUNK_SIZE);
-            const batch = this.sdk.writeBatch(this.db);
+            this.metrics.reads++;
+            let ref = doc(this.db, 'users', key);
+            console.log(`[Firestore] 🔍 Buscando usuario en ruta: users/${key}`);
+            let snap = await getDoc(ref);
             
-            chunk.forEach(id => {
-                const userData = allUsers[id];
-                if (userData) {
-                    const userRef = this.sdk.doc(this.db, this.collections.USERS, String(id));
-                    batch.set(userRef, userData, { merge: true });
-                }
-            });
+            if (snap.exists()) {
+                if (this.config.DEBUG) Logger.debug('Firestore', `📖 Leído: ${key}`);
+                return snap.data();
+            } else {
+                console.log(`❌ [Firestore] NO ENCONTRADO en ruta principal: users/${key}`);
+            }
 
-            await batch.commit();
-            this.opCounts.writes++; // Cada batch cuenta como una operación lógica (aunque Firebase cuente documentos)
+            // Fallback 1: Intentar con Username ORIGINAL (Case Sensitive)
+            if (username !== key) {
+                console.log(`[Firestore] ⚠️ Fallback: Buscando por Case Sensitive: users/${username}`);
+                ref = doc(this.db, 'users', username);
+                snap = await getDoc(ref);
+                if (snap.exists()) {
+                     console.log(`[Firestore] ✅ ENCONTRADO por Case Sensitive: ${username}`);
+                     return snap.data();
+                } else {
+                     console.log(`❌ [Firestore] NO ENCONTRADO en fallback Case Sensitive: users/${username}`);
+                }
+            }
+            
+            // Fallback 2: Intentar por ID si existe y no encontramos por username
+            if (userId && userId !== key && userId !== username) {
+                 if (this.config.DEBUG) Logger.debug('Firestore', `⚠️ Intentando fallback legado ID: ${userId}`);
+                 ref = doc(this.db, 'users', String(userId));
+                 snap = await getDoc(ref);
+                 
+                 if (snap.exists()) {
+                     if (this.config.DEBUG) Logger.info('Firestore', `✅ Recuperado legacy ID: ${userId} -> Migrando a ${key}...`);
+                     return snap.data();
+                 } else {
+                     console.log(`❌ [Firestore] NO ENCONTRADO en fallback ID: users/${userId}`);
+                 }
+            }
+
+            console.warn(`[Firestore] FINAL: Usuario ${username} (ID: ${userId}) no encontrado en ninguna ruta. Retornando null.`);
+            return null;
+        } catch (e) {
+            Logger.error('Firestore', `Error leyendo usuario ${key}:`, e);
+            throw e;
         }
-        return true;
     }
 
+    /**
+     * Guarda o actualiza un usuario directamente
+     * @param {string} username - Nombre de usuario
+     * @param {Object} data - Datos usuario
+     * @param {boolean} merge - Fusionar o sobrescribir (Default: true)
+     */
+    async saveUser(username, data, merge = true) {
+        if (!this.isConfigured || !username) return;
+        const key = username.toLowerCase();
+
+        try {
+            this.metrics.writes++;
+            const ref = doc(this.db, 'users', key);
+            
+            // Sanitizar datos: JSON.parse/stringify elimina undefineds y funciones que rompen Firestore
+            const cleanData = JSON.parse(JSON.stringify(data));
+            
+            await setDoc(ref, cleanData, { merge });
+            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Guardado: ${key}`);
+        } catch (e) {
+            Logger.error('Firestore', `Error guardando usuario ${key}:`, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Crea una suscripción en tiempo real a un usuario.
+     * @param {string} username 
+     * @param {Function} callback 
+     * @returns {Function} Función para desuscribirse
+     */
+    watchUser(username, callback) {
+        if (!this.isConfigured || !username) return () => {};
+        const key = username.toLowerCase();
+        const ref = doc(this.db, 'users', key);
+
+        return onSnapshot(ref, (snap) => {
+            if (snap.exists()) {
+                callback(snap.data());
+            } else {
+                callback(null);
+            }
+        }, (error) => {
+            Logger.error('Firestore', `Error en suscripción de ${key}:`, error);
+        });
+    }
+    /**
+     * Verifica la conexión con Firestore (Stub para compatibilidad)
+     * @returns {Promise<boolean>}
+     */
     async testConnection() {
-        // Test rápido sin lectura real para ahorrar cuota
+        // En Web SDK v9, la conexión es lazy. 
+        // Si tenemos configuración y app inicializada, asumimos true.
+        // Una prueba real requeriría una lectura/escritura que queremos evitar si no es necesaria.
         return this.isConfigured && !!this.db;
+    }
+
+    /**
+     * Carga un documento de la colección 'system_data'
+     * @param {string} docId 
+     */
+    async getSystemData(docId) {
+        if (!this.isConfigured || !docId) return null;
+        try {
+            this.metrics.reads++;
+            const ref = doc(this.db, 'system_data', docId);
+            const snap = await getDoc(ref);
+            return snap.exists() ? snap.data() : null;
+        } catch (e) {
+            Logger.error('Firestore', `Error cargando system_data/${docId}:`, e);
+            return null;
+        }
+    }
+
+    /**
+     * Guarda un documento en la colección 'system_data'
+     * @param {string} docId 
+     * @param {Object} data 
+     */
+    async saveSystemData(docId, data) {
+        if (!this.isConfigured || !docId) return false;
+        try {
+            this.metrics.writes++;
+            const ref = doc(this.db, 'system_data', docId);
+            const cleanData = JSON.parse(JSON.stringify(data));
+            await setDoc(ref, cleanData, { merge: true });
+            return true;
+        } catch (e) {
+            Logger.error('Firestore', `Error guardando system_data/${docId}:`, e);
+            return false;
+        }
+    }
+
+    /**
+     * Carga un archivo JSON virtual desde una colección de sistema
+     * @param {string} fileName - Nombre del archivo (ej: stream_history.json)
+     * @returns {Promise<Object|null>}
+     */
+    async loadFile(fileName) {
+        if (!this.isConfigured || !fileName) return null;
+        
+        // Mapeo: stream_history.json -> system/stream_history
+        const docId = fileName.replace('.json', '');
+        const collectionName = 'system';
+        
+        try {
+            this.metrics.reads++;
+            const ref = doc(this.db, collectionName, docId);
+            const snap = await getDoc(ref);
+            
+            if (snap.exists()) {
+                if (this.config.DEBUG) Logger.debug('Firestore', `📂 Archivo cargado: ${docId}`);
+                return snap.data();
+            }
+            return null;
+        } catch (e) {
+            Logger.error('Firestore', `Error cargando archivo ${fileName}:`, e);
+            // Retornamos null para que el servicio use su valor por defecto
+            return null;
+        }
+    }
+
+    /**
+     * Guarda un archivo JSON virtual en una colección de sistema
+     * @param {string} fileName 
+     * @param {Object} data 
+     * @param {Set} dirtyKeys - (Opcional) Claves modificadas par optimización
+     */
+    async saveFile(fileName, data, dirtyKeys = null) {
+        if (!this.isConfigured || !fileName) return false;
+
+        const docId = fileName.replace('.json', '');
+        const collectionName = 'system';
+
+        try {
+            this.metrics.writes++;
+            const ref = doc(this.db, collectionName, docId);
+            
+            // Sanitizar
+            const cleanData = JSON.parse(JSON.stringify(data));
+            
+            await setDoc(ref, cleanData, { merge: true });
+            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Archivo guardado: ${docId}`);
+            return true;
+        } catch (e) {
+            Logger.error('Firestore', `Error guardando archivo ${fileName}:`, e);
+            return false;
+        }
+    }
+
+    /**
+     * Wrapper de compatibilidad para loadUserDoc
+     * @param {string} userId 
+     */
+    async loadUserDoc(userId) {
+        return this.getUser(userId);
     }
 }

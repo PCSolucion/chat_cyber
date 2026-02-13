@@ -44,8 +44,14 @@ export default class IdleDataOrchestrator {
                 },
                 {
                     type: 'leaderboard',
-                    title: 'MÁS ACTIVOS',
+                    title: 'MÁS ACTIVOS (SESIÓN)',
                     data: displayStats.topUsers || [],
+                    isValid: (s) => s.data && s.data.length > 0
+                },
+                {
+                    type: 'leaderboard', // Reusamos el tipo 'leaderboard' para el renderer
+                    title: 'LEYENDAS DE NIGHT CITY (GLOBAL)',
+                    data: this.statsService.getGlobalLeaderboard ? this.statsService.getGlobalLeaderboard(20) : [],
                     isValid: (s) => s.data && s.data.length > 0
                 },
                 {

@@ -11,7 +11,8 @@ export default class StatsCommand extends BaseCommand {
         if (!services.sessionStats) return;
 
         const lowerUser = username.toLowerCase();
-        const id = userId || lowerUser;
+        // Usamos solo el nombre de usuario como ID
+        const id = lowerUser;
         
         const msgCount = services.sessionStats.stats.userMessageCounts.get(id) || 0;
         const watchTimeMinutes = services.sessionStats.stats.sessionWatchTime.get(id) || 0;

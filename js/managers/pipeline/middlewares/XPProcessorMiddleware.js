@@ -9,8 +9,8 @@ export default class XPProcessorMiddleware {
         this.isStreamStartCheck = isStreamStartCheck;
     }
 
-    execute(ctx, next) {
-        if (!this.xpService) return next();
+    async execute(ctx, next) {
+        if (!this.xpService) return await next();
 
         const xpContext = {
             hasEmotes: ctx.emoteCount > 0,
@@ -29,6 +29,6 @@ export default class XPProcessorMiddleware {
             this.xpDisplayManager.setVisible(true);
         }
 
-        next();
+        await next();
     }
 }

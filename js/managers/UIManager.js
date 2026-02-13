@@ -221,7 +221,7 @@ export default class UIManager {
 
         // Actualizar UI de XP de forma SÍNCRONA con el mensaje
         if (this.xpDisplay) {
-            this.xpDisplay.updateXPDisplay(username, xpResult);
+            this.xpDisplay.updateXPDisplay(userId, username, xpResult);
         }
 
         // Delegar actualizaciones a los componentes
