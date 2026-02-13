@@ -84,9 +84,11 @@ export default class WatchTimeService {
                 return;
             }
 
-            // 1. Asignar XP Pasivo en ExperienceService
+            // 1. Asignar XP Pasivo en ExperienceService (MODO FINAL: Solo usuarios en RAM)
             if (this.xpService) {
-                await this.xpService.addWatchTimeBatch(chatters, this.minutesPerCycle);
+                // Pasamos la bandera 'onlyLoaded: true' para que el servicio sepa que no debe 
+                // gastar lecturas en usuarios desconocidos.
+                await this.xpService.addWatchTimeBatch(chatters, this.minutesPerCycle, true);
             }
             
             // 2. Trackear en estadísticas de sesión en SessionStatsService
@@ -94,7 +96,7 @@ export default class WatchTimeService {
                 this.sessionStatsService.trackSessionWatchTimeBatch(chatters, this.minutesPerCycle);
             }
 
-            Logger.info('WatchTime', `✅ Watch Time asignado a ${chatters.length} usuarios (+${this.minutesPerCycle}m).`);
+            Logger.info('WatchTime', `✅ Watch Time procesado para ${chatters.length} chatters (+${this.minutesPerCycle}m).`);
         } catch (error) {
             Logger.error('WatchTime', 'Error en el ciclo de Watch Time:', error);
         }

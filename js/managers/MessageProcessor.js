@@ -9,7 +9,6 @@ import SessionStatsService from '../services/SessionStatsService.js';
 import WatchTimeService from '../services/WatchTimeService.js';
 import UserStateManager from '../services/UserStateManager.js';
 import SpamFilterService from '../services/SpamFilterService.js';
-import LeaderboardService from '../services/LeaderboardService.js';
 
 // Middlewares
 import BlacklistMiddleware from './pipeline/middlewares/BlacklistMiddleware.js';
@@ -111,22 +110,14 @@ export default class MessageProcessor {
                 this.services.stateManager = new UserStateManager(this.config, this.storageManager);
                 await this.services.stateManager.init(); // [FIX] Inicializar para configurar Firestore interno
                 
-                // Nuevo Servicio de Leaderboard Global (Top 100)
-                this.services.leaderboard = new LeaderboardService(this.config, this.services.firestore);
-                await this.services.leaderboard.init();
-
                 // Inyectar servicios en RankingSystem
                 this.services.ranking.setStateManager(this.services.stateManager);
-                this.services.ranking.setLeaderboardService(this.services.leaderboard);
                 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
                 await this.services.streamHistory.init().catch(e => console.error(e));
                 
                 // Inyectar stateManager en los servicios que lo necesitan
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager);
-                
-                // Vincular XP con Leaderboard para actualizaciones automáticas
-                this.services.xp.setLeaderboardService(this.services.leaderboard);
 
                 this.services.achievements = new AchievementService(this.config, this.services.xp, this.services.stateManager);
             }

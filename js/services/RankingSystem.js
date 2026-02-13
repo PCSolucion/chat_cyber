@@ -1,16 +1,17 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import { DATA_SOURCES } from '../constants/AppConstants.js';
 
 /**
- * RankingSystem - Sistema de Gestión de Rankings y Roles
+ * RankingSystem - Sistema de Gestión de Rankings y Roles (Gist Edition)
  * 
  * Responsabilidades:
- * - Calcular rankings dinámicos desde Firestore (por nivel/XP)
+ * - Cargar rankings estáticos desde un Gist público (Retro v1.1.3)
  * - Determinar roles de usuarios (Admin, Top, VIP, etc.)
  * - Asignar títulos Cyberpunk según ranking
  * - Gestionar iconos de rango
  * 
- * Migrado de Gist estático → Firestore dinámico (v1.1.4)
+ * Migrado de Firestore dinámico → Gist estático (Rollback solicitado)
  * 
  * @class RankingSystem
  */
@@ -25,14 +26,10 @@ export default class RankingSystem {
         this.adminUser = 'liiukiin';
         this.isLoaded = false;
         this.stateManager = null;
-        this.leaderboardService = null;
 
-        // Escuchar carga de usuarios para actualización reactiva
+        // Escuchar carga de usuarios (opcional para rankings estáticos)
         EventManager.on(EVENTS.USER.LOADED, () => {
-            if (this.isLoaded && !this.leaderboardService) {
-                // Solo auto-calcular si no tenemos el servicio de leaderboard global
-                this.loadRankings(); 
-            }
+             // En modo Gist no solemos recalcular al cargar usuario
         });
     }
 
@@ -45,74 +42,44 @@ export default class RankingSystem {
     }
 
     /**
-     * Inyecta la referencia al LeaderboardService
-     * @param {LeaderboardService} leaderboardService
+     * @deprecated El sistema ahora usa Gist estático
      */
     setLeaderboardService(leaderboardService) {
-        this.leaderboardService = leaderboardService;
-        this.isLoaded = true; // El leaderboard service ya viene con datos o los carga él mismo
+        // Obsoleto
     }
 
-    /**
-     * Calcula los rankings dinámicamente desde los datos de Firestore.
-     * OR RE-SYNCS from LeaderboardService.
-     * 
-     * @returns {Promise<void>}
-     */
     async loadRankings() {
         try {
-            // Si tenemos LeaderboardService, el ranking viene de ahí (Top 100 Global)
-            if (this.leaderboardService) {
-                this.userRankings.clear();
-                const tops = this.leaderboardService.getTopUsers();
-                tops.forEach((u, index) => {
-                    this.userRankings.set(u.username.toLowerCase(), index + 1);
-                });
-                this.isLoaded = true;
-                return;
-            }
-
-            // Fallback: Calcular basándose en lo que hay en RAM (menos preciso)
-            if (!this.stateManager) return;
-            const allUsers = this.stateManager.getAllUsers();
-            if (!allUsers || allUsers.size === 0) return;
-
-            const sorted = Array.from(allUsers.entries())
-                .filter(([id, data]) => {
-                    const blacklist = this.config.BLACKLISTED_USERS || [];
-                    const name = (data.displayName || id).toLowerCase();
-                    return data.level > 0 && !blacklist.includes(name);
-                })
-                .sort((a, b) => {
-                    const levelDiff = (b[1].level || 0) - (a[1].level || 0);
-                    if (levelDiff !== 0) return levelDiff;
-                    return (b[1].xp || 0) - (a[1].xp || 0);
-                });
-
+            const url = DATA_SOURCES.TOP_RANKINGS_GIST;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Ranking Gist not reachable');
+            
+            const rawText = await response.text();
             this.userRankings.clear();
-            sorted.forEach(([id, _data], index) => {
-                this.userRankings.set(id.toLowerCase(), index + 1);
+            
+            // Parsing Tsv format from Gist: Rank\tUsername\tExp
+            const lines = rawText.split('\n');
+            lines.forEach(line => {
+                const parts = line.split('\t');
+                if (parts.length >= 2) {
+                    const rank = parseInt(parts[0]);
+                    const username = parts[1].trim().toLowerCase();
+                    if (!isNaN(rank) && username) {
+                        this.userRankings.set(username, rank);
+                    }
+                }
             });
 
             this.isLoaded = true;
+            console.log(`🏆 Global Rankings loaded from Gist: ${this.userRankings.size} users`);
         } catch (error) {
-            console.error('❌ Error al calcular rankings:', error);
+            console.error('❌ Error al cargar rankings desde Gist:', error);
         }
     }
 
-    /**
-     * Obtiene el rango de un usuario (1-100 o null)
-     */
     getUserRank(userId, username) {
         if (!username) return null;
         const lowerName = username.toLowerCase();
-
-        // 1. Intentar desde LeaderboardService si existe (El más fiable)
-        if (this.leaderboardService) {
-            return this.leaderboardService.getUserRank(lowerName);
-        }
-
-        // 2. Fallback a tabla local mapeada
         return this.userRankings.get(lowerName) || null;
     }
 

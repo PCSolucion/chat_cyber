@@ -33,64 +33,54 @@ export default class StreamHistoryService {
      */
     async init() {
         this._setupListeners();
-        
-        try {
-            const history = await this.storage.load(this.fileName) || {};
-            // Si FirestoreService nos marca que estos datos vienen del formato antiguo
-            if (history._isMigrated) {
-                console.info('🚀 StreamHistoryService: Ejecutando migración de historial...');
-                // Guardamos todo el objeto (null en dirtyKeys) para crear documentos individuales
-                await this.storage.save(this.fileName, history, null);
-                console.log('✅ Historial migrado a la nueva estructura de Firestore');
-            }
-            
-            if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
-            return true;
-        } catch (e) {
-            console.error('❌ Error inicializando StreamHistoryService:', e);
-            return false;
-        }
+        // OPTIMIZACIÓN: Eliminada lectura inicial de historial. 
+        // El widget no usa datos históricos, solo escribe la sesión actual.
+        // Esto ahorra 1 lectura de documento grande en cada recarga.
+        console.log('✅ StreamHistoryService inicializado (Modo Escritura Unica)');
+        return true;
     }
 
     _setupListeners() {
         // Reaccionar al estado del stream
-        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
-            if (isOnline) {
-                this._handleStreamStart();
-            } else {
-                this._handleStreamEnd();
-            }
-        });
+        if (typeof EventManager !== 'undefined') { // Safety check
+            EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
+                if (isOnline) {
+                    this._handleStreamStart();
+                } else {
+                    this._handleStreamEnd();
+                }
+            });
 
-        // Reaccionar a cambios de categoría
-        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
-            this.currentSession.category = category;
-            if (this.isTracking) {
-                this._autoSave();
-            }
-        });
+            // Reaccionar a cambios de categoría
+            EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
+                this.currentSession.category = category;
+                if (this.isTracking) {
+                    this._autoSave();
+                }
+            });
 
-        // Reaccionar a cambios de título
-        EventManager.on('stream:titleUpdated', (title) => {
-            this.currentSession.title = title;
-            if (this.isTracking) {
-                this._autoSave();
-            }
-        });
+            // Reaccionar a cambios de título
+            EventManager.on('stream:titleUpdated', (title) => {
+                this.currentSession.title = title;
+                if (this.isTracking) {
+                    this._autoSave();
+                }
+            });
 
-        // Trackear XP generado en la sesión
-        EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
-            if (this.isTracking) {
-                this.currentSession.xp += (data.amount || 0);
-            }
-        });
+            // Trackear XP generado en la sesión
+            EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
+                if (this.isTracking) {
+                    this.currentSession.xp += (data.amount || 0);
+                }
+            });
 
-        // Trackear mensajes enviados en la sesión
-        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
-            if (this.isTracking) {
-                this.currentSession.messages++;
-            }
-        });
+            // Trackear mensajes enviados en la sesión
+            EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
+                if (this.isTracking) {
+                    this.currentSession.messages++;
+                }
+            });
+        }
     }
 
     _handleStreamStart() {
@@ -123,14 +113,15 @@ export default class StreamHistoryService {
     }
 
     /**
-     * Guarda periódicamente si los datos han cambiado
+     * Guarda SOLO cuando hay cambios contextuales (Categoría, Título) 
+     * o cuando el stream termina.
      */
     async _autoSave() {
-        const now = Date.now();
-        if (!this.lastSaveTime || (now - this.lastSaveTime > TIMING.STREAM_SAVE_COOLDOWN_MS)) {
-            await this.saveHistory();
-            this.lastSaveTime = now;
-        }
+        // En este modo optimizado, guardamos inmediatamente cuando cambia el contexto.
+        // Ya no dependemos de un intervalo de tiempo fijo para "hacer backup".
+        // La fiabilidad del evento "STREAM END" es suficiente.
+        await this.saveHistory();
+        this.lastSaveTime = Date.now();
     }
 
     /**
@@ -178,7 +169,8 @@ export default class StreamHistoryService {
         const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
         if (sessionMinutes < 1 && !this.DEBUG && !final) return;
 
-        const history = await this.storage.load(this.fileName) || {};
+        // OPTIMIZACIÓN: No leemos el historial antiguo. Solo escribimos la sesión actual.
+        // Firestore hará merge automáticamente gracias a setDoc con merge: true (en FirestoreService).
         
         // Calcular mensajes por hora (MPH)
         const hours = Math.max(0.1, sessionMinutes / 60);
@@ -199,14 +191,18 @@ export default class StreamHistoryService {
             lastUpdate: new Date(now).toISOString()
         };
 
-        // Guardar usando el sessionId único como clave principal
-        history[this.currentSessionId] = sessionData;
+        // Guardar SOLO la sesión actual
+        // El formato { [id]: data } permite que Firestore fusione este objeto con el existente.
+        const updatePayload = {
+            [this.currentSessionId]: sessionData
+        };
 
-        const success = await this.storage.save(this.fileName, history, new Set([this.currentSessionId]));
+        // Asumimos que save maneja merge: true (FirestoreService.saveFile lo hace)
+        const success = await this.storage.save(this.fileName, updatePayload, new Set([this.currentSessionId]));
         
         if (success) {
-            if (this.DEBUG) console.log(`✅ Sesión ${this.currentSessionId} actualizada (${sessionMinutes}m)`);
-            if (typeof window !== 'undefined') window.STREAM_HISTORY = history;
+            if (this.DEBUG) console.log(`✅ Sesión ${this.currentSessionId} guardada (${sessionMinutes}m)`);
+            // window.STREAM_HISTORY ya no se actualiza localmente porque no tenemos todo el historial.
         }
     }
 

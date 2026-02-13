@@ -81,23 +81,11 @@ export default class UserStateManager {
 
                 this.users.set(key, finalData);
 
-                // ACTIVAR SUSCRIPCIÓN EN TIEMPO REAL
-                // Esto garantiza que si otra pestaña cambia el nivel, esta RAM se actualice sola.
-                if (!this.subscriptions.has(key) && !this.config.TEST_MODE) {
-                    const unsub = this.firestore.watchUser(key, (updatedCloudData) => {
-                        if (updatedCloudData) {
-                            const currentLocal = this.users.get(key);
-                            const sanitized = this._sanitize(updatedCloudData, username);
-                            
-                            // Solo actualizar si hay cambios reales para evitar re-renders infinitos
-                            if (JSON.stringify(currentLocal) !== JSON.stringify(sanitized)) {
-                                if (this.config.DEBUG) Logger.debug('UserStateManager', `🔄 Sync Cloud -> RAM: ${key}`);
-                                this.users.set(key, sanitized);
-                                EventManager.emit(EVENTS.USER.LOADED, { username: key, data: sanitized });
-                            }
-                        }
-                    });
-                    this.subscriptions.set(key, unsub);
+                // OPTIMIZACIÓN LECTURAS: Eliminamos onSnapshot.
+                // Al ser un overlay de OBS, el propio sistema es la fuente de verdad en RAM.
+                // Esto evita cobrar 1 lectura extra cada vez que el usuario sube de XP.
+                if (!this.users.has(key)) {
+                    this.users.set(key, finalData);
                 }
                 
                 EventManager.emit(EVENTS.USER.LOADED, { username: key, data: finalData });
@@ -231,18 +219,22 @@ export default class UserStateManager {
             let incrementedOnly = false;
 
             if (increments && Object.keys(increments).length > 0) {
-                this.pendingIncrements.delete(key);
+                this.pendingIncrements.delete(key); // Limpiar pendientes antes de enviar
                 await this.firestore.updateUserCounters(key, increments);
                 
-                // Si la última actividad es muy reciente y no hay cambios estructurales (nivel, logros)
-                // podríamos omitir el setDoc completo para ahorrar cuota.
-                // Por ahora, lo dejamos así para asegurar consistencia de metadatos (lastActivity).
+                // CRÍTICO: Si solo hemos incrementado contadores (XP, mensajes), NO necesitamos guardar todo el objeto.
+                // Esto ahorra una escritura completa (SetDoc) y evita sobrescribir datos si no es necesario.
+                // Solo continuamos si hay cambios estructurales (Nivel, Logros, Nombre).
                 incrementedOnly = true;
             }
             
-            // Guardar el estado completo solo si hay algo más que la XP/Mensajes (ej. Nivel up, nuevos logros)
-            // O si ha pasado mucho tiempo desde la última sincronización completa.
-            // Para mantenerlo seguro, hacemos el saveUser pero podrías filtrar aquí.
+            // Si solo fue un incremento, terminamos aquí. Ahorramos la escritura pesada.
+            if (incrementedOnly) {
+                if (this.config.DEBUG) Logger.debug('UserStateManager', `⚡ Optimizado: Solo incrementos para ${key}`);
+                return;
+            }
+            
+            // Guardar el estado completo solo si hay cambios estructurales (ej. Nivel up, nuevos logros)
             await this.firestore.saveUser(key, data);
         } catch (e) {
             Logger.error('UserStateManager', `❌ Error guardando ${key}`, e);

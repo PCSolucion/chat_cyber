@@ -5,6 +5,11 @@
  * para valores mágicos que se repiten o que requieren contexto semántico.
  */
 
+// URLs de datos estáticos externos
+export const DATA_SOURCES = {
+    TOP_RANKINGS_GIST: 'https://gist.githubusercontent.com/PCSolucion/550afe48a9954f54462ec201e49c851b/raw/'
+};
+
 // Tiempos en milisegundos relacionados con bucles y polling
 export const TIMING = {
     // Conversiones base
@@ -30,7 +35,7 @@ export const TIMING = {
 
     // Stream History
     STREAM_CHECK_INTERVAL_MS: 60000,     // 1 min
-    STREAM_SAVE_COOLDOWN_MS: 600000,     // 10 min
+    STREAM_SAVE_COOLDOWN_MS: 3600000,     // 1 hora (Optimización de cuota Firestore)
 
     // XP System
     STREAM_START_WINDOW_MS: 600000,      // 10 min (ventana para bonus de inicio)

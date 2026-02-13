@@ -42,14 +42,13 @@ export default class ExperienceService {
         this.levelCalculator = new LevelCalculator();
 
         this.currentDay = this.streakManager.getCurrentDay();
-        this.leaderboardService = null;
     }
 
     /**
-     * Inyecta el LeaderboardService para actualizaciones de ranking global
+     * @deprecated Sistema de leaderboard dinámico deshabilitado
      */
     setLeaderboardService(service) {
-        this.leaderboardService = service;
+        // Obsoleto
     }
 
     /**
@@ -151,10 +150,7 @@ export default class ExperienceService {
             }
         }
 
-        // 6. Actualizar Ranking Global (Top 100) si el servicio está disponible
-        if (this.leaderboardService && !passive) {
-            this.leaderboardService.updateUserEntry(userData);
-        }
+        // 6. Ranking Global (Gist Edition): No se actualiza dinámicamente desde aquí
 
         return { userData, leveledUp, previousLevel, newLevel };
     }
@@ -747,22 +743,42 @@ export default class ExperienceService {
     }
 
     /**
-     * Añade tiempo de visualización a los usuarios activos (Batch) - Async para soporte On-Demand
+     * Añade tiempo de visualización a los usuarios activos (Batch)
+     * 
      * @param {Array} chatters - Lista de nombres de usuario
      * @param {number} minutes - Minutos a añadir (default: 1)
+     * @param {boolean} onlyLoaded - Si true, SOLO procesa usuarios que YA están en memoria (ahorra lecturas).
      */
-    async addWatchTimeBatch(chatters, minutes = 1) {
+    async addWatchTimeBatch(chatters, minutes = 1, onlyLoaded = false) {
         if (!chatters || !Array.isArray(chatters)) return;
+
+        let targetUsers = [];
+        
+        if (onlyLoaded) {
+            // MODO OPTIMIZADO: Solo usuarios conocidos en RAM (Activos recientemente)
+            targetUsers = chatters.filter(username => {
+                const loaded = this.stateManager.users.has(username.toLowerCase());
+                if (!loaded && this.config.DEBUG) {
+                    // console.log(`Skipping WatchTime for lurker/unknown: ${username}`);
+                }
+                return loaded;
+            });
+        } else {
+            // MODO COMPLETO (Legacy): Intenta cargar a todos (Costoso en lecturas)
+            targetUsers = chatters;
+            // Pre-argar en paralelo
+            await Promise.all(targetUsers.map(username => 
+                this.stateManager.ensureUserLoaded(null, username)
+            ));
+        }
+
+        if (targetUsers.length === 0) return;
 
         let updatedCount = 0;
         const totalXP = this._calculateWatchTimeXP(minutes);
 
-        // Pre-cargar todos los usuarios necesarios en paralelo para ahorrar tiempo y lecturas redundantes
-        await Promise.all(chatters.map(username => 
-            this.stateManager.ensureUserLoaded(null, username)
-        ));
-
-        chatters.forEach(username => {
+        targetUsers.forEach(username => {
+            // Ya sabemos que están cargados o se acaban de cargar
             const result = this._applyActivity(null, username, {
                 xp: totalXP,
                 watchTime: minutes,
@@ -772,13 +788,13 @@ export default class ExperienceService {
             if (result) updatedCount++;
         });
         
-        // [FIX] Forzar guardado inmediato en Firestore para todo el grupo tras el ciclo de 30m
+        // Forzar guardado inmediato en Firestore para todo el grupo tras el ciclo
         if (this.stateManager && typeof this.stateManager.saveImmediately === 'function') {
             await this.stateManager.saveImmediately();
         }
 
         if (this.config.DEBUG && updatedCount > 0) {
-            console.log(`⏱️ Watch time updated for ${updatedCount} users (+${minutes}m, +${totalXP}xp)`);
+            console.log(`⏱️ Watch time updated for ${updatedCount}/${chatters.length} users (+${minutes}m, +${totalXP}xp)`);
         }
     }
 

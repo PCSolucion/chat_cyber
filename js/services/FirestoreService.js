@@ -81,38 +81,12 @@ export default class FirestoreService {
                 if (this.config.DEBUG) Logger.debug('Firestore', `📖 Leído: ${key}`);
                 return snap.data();
             } else {
-                console.log(`❌ [Firestore] NO ENCONTRADO en ruta principal: users/${key}`);
+                // OPTIMIZACIÓN LECTURAS: Si no existe en minúsculas, asumimos que es nuevo.
+                // Eliminados los fallbacks legacy (ID, Case Sensitive) que triplicaban el coste
+                // de lectura para usuarios nuevos (First Time Chatters).
+                if (this.config.DEBUG) console.log(`[Firestore] Usuario nuevo o no encontrado: ${key}`);
+                return null;
             }
-
-            // Fallback 1: Intentar con Username ORIGINAL (Case Sensitive)
-            if (username !== key) {
-                console.log(`[Firestore] ⚠️ Fallback: Buscando por Case Sensitive: users/${username}`);
-                ref = doc(this.db, 'users', username);
-                snap = await getDoc(ref);
-                if (snap.exists()) {
-                     console.log(`[Firestore] ✅ ENCONTRADO por Case Sensitive: ${username}`);
-                     return snap.data();
-                } else {
-                     console.log(`❌ [Firestore] NO ENCONTRADO en fallback Case Sensitive: users/${username}`);
-                }
-            }
-            
-            // Fallback 2: Intentar por ID si existe y no encontramos por username
-            if (userId && userId !== key && userId !== username) {
-                 if (this.config.DEBUG) Logger.debug('Firestore', `⚠️ Intentando fallback legado ID: ${userId}`);
-                 ref = doc(this.db, 'users', String(userId));
-                 snap = await getDoc(ref);
-                 
-                 if (snap.exists()) {
-                     if (this.config.DEBUG) Logger.info('Firestore', `✅ Recuperado legacy ID: ${userId} -> Migrando a ${key}...`);
-                     return snap.data();
-                 } else {
-                     console.log(`❌ [Firestore] NO ENCONTRADO en fallback ID: users/${userId}`);
-                 }
-            }
-
-            console.warn(`[Firestore] FINAL: Usuario ${username} (ID: ${userId}) no encontrado en ninguna ruta. Retornando null.`);
-            return null;
         } catch (e) {
             Logger.error('Firestore', `Error leyendo usuario ${key}:`, e);
             throw e;
