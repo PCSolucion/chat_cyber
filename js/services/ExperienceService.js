@@ -108,14 +108,21 @@ export default class ExperienceService {
         }
 
         // 4. Persistencia
-        // Usamos saveUserResult directamente al StateManager, pasando null como ID numérico
+        // Usamos saveUserResult directamente al StateManager
+        // Pasamos los "gains" para que el StateManager pueda usar atomic increments de Firestore
         this.stateManager.saveUserResult(null, username, { 
             xp: userData.xp, 
             level: userData.level,
             totalMessages: userData.totalMessages,
             watchTimeMinutes: userData.watchTimeMinutes,
             activityHistory: userData.activityHistory,
-            lastActivity: userData.lastActivity
+            lastActivity: userData.lastActivity,
+            
+            // Metadatos para Incrementos Atómicos
+            xpGain: xp,
+            messageGain: messages,
+            watchTimeGain: watchTime,
+            todayKey: today
         });
 
         // 5. Notificar Eventos

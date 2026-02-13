@@ -26,6 +26,9 @@ export default class UserStateManager {
 
         // Suscripciones reales a Firestore: Map<username, unsubscribeFn>
         this.subscriptions = new Map();
+
+        // Acumulador de incrementos pendientes: Map<username, {xp: 0, "stats.messages": 0, ...}>
+        this.pendingIncrements = new Map();
     }
 
     async init() {
@@ -173,8 +176,32 @@ export default class UserStateManager {
         
         // El objeto en this.users ya está actualizado por Object.assign
 
+        // Si recibimos incrementos específicos (ej. de ExperienceService), los acumulamos
+        if (newData.xpGain || newData.messageGain || newData.watchTimeGain) {
+            this._accumulateIncrements(key, newData);
+        }
+
         // Programar Cloud Save
         this._scheduleSave(key);
+    }
+
+    _accumulateIncrements(key, newData) {
+        if (!this.pendingIncrements.has(key)) {
+            this.pendingIncrements.set(key, {});
+        }
+        const acc = this.pendingIncrements.get(key);
+        
+        if (newData.xpGain) acc['xp'] = (acc['xp'] || 0) + newData.xpGain;
+        if (newData.messageGain) acc['stats.messages'] = (acc['stats.messages'] || 0) + newData.messageGain;
+        if (newData.watchTimeGain) acc['stats.watchTime'] = (acc['stats.watchTime'] || 0) + newData.watchTimeGain;
+
+        // Soporte para Heatmap (activityHistory)
+        if (newData.todayKey) {
+            const hKey = `activityHistory.${newData.todayKey}`;
+            if (newData.xpGain) acc[`${hKey}.xp`] = (acc[`${hKey}.xp`] || 0) + newData.xpGain;
+            if (newData.messageGain) acc[`${hKey}.messages`] = (acc[`${hKey}.messages`] || 0) + newData.messageGain;
+            if (newData.watchTimeGain) acc[`${hKey}.watchTime`] = (acc[`${hKey}.watchTime`] || 0) + newData.watchTimeGain;
+        }
     }
 
     _scheduleSave(key) {
@@ -199,6 +226,23 @@ export default class UserStateManager {
         if (!data) return;
 
         try {
+            // OPTIMIZACIÓN: Si tenemos incrementos acumulados, usarlos de forma atómica
+            const increments = this.pendingIncrements.get(key);
+            let incrementedOnly = false;
+
+            if (increments && Object.keys(increments).length > 0) {
+                this.pendingIncrements.delete(key);
+                await this.firestore.updateUserCounters(key, increments);
+                
+                // Si la última actividad es muy reciente y no hay cambios estructurales (nivel, logros)
+                // podríamos omitir el setDoc completo para ahorrar cuota.
+                // Por ahora, lo dejamos así para asegurar consistencia de metadatos (lastActivity).
+                incrementedOnly = true;
+            }
+            
+            // Guardar el estado completo solo si hay algo más que la XP/Mensajes (ej. Nivel up, nuevos logros)
+            // O si ha pasado mucho tiempo desde la última sincronización completa.
+            // Para mantenerlo seguro, hacemos el saveUser pero podrías filtrar aquí.
             await this.firestore.saveUser(key, data);
         } catch (e) {
             Logger.error('UserStateManager', `❌ Error guardando ${key}`, e);

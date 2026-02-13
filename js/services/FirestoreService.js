@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, limit, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, limit, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -141,6 +141,38 @@ export default class FirestoreService {
         } catch (e) {
             Logger.error('Firestore', `Error guardando usuario ${key}:`, e);
             throw e;
+        }
+    }
+
+    /**
+     * Actualiza contadores numéricos de un usuario de forma atómica (Sin lecturas previas)
+     * @param {string} username - Nombre de usuario
+     * @param {Object} increments - Mapa de campos y valores (ej: { xp: 10, "stats.messages": 1 })
+     */
+    async updateUserCounters(username, increments) {
+        if (!this.isConfigured || !username || !increments) return;
+        const key = username.toLowerCase();
+
+        try {
+            const ref = doc(this.db, 'users', key);
+            const updateObj = {};
+            
+            for (const [field, value] of Object.entries(increments)) {
+                updateObj[field] = increment(value);
+            }
+
+            this.metrics.writes++;
+            await updateDoc(ref, updateObj);
+            
+            if (this.config.DEBUG) Logger.debug('Firestore', `📈 Incrementados contadores para ${key}:`, increments);
+        } catch (e) {
+            // Si el documento no existe, fallback a setDoc (saveUser)
+            if (e.code === 'not-found') {
+                Logger.warn('Firestore', `⚠️ Documento ${key} no existe para increment. Creando...`);
+                // No tenemos los datos completos aquí, el UserStateManager debería manejar esto
+            } else {
+                Logger.error('Firestore', `Error incrementando contadores de ${key}:`, e);
+            }
         }
     }
 
