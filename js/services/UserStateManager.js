@@ -29,6 +29,10 @@ export default class UserStateManager {
 
         // Acumulador de incrementos pendientes: Map<username, {xp: 0, "stats.messages": 0, ...}>
         this.pendingIncrements = new Map();
+
+        // Control de cambios estructurales y usuarios nuevos para evitar atomic increments fallidos
+        this.pendingStructuralChanges = new Set(); 
+        this.newUsers = new Set();
     }
 
     async init() {
@@ -55,8 +59,10 @@ export default class UserStateManager {
         if (!username) return false;
         const key = username.toLowerCase();
 
-        // 1. Si ya tenemos suscripción activa, los datos en RAM son "buenos" (autorefresh)
-        if (this.subscriptions.has(key) && this.users.has(key)) {
+        // 1. Si ya tenemos al usuario en memoria, consideramos que está cargado.
+        // NOTA: Antes dependía de subscriptions, pero al eliminar onSnapshot para ahorrar lecturas,
+        // la memoria RAM (this.users) se convierte en la fuente de verdad.
+        if (this.users.has(key)) {
             return true;
         }
 
@@ -77,6 +83,8 @@ export default class UserStateManager {
                     finalData = this._sanitize(cloudData, username);
                 } else {
                     finalData = this._createNewUser(username);
+                    // IMPORTANTE: Marcar como nuevo para forzar Full Save la primera vez (EVITA ERROR NOT-FOUND)
+                    this.newUsers.add(key);
                 }
 
                 this.users.set(key, finalData);
@@ -125,6 +133,7 @@ export default class UserStateManager {
      */
     markDirty(username) {
         if (!username) return;
+        this.pendingStructuralChanges.add(username.toLowerCase());
         this._scheduleSave(username.toLowerCase());
     }
 
@@ -151,6 +160,23 @@ export default class UserStateManager {
         let currentData = this.users.get(key);
         if (!currentData) {
             currentData = this._createNewUser(username);
+            this.newUsers.add(key); // Marcar como nuevo si se creó implícitamente
+        }
+
+        // DETECCIÓN DE CAMBIOS ESTRUCTURALES (Antes del merge)
+        let isStructural = false;
+        
+        // 1. Cambio de Nivel
+        if (newData.level !== undefined && newData.level !== currentData.level) isStructural = true;
+        
+        // 2. Nuevos Logros (verificamos longitud)
+        if (newData.achievements && (!currentData.achievements || newData.achievements.length !== currentData.achievements.length)) isStructural = true;
+        
+        // 3. Cambio de Nombre Visual
+        if (newData.displayName && newData.displayName !== currentData.displayName) isStructural = true;
+
+        if (isStructural) {
+            this.pendingStructuralChanges.add(key);
         }
 
         // Merge in-place para preservar referencias usadas por otros servicios (ej. ExperienceService)
@@ -177,6 +203,7 @@ export default class UserStateManager {
         if (!this.pendingIncrements.has(key)) {
             this.pendingIncrements.set(key, {});
         }
+
         const acc = this.pendingIncrements.get(key);
         
         if (newData.xpGain) acc['xp'] = (acc['xp'] || 0) + newData.xpGain;
@@ -193,18 +220,42 @@ export default class UserStateManager {
     }
 
     _scheduleSave(key) {
+        // Inicializar mapa de tiempos de dirty si no existe
+        if (!this.firstDirtyTime) this.firstDirtyTime = new Map();
+
+        // 1. Verificamos si ya hay un guardado pendiente
         if (this.saveTimers.has(key)) {
+            const firstTime = this.firstDirtyTime.get(key) || Date.now();
+            const timeElapsed = Date.now() - firstTime;
+
+            // SAFETY: Si hemos pospuesto el guardado por más de 10 segundos, forzamos EJECUCIÓN INMEDIATA.
+            // Esto evita que usuarios muy activos (spam) nunca guarden sus datos por el debounce infinito.
+            if (timeElapsed > 10000) {
+                if (this.config.DEBUG) Logger.debug('UserStateManager', `🚨 Forzando guardado por timeout de seguridad (${Math.round(timeElapsed/1000)}s) para ${key}`);
+                clearTimeout(this.saveTimers.get(key));
+                this._performCloudWrite(key);
+                this.saveTimers.delete(key);
+                this.firstDirtyTime.delete(key);
+                return;
+            }
+            
+            // Si no hemos excedido el límite, posponemos el guardado (Debounce clásico)
             clearTimeout(this.saveTimers.get(key));
+        } else {
+            // Es el primer cambio, registramos tiempo de inicio
+            this.firstDirtyTime.set(key, Date.now());
         }
 
-        // MODO LIVE (A): Guardado casi inmediato (100ms debounce)
-        // Protege contra doble llamada síncrona pero se siente instantáneo.
+        // 2. Programamos el nuevo intento
+        // Aumentamos el debounce de 100ms a 2000ms (2s)
+        // Esto reduce drásticamente las escrituras en ráfaga sin afectar la UX (ya que la UI usa RAM).
         const timer = setTimeout(() => {
             if (this.saveTimers.has(key)) {
                 this._performCloudWrite(key);
                 this.saveTimers.delete(key);
+                if(this.firstDirtyTime) this.firstDirtyTime.delete(key);
             }
-        }, 100);
+        }, 2000);
 
         this.saveTimers.set(key, timer);
     }
@@ -214,41 +265,68 @@ export default class UserStateManager {
         if (!data) return;
 
         try {
-            // OPTIMIZACIÓN: Si tenemos incrementos acumulados, usarlos de forma atómica
-            const increments = this.pendingIncrements.get(key);
-            let incrementedOnly = false;
+            // VERIFICACIÓN CRÍTICA:
+            // 1. ¿Es un usuario nuevo? (Nunca guardado en DB) -> Forzar Full Save
+            // 2. ¿Hay cambios estructurales pendientes? (Nivel, Logros) -> Forzar Full Save
+            const isNewUser = this.newUsers.has(key);
+            const hasStructuralChanges = this.pendingStructuralChanges.has(key);
+            
+            if (isNewUser || hasStructuralChanges) {
+                // Forzar guardado completo (setDoc)
+                // Usamos await PRIMERO para asegurarnos de que la operación tuvo éxito antes de borrar banderas.
+                await this.firestore.saveUser(key, data);
+                
+                // Si llegamos aquí, fue exitoso. Limpiamos:
+                this.pendingIncrements.delete(key);
+                this.newUsers.delete(key);
+                this.pendingStructuralChanges.delete(key);
+                
+                if (this.config.DEBUG) Logger.debug('UserStateManager', `💾 Full Save forzado para ${key} (Nuevo: ${isNewUser}, Estructural: ${hasStructuralChanges})`);
+                return;
+            }
 
+            // OPTIMIZACIÓN: Si NO es nuevo y NO hay cambios estructurales, usamos incrementos atómicos
+            const increments = this.pendingIncrements.get(key);
+            
             if (increments && Object.keys(increments).length > 0) {
-                this.pendingIncrements.delete(key); // Limpiar pendientes antes de enviar
+                // Intentamos actualizar solo contadores
                 await this.firestore.updateUserCounters(key, increments);
                 
-                // CRÍTICO: Si solo hemos incrementado contadores (XP, mensajes), NO necesitamos guardar todo el objeto.
-                // Esto ahorra una escritura completa (SetDoc) y evita sobrescribir datos si no es necesario.
-                // Solo continuamos si hay cambios estructurales (Nivel, Logros, Nombre).
-                incrementedOnly = true;
-            }
-            
-            // Si solo fue un incremento, terminamos aquí. Ahorramos la escritura pesada.
-            if (incrementedOnly) {
+                // Si llegamos aquí, borramos los pendientes procesados
+                this.pendingIncrements.delete(key); 
+                
                 if (this.config.DEBUG) Logger.debug('UserStateManager', `⚡ Optimizado: Solo incrementos para ${key}`);
                 return;
             }
             
-            // Guardar el estado completo solo si hay cambios estructurales (ej. Nivel up, nuevos logros)
+            // Si llegamos aquí y no había incrementos ni cambios estructurales (data dirty por otra razón?), guardamos user.
             await this.firestore.saveUser(key, data);
+
         } catch (e) {
             Logger.error('UserStateManager', `❌ Error guardando ${key}`, e);
+            // AL NO BORRAR LAS BANDERAS NII LOS INCREMENTS, 
+            // EL SISTEMA REINTENTARÁ AUTOMÁTICAMENTE EN EL SIGUIENTE CICLO.
         }
     }
 
     _sanitize(data, username) {
+        // Asegurar estructura mínima coherente para evitar NaN en contadores
+        const stats = data.stats || { messages: 0, watchTime: 0 };
+
         return {
             displayName: data.displayName || username,
             xp: Number(data.xp) || 0,
             level: Number(data.level) || 1,
-            stats: data.stats || { messages: 0, watchTime: 0 },
+            stats,
             achievements: Array.isArray(data.achievements) ? data.achievements : [],
             activityHistory: data.activityHistory || {},
+            // Normalizar contadores derivados usados por ExperienceService
+            totalMessages: Number(
+                data.totalMessages ?? stats.messages ?? 0
+            ) || 0,
+            watchTimeMinutes: Number(
+                data.watchTimeMinutes ?? stats.watchTime ?? 0
+            ) || 0,
             // Preservar cualquier otro campo que venga de la nube
             ...data
         };
@@ -261,6 +339,9 @@ export default class UserStateManager {
             xp: 0,
             level: 1,
             stats: { messages: 0, watchTime: 0 },
+            // Contadores derivados usados por ExperienceService
+            totalMessages: 0,
+            watchTimeMinutes: 0,
             achievements: [],
             activityHistory: {}
         };
@@ -305,3 +386,4 @@ export default class UserStateManager {
         this.users.clear(); 
     }
 }
+

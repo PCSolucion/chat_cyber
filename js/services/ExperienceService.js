@@ -650,7 +650,7 @@ export default class ExperienceService {
      * @param {Map} rankingMap - Mapa de username -> rank (desde RankingSystem dinámico)
      * @param {boolean} isInitialLoad - Si es la carga inicial (para suprimir notificaciones)
      */
-    updateRankingStats(rankingMap, isInitialLoad = false) {
+    async updateRankingStats(rankingMap, isInitialLoad = false) {
         if (!rankingMap || rankingMap.size === 0) return;
 
         const today = new Date().toDateString();
@@ -666,9 +666,21 @@ export default class ExperienceService {
         }
 
         // 2. Iterar sobre todos los usuarios del ranking actual
-        rankingMap.forEach((rank, idOrName) => {
-            const userData = this.stateManager.users.get(String(idOrName).toLowerCase());
-            if (!userData) return;
+        // Usamos for...of para permitir operaciones asíncronas (carga bajo demanda de Top Users)
+        for (const [idOrName, rank] of rankingMap.entries()) {
+            const key = String(idOrName).toLowerCase();
+            let userData = this.stateManager.users.get(key);
+
+            // GESTIÓN DE OFFLINE: Si es un usuario Top 20 y no está en RAM, lo cargamos.
+            // Esto asegura que sus estadísticas (días en top, best rank) se actualicen aunque no esté en el chat.
+            if (!userData && rank <= 20) {
+                if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
+                await this.stateManager.ensureUserLoaded(null, key);
+                userData = this.stateManager.users.get(key);
+            }
+
+            if (!userData) continue;
+
             const lowerUser = (userData.displayName || idOrName).toLowerCase();
             const stats = userData.achievementStats || {};
 
@@ -735,7 +747,7 @@ export default class ExperienceService {
                     isInitialLoad 
                 });
             }
-        });
+        } // Cierre del for..of (antes era }); del forEach)
 
         if (changesCount > 0 && this.config.DEBUG) {
             console.log(`📊 Ranking stats updated for ${changesCount} users`);

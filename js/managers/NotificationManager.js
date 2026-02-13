@@ -37,6 +37,11 @@ export default class NotificationManager {
     this.fadeTime = NOTIFICATIONS.FADE_TIME_MS;
     this.queueMaxSize = NOTIFICATIONS.QUEUE_MAX_SIZE;
 
+    // Buffer para agrupar logros (Smart Batching)
+    this.achievementBuffer = new Map(); // username -> [achievements]
+    this.bufferTimers = new Map();      // username -> timeoutId
+    this.BATCH_WINDOW_MS = 2000;        // Ventana de 2 segundos para agrupar
+
     // Mapeo de rareza a iconos
     this.rarityIconMap = {
       common: "tier1.png",
@@ -81,24 +86,61 @@ export default class NotificationManager {
   }
 
   /**
-   * Añade una notificación de logro a la cola
+   * Añade una notificación de logro a la cola de procesamiento (Bufferizado)
    * @param {Object} eventData - { username, achievement }
    */
   showAchievement(eventData) {
-    if (this.queue.length >= this.queueMaxSize) {
-      if (this.config.DEBUG) {
-        console.log(
-          `🏆 Cola llena, logro descartado: ${eventData.achievement.name}`,
-        );
-      }
+    const { username, achievement } = eventData;
+    const lowerUser = username.toLowerCase();
+
+    // 1. Inicializar buffer si no existe
+    if (!this.achievementBuffer.has(lowerUser)) {
+      this.achievementBuffer.set(lowerUser, []);
+    }
+
+    // 2. Añadir logro al buffer
+    this.achievementBuffer.get(lowerUser).push(achievement);
+
+    // 3. Gestionar timer de batch
+    if (this.bufferTimers.has(lowerUser)) {
+      // Ya hay un timer corriendo, el logro se procesará cuando termine.
+      // Opcional: Reiniciar timer para extender ventana (debounce) -> No, mejor fixed window para no retrasar mucho.
       return;
     }
 
+    // 4. Iniciar timer
+    const timerId = setTimeout(() => {
+      this._flushAchievementBuffer(lowerUser, username);
+    }, this.BATCH_WINDOW_MS);
+
+    this.bufferTimers.set(lowerUser, timerId);
+  }
+
+  /**
+   * Procesa el buffer de logros de un usuario y lo envía a la cola real
+   * @private
+   */
+  _flushAchievementBuffer(lowerKey, displayUsername) {
+    const achievements = this.achievementBuffer.get(lowerKey);
+    this.achievementBuffer.delete(lowerKey);
+    this.bufferTimers.delete(lowerKey);
+
+    if (!achievements || achievements.length === 0) return;
+
+    if (this.queue.length >= this.queueMaxSize) {
+      if (this.config.DEBUG) console.log(`🏆 Cola llena, batch de logros descartado para ${displayUsername}`);
+      return;
+    }
+
+    // Encolar como batch
     this.queue.push({
-      type: "achievement",
-      data: eventData,
+      type: "achievement_batch",
+      data: {
+        username: displayUsername,
+        achievements: achievements // Array de logros
+      },
     });
- 
+
     this._processQueue();
   }
  
@@ -111,7 +153,7 @@ export default class NotificationManager {
       type: "levelup",
       data: eventData,
     });
- 
+  
     this._processQueue();
   }
 
@@ -135,13 +177,18 @@ export default class NotificationManager {
     let totalWaitTime = this.displayTime + this.fadeTime;
 
     switch (notification.type) {
-      case "achievement":
-        // Mostramos ambas: la del widget y la de Xbox (que ahora es parte de la cola)
-        this._displayAchievement(notification.data);
-        this._displayTopOverlayAchievement(notification.data);
+      case "achievement_batch":
+        // Maneja tanto singles como múltiples
+        this._displayAchievementBatch(notification.data);
+        this._displayTopOverlayAchievementBatch(notification.data);
         
-        // Emitir evento para sincronizar sonido con la animación real
-        EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, notification.data);
+        // Emitir evento para sincronizar sonido
+        // Usamos el primer logro para datos de referencia del evento
+        EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { 
+            username: notification.data.username, 
+            achievement: notification.data.achievements[0],
+            count: notification.data.achievements.length
+        });
         
         // Tiempo base del Xbox Achievement (11s) + margen
         totalWaitTime = Math.max(totalWaitTime, 11500);
@@ -229,27 +276,69 @@ export default class NotificationManager {
   }
 
   /**
-   * Muestra físicamente la notificación de logro
+   * Renderiza un batch de logros (Single o Múltiple) en el widget lateral
+   */
+  _displayAchievementBatch(data) {
+    const { username, achievements } = data;
+    
+    // Caso simple: Solo 1 logro -> Usar diseño original
+    if (achievements.length === 1) {
+        return this._displayAchievement({ username, achievement: achievements[0] });
+    }
+
+    // Caso múltiple: Diseño agrupado
+    const container = document.getElementById("achievement-notifications");
+    if (!container) return;
+
+    const notification = document.createElement("div");
+    // Usamos una clase especial para batches o reutilizamos la base
+    notification.className = "achievement-notification achievement-batch";
+    notification.setAttribute("data-count", achievements.length);
+
+    // Construir lista de iconos
+    // Limitamos a 5 iconos para no romper el layout
+    const displayAchievements = achievements.slice(0, 5);
+    const iconsHTML = displayAchievements.map(ach => 
+        `<img class="batch-icon" src="${ach.image || 'img/logros/default.png'}" title="${ach.name}" onerror="this.src='img/logros/default.png'">`
+    ).join('');
+    
+    // Nombres resumidos (ej. "Novato, Constante...")
+    const names = achievements.map(a => a.name).join(', ');
+
+    notification.innerHTML = `
+            <div class="achievement-icon batch-icon-stack">
+                <img src="img/trophy_full.svg" alt="Trophy">
+            </div>
+            <div class="achievement-content">
+                <div class="achievement-label" style="color: var(--cyber-yellow);">¡RACHA DE LOGROS!</div>
+                <div class="achievement-name"><span>${achievements.length} DESBLOQUEADOS</span></div>
+                <div class="achievement-desc batch-names"><span>${names}</span></div>
+                <div class="achievement-icons-row">
+                    ${iconsHTML}
+                    ${achievements.length > 5 ? `<span class="more-badge">+${achievements.length - 5}</span>` : ''}
+                </div>
+            </div>
+            <div class="achievement-timer"></div>
+        `;
+
+    this._mountNotification(notification, container, username, "Multiple Achievements");
+  }
+
+  /**
+   * Muestra físicamente la notificación de logro (Single)
    * @private
-   * @param {Object} eventData - { username, achievement }
    */
   _displayAchievement(eventData) {
     const container = document.getElementById("achievement-notifications");
+    if (!container) return;
 
-    if (!container) {
-      console.warn("Achievement notifications container not found");
-      return;
-    }
-
-    // Decorar datos para uso seguro en HTML (Mover al inicio para tener acceso a variables)
     const safeData = UIUtils.decorate(eventData);
     const { username, achievement } = safeData;
 
     const notification = document.createElement("div");
     notification.className = "achievement-notification";
-    notification.setAttribute("data-rarity", eventData.achievement.rarity); // Usar eventData original para clases/logica si es seguro, o safeData si se prefiere (rarity suele ser safe string)
+    notification.setAttribute("data-rarity", eventData.achievement.rarity);
 
-    // Usamos la imagen del logro (que ya viene con default.png si no tiene específica)
     const imagePath = eventData.achievement.image || "img/logros/default.png";
 
     notification.innerHTML = `
@@ -264,25 +353,24 @@ export default class NotificationManager {
             <div class="achievement-timer"></div>
         `;
 
-    // Añadir al container
-    container.appendChild(notification);
+    this._mountNotification(notification, container, username, achievement.name);
+  }
 
-    // Check for text overflow to enable marquee
+  /**
+   * Helper común para montar animación y cleanup de notificación
+   */
+  _mountNotification(notification, container, username, debugLabel) {
+    container.appendChild(notification);
     this._checkOverflow(notification);
 
-    // Trigger animation
     requestAnimationFrame(() => {
       notification.classList.add("show");
     });
 
-
-
-    // Extender tiempo del widget para que se vea el logro
     if (this.uiManager) {
       this.uiManager.extendDisplayTime(this.displayTime + 1000);
     }
 
-    // Remover después del tiempo de display
     setTimeout(() => {
       notification.classList.remove("show");
       notification.classList.add("hiding");
@@ -294,51 +382,101 @@ export default class NotificationManager {
       }, this.fadeTime);
     }, this.displayTime);
 
-    // Log para debug
     if (this.config.DEBUG) {
-      console.log(
-        `🏆 Achievement notification shown: ${username} -> ${achievement.name}`,
-      );
+      console.log(`🏆 Notification shown: ${username} -> ${debugLabel}`);
     }
   }
 
   /**
-   * Muestra la notificación de logro en el overlay superior (Fuera del widget)
-   * @private
-   * @param {Object} eventData
+   * Renderiza overlay Top para batch (Single o Múltiple)
+   */
+  _displayTopOverlayAchievementBatch(data) {
+    const { username, achievements } = data;
+    if (achievements.length === 1) {
+        return this._displayTopOverlayAchievement({ username, achievement: achievements[0] });
+    }
+
+    // Lógica para Batch en Overlay Top
+    const overlay = document.getElementById("cp-achievement-overlay");
+    if (!overlay) return;
+
+    const totalXP = achievements.reduce((sum, ach) => sum + (XP.ACHIEVEMENT_REWARDS[ach.rarity] || 50), 0);
+    const titleText = `${username} está ON FIRE! 🔥`;
+    // Lista scrolleable o concatenada
+    const namesList = achievements.map(a => a.name).join(' • ');
+
+    // Ancho dinámico
+    const maxChars = Math.max(titleText.length, namesList.length);
+    let bannerWidth = 532;
+    if (maxChars > 30) {
+      bannerWidth = 532 + (maxChars - 30) * 11;
+    }
+    bannerWidth = Math.min(Math.round(bannerWidth), 900);
+    const textWidth = bannerWidth - 150;
+    const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
+
+    overlay.innerHTML = `
+      <div class="achievement rare" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
+        <div class="animation">
+          <div class="circle">
+            <div class="img trophy_animate trophy_img">
+              <img class="trophy_1" src="img/trophy_full.svg" alt="Trophy"/>
+            </div>
+            <div class="img xbox_img">
+              <img src="img/arasaka.png" alt="Arasaka"/>
+            </div>
+            <div class="brilliant-wrap">
+              <div class="brilliant"></div>
+            </div>
+          </div>
+          <div class="banner-outer">
+            <div class="banner">
+              <div class="achieve_disp">
+                <span class="unlocked">${titleText}</span>
+                <div class="score_disp">
+                  <div class="gamerscore">
+                    <img width="30px" src="img/G.svg" alt="G"/>
+                    <span class="acheive_score">${totalXP}</span>
+                  </div>
+                  <span class="hyphen_sep">-</span>
+                  <span class="achiev_name">${namesList}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this._animateOverlay(overlay, namesList);
+  }
+
+  /**
+   * Muestra la notificación de logro en el overlay superior (Single)
    */
   _displayTopOverlayAchievement(eventData) {
     const overlay = document.getElementById("cp-achievement-overlay");
     if (!overlay) return;
 
-    // Decorar datos para uso seguro en HTML
     const safeData = UIUtils.decorate(eventData);
     const { username, achievement } = safeData;
     
     const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
-    
-    // Forzamos que siempre sea la animación de logro raro (con diamante)
-    const isRare = true;
+    const isRare = true; // Always rare animation
     const unlockedText = `${username} ha desbloqueado el logro`;
 
-    // Calcular ancho dinámico basado en el texto más largo (usando datos sin escapar para el cálculo de longitud real)
     const nameLength = eventData.achievement.name.length;
     const maxChars = Math.max(unlockedText.length, (nameLength + 15));
     
-    // Ancho base: 532px (1.5x del original 355px)
     let bannerWidth = 532;
     if (maxChars > 34) {
       bannerWidth = 532 + (maxChars - 34) * 12.75;
     }
     
-    // Máximo razonable: 825px para no saturar
     bannerWidth = Math.min(Math.round(bannerWidth), 825);
     const textWidth = bannerWidth - 150;
-
-    // Cálculo dinámico de la traslación del círculo para que siempre quede en el borde izquierdo
     const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
 
-    // Estructura estilo Xbox One (Refinada v3 con soporte de rareza siempre activo)
     overlay.innerHTML = `
       <div class="achievement ${isRare ? 'rare' : ''}" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
         <div class="animation">
@@ -373,41 +511,40 @@ export default class NotificationManager {
       </div>
     `;
 
+    this._animateOverlay(overlay, achievement.name);
+  }
+
+  /**
+   * Lógica de animación común para overlays
+   */
+  _animateOverlay(overlay, scrambleText) {
     const circle = overlay.querySelector('.circle');
     const banner = overlay.querySelector('.banner');
     const display = overlay.querySelector('.achieve_disp');
 
-    // Trigger show animation
     requestAnimationFrame(() => {
       overlay.classList.add("show");
       circle.classList.add("circle_animate");
       banner.classList.add("banner-animate");
       display.classList.add("achieve_disp_animate");
 
-      // Inicio del efecto de descifrado discreto
       const nameElement = overlay.querySelector('.achiev_name');
       if (nameElement) {
-        // El texto empieza a ser visible a los ~2.6s de la animación general del HUD
         setTimeout(() => {
-          FXManager.scramble(nameElement, achievement.name, 1500);
+          FXManager.scramble(nameElement, scrambleText, 1500);
           FXManager.createDataParticles(overlay.querySelector('.animation'), { count: 10 });
         }, 2600);
       }
 
-      // Ráfaga inicial al abrirse el banner
       setTimeout(() => {
         FXManager.createDataParticles(overlay.querySelector('.animation'), { count: 15 });
       }, 1200);
     });
 
-    // Duración extendida para la animación completa del Codepen (10.5s)
     const animationDuration = 11000;
 
-    // Hide after display time
     setTimeout(() => {
       overlay.classList.remove("show");
-      
-      // Cleanup
       setTimeout(() => {
         circle.classList.remove("circle_animate");
         banner.classList.remove("banner-animate");
@@ -416,6 +553,9 @@ export default class NotificationManager {
       }, 1000);
     }, this.displayTime > animationDuration ? this.displayTime : animationDuration);
   }
+
+  /**
+   * Verifica overflow de texto para activar marquee
 
 
 

@@ -1,4 +1,4 @@
-﻿/* ===========================================
+/* ===========================================
    CYBERPUNK 2077 CHAT WIDGET - BUNDLE
    Generated: 01/19/2026 06:45:39
    =========================================== */
@@ -873,14 +873,14 @@ body {
 .user-badge {
     display: none;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1.5px;
-    padding: 2px 6px;
+    padding: 3px 10px;
     text-transform: uppercase;
     white-space: nowrap;
     position: relative;
-    border-radius: 2px;
+    border-radius: 0;
 }
 
 /* ===========================================
@@ -952,16 +952,16 @@ body {
     align-items: center;
     gap: 4px;
     color: var(--cyber-red);
-    background: rgba(255, 0, 60, 0.08);
-    border: 1px solid rgba(255, 0, 60, 0.3);
-    border-left: 3px solid var(--cyber-red);
-    box-shadow: none;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 59, 69, 0.7);
+    border-left: 3px solid rgba(255, 59, 69, 0.9);
+    box-shadow: 0 0 6px rgba(255, 59, 69, 0.25);
+    padding: 4px 12px;
 }
 
 .badge.vip::before,
 .user-badge.vip::before {
-    content: '♛';
-    font-size: 10px;
+    content: none;
 }
 
 /* ===========================================
@@ -973,20 +973,20 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--cyber-red);
-    background: rgba(255, 0, 60, 0.1);
-    border: 1px solid rgba(255, 0, 60, 0.4);
-    border-left: 3px solid var(--cyber-red);
-    box-shadow: 0 0 10px rgba(255, 0, 60, 0.1);
+    color: #ffffff;
+    background: rgba(255, 59, 69, 0.16);
+    border: 1px solid rgba(255, 59, 69, 0.7);
+    border-left: 3px solid rgba(255, 59, 69, 0.9);
+    box-shadow: 0 0 10px rgba(255, 59, 69, 0.35);
     animation: topBadgePulse 3s ease-in-out infinite;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
+    padding: 4px 12px;
 }
 
 .badge.top-user::before,
 .user-badge.top-user::before {
-    content: '★';
-    font-size: 11px;
+    content: none;
 }
 
 /* ===========================================
@@ -998,17 +998,20 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--cyber-red);
-    background: rgba(255, 0, 60, 0.12);
-    border: 1px solid rgba(255, 0, 60, 0.5);
-    border-left: 3px solid var(--cyber-red);
-    box-shadow: 0 0 15px rgba(255, 0, 60, 0.15);
+    color: #ffffff;
+    background: linear-gradient(90deg,
+            rgba(255, 59, 69, 0.22),
+            rgba(217, 0, 255, 0.22));
+    border: 1px solid rgba(255, 59, 69, 0.7);
+    border-left: 3px solid rgba(255, 59, 69, 0.9);
+    box-shadow: 0 0 12px rgba(255, 59, 69, 0.45);
+    padding: 4px 12px;
+    font-size: 12px;
 }
 
 .badge.admin::before,
 .user-badge.admin::before {
-    content: '⚡';
-    font-size: 11px;
+    content: none;
 }
 
 /* ===========================================
@@ -1020,18 +1023,16 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-left: 3px solid rgba(255, 255, 255, 0.5);
+    padding: 4px 12px;
 }
 
 .badge.ranked::before,
 .user-badge.ranked::before {
-    content: '#';
-    font-size: 9px;
-    opacity: 0.8;
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+    content: none;
 }
 
 /* === SOURCE: css/components/rank-icons.css === */
@@ -2831,19 +2832,19 @@ body {
 /* 4. User Badge (Circuitry Style) */
 .container.gold-mode-active .badge,
 .container.gold-mode-active .user-badge {
-    background: rgba(212, 175, 55, 0.08) !important;
-    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    background: linear-gradient(90deg,
+            rgba(170, 119, 28, 0.18),
+            rgba(212, 175, 55, 0.22)) !important;
+    border: 1px solid rgba(212, 175, 55, 0.7) !important;
     border-left: 3px solid #d4af37 !important;
     color: #f1e3a6 !important;
-    text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
-    box-shadow: none !important;
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+    box-shadow: 0 0 14px rgba(212, 175, 55, 0.55) !important;
     font-weight: 800 !important;
     letter-spacing: 2px !important;
-    
-    /* REAJUSTE DE ESPACIO */
     margin-left: 2px !important; 
     margin-right: 2px !important;
-    padding: 0 4px !important;
+    padding: 4px 12px !important;
     min-width: unset !important;
 }
 

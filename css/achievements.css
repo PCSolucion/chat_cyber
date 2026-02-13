@@ -134,7 +134,7 @@
     /* Lighter outline (1px) */
     white-space: nowrap;
     overflow: hidden;
-    max-width: 250px; /* Incrementado para dar más espacio */
+    max-width: 100%; /* Usar todo el ancho disponible dentro del contenedor */
     display: block;
     line-height: 1.2;
     padding-right: 5px; /* Pequeño buffer para evitar que la última letra toque el borde */
@@ -178,8 +178,8 @@
     white-space: nowrap;
     overflow: hidden;
     position: relative;
-    max-width: 245px;
-    /* Limit width to force scroll on long text */
+    max-width: 100%;
+    /* Usar todo el ancho disponible y confiar en overflow hidden */
     display: block;
     line-height: 1.2;
     /* Tighter line height */
@@ -192,6 +192,13 @@
 
 .achievement-desc>span.marquee-active {
     animation: marquee 10s linear infinite;
+}
+
+/* Dentro del widget, desactivamos el scroll horizontal para evitar que el texto se salga del div
+   cuando se encadenan varios logros. El overlay superior mantiene su animación original. */
+.achievement-notifications .achievement-name span.marquee-active,
+.achievement-notifications .achievement-desc>span.marquee-active {
+    animation: none;
 }
 
 .achievement-notification:hover .achievement-desc>span.marquee-active {
@@ -728,4 +735,63 @@
         transform: translate(var(--tx), var(--ty)) scale(0);
         opacity: 0;
     }
+}
+
+/* ========================================
+   BATCH ACHIEVEMENT STYLES
+   ======================================== */
+
+.achievement-notification.achievement-batch {
+    /* Slight gradient to distinguish from normal */
+    background: linear-gradient(90deg, 
+        rgba(20, 20, 25, 0.95) 0%, 
+        rgba(35, 35, 45, 0.95) 100%
+    );
+    border-left: 2px solid #ffd700; /* Gold distinctive border */
+}
+
+/* Ensure overrides from generic img selector don't break this */
+.achievement-notification .achievement-content .achievement-icons-row {
+     display: flex;
+     flex-direction: row;
+     gap: 6px;
+     margin-top: 5px;
+     align-items: center;
+     overflow: hidden;
+     height: 28px; /* Fixed height for consistency */
+}
+
+/* Small icons in the row */
+.batch-icon {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 3px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    transition: transform 0.2s;
+    /* Reset generic img styles override from above */
+    display: inline-block !important;
+    position: relative !important;
+    filter: none !important;
+    transform: none !important; 
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.more-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #00f0ff;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.batch-names span {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.7rem;
+    font-weight: 400;
 }

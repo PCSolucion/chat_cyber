@@ -147,6 +147,7 @@ export default class FirestoreService {
             } else {
                 Logger.error('Firestore', `Error incrementando contadores de ${key}:`, e);
             }
+            throw e; // Propagar error para que UserStateManager no borre los pendientes
         }
     }
 

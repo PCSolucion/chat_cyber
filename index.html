@@ -22,141 +22,143 @@
 </head>
 
 <body>
-  <!-- Cyberpunk Level Up Overlay (Global Position) -->
-  <div id="cp-levelup-overlay" class="cp-levelup-overlay">
-    <div class="cp-levelup-content">
-      <div class="cp-levelup-icon">
-        <svg class="cp-hex-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <polygon points="50 0, 95 25, 95 75, 50 100, 5 75, 5 25" />
-        </svg>
-        <div class="cp-hex-arrows">
-          <span>^</span>
-          <span>^</span>
-          <span>^</span>
-        </div>
-      </div>
-      <div class="cp-levelup-bar">
-        <div class="cp-levelup-main-text">
-          <span class="cp-level-arrow">▲</span>
-          <span id="cp-new-level" class="cp-level-number">--</span>
-          <span class="cp-level-text">LEVEL UP!</span>
-          <div class="cp-level-decor-right">
-            <svg class="cp-level-decor-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-            </svg>
+  <div id="chat-overlay-widget">
+    <!-- Cyberpunk Level Up Overlay (Global Position) -->
+    <div id="cp-levelup-overlay" class="cp-levelup-overlay">
+      <div class="cp-levelup-content">
+        <div class="cp-levelup-icon">
+          <svg class="cp-hex-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polygon points="50 0, 95 25, 95 75, 50 100, 5 75, 5 25" />
+          </svg>
+          <div class="cp-hex-arrows">
+            <span>^</span>
+            <span>^</span>
+            <span>^</span>
           </div>
         </div>
-        <div class="cp-levelup-sub-bar">
-          <div class="cp-stat-box">
-            <span class="cp-stat-icon">👤</span>
-            <span class="cp-stat-label">MERC:</span>
-            <span id="cp-username" class="cp-stat-value">---</span>
+        <div class="cp-levelup-bar">
+          <div class="cp-levelup-main-text">
+            <span class="cp-level-arrow">▲</span>
+            <span id="cp-new-level" class="cp-level-number">--</span>
+            <span class="cp-level-text">LEVEL UP!</span>
+            <div class="cp-level-decor-right">
+              <svg class="cp-level-decor-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+              </svg>
+            </div>
           </div>
-          <div class="cp-stat-box">
-            <span class="cp-stat-icon">◤</span>
-            <span class="cp-stat-label">NEW RANK:</span>
-            <span id="cp-new-title" class="cp-stat-value">---</span>
+          <div class="cp-levelup-sub-bar">
+            <div class="cp-stat-box">
+              <span class="cp-stat-icon">👤</span>
+              <span class="cp-stat-label">MERC:</span>
+              <span id="cp-username" class="cp-stat-value">---</span>
+            </div>
+            <div class="cp-stat-box">
+              <span class="cp-stat-icon">◤</span>
+              <span class="cp-stat-label">NEW RANK:</span>
+              <span id="cp-new-title" class="cp-stat-value">---</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Achievement Overlay (Top of Screen) -->
-  <div id="cp-achievement-overlay" class="cp-achievement-overlay">
-    <!-- Content injected via JS -->
-  </div>
-  <div class="container-wrapper">
-    <div class="container" role="region" aria-label="Chat de Twitch">
+    <!-- Achievement Overlay (Top of Screen) -->
+    <div id="cp-achievement-overlay" class="cp-achievement-overlay">
+      <!-- Content injected via JS -->
+    </div>
+    <div class="container-wrapper">
+      <div class="container" role="region" aria-label="Chat de Twitch">
 
-      <!-- Animated border glow -->
-      <div class="border-glow"></div>
+        <!-- Animated border glow -->
+        <div class="border-glow"></div>
 
-      <!-- Status bar top -->
-      <aside class="status-bar">
-        <div class="network-activity">
-          <div class="net-led rx" id="led-rx" title="RECEIVING"></div>
-          <div class="net-led tx" id="led-tx" title="TRANSMITTING"></div>
-        </div>
-        <span class="status-text hidden" id="system-status-text">SYS.ONLINE</span>
-        <span class="status-divider">|</span>
-        <span class="status-code" id="stream-category">CHAT.STREAM</span>
-      </aside>
-
-      <!-- Header with username -->
-      <header class="header">
-        <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
-        <div class="user-identity">
-          <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
-          <span class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</span>
-          <div class="user-identity__badges">
-            <span class="badge" id="user-badge"></span>
+        <!-- Status bar top -->
+        <aside class="status-bar">
+          <div class="network-activity">
+            <div class="net-led rx" id="led-rx" title="RECEIVING"></div>
+            <div class="net-led tx" id="led-tx" title="TRANSMITTING"></div>
           </div>
-        </div>
+          <span class="status-text hidden" id="system-status-text">SYS.ONLINE</span>
+          <span class="status-divider">|</span>
+          <span class="status-code" id="stream-category">CHAT.STREAM</span>
+        </aside>
 
-        <!-- XP Display Section (Sistema de experiencia) - DESPUÉS -->
-        <section class="xp-display" id="xp-section" aria-label="Nivel y Experiencia">
-          <!-- Level Up Notification (overlay) -->
-          <div class="xp-levelup" id="xp-levelup-inline">
-            <span class="xp-levelup__star">★</span>
-            <span class="xp-levelup__text">LEVEL UP</span>
-            <span class="xp-levelup__chevrons">❯❯❯</span>
-            <span class="xp-levelup__number" id="levelup-number">2</span>
-          </div>
-
-          <!-- XP Bar -->
-          <div class="xp-bar">
-            <div class="xp-bar__level">
-              <span class="xp-bar__level-label">LVL</span>
-              <span class="xp-bar__level-value" id="xp-level">--</span>
+        <!-- Header with username -->
+        <header class="header">
+          <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
+          <div class="user-identity">
+            <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
+            <span class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</span>
+            <div class="user-identity__badges">
+              <span class="badge" id="user-badge"></span>
             </div>
-            <div class="xp-bar__progress">
-              <div class="xp-bar__track">
-                <div class="xp-bar__ghost" id="xp-progress-ghost"></div>
-                <div class="xp-bar__fill" id="xp-progress-fill"></div>
-              </div>
-              <div class="xp-bar__text">
-                <span class="xp-bar__current" id="xp-current">--</span>
-                <span class="xp-bar__divider">/</span>
-                <span class="xp-bar__next" id="xp-next">--</span>
-                <span class="xp-bar__suffix">XP</span>
-              </div>
+          </div>
+
+          <!-- XP Display Section (Sistema de experiencia) - DESPUÉS -->
+          <section class="xp-display" id="xp-section" aria-label="Nivel y Experiencia">
+            <!-- Level Up Notification (overlay) -->
+            <div class="xp-levelup" id="xp-levelup-inline">
+              <span class="xp-levelup__star">★</span>
+              <span class="xp-levelup__text">LEVEL UP</span>
+              <span class="xp-levelup__chevrons">❯❯❯</span>
+              <span class="xp-levelup__number" id="levelup-number">2</span>
             </div>
-            <div class="xp-bar__gain" id="xp-gain-container"></div>
-          </div>
 
-          <!-- XP Info (Title + Streak) -->
-          <div class="xp-info">
-            <span class="xp-info__title" id="xp-title">...</span>
-            <span class="xp-info__streak" id="xp-streak"></span>
-          </div>
-        </section>
-      </header>
+            <!-- XP Bar -->
+            <div class="xp-bar">
+              <div class="xp-bar__level">
+                <span class="xp-bar__level-label">LVL</span>
+                <span class="xp-bar__level-value" id="xp-level">--</span>
+              </div>
+              <div class="xp-bar__progress">
+                <div class="xp-bar__track">
+                  <div class="xp-bar__ghost" id="xp-progress-ghost"></div>
+                  <div class="xp-bar__fill" id="xp-progress-fill"></div>
+                </div>
+                <div class="xp-bar__text">
+                  <span class="xp-bar__current" id="xp-current">--</span>
+                  <span class="xp-bar__divider">/</span>
+                  <span class="xp-bar__next" id="xp-next">--</span>
+                  <span class="xp-bar__suffix">XP</span>
+                </div>
+              </div>
+              <div class="xp-bar__gain" id="xp-gain-container"></div>
+            </div>
 
-      <!-- Data stream indicator -->
-      <div class="data-stream">
-        <div class="stream-line"></div>
+            <!-- XP Info (Title + Streak) -->
+            <div class="xp-info">
+              <span class="xp-info__title" id="xp-title">...</span>
+              <span class="xp-info__streak" id="xp-streak"></span>
+            </div>
+          </section>
+        </header>
+
+        <!-- Data stream indicator -->
+        <div class="data-stream">
+          <div class="stream-line"></div>
+        </div>
+
+        <!-- Digital Particles BG (Top Users) -->
+        <div id="particles-bg" class="particles-bg"></div>
+
+        <!-- Message display -->
+        <main class="quote" id="message" role="log" aria-live="polite">
+          [BOOTING...] 
+        </main>
+
+        <!-- Achievement Notifications (Dentro del widget) -->
+        <div class="achievement-notifications" id="achievement-notifications"></div>
+
+        <!-- Achievement Counter (Absolute position near footer) -->
+        <div class="xp-achievements-container" id="xp-achievements-container-wrapper">
+          <span class="xp-achievements" id="xp-achievements"></span>
+          <!-- Watch Time: Bottom Right Pegado al Borde -->
+          <div id="watch-time-container" class="hidden"></div>
+        </div>
+
       </div>
-
-      <!-- Digital Particles BG (Top Users) -->
-      <div id="particles-bg" class="particles-bg"></div>
-
-      <!-- Message display -->
-      <main class="quote" id="message" role="log" aria-live="polite">
-        [BOOTING...] 
-      </main>
-
-      <!-- Achievement Notifications (Dentro del widget) -->
-      <div class="achievement-notifications" id="achievement-notifications"></div>
-
-      <!-- Achievement Counter (Absolute position near footer) -->
-      <div class="xp-achievements-container" id="xp-achievements-container-wrapper">
-        <span class="xp-achievements" id="xp-achievements"></span>
-        <!-- Watch Time: Bottom Right Pegado al Borde -->
-        <div id="watch-time-container" class="hidden"></div>
-      </div>
-
     </div>
   </div>
 
