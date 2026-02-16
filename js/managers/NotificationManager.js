@@ -306,14 +306,11 @@ export default class NotificationManager {
     const names = achievements.map(a => a.name).join(', ');
 
     notification.innerHTML = `
-            <div class="achievement-icon batch-icon-stack">
-                <img src="img/trophy_full.svg" alt="Trophy">
-            </div>
-            <div class="achievement-content">
-                <div class="achievement-label" style="color: var(--cyber-yellow);">¡RACHA DE LOGROS!</div>
-                <div class="achievement-name"><span>${achievements.length} DESBLOQUEADOS</span></div>
-                <div class="achievement-desc batch-names"><span>${names}</span></div>
-                <div class="achievement-icons-row">
+            <div class="achievement-content" style="padding-left: 5px;">
+                <div class="achievement-label" style="color: var(--cyber-yellow); margin-bottom: 0px;">¡RACHA DE LOGROS!</div>
+                <div class="achievement-name" style="margin-bottom: 0px;"><span>${achievements.length} DESBLOQUEADOS</span></div>
+                <div class="achievement-desc batch-names" style="margin-bottom: 0px;"><span>${names}</span></div>
+                <div class="achievement-icons-row" style="margin-top: 5px; height: 24px;">
                     ${iconsHTML}
                     ${achievements.length > 5 ? `<span class="more-badge">+${achievements.length - 5}</span>` : ''}
                 </div>

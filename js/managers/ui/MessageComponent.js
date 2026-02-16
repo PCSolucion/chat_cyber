@@ -10,7 +10,7 @@ export default class MessageComponent {
         this.config = config;
     }
 
-    update(message, emotes, userRole) {
+    update(username, message, emotes, userRole) {
         const maxLength = this.config.MAX_MESSAGE_LENGTH || 100;
         const maxWordLength = this.config.MAX_WORD_LENGTH || 25;
         
@@ -99,7 +99,7 @@ export default class MessageComponent {
             const isHighRank = ['admin', 'top'].includes(userRole.role);
             const hasImages = UIUtils.hasImages(processed);
 
-            if (isHighRank && !hasImages) {
+            if (username.toLowerCase() === 'liiukiin' && !hasImages) {
                 UIUtils.scrambleText(this.el, processed);
             } else {
                 if (!hasImages) {

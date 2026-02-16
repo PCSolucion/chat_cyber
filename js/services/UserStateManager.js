@@ -312,9 +312,18 @@ export default class UserStateManager {
     _sanitize(data, username) {
         // Asegurar estructura mínima coherente para evitar NaN en contadores
         const stats = data.stats || { messages: 0, watchTime: 0 };
+        
+        // [FIX] Detectar y rechazar "total" como displayName (Evitar corrupción de datos)
+        const rawDisplayName = data.displayName || username;
+        const displayName = (rawDisplayName.toLowerCase() === 'total' && username.toLowerCase() !== 'total') 
+            ? username 
+            : rawDisplayName;
 
         return {
-            displayName: data.displayName || username,
+            // Preservar cualquier otro campo que venga de la nube primero
+            ...data,
+            // Sobrescribir con valores normalizados
+            displayName: displayName,
             xp: Number(data.xp) || 0,
             level: Number(data.level) || 1,
             stats,
@@ -326,9 +335,7 @@ export default class UserStateManager {
             ) || 0,
             watchTimeMinutes: Number(
                 data.watchTimeMinutes ?? stats.watchTime ?? 0
-            ) || 0,
-            // Preservar cualquier otro campo que venga de la nube
-            ...data
+            ) || 0
         };
     }
 

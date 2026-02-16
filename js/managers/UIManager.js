@@ -162,7 +162,7 @@ export default class UIManager {
             const isVisible = this.display.isVisibleState();
             
             // Si el widget ya estaba visible, usamos transición rápida. Si no, secuencia completa.
-            const shouldShowFullAnim = !isVisible && (now - this.lastMessageTime) > this.config.ANIMATION_COOLDOWN_MS;
+            const shouldShowFullAnim = !isVisible && (now - this.lastMessageTime) > this.config.ANIMATION_COOLDOWN_MS && username.toLowerCase() === 'liiukiin';
             
             this.lastMessageTime = now;
             this.display.show();
@@ -226,7 +226,7 @@ export default class UIManager {
 
         // Delegar actualizaciones a los componentes
         this.identity.update(username, userRole, subscriberInfo);
-        this.message.update(message, emotes, userRole);
+        this.message.update(username, message, emotes, userRole);
         
         this._handleGoldMode(subscriberInfo);
 

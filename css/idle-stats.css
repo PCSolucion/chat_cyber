@@ -434,7 +434,7 @@
 }
 
 .stat-value.mobile-highlight {
-  color: var(--cyber-yellow, #ffd700);
+  color: #fff;
 }
 
 .stat-label {

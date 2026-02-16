@@ -742,12 +742,23 @@
    ======================================== */
 
 .achievement-notification.achievement-batch {
-    /* Slight gradient to distinguish from normal */
     background: linear-gradient(90deg, 
-        rgba(20, 20, 25, 0.95) 0%, 
+        rgba(20, 20, 25, 0.98) 0%, 
         rgba(35, 35, 45, 0.95) 100%
     );
-    border-left: 2px solid #ffd700; /* Gold distinctive border */
+    border-left: 3px solid #ffd700;
+    min-height: auto;
+    padding: 10px 15px; /* Sightly more compact */
+}
+
+.achievement-batch .achievement-content {
+    gap: 1px; /* Tighter vertical space */
+}
+
+.achievement-batch .achievement-icons-row {
+    margin-top: 3px !important;
+    height: auto !important; /* Allow it to set height naturally if needed, though we set 24px in JS as well */
+    min-height: 24px;
 }
 
 /* Ensure overrides from generic img selector don't break this */

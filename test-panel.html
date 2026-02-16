@@ -40,22 +40,6 @@
         <h3 class="panel-title">SYSTEM_CONSOLE</h3>
 
         <div class="panel-scroll-area">
-            <!-- Quota Monitor -->
-            <div class="panel-section quota-monitor">
-                <label class="section-label">QUOTA_MONITOR // FIREBASE</label>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <span class="stat-label">READS</span>
-                        <span id="quota-reads" class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">WRITES</span>
-                        <span id="quota-writes" class="stat-value">0</span>
-                    </div>
-                </div>
-                <div id="quota-warning" class="quota-warning" style="display: none;">🚨 LÍMITE DE SEGURIDAD ALCANZADO</div>
-            </div>
-
             <!-- Global Toggles -->
             <div class="panel-section">
                 <div class="control-group">
@@ -77,13 +61,6 @@
                 </div>
             </div>
 
-            <!-- Environment Selection -->
-            <div class="panel-section">
-                <label class="section-label">ENVIRONMENT</label>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                    <button data-action="change-bg" data-value="img/fondo pruebas.webp" class="btn btn--full" style="font-size: 9px; text-align: center;">BG_DEFAULT (WEBP)</button>
-                </div>
-            </div>
 
             <!-- Manual Triggering -->
             <div class="panel-section">
@@ -144,9 +121,7 @@
             </div>
         </div>
 
-        <div class="panel-footer">
-            PROTOCOL_V2 // IDLE
-        </div>
+
     </div>
 
     <script src="js/test-panel.js"></script>
