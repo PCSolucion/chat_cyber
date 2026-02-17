@@ -62,6 +62,9 @@ export default class NotificationManager {
   _setupEventListeners() {
     // Escuchar logros desbloqueados
     EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
+      if (this.config.DEBUG) {
+        console.log(`[NotificationManager] Received Achievement Event:`, eventData);
+      }
       this.showAchievement(eventData);
     });
 
@@ -133,6 +136,9 @@ export default class NotificationManager {
     }
 
     // Encolar como batch
+    if (this.config.DEBUG) {
+      console.log(`[NotificationManager] Enqueuing achievement batch for ${displayUsername}:`, achievements.map(a => a.name));
+    }
     this.queue.push({
       type: "achievement_batch",
       data: {
@@ -283,8 +289,11 @@ export default class NotificationManager {
     
     // Caso simple: Solo 1 logro -> Usar diseño original
     if (achievements.length === 1) {
+        if (this.config.DEBUG) console.log(`[NotificationManager] Single achievement batch, forwarding to _displayAchievement`);
         return this._displayAchievement({ username, achievement: achievements[0] });
     }
+
+    if (this.config.DEBUG) console.log(`[NotificationManager] Displaying multiple achievement batch (count: ${achievements.length})`);
 
     // Caso múltiple: Diseño agrupado
     const container = document.getElementById("achievement-notifications");
@@ -326,8 +335,12 @@ export default class NotificationManager {
    * @private
    */
   _displayAchievement(eventData) {
+    if (this.config.DEBUG) console.log(`[NotificationManager] _displayAchievement called with:`, eventData);
     const container = document.getElementById("achievement-notifications");
-    if (!container) return;
+    if (!container) {
+        console.error(`[NotificationManager] container 'achievement-notifications' NOT FOUND!`);
+        return;
+    }
 
     const safeData = UIUtils.decorate(eventData);
     const { username, achievement } = safeData;
@@ -389,13 +402,17 @@ export default class NotificationManager {
    */
   _displayTopOverlayAchievementBatch(data) {
     const { username, achievements } = data;
+    if (this.config.DEBUG) console.log(`[NotificationManager] _displayTopOverlayAchievementBatch for ${username}, count: ${achievements.length}`);
     if (achievements.length === 1) {
         return this._displayTopOverlayAchievement({ username, achievement: achievements[0] });
     }
 
     // Lógica para Batch en Overlay Top
     const overlay = document.getElementById("cp-achievement-overlay");
-    if (!overlay) return;
+    if (!overlay) {
+        console.error(`[NotificationManager] overlay 'cp-achievement-overlay' NOT FOUND!`);
+        return;
+    }
 
     const totalXP = achievements.reduce((sum, ach) => sum + (XP.ACHIEVEMENT_REWARDS[ach.rarity] || 50), 0);
     const titleText = `${username} está ON FIRE! 🔥`;
@@ -452,8 +469,12 @@ export default class NotificationManager {
    * Muestra la notificación de logro en el overlay superior (Single)
    */
   _displayTopOverlayAchievement(eventData) {
+    if (this.config.DEBUG) console.log(`[NotificationManager] _displayTopOverlayAchievement called with:`, eventData);
     const overlay = document.getElementById("cp-achievement-overlay");
-    if (!overlay) return;
+    if (!overlay) {
+        console.error(`[NotificationManager] overlay 'cp-achievement-overlay' NOT FOUND!`);
+        return;
+    }
 
     const safeData = UIUtils.decorate(eventData);
     const { username, achievement } = safeData;

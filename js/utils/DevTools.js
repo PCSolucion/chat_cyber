@@ -217,8 +217,8 @@ export default class DevTools {
             { id: 'test_legendary', name: 'Netrunner Legend', rarity: 'legendary', description: 'Simulated legendary achievement', condition: 'DEBUG' }
         ];
         const random = testAchievements[Math.floor(Math.random() * testAchievements.length)];
-        // Pasar: userId, username, achievement
-        this.achievementService.emitAchievementUnlocked('99999', 'TestUser', random);
+        // Pasar: username, achievement (userId ya no se usa como key principal)
+        this.achievementService.emitAchievementUnlocked('TestUser', random);
     }
 
     async _reloadRankings() {

@@ -15,7 +15,7 @@ export default class UserLoaderMiddleware {
         try {
             // Intentar precargar el usuario (On-Demand)
             // ctx.userId es el ID numérico de Twitch
-            const loaded = await this.stateManager.ensureUserLoaded(ctx.userId, ctx.username);
+            const loaded = await this.stateManager.ensureUserLoaded(ctx.username, ctx.userId);
             
             if (!loaded) {
                 Logger.warn('Pipeline', `⚠️ Saltando mensaje: No se pudo verificar la identidad de ${ctx.username}`);

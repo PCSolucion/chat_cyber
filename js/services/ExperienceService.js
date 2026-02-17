@@ -109,7 +109,7 @@ export default class ExperienceService {
         // 4. Persistencia
         // Usamos saveUserResult directamente al StateManager
         // Pasamos los "gains" para que el StateManager pueda usar atomic increments de Firestore
-        this.stateManager.saveUserResult(null, username, { 
+        this.stateManager.saveUserResult(username, { 
             xp: userData.xp, 
             level: userData.level,
             totalMessages: userData.totalMessages,
@@ -456,7 +456,7 @@ export default class ExperienceService {
      * @returns {Object}
      */
     getUserData(userId, username) {
-        return this.stateManager.getUser(userId, username);
+        return this.stateManager.getUser(username || userId);
     }
 
     /**
@@ -466,7 +466,7 @@ export default class ExperienceService {
      */
     async updateSubscription(username, months) {
         // Asegurar carga antes de modificar para evitar sobrescrituras de nivel 1
-        await this.stateManager.ensureUserLoaded(null, username);
+        await this.stateManager.ensureUserLoaded(username);
         const userData = this.getUserData(null, username);
         
         // Si el valor es nuevo o mayor, actualizar y guardar
@@ -496,7 +496,7 @@ export default class ExperienceService {
      */
     async addWatchTime(username, minutes) {
         // Asegurar carga antes de añadir XP pasiva
-        await this.stateManager.ensureUserLoaded(null, username);
+        await this.stateManager.ensureUserLoaded(username);
         
         const lowerUser = username.toLowerCase();
         const xpEarned = this._calculateWatchTimeXP(minutes);
@@ -519,7 +519,7 @@ export default class ExperienceService {
      * @returns {number} XP ganada
      */
     async addAchievementXP(username, rarity, options = {}) {
-        await this.stateManager.ensureUserLoaded(null, username);
+        await this.stateManager.ensureUserLoaded(username);
         const lowerUser = username.toLowerCase();
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
@@ -675,7 +675,7 @@ export default class ExperienceService {
             // Esto asegura que sus estadísticas (días en top, best rank) se actualicen aunque no esté en el chat.
             if (!userData && rank <= 20) {
                 if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
-                await this.stateManager.ensureUserLoaded(null, key);
+                await this.stateManager.ensureUserLoaded(key);
                 userData = this.stateManager.users.get(key);
             }
 
@@ -780,7 +780,7 @@ export default class ExperienceService {
             targetUsers = chatters;
             // Pre-argar en paralelo
             await Promise.all(targetUsers.map(username => 
-                this.stateManager.ensureUserLoaded(null, username)
+                this.stateManager.ensureUserLoaded(username)
             ));
         }
 

@@ -20,7 +20,7 @@ export default class AchievementMiddleware {
         };
 
         // checkAchievements ya es async y tiene su propia protección de carga interna
-        await this.achievementService.checkAchievements(ctx.userId, ctx.username, achContext);
+        await this.achievementService.checkAchievements(ctx.username, achContext);
         
         // Logros específicos: Progreso de Bro
         this._handleBroProgress(ctx.userId, ctx.username, ctx.message);
@@ -39,7 +39,7 @@ export default class AchievementMiddleware {
 
     _handleBroProgress(userId, username, message) {
         if (/\bbro\b/i.test(message)) {
-            const stats = this.achievementService.getUserStats(userId, username);
+            const stats = this.achievementService.getUserStats(username);
             const broCount = stats.broCount || 0;
             const broMilestones = [1, 10, 20, 50, 100];
             let nextM = broMilestones.find(m => m > broCount) || (Math.ceil((broCount + 1) / 100) * 100);

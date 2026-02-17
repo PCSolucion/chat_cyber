@@ -61,11 +61,7 @@ export default class FirestoreService {
      * Obtiene un documento de usuario por Username directamente
      * @param {string} username - Nombre de usuario (Clave única)
      */
-    async getUser(arg1, arg2) {
-        // Soporta: (username) o (userId, username)
-        const username = arg2 || arg1;
-        const userId = arg2 ? arg1 : null;
-        
+    async getUser(username, userId = null) {
         if (!this.isConfigured || !username) return null;
         
         // Limpieza agresiva del nombre de usuario para evitar problemas de espacios o caracteres invisibles

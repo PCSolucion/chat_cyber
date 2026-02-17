@@ -32,12 +32,10 @@ export default class AchievementService {
         EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline));
         EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category));
         
-        // Escuchar cambios de ranking para re-evaluar logros
         EventManager.on(EVENTS.USER.RANKING_UPDATED, (data) => {
             const username = data.username;
             const isInitialLoad = data.isInitialLoad || false;
-            // Pasamos null como userId
-            this.checkAchievements(null, username, { isRankingUpdate: true, isInitialLoad });
+            this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
         });
 
         // RETRO: Escuchar carga de usuarios para otorgar logros retroactivos
@@ -47,7 +45,7 @@ export default class AchievementService {
                 // console.log(`🔄 Checking retroactive achievements for ${username}`);
             }
             // isInitialLoad=true silencia el popup (para no spammear al inicio), pero otorga el logro
-            this.checkAchievements(null, username, { isInitialLoad: true, isRetroactiveCheck: true });
+            this.checkAchievements(username, { isInitialLoad: true, isRetroactiveCheck: true });
         });
     }
 
@@ -144,13 +142,13 @@ export default class AchievementService {
     /**
      * Obtiene stats auxiliares para logros (mensajes, rachas, etc.)
      */
-    getUserStats(ignoredUserId, username) {
+    getUserStats(username) {
         if (!username) return {};
         const key = username.toLowerCase();
 
         if (!this.userStats.has(key)) {
             // Cargar inicial desde lo que tenga el usuario guardado
-            const userData = this.stateManager.getUser(null, key);
+            const userData = this.stateManager.getUser(key);
             const savedStats = (userData && userData.achievementStats) ? userData.achievementStats : {};
 
             this.userStats.set(key, {
@@ -193,11 +191,11 @@ export default class AchievementService {
         return this.userStats.get(key);
     }
 
-    updateUserStats(ignoredUserId, username, context = {}) {
+    updateUserStats(username, context = {}) {
         if (!username) return;
         const key = username.toLowerCase();
         
-        const stats = this.getUserStats(null, key);
+        const stats = this.getUserStats(key);
         const now = new Date();
         const hour = now.getHours();
 
@@ -254,7 +252,7 @@ export default class AchievementService {
         }
 
         // Guardar en RAM stateManager para persistencia
-        const userData = this.stateManager.getUser(null, key);
+        const userData = this.stateManager.getUser(key);
         if (userData) {
             userData.achievementStats = stats;
             this.stateManager.markDirty(key);
@@ -271,18 +269,18 @@ export default class AchievementService {
         if (!stats.holidays) stats.holidays = [];
     }
 
-    async checkAchievements(ignoredUserId, username, context = {}) {
+    async checkAchievements(username, context = {}) {
         if (!username) return [];
         const key = username.toLowerCase();
 
         // 1. Asegurar usuario cargado
-        await this.stateManager.ensureUserLoaded(null, key);
+        await this.stateManager.ensureUserLoaded(key);
 
         // 2. Update Stats
-        this.updateUserStats(null, key, context);
+        this.updateUserStats(key, context);
 
-        const userData = this.stateManager.getUser(null, key);
-        const userStats = this.getUserStats(null, key);
+        const userData = this.stateManager.getUser(key);
+        const userStats = this.getUserStats(key);
         const unlockedNow = [];
 
         let existingAchievements = userData.achievements || [];
@@ -317,14 +315,17 @@ export default class AchievementService {
             this.stateManager.markDirty(key);
 
             if (!context.isInitialLoad) {
-                unlockedNow.forEach(ach => this.emitAchievementUnlocked(null, key, ach));
+                unlockedNow.forEach(ach => this.emitAchievementUnlocked(key, ach));
             }
         }
 
         return unlockedNow;
     }
 
-    emitAchievementUnlocked(ignoredUserId, username, achievement) {
+    emitAchievementUnlocked(username, achievement) {
+        if (this.config.DEBUG) {
+            console.log(`[AchievementService] Emitting achievement unlocked for ${username}:`, achievement.name);
+        }
         EventManager.emit(EVENTS.USER.ACHIEVEMENT_UNLOCKED, {
             userId: null, 
             username: username,
@@ -333,9 +334,9 @@ export default class AchievementService {
         });
     }
 
-    getUserAchievements(ignoredUserId, username) {
+    getUserAchievements(username) {
         if (!username) return [];
-        const userData = this.stateManager.getUser(null, username.toLowerCase());
+        const userData = this.stateManager.getUser(username.toLowerCase());
         const data = userData?.achievements || [];
         
         return data.map(ach => {

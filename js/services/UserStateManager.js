@@ -52,10 +52,7 @@ export default class UserStateManager {
      * UTILIZA BLOQUEO DE CONCURRENCIA para evitar "Nivel 1" por carga duplicada.
      * UTILIZA SUBSCRIPTIONS para que los datos buenos siempre vengan de la nube.
      */
-    async ensureUserLoaded(arg1, arg2) {
-        const username = (arg1 && typeof arg1 === 'string' && !arg2) ? arg1 : arg2;
-        const userId = (arg1 && arg2) ? arg1 : null;
-        
+    async ensureUserLoaded(username, userId = null) {
         if (!username) return false;
         const key = username.toLowerCase();
 
@@ -76,7 +73,7 @@ export default class UserStateManager {
         const loadPromise = (async () => {
             try {
                 // PRIMERA CARGA: Obtener datos actuales
-                const cloudData = await this.firestore.getUser(userId, username);
+                const cloudData = await this.firestore.getUser(username, userId);
                 let finalData;
 
                 if (cloudData) {
@@ -114,8 +111,7 @@ export default class UserStateManager {
     /**
      * Devuelve los datos del usuario síncronamente (debe estar cargado previamente)
      */
-    getUser(arg1, arg2) {
-        const username = arg2 || arg1;
+    getUser(username) {
         if (!username) return null;
         return this.users.get(username.toLowerCase());
     }
@@ -141,20 +137,8 @@ export default class UserStateManager {
      * Guarda los datos modificados.
      * Soporta firma (id, username, data) y (username, data)
      */
-    async saveUserResult(arg1, arg2, arg3) {
-        let username, newData;
-        
-        if (arg3) {
-            // (id, username, data) - Estilo ExperienceService
-            username = arg2;
-            newData = arg3;
-        } else {
-            // (username, data) - Estilo directo
-            username = arg1;
-            newData = arg2;
-        }
-
-        if (!username) return;
+    async saveUserResult(username, newData) {
+        if (!username || !newData) return;
         const key = username.toLowerCase();
         
         let currentData = this.users.get(key);
