@@ -1,4 +1,5 @@
 import { IDLE } from '../constants/AppConstants.js';
+import Logger from '../utils/Logger.js';
 import SummaryScreen from './ui/screens/SummaryScreen.js';
 import LeaderboardScreen from './ui/screens/LeaderboardScreen.js';
 import TopSubsScreen from './ui/screens/TopSubsScreen.js';
@@ -57,7 +58,7 @@ export default class IdleScreenRenderer {
             const screen = this.screens[screenData.type] || this.screens['summary'];
             screen.render(screenData, screenContent);
         } catch (error) {
-            console.error(`❌ Error rendering idle screen of type ${screenData.type}:`, error);
+            Logger.error('UI', `Error rendering idle screen of type ${screenData.type}`, error);
             this._renderError(screenContent, screenData.type);
             
             // Fallback al resumen
@@ -65,7 +66,9 @@ export default class IdleScreenRenderer {
                 setTimeout(() => {
                     try { 
                         this.screens['summary'].render(screenData, screenContent); 
-                    } catch(e) {}
+                    } catch(e) {
+                         Logger.error('UI', 'Fatal error during idle screen fallback rendering', e);
+                    }
                 }, 1000);
             }
         }
