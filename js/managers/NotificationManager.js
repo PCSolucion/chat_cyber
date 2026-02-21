@@ -188,14 +188,6 @@ export default class NotificationManager {
         this._displayAchievementBatch(notification.data);
         this._displayTopOverlayAchievementBatch(notification.data);
         
-        // Emitir evento para sincronizar sonido
-        // Usamos el primer logro para datos de referencia del evento
-        EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { 
-            username: notification.data.username, 
-            achievement: notification.data.achievements[0],
-            count: notification.data.achievements.length
-        });
-        
         // Tiempo base del Xbox Achievement (11s) + margen
         totalWaitTime = Math.max(totalWaitTime, 11500);
         break;
@@ -462,7 +454,7 @@ export default class NotificationManager {
       </div>
     `;
 
-    this._animateOverlay(overlay, namesList);
+    this._animateOverlay(overlay, namesList, 'rare');
   }
 
   /**
@@ -529,13 +521,13 @@ export default class NotificationManager {
       </div>
     `;
 
-    this._animateOverlay(overlay, achievement.name);
+    this._animateOverlay(overlay, achievement.name, achievement.rarity);
   }
 
   /**
    * Lógica de animación común para overlays
    */
-  _animateOverlay(overlay, scrambleText) {
+  _animateOverlay(overlay, scrambleText, rarity = 'common') {
     const circle = overlay.querySelector('.circle');
     const banner = overlay.querySelector('.banner');
     const display = overlay.querySelector('.achieve_disp');
@@ -545,6 +537,9 @@ export default class NotificationManager {
       circle.classList.add("circle_animate");
       banner.classList.add("banner-animate");
       display.classList.add("achieve_disp_animate");
+      
+      // Emit sound immediately as the animation starts (circle pop-in)
+      EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { achievement: { rarity: rarity } });
 
       const nameElement = overlay.querySelector('.achiev_name');
       if (nameElement) {
