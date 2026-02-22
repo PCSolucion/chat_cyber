@@ -6,6 +6,7 @@ import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import { XP, TIMING, QUALITY } from '../constants/AppConstants.js';
 import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
+import XP_CONFIG from '../constants/XPWeights.js';
 
 /**
  * ExperienceService - Sistema de Gestión de Experiencia (XP)
@@ -33,8 +34,8 @@ export default class ExperienceService {
         // Registro de usuarios que ya mostraron "Welcome Back" esta sesión
         this.sessionReturningShown = new Set();
 
-        // Configuración de XP (extensible)
-        this.xpConfig = this.initXPConfig();
+        // Configuración de XP (Cargada desde constantes centralizadas)
+        this.xpConfig = XP_CONFIG;
         
         // Inicializar Gestores Especializados
         this.streakManager = new StreakManager(this.xpConfig);
@@ -156,119 +157,13 @@ export default class ExperienceService {
     }
 
     /**
-     * Inicializa la configuración de fuentes de XP
-     * Estructura extensible para añadir nuevas fuentes
+     * @deprecated La configuración ahora se maneja en js/constants/XPWeights.js
+     * Se mantiene el método para compatibilidad si otros servicios lo llaman para lectura,
+     * pero ahora retorna el objeto centralizado.
      * @returns {Object}
      */
     initXPConfig() {
-        return {
-            // Fuentes base de XP
-            sources: {
-                MESSAGE: {
-                    id: 'message',
-                    name: 'Mensaje enviado',
-                    xp: 5,
-                    cooldownMs: 0, // Sin cooldown
-                    enabled: true
-                },
-                FIRST_MESSAGE_DAY: {
-                    id: 'first_message_day',
-                    name: 'Primer mensaje del día',
-                    xp: 20,
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                STREAM_ACTIVE: {
-                    id: 'stream_active',
-                    name: 'Mensaje durante stream',
-                    xp: 10,
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                EMOTE_USED: {
-                    id: 'emote_used',
-                    name: 'Uso de emote',
-                    xp: 2,
-                    maxPerMessage: 5, // Máximo 5 emotes dan XP por mensaje
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                STREAK_BONUS: {
-                    id: 'streak_bonus',
-                    name: 'Racha de participación',
-                    xp: 50,
-                    streakDays: 3, // 3+ días seguidos
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                STREAM_START: {
-                    id: 'stream_start',
-                    name: 'Mensaje al inicio del stream',
-                    xp: 25,
-                    windowMinutes: 5, // Primeros 5 minutos
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                MENTION_USER: {
-                    id: 'mention_user',
-                    name: 'Mención a otro usuario',
-                    xp: 8,
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                WATCH_TIME: {
-                    id: 'watch_time',
-                    name: 'Tiempo de visualización',
-                    xp: XP.WATCH_TIME_XP || 10,
-                    cooldownMs: 0, // Gestionado por intervalo de 10 min (1 XP/min)
-                    enabled: true
-                },
-                RETURN_BONUS: {
-                    id: 'return_bonus',
-                    name: 'Welcome Back bonus',
-                    xp: XP.RETURN_BONUS_XP || 30,
-                    cooldownMs: 0,
-                    enabled: true
-                },
-                MSG_QUALITY: {
-                    id: 'msg_quality',
-                    name: 'Message Quality',
-                    highQualityXP: QUALITY.HIGH_QUALITY_XP,
-                    lowEffortPenalty: QUALITY.LOW_EFFORT_PENALTY,
-                    minLengthHigh: QUALITY.MIN_LENGTH_HIGH,
-                    maxLengthHigh: QUALITY.MAX_LENGTH_HIGH,
-                    minLengthLow: QUALITY.MIN_LENGTH_LOW,
-                    maxLengthLow: QUALITY.MAX_LENGTH_LOW,
-                    cooldownMs: 0,
-                    enabled: true
-                }
-            },
-
-            // Configuración global
-            settings: {
-                minTimeBetweenXP: XP.MIN_TIME_BETWEEN_XP_MS, // 1 segundo mínimo entre ganancias de XP
-                saveDebounceMs: XP.SAVE_DEBOUNCE_MS,   // Guardar cada 5 segundos máximo
-                maxXPPerMessage: XP.MAX_XP_PER_MESSAGE    // Límite de XP por mensaje individual
-            },
-
-            // Multiplicadores de racha (días -> multiplicador)
-            streakMultipliers: [
-                { minDays: 20, multiplier: 3.0 },   // 20+ días = x3
-                { minDays: 10, multiplier: 2.0 },   // 10+ días = x2
-                { minDays: 5, multiplier: 1.5 },    // 5+ días = x1.5
-                { minDays: 3, multiplier: 1.2 },    // 3+ días = x1.2
-                { minDays: 0, multiplier: 1.0 }     // Default = x1
-            ],
-
-            // Recompensas fijas por logros
-            achievementRewards: XP.ACHIEVEMENT_REWARDS || {
-                common: 50,
-                uncommon: 75,
-                rare: 150,
-                epic: 250,
-                legendary: 500
-            }
-        };
+        return XP_CONFIG;
     }
 
 
