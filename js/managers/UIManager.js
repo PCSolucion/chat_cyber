@@ -55,6 +55,9 @@ export default class UIManager {
             nextQueue: null
         };
 
+        // 4. Referencias a manejadores de eventos (para limpieza)
+        this._handlers = {};
+
         this._setupEventListeners();
     }
 
@@ -75,19 +78,19 @@ export default class UIManager {
     }
 
     _setupEventListeners() {
-        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.status.updateSystemStatus(isOnline));
-        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (cat) => this.status.updateCategory(cat));
-        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => this.status.flashLED('ledRx'));
-        EventManager.on(EVENTS.STORAGE.DATA_SAVED, () => this.status.flashLED('ledTx'));
+        // Almacenar referencias para permitir su eliminación posterior en destroy()
+        this._handlers.statusChanged = (isOnline) => this.status.updateSystemStatus(isOnline);
+        this._handlers.categoryUpdated = (cat) => this.status.updateCategory(cat);
+        this._handlers.messageReceived = () => this.status.flashLED('ledRx');
+        this._handlers.dataSaved = () => this.status.flashLED('ledTx');
         
-        EventManager.on(EVENTS.UI.SYSTEM_MESSAGE, (data) => {
+        this._handlers.systemMessage = (data) => {
             const text = typeof data === 'string' ? data : data.text;
             // Corregido: 'SYSTEM' como ID, 'SYSTEM' como nombre, y el texto como CUERPO del mensaje
             this.displayMessage('SYSTEM', 'SYSTEM', text, {}, { isSubscriber: false });
-        });
+        };
 
-        // Escuchar cuando un mensaje termina para procesar el siguiente en la cola
-        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, () => {
+        this._handlers.messageHidden = () => {
             if (this.isIdle) return;
             if (!this.queue.isEmpty()) {
                 if (this.timers.nextQueue) clearTimeout(this.timers.nextQueue);
@@ -95,11 +98,20 @@ export default class UIManager {
             } else {
                 this.isProcessingQueue = false;
             }
-        });
+        };
 
-        // Detectar entrada/salida de Idle
-        EventManager.on('idle:start', () => { this.isIdle = true; this.reset(); });
-        EventManager.on('idle:stop', () => { this.isIdle = false; });
+        this._handlers.idleStart = () => { this.isIdle = true; this.reset(); };
+        this._handlers.idleStop = () => { this.isIdle = false; };
+
+        // Suscribirse a los eventos usando las referencias guardadas
+        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, this._handlers.statusChanged);
+        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, this._handlers.categoryUpdated);
+        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, this._handlers.messageReceived);
+        EventManager.on(EVENTS.STORAGE.DATA_SAVED, this._handlers.dataSaved);
+        EventManager.on(EVENTS.UI.SYSTEM_MESSAGE, this._handlers.systemMessage);
+        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, this._handlers.messageHidden);
+        EventManager.on('idle:start', this._handlers.idleStart);
+        EventManager.on('idle:stop', this._handlers.idleStop);
     }
 
     /**
@@ -273,6 +285,33 @@ export default class UIManager {
         if (this.display) {
             this.display.extendDisplayTime(ms);
         }
+    }
+
+    /**
+     * Limpia y destruye el UIManager (previene memory leaks)
+     */
+    destroy() {
+        console.log('[UIManager] Destruyendo instancia y limpiando eventos...');
+        this.clearAllTimers();
+
+        // 1. Eliminar Event Listeners globales
+        if (this._handlers) {
+            EventManager.off(EVENTS.STREAM.STATUS_CHANGED, this._handlers.statusChanged);
+            EventManager.off(EVENTS.STREAM.CATEGORY_UPDATED, this._handlers.categoryUpdated);
+            EventManager.off(EVENTS.CHAT.MESSAGE_RECEIVED, this._handlers.messageReceived);
+            EventManager.off(EVENTS.STORAGE.DATA_SAVED, this._handlers.dataSaved);
+            EventManager.off(EVENTS.UI.SYSTEM_MESSAGE, this._handlers.systemMessage);
+            EventManager.off(EVENTS.UI.MESSAGE_HIDDEN, this._handlers.messageHidden);
+            EventManager.off('idle:start', this._handlers.idleStart);
+            EventManager.off('idle:stop', this._handlers.idleStop);
+        }
+
+        // 2. Limpiar Subcomponentes si implementan destroy()
+        if (this.display && typeof this.display.destroy === 'function') this.display.destroy();
+        if (this.status && typeof this.status.destroy === 'function') this.status.destroy();
+        if (this.identity && typeof this.identity.destroy === 'function') this.identity.destroy();
+        if (this.message && typeof this.message.destroy === 'function') this.message.destroy();
+        if (this.queue && typeof this.queue.destroy === 'function') this.queue.destroy();
     }
 }
 
