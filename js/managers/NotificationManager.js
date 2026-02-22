@@ -533,13 +533,13 @@ export default class NotificationManager {
     const display = overlay.querySelector('.achieve_disp');
 
     requestAnimationFrame(() => {
+      // Emit sound immediately as the animation starts (circle pop-in)
+      EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { achievement: { rarity: rarity } });
+
       overlay.classList.add("show");
       circle.classList.add("circle_animate");
       banner.classList.add("banner-animate");
       display.classList.add("achieve_disp_animate");
-      
-      // Emit sound immediately as the animation starts (circle pop-in)
-      EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { achievement: { rarity: rarity } });
 
       const nameElement = overlay.querySelector('.achiev_name');
       if (nameElement) {
@@ -566,11 +566,6 @@ export default class NotificationManager {
       }, 1000);
     }, this.displayTime > animationDuration ? this.displayTime : animationDuration);
   }
-
-  /**
-   * Verifica overflow de texto para activar marquee
-
-
 
   /**
    * Verifica overflow de texto para activar marquee

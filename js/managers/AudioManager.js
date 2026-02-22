@@ -91,15 +91,16 @@ export default class AudioManager {
      * @param {Object} data - Datos del evento { achievement }
      */
     playAchievement(data) {
-        const rarity = data?.achievement?.rarity || 'common';
+        const rarity = (data?.achievement?.rarity || 'common').toLowerCase();
         
         // Mapeo de sonidos por rareza
-        let soundFile = 'sounds/logro2.mp3'; // Default common
+        // Rarezas: common, uncommon, rare, epic, legendary
+        let soundFile = 'sounds/logro2.mp3'; // Default
         
-        if (rarity === 'legendary' || rarity === 'epic') {
-            soundFile = 'sounds/logro3.mp3'; // Rare sound
-        } else if (rarity === 'common') {
-            soundFile = 'sounds/logro2.mp3';
+        if (['legendary', 'epic', 'rare'].includes(rarity)) {
+            soundFile = 'sounds/logro3.mp3'; // Sonido premium/raro
+        } else {
+            soundFile = 'sounds/logro2.mp3'; // Sonido estándar
         }
 
         this._playSoundFile(soundFile);
@@ -136,10 +137,11 @@ export default class AudioManager {
                     // Si el pool está lleno, forzar reutilización del primero
                     audio = pool[0];
                     audio.pause();
-                    audio.currentTime = 0;
                 }
             }
 
+            // [FIX] Asegurar que el audio empieza desde el principio
+            audio.currentTime = 0;
             audio.volume = Math.max(0, Math.min(1, volume));
             
             const playPromise = audio.play();
