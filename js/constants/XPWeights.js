@@ -64,13 +64,6 @@ export const XP_SOURCES = {
         cooldownMs: 0,
         enabled: true
     },
-    RETURN_BONUS: {
-        id: 'return_bonus',
-        name: 'Welcome Back bonus',
-        xp: XP.RETURN_BONUS_XP || 30,
-        cooldownMs: 0,
-        enabled: true
-    },
     MSG_QUALITY: {
         id: 'msg_quality',
         name: 'Message Quality',

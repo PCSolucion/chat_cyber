@@ -98,9 +98,6 @@ class TestPanelController {
             case 'test-level-up':
                 this.testLevelUp();
                 break;
-            case 'test-welcome-back':
-                this.testWelcomeBack(document.getElementById('welcome-back-days')?.value);
-                break;
             case 'test-spam-charflood':
                 this.testSpamCharFlood();
                 break;
@@ -431,16 +428,6 @@ class TestPanelController {
         }, '*');
     }
 
-    testWelcomeBack(days) {
-        const win = this.getWidgetWindow();
-        if (!win?.WidgetDebug?.xp) {
-            console.warn('⚠️ Widget XP system not ready');
-            return;
-        }
-        days = parseInt(days) || 14;
-        console.log(`🔄 Testing Welcome Back with ${days} days absence...`);
-        win.WidgetDebug.xp.testWelcomeBack(days);
-    }
 
     // =========================================================================
     // SPAM SHIELD TESTS

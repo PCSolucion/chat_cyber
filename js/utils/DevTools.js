@@ -50,8 +50,7 @@ export default class DevTools {
                 testLevelUp: (lvl) => this._testLevelUp(lvl),
                 resetAll: () => this._resetAllXP(),
                 exportData: () => this._exportXPData(),
-                setStreak: (user, days) => this._setTestStreak(user, days),
-                testWelcomeBack: (days) => this._testWelcomeBack(days)
+                setStreak: (user, days) => this._setTestStreak(user, days)
             },
 
             achievements: {
@@ -168,29 +167,6 @@ export default class DevTools {
         console.log(`🔥 Streak set for ${username}: ${days} days`);
     }
 
-    _testWelcomeBack(daysAway = 14) {
-        if (!this.xpService) {
-            console.warn('⚠️ XP Service not available');
-            return;
-        }
-
-        const testUser = 'ReturningRunner';
-        // getUserData espera (userId, username)
-        const userData = this.xpService.getUserData(null, testUser);
-        if (!userData) return;
-
-        // Simular que el usuario estuvo inactivo N días
-        const msAway = daysAway * 24 * 60 * 60 * 1000;
-        userData.lastActivity = Date.now() - msAway;
-
-        // Limpiar el cache de sesión para que pueda dispararse de nuevo
-        this.xpService.sessionReturningShown.delete(testUser.toLowerCase());
-
-        console.log(`🔄 Simulating ${testUser} returning after ${daysAway} days...`);
-
-        // Enviar mensaje para disparar la detección
-        this._simulateMessage(testUser, `I'm back after ${daysAway} days! Did I miss anything?`);
-    }
 
     _showEmoteStats() {
         if (!this.emoteService) return;
