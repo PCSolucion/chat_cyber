@@ -9,6 +9,7 @@ class PredictionApp {
         this.client = null;
         this.active = false;
         this.resolved = false;
+        this.votingOpen = false; // Nuevo estado para controlar votos
         this.timer = 0;
         this.timerInterval = null;
         this.connected = false;
@@ -83,6 +84,10 @@ class PredictionApp {
 
         // Comando para iniciar predicción: !pre <minutos> <pregunta> a-N b-N...
         if (msgLower.startsWith('!pre ') && isAdmin) {
+            if (this.active) {
+                console.warn('⚠️ Ya hay una predicción activa. Debes esperar a que finalice.');
+                return;
+            }
             console.log('📝 Intentando procesar !pre...');
             this.startPrediction(msg);
             return;
@@ -98,7 +103,7 @@ class PredictionApp {
         }
 
         // Comandos para votar: !a !b !c...
-        if (this.active && !this.resolved && msg.startsWith('!')) {
+        if (this.active && this.votingOpen && !this.resolved && msg.startsWith('!')) {
             const vote = msg.substring(1);
             if (this.prediction.options[vote]) {
                 this.addVote(tags['display-name'] || tags.username, vote);
@@ -143,6 +148,7 @@ class PredictionApp {
         // Reset and set new prediction
         this.active = true;
         this.resolved = false;
+        this.votingOpen = true; // Abrir votaciones
         this.prediction = { question, options, totalVotes: 0 };
         this.timer = minutes * 60;
 
@@ -196,11 +202,12 @@ class PredictionApp {
 
     onTimerEnd() {
         this.timerEl.textContent = "TIEMPO AGOTADO // ESPERANDO RESULTADO";
-        // Aquí podríamos bloquear nuevos votos si quisiéramos
+        this.votingOpen = false; // Cerrar votaciones al terminar el tiempo
     }
 
     resolvePrediction(winnerLabel) {
         this.resolved = true;
+        this.votingOpen = false; // Asegurar que se cierran si se resuelve antes
         if (this.timerInterval) clearInterval(this.timerInterval);
         
         // Guardar para poder consultarla luego con !preult
