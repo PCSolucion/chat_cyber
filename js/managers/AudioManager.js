@@ -75,13 +75,21 @@ export default class AudioManager {
      * @param {Object} data - Datos del evento { newLevel }
      */
     playLevelUp(data) {
-        const level = data?.newLevel || 1;
-        let soundFile = 'sounds/level10.mp3';
+        // [MODIFICACIÓN] Siempre utilizar level15.mp3 por petición del usuario
+        // [FIX] Control de duplicados: Evitar que el sonido se solape si el evento se dispara muy seguido
+        const now = Date.now();
+        const lastPlay = this.lastPlayTimes.get('levelup') || 0;
+        const cooldown = 5000; // 5 segundos de cooldown (inferior al tiempo de animación del overlay que es de ~6.5s)
 
-        if (level <= 10) soundFile = 'sounds/level10.mp3';
-        else if (level <= 15) soundFile = 'sounds/level15.mp3';
-        else if (level <= 20) soundFile = 'sounds/level20.mp3';
-        else soundFile = 'sounds/level25.mp3';
+        if (now - lastPlay < cooldown) {
+            if (this.config.DEBUG) {
+                console.log('🔊 AudioManager: Bloqueado sonido de level up duplicado (cooldown)');
+            }
+            return;
+        }
+
+        this.lastPlayTimes.set('levelup', now);
+        const soundFile = 'sounds/level15.mp3';
 
         this._playSoundFile(soundFile);
     }

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2026-02-24
+
+### Lista completa de cambios
+
+- fix: Forzar sonido de subir de nivel a level15.mp3 siempre y añadir cooldown de 5s para evitar doble disparo.
+
 ## [1.2.0] - 2026-02-24
 
 ### Lista completa de cambios

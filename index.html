@@ -23,44 +23,48 @@
 
 <body>
   <div id="chat-overlay-widget">
-    <!-- Cyberpunk Level Up Overlay (Global Position) -->
+    <!-- Cyberpunk Level Up Overlay (HUD Design) -->
     <div id="cp-levelup-overlay" class="cp-levelup-overlay">
-      <div class="cp-levelup-content">
-        <div class="cp-levelup-icon">
-          <svg class="cp-hex-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <polygon points="50 0, 95 25, 95 75, 50 100, 5 75, 5 25" />
-          </svg>
-          <div class="cp-hex-arrows">
-            <span>^</span>
-            <span>^</span>
-            <span>^</span>
+      <div class="levelup-hud-container">
+        <!-- Background Layer: Glitchy Text -->
+        <div class="levelup-ghost-text">LEVEL UP</div>
+        
+        <!-- Main HUD Area -->
+        <div class="levelup-hud-content">
+          <div class="hud-bracket left"></div>
+          
+          <div class="hud-data-core">
+            <div class="hud-header">
+              <span class="hud-tag">ID: INTERNAL_NEURAL_LINK</span>
+              <span class="hud-status">SYNC_COMPLETE</span>
+            </div>
+            
+            <div class="hud-main-display">
+              <div class="hud-level-box">
+                <span class="hud-level-lbl">LVL</span>
+                <span id="cp-new-level" class="hud-level-val">--</span>
+              </div>
+              <div class="hud-user-info">
+                <span id="cp-username" class="hud-user-name">---</span>
+                <div class="hud-rank-tag">
+                  <span class="hud-rank-lbl">RANK_UPDATE:</span>
+                  <span id="cp-new-title" class="hud-rank-val">---</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hud-footer">
+              <div class="hud-bit-line"></div>
+              <span class="hud-warning">CONNECTION STABLE // UPLOADING NEW PERKS...</span>
+            </div>
           </div>
+
+          <div class="hud-bracket right"></div>
         </div>
-        <div class="cp-levelup-bar">
-          <div class="cp-levelup-main-text">
-            <span class="cp-level-arrow">▲</span>
-            <span id="cp-new-level" class="cp-level-number">--</span>
-            <span class="cp-level-text">LEVEL UP!</span>
-            <div class="cp-level-decor-right">
-              <svg class="cp-level-decor-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-              </svg>
-            </div>
-          </div>
-          <div class="cp-levelup-sub-bar">
-            <div class="cp-stat-box">
-              <span class="cp-stat-icon">👤</span>
-              <span class="cp-stat-label">MERC:</span>
-              <span id="cp-username" class="cp-stat-value">---</span>
-            </div>
-            <div class="cp-stat-box">
-              <span class="cp-stat-icon">◤</span>
-              <span class="cp-stat-label">NEW RANK:</span>
-              <span id="cp-new-title" class="cp-stat-value">---</span>
-            </div>
-          </div>
+
         </div>
+        <!-- New: Particle Container -->
+        <div id="levelup-particles" class="levelup-particles"></div>
       </div>
     </div>
 

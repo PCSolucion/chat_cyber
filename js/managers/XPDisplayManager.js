@@ -1,5 +1,6 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import UIUtils from '../utils/UIUtils.js';
 
 /**
  * XPDisplayManager - Gestión de UI para el Sistema de XP (Integrado en Widget)
@@ -103,6 +104,7 @@ export default class XPDisplayManager {
             cpNewLevel: document.getElementById('cp-new-level'),
             cpNewTitle: document.getElementById('cp-new-title'),
             cpUsername: document.getElementById('cp-username'),
+            cpParticles: document.getElementById('levelup-particles'),
             // Referencias antiguas (mantenidas por seguridad o si se usan en layouts legacy)
             levelUpInline: document.getElementById('xp-levelup-inline'),
             levelUpNumber: document.getElementById('levelup-number'),
@@ -385,15 +387,17 @@ export default class XPDisplayManager {
             clearTimeout(this.levelUpTimeout);
         }
 
-        // Actualizar datos en el overlay
+        // Actualizar datos en el overlay con efecto scramble
         if (this.dom.cpNewLevel) {
             this.dom.cpNewLevel.textContent = eventData.newLevel;
         }
         if (this.dom.cpNewTitle) {
-            this.dom.cpNewTitle.textContent = eventData.title || 'MERCENARY';
+            // Efecto scramble para el rango (más técnico)
+            UIUtils.scrambleText(this.dom.cpNewTitle, eventData.title || 'MERCENARY', 30, false);
         }
         if (this.dom.cpUsername) {
-            this.dom.cpUsername.textContent = eventData.username || 'UNKNOWN';
+            // Efecto scramble para el nombre del usuario
+            UIUtils.scrambleText(this.dom.cpUsername, eventData.username || 'UNKNOWN', 40, false);
         }
 
         // Mostrar Overlay
@@ -401,16 +405,21 @@ export default class XPDisplayManager {
         void this.dom.cpLevelOverlay.offsetWidth; // Force reflow
         this.dom.cpLevelOverlay.classList.add('show');
 
-        // Añadir efecto global al container
+        // Añadir efectos globales al container
         const container = document.querySelector('.container');
         if (container) {
             container.classList.add('level-up-effect');
+            container.classList.add('shake-impact');
+            setTimeout(() => container.classList.remove('shake-impact'), 1000);
         }
 
-        // Ocultar después del tiempo configurado (Aumentado 2s extra)
+        // Crear explosión de partículas de datos
+        this._createLevelUpParticles();
+
+        // Ocultar después del tiempo configurado (Aumentado 1s extra a petición)
         this.levelUpTimeout = setTimeout(() => {
             this.hideTopLevelUp();
-        }, this.levelUpDisplayTime + 3000);
+        }, this.levelUpDisplayTime + 4000);
 
         if (this.config.DEBUG) {
             console.log(`🚀 CP2077 Top Level Up: ${eventData.username} → LVL ${eventData.newLevel}`);
@@ -422,12 +431,50 @@ export default class XPDisplayManager {
      */
     hideTopLevelUp() {
         if (this.dom.cpLevelOverlay) {
+            // Añadir clase de glitch de salida
+            this.dom.cpLevelOverlay.classList.add('hiding');
             this.dom.cpLevelOverlay.classList.remove('show');
 
-            const container = document.querySelector('.container');
-            if (container) {
-                container.classList.remove('level-up-effect');
-            }
+            // Esperar a que termine el glitch (0.25s) para limpiar todo
+            setTimeout(() => {
+                this.dom.cpLevelOverlay.classList.remove('hiding');
+                
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.classList.remove('level-up-effect');
+                }
+            }, 250);
+        }
+    }
+
+    /**
+     * Crea partículas de bits de datos que explotan desde el centro
+     * @private
+     */
+    _createLevelUpParticles() {
+        if (!this.dom.cpParticles) return;
+        this.dom.cpParticles.innerHTML = '';
+
+        for (let i = 0; i < 40; i++) {
+            const bit = document.createElement('div');
+            bit.className = 'data-bit';
+            
+            // Dirección aleatoria
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 100 + Math.random() * 300;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+            
+            bit.style.setProperty('--tx', `${tx}px`);
+            bit.style.setProperty('--ty', `${ty}px`);
+            bit.style.left = '0px';
+            bit.style.top = '0px';
+            
+            // Animación única
+            const duration = 0.5 + Math.random() * 1.5;
+            bit.style.animation = `bit-explode ${duration}s cubic-bezier(0.19, 1, 0.22, 1) forwards`;
+            
+            this.dom.cpParticles.appendChild(bit);
         }
     }
 
