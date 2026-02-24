@@ -109,6 +109,9 @@ class App {
             this.streamMonitor.start();
         }
 
+        // Iniciar sincronización de predicciones
+        this.initPredictionSync();
+
         // Notificar que el widget está listo (para Test Panel)
         window.dispatchEvent(new CustomEvent('widget-ready'));
         console.log('✅ Widget Initialization Complete');
@@ -156,9 +159,58 @@ class App {
 
     async destroy() {
         console.log('🛑 Shutting down...');
+        if (this.predictionUnsubscribe) this.predictionUnsubscribe();
         if (this.streamMonitor) this.streamMonitor.stop();
         if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();
+    }
+
+    /**
+     * Escucha cambios en los resultados de predicciones en Firestore
+     */
+    initPredictionSync() {
+        if (!this.processor || !this.processor.services || !this.processor.services.stateManager) return;
+        
+        const firestore = this.processor.services.stateManager.firestore;
+        if (!firestore) return;
+
+        console.log('🔮 Sincronización de predicciones activa');
+        
+        // Track the last processed timestamp (allow 5 second grace period for recent reloads)
+        let lastProcessedTime = Date.now() - 5000;
+
+        this.predictionUnsubscribe = firestore.watchSystemDoc('last_prediction_result', (data) => {
+            console.log('🔮 [PredictionSync] Doc updated:', data);
+            if (!data || !data.results || data.timestamp <= lastProcessedTime) {
+                console.log(`⏭️ [PredictionSync] Skipping update (Time: ${data?.timestamp} <= ${lastProcessedTime})`);
+                return;
+            }
+            
+            lastProcessedTime = data.timestamp;
+            console.log('🏆 [PredictionSync] Processing Results:', data.results.length, 'users');
+            console.log('📦 Results data:', data.results);
+
+            // Emitir eventos para cada usuario
+            data.results.forEach(res => {
+                const xpService = this.processor.services.xp;
+                const stateManager = this.processor.services.stateManager;
+                
+                // Si el usuario está en RAM, aplicamos el XP y obtenemos el resultado para la UI
+                let xpResult = null;
+                if (xpService && stateManager.users.has(res.username.toLowerCase())) {
+                    xpResult = xpService.awardPredictionXP(null, res.username, res.xp, res.isWinner);
+                    console.log(`✨ [PredictionSync] XP Awarded to ${res.username}: +${res.xp} (Level: ${xpResult.level})`);
+                }
+
+                // Notificar el resultado (NotificationManager lo capturará)
+                EventManager.emit(EVENTS.USER.PREDICTION_RESULT, {
+                    username: res.username,
+                    xp: res.xp,
+                    isWinner: res.isWinner,
+                    xpResult: xpResult // Nuevo: Incluimos el resultado del cálculo de XP
+                });
+            });
+        });
     }
 }
 

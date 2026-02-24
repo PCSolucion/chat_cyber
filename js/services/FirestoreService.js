@@ -279,4 +279,15 @@ export default class FirestoreService {
     async loadUserDoc(userId) {
         return this.getUser(userId);
     }
+
+    /**
+     * Suscripción en tiempo real a documento de sistema
+     */
+    watchSystemDoc(docId, callback) {
+        if (!this.isConfigured || !docId) return () => {};
+        const ref = doc(this.db, 'system', docId);
+        return onSnapshot(ref, (snap) => {
+            if (snap.exists()) callback(snap.data());
+        });
+    }
 }

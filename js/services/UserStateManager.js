@@ -295,7 +295,13 @@ export default class UserStateManager {
 
     _sanitize(data, username) {
         // Asegurar estructura mínima coherente para evitar NaN en contadores
-        const stats = data.stats || { messages: 0, watchTime: 0 };
+        const stats = {
+            messages: 0,
+            watchTime: 0,
+            prediction_wins: 0,
+            prediction_participations: 0,
+            ...(data.stats || {})
+        };
         
         // [FIX] Detectar y rechazar "total" como displayName (Evitar corrupción de datos)
         const rawDisplayName = data.displayName || username;
@@ -329,7 +335,12 @@ export default class UserStateManager {
             displayName: username,
             xp: 0,
             level: 1,
-            stats: { messages: 0, watchTime: 0 },
+            stats: { 
+                messages: 0, 
+                watchTime: 0,
+                prediction_wins: 0,
+                prediction_participations: 0 
+            },
             // Contadores derivados usados por ExperienceService
             totalMessages: 0,
             watchTimeMinutes: 0,

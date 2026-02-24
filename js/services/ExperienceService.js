@@ -413,6 +413,48 @@ export default class ExperienceService {
 
 
     /**
+     * Aplica XP ganado en una predicción y devuelve el resultado completo.
+     * @param {string} userId - ID numérico de Twitch
+     * @param {string} username - Nombre del usuario
+     * @param {number} xp - Cantidad de XP a añadir
+     * @param {boolean} isWinner - Si es ganador o no
+     * @returns {Object|null}
+     */
+    awardPredictionXP(userId, username, xp, isWinner = false) {
+        if (this._isBlacklisted(username)) return null;
+
+        const userData = this.getUserData(userId, username);
+        
+        // Actualizar estadísticas de predicción en el objeto de datos
+        if (!userData.stats) userData.stats = {};
+        userData.stats.prediction_wins = (userData.stats.prediction_wins || 0) + (isWinner ? 1 : 0);
+        userData.stats.prediction_participations = (userData.stats.prediction_participations || 0) + 1;
+
+        // Aplicar la actividad de XP
+        const result = this._applyActivity(userId, username, {
+            xp: xp,
+            messages: 0,
+            source: 'PREDICTION',
+            passive: false // Queremos que cuente como acción propia para el widget
+        });
+
+        if (!result) return null;
+
+        // Construir resultado compatible con la UI
+        return {
+            username: username,
+            xpGained: xp,
+            totalXP: userData.xp,
+            level: userData.level,
+            previousLevel: result.previousLevel,
+            leveledUp: result.leveledUp,
+            levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
+            levelTitle: this.levelCalculator.getLevelTitle(userData.level),
+            isWinner
+        };
+    }
+
+    /**
      * Obtiene información completa de XP de un usuario
      * @param {string} username - Nombre del usuario
      * @returns {Object} Información de XP

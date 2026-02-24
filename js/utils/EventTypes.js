@@ -19,7 +19,8 @@ export const EVENTS = {
         ACHIEVEMENT_UNLOCKED: 'user:achievementUnlocked',
         XP_GAINED: 'user:xpGained',
         RANKING_UPDATED: 'user:rankingUpdated',
-        LOADED: 'user:loaded'
+        LOADED: 'user:loaded',
+        PREDICTION_RESULT: 'user:predictionResult'
     },
 
     // Eventos de Stream (Twitch)

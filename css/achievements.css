@@ -799,10 +799,50 @@
     padding: 1px 4px;
     border-radius: 3px;
     white-space: nowrap;
+    font-weight: bold;
 }
 
 .batch-names span {
     color: rgba(255, 255, 255, 0.85);
     font-size: 0.7rem;
     font-weight: 400;
+}
+
+/* ========================================
+   PREDICTION NOTIFICATION STYLES
+   ======================================== */
+
+.achievement-notification.prediction-notif {
+    border-left: 4px solid var(--cyber-yellow);
+    background: linear-gradient(90deg, 
+        rgba(20, 20, 25, 0.98) 0%, 
+        rgba(40, 40, 50, 0.95) 100%
+    );
+}
+
+.achievement-notification.prediction-notif.participant {
+    border-left-color: var(--cyber-blue);
+}
+
+.prediction-notif .achievement-icon {
+    border: 2px solid var(--cyber-yellow) !important;
+    border-radius: 50% !important;
+    background: rgba(252, 238, 9, 0.1) !important;
+    box-shadow: 0 0 15px rgba(252, 238, 9, 0.2) !important;
+    transform: none !important; /* Overriding common nudge */
+    margin-top: 4px;
+}
+
+.prediction-notif.participant .achievement-icon {
+    border-color: var(--cyber-blue) !important;
+    background: rgba(5, 213, 250, 0.1) !important;
+    box-shadow: 0 0 15px rgba(5, 213, 250, 0.2) !important;
+}
+
+.prediction-notif .achievement-timer {
+    background: var(--cyber-yellow);
+}
+
+.prediction-notif.participant .achievement-timer {
+    background: var(--cyber-blue);
 }

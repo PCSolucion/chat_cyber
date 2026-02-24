@@ -64,6 +64,11 @@ export default class DevTools {
 
             idle: {
                 forceMode: () => this.idleManager?._enterIdleMode()
+            },
+            
+            predictions: {
+                testWinner: (user = 'Tester') => this._testPrediction(user, true),
+                testParticipant: (user = 'Tester') => this._testPrediction(user, false)
             }
         };
 
@@ -195,6 +200,15 @@ export default class DevTools {
         const random = testAchievements[Math.floor(Math.random() * testAchievements.length)];
         // Pasar: username, achievement (userId ya no se usa como key principal)
         this.achievementService.emitAchievementUnlocked('TestUser', random);
+    }
+
+    _testPrediction(username, isWinner) {
+        if (!this.notificationManager) return;
+        this.notificationManager.showPredictionResult({
+            username,
+            xp: isWinner ? 200 : 30,
+            isWinner
+        });
     }
 
     async _reloadRankings() {

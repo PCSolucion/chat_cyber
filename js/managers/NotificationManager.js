@@ -77,6 +77,11 @@ export default class NotificationManager {
     EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
       this.showLevelUp(eventData);
     });
+
+    // Escuchar resultados de predicción
+    EventManager.on(EVENTS.USER.PREDICTION_RESULT, (eventData) => {
+      this.showPredictionResult(eventData);
+    });
   }
 
   /**
@@ -164,6 +169,20 @@ export default class NotificationManager {
   }
 
   /**
+   * Añade una notificación de resultado de predicción a la cola
+   * @param {Object} eventData - { username, xp, isWinner }
+   */
+  showPredictionResult(eventData) {
+    console.log('📢 [NotificationManager] Received prediction result event:', eventData);
+    this.queue.push({
+      type: "prediction_result",
+      data: eventData,
+    });
+
+    this._processQueue();
+  }
+
+  /**
    * Procesa la cola de notificaciones una a una
    * @private
    */
@@ -204,6 +223,11 @@ export default class NotificationManager {
 
         // Tiempo base del Level Up Overlay (6s) + margen
         totalWaitTime = 6500;
+        break;
+
+      case "prediction_result":
+        this._displayPredictionResult(notification.data);
+        totalWaitTime = 3500;
         break;
 
       default:
@@ -614,5 +638,37 @@ export default class NotificationManager {
    */
   getQueueSize() {
     return this.queue.length;
+  }
+
+  /**
+   * Renderiza el resultado de la predicción en el flujo del chat
+   * @private
+   */
+  _displayPredictionResult(data) {
+    const { username, xp, isWinner, xpResult } = data;
+    
+    // Configuración visual basada en el resultado
+    const icon = isWinner ? '🏆' : '🎫';
+    const message = isWinner 
+        ? `¡He ganado +${xp} XP en la última predicción! ${icon}🦾` 
+        : `He recibido +${xp} XP por participar en la predicción. ${icon}`;
+
+    if (this.config.DEBUG) {
+        console.log(`📢 [NotificationManager] Injecting prediction message for ${username}`);
+    }
+
+    // Inyectar el mensaje en el flujo normal del chat
+    // Esto disparará la animación de la barra de XP en el widget principal
+    this.uiManager.displayMessage(
+        null, 
+        username, 
+        message, 
+        {}, 
+        { isSubscriber: false }, // Info básica, el UIManager buscará roles reales
+        xpResult
+    );
+
+    // Emitir sonido
+    EventManager.emit(EVENTS.AUDIO.PLAY, { id: isWinner ? 'level-up' : 'achievement' });
   }
 }
