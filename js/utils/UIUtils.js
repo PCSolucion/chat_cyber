@@ -78,17 +78,6 @@ const UIUtils = {
      * 
      * @param {string} text - Texto del mensaje
      * @param {Object} emotes - Objeto de emotes de Twitch (tags.emotes)
-     * @param {string} emoteSize - Tamaño de los emotes (ej: '1.2em')
-     * @returns {string} HTML con emotes procesados
-     */
-    /**
-     * Procesa los emotes de Twitch en un mensaje
-     * - Reemplaza IDs de emotes con imágenes
-     * - Mantiene el texto escapado para seguridad
-     * - También procesa emotes de terceros (7TV, BTTV, FFZ) si están disponibles
-     * 
-     * @param {string} text - Texto del mensaje
-     * @param {Object} emotes - Objeto de emotes de Twitch (tags.emotes)
      * @param {Object} [thirdPartyService] - Servicio de emotes de terceros (opcional)
      * @param {string} emoteSize - Tamaño de los emotes (ej: '1.2em')
      * @returns {string} HTML con emotes procesados

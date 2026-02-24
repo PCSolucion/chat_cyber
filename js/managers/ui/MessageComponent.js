@@ -102,11 +102,7 @@ export default class MessageComponent {
             if (username.toLowerCase() === 'liiukiin' && !hasImages) {
                 UIUtils.scrambleText(this.el, processed);
             } else {
-                if (!hasImages) {
-                    this.el.innerHTML = `"${processed}"`; 
-                } else {
-                    this.el.innerHTML = `"${processed}"`;
-                }
+                this.el.innerHTML = `"${processed}"`;
             }
         }
     }
