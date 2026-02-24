@@ -24,7 +24,7 @@ export const TIMING = {
     MESSAGE_DISPLAY_TIME_MS: 14000,      // Tiempo que el mensaje es visible
 
     // Watch Time Tracker (Sistema de XP por tiempo)
-    WATCH_TIME_INTERVAL_MS: 1800000,     // 30 min (Cambio solicitado de 10 a 30)
+    WATCH_TIME_INTERVAL_MS: 1200000,     // 20 min (Cambiado de 30 a 20)
     WATCH_TIME_INITIAL_DELAY_MS: 5000,  // 5 seg (arranque diferido)
     
     // Cache de Storage
@@ -81,7 +81,7 @@ export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
     SAVE_DEBOUNCE_MS: 45000,            // 45 segundos: Más reactivo para el usuario, sigue siendo seguro para la cuota.
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
-    WATCH_TIME_XP: 30,                 // XP otorgada por cada intervalo de 30 min (1 XP/min)
+    WATCH_TIME_XP: 40,                 // XP otorgada por cada intervalo de 20 min (2 XP/min)
     // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
     ACHIEVEMENT_REWARDS: {
         common: 50,

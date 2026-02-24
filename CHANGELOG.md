@@ -46,6 +46,8 @@
 - feat: Add Viewer Wiki, Catalog Search, and Profile Percentiles to viewer app
 - feat: Expand leaderboard with weekly and monthly ranking timeframes
 - refactor: Implement Strategy pattern for `IdleScreenRenderer`
+- feat: Redesign Level Up overlay with a premium Cyberpunk 2077 HUD aesthetic including particle effects and screen shake.
+- Enable XP gain for all viewers (including lurkers) without requiring prior chat interaction.
 - feat: Redesign Xbox achievements and implement integrated XP reward system
 - fix: Resolve MIME type errors and asset loading issues in subfolder deployments
 - feat: Modernize technical HUD Dashboard and improve anti-spam heuristics
