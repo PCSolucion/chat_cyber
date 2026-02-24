@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0] - 2026-02-24
+
+### Lista completa de cambios
+
+- feat: Add Cyberpunk Prediction System module with OBS overlay and Twitch integration
+- feat: Add prediction concurrency and voting timeout restrictions
+- feat: Implement Firebase/Firestore migration for dynamic rankings and global leaderboard
+- perf: Major optimization of Firestore reads, writes, and atomic increments
+- feat: Enhance UI effects, notifications, and mobile-friendly statistics
+- refactor: Externalize XP configuration and improve memory management in UIManager
+- fix: Restore achievement sound playback and improve audio synchronization
+- chore: Cleanup unused files and optimize project architecture
+- refactor: Remove "Welcome Back" feature and simplify UI flow
+
 ## [1.1.4] - 2026-02-11
 
 ### Lista completa de cambios
