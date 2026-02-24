@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Predictions Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="prediction-overlay" class="prediction-overlay">
+            <div class="prediction-header">
+                <div class="timer">
+                    <div class="icon"></div>
+                    <span id="timer-text">LOADING...</span>
+                </div>
+                <div id="question-text" class="question">ESPERANDO PREDICCIÓN...</div>
+            </div>
+            
+            <div id="options-list" class="options-container">
+                <!-- Se llenará dinámicamente -->
+            </div>
+
+            <div class="cmd-hint">
+                VOTAR: !a, !b... EN EL CHAT
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../libs/regenerator-runtime.min.js"></script>
+    <script src="../libs/tmi.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

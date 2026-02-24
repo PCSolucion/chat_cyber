@@ -1,0 +1,204 @@
+:root {
+    /* Colores extraídos del chat principal */
+    --cyber-red: #FF3B45;
+    --cyber-blue: #05d5fa;
+    --cyber-yellow: #fcee09;
+    --bg-dark: #0a0a0f;
+    --bg-panel: #0a0a12;
+    
+    --font-main: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    
+    --transition-speed: 0.35s;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    font-family: var(--font-main);
+    color: white;
+}
+
+.prediction-overlay {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 430px; /* Aumentado de 380px */
+    background: var(--bg-panel);
+    border-right: 4px solid var(--cyber-red);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+    display: none;
+    flex-direction: column;
+    opacity: 1; /* Forzar opacidad total */
+    
+    /* Inversión del corte diagonal: Ahora corta la esquina inferior IZQUIERDA */
+    clip-path: polygon(
+        0 0, 
+        100% 0, 
+        100% 100%, 
+        20px 100%, 
+        0 calc(100% - 20px)
+    );
+}
+
+.prediction-header {
+    padding: 20px;
+    background: linear-gradient(90deg, rgba(255, 59, 69, 0.1) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255, 59, 69, 0.2);
+    position: relative;
+}
+
+/* Decoración superior estilo HUD */
+.prediction-header::before {
+    content: "PREDICTION_SYSTEM_V.2.0";
+    position: absolute;
+    top: 5px;
+    left: 15px; /* Movido a la izquierda */
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--cyber-red);
+    letter-spacing: 1px;
+    opacity: 0.5;
+}
+
+.timer {
+    font-family: var(--font-mono);
+    color: var(--cyber-blue);
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timer .icon {
+    width: 8px;
+    height: 8px;
+    background: var(--cyber-red);
+    box-shadow: 0 0 10px var(--cyber-red);
+    animation: statusPulse 1.5s infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.question {
+    font-size: 1.4em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    line-height: 1.1;
+}
+
+.options-container {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.option-item.winner {
+    background: rgba(251, 238, 9, 0.05);
+    border-color: var(--cyber-yellow);
+    padding-top: 30px; /* Espacio para que el tag no tape el texto */
+}
+
+.option-item.winner::before {
+    content: "✓ SELECCIÓN CORRECTA";
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    font-family: var(--font-mono);
+    color: var(--cyber-yellow);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.option-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.option-text {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--text-dim);
+    /* text-transform: uppercase; REMOVIDO para permitir minúsculas */
+}
+
+.option-percent {
+    font-family: var(--font-mono);
+    color: var(--cyber-blue);
+    font-weight: bold;
+}
+
+.progress-bar-bg {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--cyber-blue);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 0 10px rgba(5, 213, 250, 0.3);
+}
+
+.option-item.winner .progress-bar {
+    background: var(--cyber-yellow);
+    box-shadow: 0 0 10px var(--cyber-yellow);
+}
+
+.voters-list {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 40px;
+    overflow-y: auto;
+}
+
+.voter-tag {
+    font-size: 0.7em;
+    font-family: var(--font-mono);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 5px;
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cmd-hint {
+    background: rgba(0, 0, 0, 0.4);
+    font-family: var(--font-mono);
+    font-size: 14px; /* Aumentado de 10px */
+    color: var(--cyber-red);
+    text-align: center;
+    padding: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* Scrollbar para la lista de votantes */
+.voters-list::-webkit-scrollbar { width: 2px; }
+.voters-list::-webkit-scrollbar-thumb { background: var(--cyber-red); }
