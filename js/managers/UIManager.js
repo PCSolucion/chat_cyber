@@ -101,7 +101,11 @@ export default class UIManager {
         };
 
         this._handlers.idleStart = () => { this.isIdle = true; this.reset(); };
-        this._handlers.idleStop = () => { this.isIdle = false; };
+        this._handlers.idleStop = () => { 
+            this.isIdle = false; 
+            // Procesar cualquier mensaje que haya llegado durante el fin del modo idle
+            this._processQueue();
+        };
 
         // Suscribirse a los eventos usando las referencias guardadas
         EventManager.on(EVENTS.STREAM.STATUS_CHANGED, this._handlers.statusChanged);
@@ -122,16 +126,14 @@ export default class UIManager {
             console.log(`[UIManager] 📩 Incoming display: ${username} (ID: ${userId}) -> "${message}"`);
         }
 
-        if (this.isIdle) {
-            // Si estamos en idle, despertar al manager (esto disparará activity y eventualmente saldrá de idle)
-            EventManager.emit(EVENTS.USER.ACTIVITY, { userId, username });
-        }
-
         try {
-            // Añadir a la cola
+            // 1. Añadir a la cola primero para que esté disponible si el despertar dispara el procesado
             this.queue.add({ userId, username, message, emotes, subscriberInfo, xpResult });
 
-            // Si no estamos procesando o si el widget ya es visible (y queremos swap rápido)
+            // 2. Despertar al manager de inactividad y resetear timers
+            EventManager.emit(EVENTS.USER.ACTIVITY, { userId, username });
+
+            // 3. Si no estamos procesando o si el widget ya es visible (y queremos swap rápido)
             if (!this.isProcessingQueue || this.display.isVisibleState()) {
                 this._processQueue();
             }

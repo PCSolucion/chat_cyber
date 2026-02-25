@@ -141,7 +141,7 @@ export default class IdleDisplayManager {
                 this.idleContainer.style.opacity = '1';
             }
         } else {
-            container.classList.remove('idle-mode');
+            container.classList.remove('idle-mode', 'exit-left', 'hidden');
             if (this.idleContainer) this.idleContainer.style.display = 'none';
         }
     }
