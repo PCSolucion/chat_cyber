@@ -102,18 +102,9 @@ export default class MessageComponent {
             if (username.toLowerCase() === 'liiukiin' && !hasImages) {
                 UIUtils.scrambleText(this.el, processed);
             } else {
-                // Si NO tiene imágenes (emotes), usar textContent por seguridad
-                // Nota: processed ya está escapado por UIUtils.processEmotes, 
-                // pero si tiene imágenes necesitamos innerHTML.
-                if (hasImages) {
-                    this.el.innerHTML = `"${processed}"`;
-                } else {
-                    // processed aquí ya es texto plano escapado
-                    // pero textContent NO necesita escape previo, 
-                    // sin embargo UIUtils.processEmotes devuelve un string escapado.
-                    // Para mayor seguridad lo tratamos como HTML controlado.
-                    this.el.innerHTML = `"${processed}"`;
-                }
+                // processed aquí ya puede contener HTML (si hay emotes) o texto escapado
+                // UIUtils garantiza que el texto base está sanitizado.
+                this.el.innerHTML = `"${processed}"`;
             }
         }
     }
