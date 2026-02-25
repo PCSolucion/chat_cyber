@@ -126,7 +126,13 @@ export const QUALITY = {
 export const AUDIO = {
     COOLDOWN_MESSAGE_MS: 250,           // Mínimo 250ms entre sonidos de chat
     DEFAULT_VOLUME: 0.8,
-    MAX_OVERLAPPING_SOUNDS: 5           // Límite de sonidos simultáneos del mismo tipo
+    MAX_OVERLAPPING_SOUNDS: 5,           // Límite de sonidos simultáneos del mismo tipo
+    SOUNDS: {
+        NOTIFICATION: 'sounds/radiof1.mp3',
+        ACHIEVEMENT_COMMON: 'sounds/logro2.mp3',
+        ACHIEVEMENT_RARE: 'sounds/logro3.mp3',
+        LEVEL_UP: 'sounds/level15.mp3'
+    }
 };
 
 // Configuración de almacenamiento y red
