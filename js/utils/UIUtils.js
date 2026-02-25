@@ -314,9 +314,17 @@ const UIUtils = {
             }
         };
         window.requestAnimationFrame(step);
+    },
+
+    /**
+     * Elimina todas las clases de temas visuales de un elemento
+     * @param {HTMLElement} element 
+     * @param {string[]} themes 
+     */
+    clearVisualThemes(element, themes) {
+        if (!element || !themes || !Array.isArray(themes)) return;
+        element.classList.remove(...themes);
     }
 };
-
-
 
 export default UIUtils;

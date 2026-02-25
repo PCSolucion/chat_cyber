@@ -183,6 +183,15 @@ export const DEFAULTS = {
     ACCESSIBILITY: {
         ENABLE_ARIA: true
     },
+    // Clases de CSS que representan temas visuales o estados especiales de usuario
+    THEMES_CLASSES: [
+        'gold-mode-active', 
+        'takeru-bg', 
+        'x1lenz-bg', 
+        'chandalf-bg', 
+        'manguerazo-bg', 
+        'duckcris-bg'
+    ],
     MAX_MESSAGE_LENGTH: 100,
     MAX_WORD_LENGTH: 25,
     MAX_EMOJI_LIMIT: 7

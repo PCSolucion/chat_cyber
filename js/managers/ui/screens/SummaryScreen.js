@@ -12,12 +12,13 @@ export default class SummaryScreen extends BaseScreen {
         const sessionStart = data.sessionStart || Date.now();
         const startTimeStr = UIUtils.formatClockTime(new Date(sessionStart));
 
+        // Estructura base estática (Safe)
         container.innerHTML = `
             <div class="idle-dashboard-top-row">
                 <div class="stat-card mini-stat animate-hidden animate-in delay-1">
                     <div class="stat-icon timer-icon"></div>
                     <div class="stat-info">
-                        <div class="stat-value small tabular-nums">${data.duration}</div>
+                        <div class="stat-value small tabular-nums" id="stat-duration">--:--</div>
                         <div class="stat-label">TIEMPO</div>
                     </div>
                 </div>
@@ -44,24 +45,33 @@ export default class SummaryScreen extends BaseScreen {
                         <div class="gauge-ticks" id="gauge-ticks"></div>
                         <div class="gauge-fill" id="gauge-needle" style="transform: rotate(0deg)"></div>
                         <div class="gauge-cover">
-                            <div class="gauge-value-text cyan-glow tabular-nums" id="stat-mpm">${data.avgMpm}</div>
+                            <div class="gauge-value-text cyan-glow tabular-nums" id="stat-mpm">0.0</div>
                             <div class="gauge-label-text">MESSAGES PER MINUTE</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="idle-footer-info animate-hidden animate-in delay-5">
-                <span class="pulse-dot"></span> SESSION START: ${startTimeStr}h
+            <div class="idle-footer-info animate-hidden animate-in delay-5" id="stat-footer">
+                <span class="pulse-dot"></span> SESSION START: <span id="stat-start-time">--:--</span>h
             </div>
         `;
 
-        this._renderTicks();
-        this._animateValues(data);
+        // Inyección segura de datos dinámicos mediante textContent
+        const durationEl = container.querySelector('#stat-duration');
+        const mpmEl = container.querySelector('#stat-mpm');
+        const startTimeEl = container.querySelector('#stat-start-time');
+
+        if (durationEl) durationEl.textContent = data.duration || '--:--';
+        if (mpmEl) mpmEl.textContent = data.avgMpm || '0.0';
+        if (startTimeEl) startTimeEl.textContent = startTimeStr;
+
+        this._renderTicks(container);
+        this._animateValues(data, container);
     }
 
-    _renderTicks() {
-        const ticksContainer = document.getElementById('gauge-ticks');
+    _renderTicks(container) {
+        const ticksContainer = container.querySelector('#gauge-ticks');
         if (ticksContainer) {
             for (let i = 0; i <= 10; i++) {
                 const tick = document.createElement('div');
@@ -97,13 +107,16 @@ export default class SummaryScreen extends BaseScreen {
         }
     }
 
-    _animateValues(data) {
+    _animateValues(data, container) {
         setTimeout(() => {
-            UIUtils.animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 2500);
-            UIUtils.animateValue('stat-users', 0, parseInt(data.users) || 0, 2500);
+            const msgsEl = container.querySelector('#stat-msgs');
+            const usersEl = container.querySelector('#stat-users');
+            
+            if (msgsEl) UIUtils.animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 2500);
+            if (usersEl) UIUtils.animateValue('stat-users', 0, parseInt(data.users) || 0, 2500);
             
             const targetRotation = Math.min(180, (parseFloat(data.avgMpm) || 0) * 18);
-            const needle = document.getElementById('gauge-needle');
+            const needle = container.querySelector('#gauge-needle');
             if (needle) {
                 needle.style.transform = `rotate(${targetRotation}deg)`;
             }

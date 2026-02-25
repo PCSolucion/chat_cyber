@@ -1,9 +1,10 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
-import { IDLE } from '../constants/AppConstants.js';
+import { IDLE, DEFAULTS } from '../constants/AppConstants.js';
 import IdleScreenRenderer from './IdleScreenRenderer.js';
 import IdleDataOrchestrator from './IdleDataOrchestrator.js';
 import IdleTimerService from './IdleTimerService.js';
+import UIUtils from '../utils/UIUtils.js';
 
 /**
  * IdleDisplayManager - Gestiona la visualización cuando no hay chat activo
@@ -52,8 +53,13 @@ export default class IdleDisplayManager {
     }
 
     _setupEventListeners() {
-        EventManager.on(EVENTS.USER.ACTIVITY, () => this.onActivity());
-        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, () => this.timerService.enterIdle());
+        this._handlers = {
+            activity: () => this.onActivity(),
+            messageHidden: () => this.timerService.enterIdle()
+        };
+
+        EventManager.on(EVENTS.USER.ACTIVITY, this._handlers.activity);
+        EventManager.on(EVENTS.UI.MESSAGE_HIDDEN, this._handlers.messageHidden);
     }
 
     /**
@@ -124,7 +130,11 @@ export default class IdleDisplayManager {
 
         if (isEntering) {
             container.classList.add('idle-mode');
-            container.classList.remove('hidden', 'gold-mode-active', 'takeru-bg', 'x1lenz-bg', 'chandalf-bg', 'manguerazo-bg', 'duckcris-bg');
+            container.classList.remove('hidden');
+            
+            // Limpiar temas visuales especiales (Centralizado)
+            UIUtils.clearVisualThemes(container, DEFAULTS.THEMES_CLASSES);
+
             if (this.uiManager) this.uiManager.clearAllTimers();
             if (this.idleContainer) {
                 this.idleContainer.style.display = 'flex';
@@ -214,6 +224,13 @@ export default class IdleDisplayManager {
 
     destroy() {
         this.stop();
+
+        // Desuscripción de eventos para evitar fugas de memoria
+        if (this._handlers) {
+            EventManager.off(EVENTS.USER.ACTIVITY, this._handlers.activity);
+            EventManager.off(EVENTS.UI.MESSAGE_HIDDEN, this._handlers.messageHidden);
+        }
+
         if (this.idleContainer && this.idleContainer.parentNode) {
             this.idleContainer.parentNode.removeChild(this.idleContainer);
         }
