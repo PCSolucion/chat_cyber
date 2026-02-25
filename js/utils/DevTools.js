@@ -157,6 +157,7 @@ export default class DevTools {
             console.log('💾 Datos Sesión Exportados');
         } catch (e) {
             console.error('Error exportando:', e);
+            alert('❌ Error al exportar los datos: ' + e.message);
         }
     }
 
@@ -211,11 +212,6 @@ export default class DevTools {
         });
     }
 
-    async _reloadRankings() {
-        if (this.app.processor) {
-            await this.app.processor.loadAsyncData();
-        }
-    }
 
     _setupLegacyAliases() {
         const d = window.WidgetDebug;
