@@ -87,40 +87,10 @@ export default class NotificationRenderer {
      * Renderiza un batch de logros en el widget lateral
      */
     renderAchievementBatch(data) {
-        const { username, achievements } = data;
-        
-        if (achievements.length === 1) {
-            return this.renderAchievement({ username, achievement: achievements[0] });
+        // Solicitud usuario: no mostrar banner de batch en el widget si ya sale el overlay arriba.
+        if (this.config.DEBUG) {
+            console.log(`🏆 Batch of ${data.achievements.length} achievements skipped in widget (Overlay only).`);
         }
-
-        const container = document.getElementById("achievement-notifications");
-        if (!container) return;
-
-        const notification = document.createElement("div");
-        notification.className = "achievement-notification achievement-batch";
-        notification.setAttribute("data-count", achievements.length);
-
-        const displayAchievements = achievements.slice(0, 5);
-        const iconsHTML = displayAchievements.map(ach => 
-            `<img class="batch-icon" src="${this._escapeHTML(ach.image || 'img/logros/default.png')}" title="${this._escapeHTML(ach.name)}" onerror="this.src='img/logros/default.png'">`
-        ).join('');
-        
-        const names = achievements.map(a => this._escapeHTML(a.name)).join(', ');
-
-        notification.innerHTML = `
-            <div class="achievement-content" style="padding-left: 5px;">
-                <div class="achievement-label" style="color: var(--cyber-yellow); margin-bottom: 0px;">¡RACHA DE LOGROS!</div>
-                <div class="achievement-name" style="margin-bottom: 0px;"><span>${achievements.length} DESBLOQUEADOS</span></div>
-                <div class="achievement-desc batch-names" style="margin-bottom: 0px;"><span>${names}</span></div>
-                <div class="achievement-icons-row" style="margin-top: 5px; height: 24px;">
-                    ${iconsHTML}
-                    ${achievements.length > 5 ? `<span class="more-badge">+${achievements.length - 5}</span>` : ''}
-                </div>
-            </div>
-            <div class="achievement-timer"></div>
-        `;
-
-        this.mountNotification(notification, container, username, "Multiple Achievements");
     }
 
     /**

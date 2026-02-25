@@ -31,7 +31,7 @@ export default class IdleDataOrchestrator {
       const allScreens = [
         {
           type: "summary",
-          title: "ESTADÍSTICAS DE SESIÓN",
+          title: "RESUMEN SESIÓN",
           data: {
             duration: displayStats.sessionDuration || "00:00:00",
             messages: displayStats.totalMessages || 0,
@@ -46,13 +46,13 @@ export default class IdleDataOrchestrator {
         },
         {
           type: "leaderboard",
-          title: "MÁS ACTIVOS (SESIÓN)",
+          title: "MÁS ACTIVOS",
           data: displayStats.topUsers || [],
           isValid: (s) => s.data && s.data.length > 0,
         },
         {
           type: "trending",
-          title: "EMOTES MÁS USADOS",
+          title: "TOP EMOTES",
           data: {
             topEmotes: this.statsService.getTopEmotes
               ? this.statsService.getTopEmotes(3)
@@ -66,7 +66,7 @@ export default class IdleDataOrchestrator {
         },
         {
           type: "achievements",
-          title: "PROGRESO DE SESIÓN",
+          title: "HITOS Y LOGROS",
           data: {
             levelUps: displayStats.totalLevelUps || 0,
             achievements: displayStats.totalAchievements || 0,
@@ -83,7 +83,7 @@ export default class IdleDataOrchestrator {
         },
         {
           type: "streaks",
-          title: "RACHAS ACTIVAS",
+          title: "RACHAS DÍA",
           data: {
             topStreaks: displayStats.topStreaks || [],
             totalActive: displayStats.activeStreaksCount || 0,
@@ -93,7 +93,7 @@ export default class IdleDataOrchestrator {
         },
         {
           type: "watchtime_session",
-          title: "TIEMPO EN DIRECTO",
+          title: "TIEMPO SESIÓN",
           data: this.statsService.getTopWatchTime
             ? this.statsService.getTopWatchTime("session", 20)
             : [],
@@ -109,12 +109,12 @@ export default class IdleDataOrchestrator {
         },
         {
           type: "last_achievement",
-          title: "ÚLTIMO LOGRO DESBLOQUEADO",
+          title: "ÚLTIMO LOGRO",
           data:
             displayStats.recentAchievements &&
             displayStats.recentAchievements.length > 0
-              ? displayStats.recentAchievements[0]
-              : null,
+               ? displayStats.recentAchievements[0]
+               : null,
           isValid: (s) => s.data !== null,
         },
         {
