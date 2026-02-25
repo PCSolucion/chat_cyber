@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class TopCommand extends BaseCommand {
     constructor() {
-        super('top', ['leaderboard', 'ranking']);
+        super('top', {
+            aliases: ['leaderboard', 'ranking'],
+            description: 'Muestra el top 3 de usuarios con más nivel'
+        });
     }
 
     execute({ services }) {

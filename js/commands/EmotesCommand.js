@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class EmotesCommand extends BaseCommand {
     constructor() {
-        super('emotes', ['topemotes', 'trending']);
+        super('emotes', {
+            aliases: ['topemotes', 'trending'],
+            description: 'Muestra los emotes más usados en la sesión'
+        });
     }
 
     execute({ services }) {

@@ -40,6 +40,8 @@ export default class NotificationManager {
     this.bufferTimers = new Map();      // username -> timeoutId
     this.BATCH_WINDOW_MS = 2000;        // Ventana de 2 segundos para agrupar
 
+    this._handlers = {};
+
     console.log("📢 NotificationManager (Orchestrator) initialized");
     this._setupEventListeners();
   }
@@ -50,24 +52,49 @@ export default class NotificationManager {
    */
   _setupEventListeners() {
     // Logros desbloqueados
-    EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
+    this._handlers.achievementUnlocked = EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
       this.showAchievement(eventData);
     });
 
     // Progreso de "Bro" (Usa renderizado inmediato fuera de la cola principal)
-    EventManager.on(EVENTS.USER.BRO_PROGRESS, ({ current, max }) => {
+    this._handlers.broProgress = EventManager.on(EVENTS.USER.BRO_PROGRESS, ({ current, max }) => {
       this.showBroProgress(current, max);
     });
 
     // Level ups
-    EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
+    this._handlers.levelUp = EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
       this.showLevelUp(eventData);
     });
 
     // Resultados de predicción
-    EventManager.on(EVENTS.USER.PREDICTION_RESULT, (eventData) => {
+    this._handlers.predictionResult = EventManager.on(EVENTS.USER.PREDICTION_RESULT, (eventData) => {
       this.showPredictionResult(eventData);
     });
+  }
+
+  /**
+   * Limpia y destruye el manager (previene memory leaks)
+   */
+  destroy() {
+      // 1. Limpiar eventos
+      if (this._handlers) {
+          Object.values(this._handlers).forEach(unsubscribe => {
+              if (typeof unsubscribe === 'function') unsubscribe();
+          });
+      }
+
+      // 2. Limpiar timers de buffer
+      this.bufferTimers.forEach(timerId => clearTimeout(timerId));
+      this.bufferTimers.clear();
+      this.achievementBuffer.clear();
+
+      // 3. Limpiar cola
+      this.clearQueue();
+
+      // 4. Limpiar renderer
+      if (this.renderer && typeof this.renderer.destroy === 'function') {
+          this.renderer.destroy();
+      }
   }
 
   /**

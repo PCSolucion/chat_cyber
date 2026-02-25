@@ -100,29 +100,63 @@ export default class NotificationRenderer {
         const container = document.getElementById("achievement-notifications");
         if (!container) return;
 
-        const safeData = UIUtils.decorate(eventData);
-        const { username, achievement } = safeData;
+        const { username, achievement } = eventData;
 
         const notification = document.createElement("div");
         notification.className = "achievement-notification";
-        notification.setAttribute("data-rarity", eventData.achievement.rarity);
+        notification.setAttribute("data-rarity", achievement.rarity);
 
-        const imagePath = this._escapeHTML(eventData.achievement.image || "img/logros/default.png");
-        const safeName = this._escapeHTML(achievement.name);
-        const safeDesc = this._escapeHTML(achievement.description);
-        const safeCond = this._escapeHTML(achievement.condition);
+        // Icono
+        const iconDiv = document.createElement("div");
+        iconDiv.className = "achievement-icon";
+        const iconImg = document.createElement("img");
+        iconImg.src = achievement.image || "img/logros/default.png";
+        iconImg.alt = "Achievement Icon";
+        iconImg.onerror = () => {
+            iconImg.onerror = null;
+            iconImg.src = 'img/logros/default.png';
+        };
+        iconDiv.appendChild(iconImg);
 
-        notification.innerHTML = `
-            <div class="achievement-icon">
-                <img src="${imagePath}" alt="Achievement Icon" onerror="this.onerror=null;this.src='img/logros/default.png';">
-            </div>
-            <div class="achievement-content">
-                <div class="achievement-label">LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name"><span>${safeName}</span></div>
-                <div class="achievement-desc"><span>${safeDesc} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${safeCond}]</span></span></div>
-            </div>
-            <div class="achievement-timer"></div>
-        `;
+        // Contenido
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "achievement-content";
+
+        const labelDiv = document.createElement("div");
+        labelDiv.className = "achievement-label";
+        labelDiv.textContent = "LOGRO DESBLOQUEADO";
+
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "achievement-name";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = achievement.name;
+        nameDiv.appendChild(nameSpan);
+
+        const descDiv = document.createElement("div");
+        descDiv.className = "achievement-desc";
+        const descSpan = document.createElement("span");
+        descSpan.textContent = achievement.description + " ";
+        
+        const condSpan = document.createElement("span");
+        condSpan.style.color = "var(--cyber-cyan)";
+        condSpan.style.opacity = "0.9";
+        condSpan.textContent = `[${achievement.condition}]`;
+        
+        descSpan.appendChild(condSpan);
+        descDiv.appendChild(descSpan);
+
+        contentDiv.appendChild(labelDiv);
+        contentDiv.appendChild(nameDiv);
+        contentDiv.appendChild(descDiv);
+
+        // Timer bar
+        const timerDiv = document.createElement("div");
+        timerDiv.className = "achievement-timer";
+
+        // Ensamblaje
+        notification.appendChild(iconDiv);
+        notification.appendChild(contentDiv);
+        notification.appendChild(timerDiv);
 
         this.mountNotification(notification, container, username, achievement.name);
     }
@@ -167,17 +201,37 @@ export default class NotificationRenderer {
             return this.renderTopOverlayAchievement({ username, achievement: achievements[0] });
         }
 
-        const overlay = document.getElementById("cp-achievement-overlay");
-        if (!overlay) return;
-
         const totalXP = achievements.reduce((sum, ach) => sum + (XP.ACHIEVEMENT_REWARDS[ach.rarity] || 50), 0);
         const titleText = `${username} está ON FIRE! 🔥`;
         const namesList = achievements.map(a => a.name).join(' • ');
 
-        const safeTitle = this._escapeHTML(titleText);
-        const safeNamesList = this._escapeHTML(namesList);
+        this._renderOverlayContent(titleText, namesList, totalXP, 'rare');
+    }
 
-        const maxChars = Math.max(titleText.length, namesList.length);
+    /**
+     * Muestra la notificación de logro en el overlay superior
+     */
+    renderTopOverlayAchievement(eventData) {
+        const { username, achievement } = eventData;
+        const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
+        const unlockedText = `${username} ha desbloqueado el logro`;
+
+        this._renderOverlayContent(unlockedText, achievement.name, xpReward, achievement.rarity);
+    }
+
+    /**
+     * Método privado unificado para construir el contenido del overlay usando DOM API
+     * @private
+     */
+    _renderOverlayContent(titleText, subTitleText, xpValue, rarity) {
+        const overlay = document.getElementById("cp-achievement-overlay");
+        if (!overlay) return;
+
+        // Limpiar previo
+        overlay.innerHTML = "";
+
+        // Cálculos de layout (Preservando lógica original)
+        const maxChars = Math.max(titleText.length, subTitleText.length);
         let bannerWidth = 532;
         if (maxChars > 30) {
             bannerWidth = 532 + (maxChars - 30) * 11;
@@ -186,105 +240,87 @@ export default class NotificationRenderer {
         const textWidth = bannerWidth - 150;
         const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
 
-        overlay.innerHTML = `
-          <div class="achievement rare" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
-            <div class="animation">
-              <div class="circle">
-                <div class="img trophy_animate trophy_img">
-                  <img class="trophy_1" src="img/trophy_full.svg" alt="Trophy"/>
-                </div>
-                <div class="img xbox_img">
-                  <img src="img/arasaka.png" alt="Arasaka"/>
-                </div>
-                <div class="brilliant-wrap">
-                  <div class="brilliant"></div>
-                </div>
-              </div>
-              <div class="banner-outer">
-                <div class="banner">
-                  <div class="achieve_disp">
-                    <span class="unlocked">${safeTitle}</span>
-                    <div class="score_disp">
-                      <div class="gamerscore">
-                        <img width="30px" src="img/G.svg" alt="G"/>
-                        <span class="acheive_score">${totalXP}</span>
-                      </div>
-                      <span class="hyphen_sep">-</span>
-                      <span class="achiev_name">${safeNamesList}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        // Construcción de elementos
+        const achievementDiv = document.createElement("div");
+        achievementDiv.className = `achievement ${rarity === 'common' ? '' : 'rare'}`;
+        achievementDiv.style.setProperty("--banner-width", `${bannerWidth}px`);
+        achievementDiv.style.setProperty("--text-width", `${textWidth}px`);
+        achievementDiv.style.setProperty("--circle-translate", `${circleTranslate}px`);
 
-        this.animateOverlay(overlay, safeNamesList, 'rare');
-    }
+        const animationDiv = document.createElement("div");
+        animationDiv.className = "animation";
 
-    /**
-     * Muestra la notificación de logro en el overlay superior
-     */
-    renderTopOverlayAchievement(eventData) {
-        const overlay = document.getElementById("cp-achievement-overlay");
-        if (!overlay) return;
+        // Círculo y Trofeos
+        const circleDiv = document.createElement("div");
+        circleDiv.className = "circle";
 
-        const safeData = UIUtils.decorate(eventData);
-        const { username, achievement } = safeData;
+        const trophyDiv = document.createElement("div");
+        trophyDiv.className = "img trophy_animate trophy_img";
+        const trophyImg1 = document.createElement("img");
+        trophyImg1.className = "trophy_1";
+        trophyImg1.src = "img/trophy_full.svg";
+        trophyImg1.alt = "Trophy";
+        trophyDiv.appendChild(trophyImg1);
+
+        const xboxImgDiv = document.createElement("div");
+        xboxImgDiv.className = "img xbox_img";
+        const arasakaImg = document.createElement("img");
+        arasakaImg.src = "img/arasaka.png";
+        arasakaImg.alt = "Arasaka";
+        xboxImgDiv.appendChild(arasakaImg);
+
+        const brilliantWrap = document.createElement("div");
+        brilliantWrap.className = "brilliant-wrap";
+        const brilliantDiv = document.createElement("div");
+        brilliantDiv.className = "brilliant";
+        brilliantWrap.appendChild(brilliantDiv);
+
+        circleDiv.append(trophyDiv, xboxImgDiv, brilliantWrap);
+
+        // Banner
+        const bannerOuter = document.createElement("div");
+        bannerOuter.className = "banner-outer";
+        const banner = document.createElement("div");
+        banner.className = "banner";
+
+        const dispDiv = document.createElement("div");
+        dispDiv.className = "achieve_disp";
+        const unlockedSpan = document.createElement("span");
+        unlockedSpan.className = "unlocked";
+        unlockedSpan.textContent = titleText;
+
+        const scoreDisp = document.createElement("div");
+        scoreDisp.className = "score_disp";
         
-        const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
-        const unlockedText = `${username} ha desbloqueado el logro`;
+        const gamerscore = document.createElement("div");
+        gamerscore.className = "gamerscore";
+        const gImg = document.createElement("img");
+        gImg.width = 30;
+        gImg.src = "img/G.svg";
+        gImg.alt = "G";
+        const scoreSpan = document.createElement("span");
+        scoreSpan.className = "acheive_score";
+        scoreSpan.textContent = xpValue;
+        gamerscore.append(gImg, scoreSpan);
 
-        const safeUnlockedText = this._escapeHTML(unlockedText);
-        const safeAchievementName = this._escapeHTML(achievement.name);
+        const hyphen = document.createElement("span");
+        hyphen.className = "hyphen_sep";
+        hyphen.textContent = "-";
 
-        const nameLength = eventData.achievement.name.length;
-        const maxChars = Math.max(unlockedText.length, (nameLength + 15));
-        
-        let bannerWidth = 532;
-        if (maxChars > 34) {
-            bannerWidth = 532 + (maxChars - 34) * 12.75;
-        }
-        
-        bannerWidth = Math.min(Math.round(bannerWidth), 825);
-        const textWidth = bannerWidth - 150;
-        const circleTranslate = -1 * (bannerWidth / 2 - 56.25);
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "achiev_name";
+        nameSpan.textContent = subTitleText;
 
-        overlay.innerHTML = `
-          <div class="achievement rare" style="--banner-width: ${bannerWidth}px; --text-width: ${textWidth}px; --circle-translate: ${circleTranslate}px;">
-            <div class="animation">
-              <div class="circle">
-                <div class="img trophy_animate trophy_img">
-                  <img class="trophy_1" src="img/trophy_full.svg" alt="Trophy"/>
-                  <img class="trophy_2" src="img/trophy_no_handles.svg" alt="Trophy"/>
-                </div>
-                <div class="img xbox_img">
-                  <img src="img/arasaka.png" alt="Arasaka"/>
-                </div>
-                <div class="brilliant-wrap">
-                  <div class="brilliant"></div>
-                </div>
-              </div>
-              <div class="banner-outer">
-                <div class="banner">
-                  <div class="achieve_disp">
-                    <span class="unlocked">${safeUnlockedText}</span>
-                    <div class="score_disp">
-                      <div class="gamerscore">
-                        <img width="30px" src="img/G.svg" alt="G"/>
-                        <span class="acheive_score">${xpReward}</span>
-                      </div>
-                      <span class="hyphen_sep">-</span>
-                      <span class="achiev_name">${safeAchievementName}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        scoreDisp.append(gamerscore, hyphen, nameSpan);
+        dispDiv.append(unlockedSpan, scoreDisp);
+        banner.appendChild(dispDiv);
+        bannerOuter.appendChild(banner);
 
-        this.animateOverlay(overlay, safeAchievementName, achievement.rarity);
+        animationDiv.append(circleDiv, bannerOuter);
+        achievementDiv.appendChild(animationDiv);
+        overlay.appendChild(achievementDiv);
+
+        this.animateOverlay(overlay, subTitleText, rarity);
     }
 
     /**

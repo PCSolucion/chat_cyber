@@ -637,7 +637,7 @@ body {
 }
 
 .status-text {
-    color: #ff3b45;
+    color: var(--cyber-red);
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 600;

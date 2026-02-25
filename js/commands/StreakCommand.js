@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class StreakCommand extends BaseCommand {
     constructor() {
-        super('racha', ['streak', 'dias']);
+        super('racha', {
+            aliases: ['streak', 'dias'],
+            description: 'Muestra tu racha de días viendo el canal'
+        });
     }
 
     execute({ userId, username, services }) {

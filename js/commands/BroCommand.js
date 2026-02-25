@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class BroCommand extends BaseCommand {
     constructor() {
-        super('bro', ['bros']);
+        super('bro', {
+            aliases: ['bros'],
+            description: 'Muestra cuántas veces has dicho "bro"'
+        });
     }
 
     execute({ userId, username, services }) {

@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class UptimeCommand extends BaseCommand {
     constructor() {
-        super('uptime', ['on', 'tiempo', 'directo', 'livetime']);
+        super('uptime', {
+            aliases: ['on', 'tiempo', 'directo', 'livetime'],
+            description: 'Muestra el tiempo que lleva el stream en directo'
+        });
     }
 
     execute({ services }) {

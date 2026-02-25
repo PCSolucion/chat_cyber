@@ -2,10 +2,15 @@
  * BaseCommand - Clase base para todos los comandos del chat
  */
 export default class BaseCommand {
-    constructor(name, aliases = [], requiredPermission = 'everyone') {
+    constructor(name, params = {}) {
         this.name = name;
-        this.aliases = aliases;
-        this.requiredPermission = requiredPermission; // everyone, subscriber, vip, moderator, broadcaster
+        this.aliases = params.aliases || [];
+        this.requiredPermission = params.requiredPermission || 'everyone'; // everyone, subscriber, vip, moderator, broadcaster
+        this.cooldown = params.cooldown || 5000; // Cooldown por defecto de 5s
+        this.description = params.description || '';
+        
+        // Registro de último uso por usuario (para cooldown personal)
+        this.lastUsed = new Map();
     }
 
     /**

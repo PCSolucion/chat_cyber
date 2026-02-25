@@ -55,6 +55,25 @@ export default class CommandManager {
             next();
         });
 
+        // Middleware de Cooldown (Anti-Spam)
+        this.addMiddleware((ctx, next) => {
+            const now = Date.now();
+            const lastUsed = ctx.command.lastUsed.get(ctx.username) || 0;
+            const cooldown = ctx.command.cooldown || 5000;
+
+            if (now - lastUsed < cooldown) {
+                const remaining = Math.ceil((cooldown - (now - lastUsed)) / 1000);
+                if (this.config.DEBUG) {
+                    Logger.debug('Command', `Cooldown active for !${ctx.commandName} (${remaining}s remaining for ${ctx.username})`);
+                }
+                return; // Bloquear ejecución silenciosamente
+            }
+
+            // Actualizar último uso antes de ejecutar
+            ctx.command.lastUsed.set(ctx.username, now);
+            next();
+        });
+
         // Middleware de Permisos
         this.addMiddleware((ctx, next) => {
             if (this.checkPermissions(ctx.tags, ctx.command.requiredPermission)) {
@@ -111,7 +130,8 @@ export default class CommandManager {
             tags,
             message,
             services: this.services,
-            config: this.config
+            config: this.config,
+            manager: this // Pasar referencia al manager para comandos como !ayuda
         };
 
         // Ejecutar cadena de middlewares

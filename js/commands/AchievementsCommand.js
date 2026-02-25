@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class AchievementsCommand extends BaseCommand {
     constructor() {
-        super('logros', ['achievements', 'tros']);
+        super('logros', {
+            aliases: ['achievements', 'tros'],
+            description: 'Muestra tu progreso de logros'
+        });
     }
 
     execute({ userId, username, services }) {

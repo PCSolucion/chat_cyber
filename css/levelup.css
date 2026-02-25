@@ -46,7 +46,7 @@
     position: absolute;
     font-family: 'Black Ops One', sans-serif;
     font-size: 180px;
-    color: rgba(255, 59, 69, 0.05); /* Very faint red */
+    color: rgba(var(--cyber-red-rgb), 0.05); /* Very faint red */
     z-index: 1;
     letter-spacing: -10px;
     white-space: nowrap;
@@ -111,12 +111,12 @@
 .hud-data-core {
     flex: 1;
     background: linear-gradient(180deg, rgba(10, 10, 15, 0.9) 0%, rgba(20, 20, 25, 0.8) 100%);
-    border-top: 1px solid rgba(255, 59, 69, 0.3);
+    border-top: 1px solid rgba(var(--cyber-red-rgb), 0.3);
     border-bottom: 2px solid var(--cyber-red);
     display: flex;
     flex-direction: column;
     padding: 10px 20px;
-    box-shadow: 0 0 30px rgba(255, 59, 69, 0.1);
+    box-shadow: 0 0 30px rgba(var(--cyber-red-rgb), 0.1);
     position: relative;
     overflow: hidden;
     opacity: 0;

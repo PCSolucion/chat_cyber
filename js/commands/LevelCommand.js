@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class LevelCommand extends BaseCommand {
     constructor() {
-        super('nivel', ['level', 'xp', 'rank']);
+        super('nivel', {
+            aliases: ['level', 'xp', 'rank'],
+            description: 'Muestra tu nivel, rango y progreso de XP'
+        });
     }
 
     async execute({ userId, username, services }) {

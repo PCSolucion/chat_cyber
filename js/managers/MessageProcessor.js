@@ -286,11 +286,20 @@ export default class MessageProcessor {
 
     async destroy() {
         Logger.info('App', '🛑 MessageProcessor: Shutting down...');
+        
+        // 1. Guardar estado final
         if (this.services.stateManager) await this.services.stateManager.saveImmediately();
+        
+        // 2. Destruir Managers (Limpiar eventos y UI)
+        if (this.managers.xpDisplay) this.managers.xpDisplay.destroy();
+        if (this.managers.ui) this.managers.ui.destroy();
+        if (this.managers.idleDisplay) this.managers.idleDisplay.stop();
+        if (this.notificationManager) this.notificationManager.destroy();
+
+        // 3. Detener Servicios
         if (this.services.sessionStats) this.services.sessionStats.destroy();
         if (this.services.watchTime) this.services.watchTime.stop();
         if (this.services.spamFilter) this.services.spamFilter.destroy();
-        if (this.managers.idleDisplay) this.managers.idleDisplay.stop();
     }
 
     getService(name) { return this.services[name]; }

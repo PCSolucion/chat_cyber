@@ -51,8 +51,9 @@ export default class XPDisplayManager {
     }
 
     bindEvents() {
+        this._handlers = {};
         // Suscribirse a ganancias de XP
-        EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
+        this._handlers.xpGained = EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
             const isMatch = (this.currentUsername && data.username && 
                            data.username.toLowerCase() === this.currentUsername.toLowerCase());
             
@@ -60,6 +61,18 @@ export default class XPDisplayManager {
                 this.updateXPDisplay(null, data.username);
             }
         });
+    }
+
+    /**
+     * Limpia y destruye el manager (previene memory leaks)
+     */
+    destroy() {
+        if (this._handlers) {
+            if (this._handlers.xpGained) this._handlers.xpGained();
+        }
+        if (this.renderer && typeof this.renderer.destroy === 'function') {
+            this.renderer.destroy();
+        }
     }
 
     /**

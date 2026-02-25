@@ -4,7 +4,10 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class StatsCommand extends BaseCommand {
     constructor() {
-        super('stats', ['me', 'session', 'misdatos']);
+        super('stats', {
+            aliases: ['estadisticas'],
+            description: 'Muestra tus estadísticas de la sesión actual'
+        });
     }
 
     execute({ userId, username, services }) {

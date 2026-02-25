@@ -102,4 +102,19 @@ export default class AudioEngine {
     setVolume(newVolume) {
         this.baseVolume = Math.max(0, Math.min(1, newVolume));
     }
+
+    /**
+     * Detiene y limpia todos los recursos de audio
+     */
+    destroy() {
+        this.audioPool.forEach(pool => {
+            pool.forEach(audio => {
+                audio.pause();
+                audio.src = ''; // Limpiar recurso
+                audio.load();
+            });
+        });
+        this.audioPool.clear();
+        if (this.config.DEBUG) Logger.info('AudioEngine', 'Motor de audio detenido y recursos liberados.');
+    }
 }

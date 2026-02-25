@@ -60,13 +60,23 @@ export default class AudioManager {
      * @private
      */
     _setupEventListeners() {
-        EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => this.playChatMessage());
-        EventManager.on(EVENTS.UI.LEVEL_UP_DISPLAYED, (data) => this.playLevelUp(data));
-        EventManager.on(EVENTS.UI.ACHIEVEMENT_DISPLAYED, (data) => this.playAchievement(data));
-        
-        // Soporte para eventos genéricos y testeo
-        EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());
-        EventManager.on(EVENTS.AUDIO.PLAY, (payload) => this._handleGenericPlay(payload));
+        this._unsubscribe = [
+            EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => this.playChatMessage()),
+            EventManager.on(EVENTS.UI.LEVEL_UP_DISPLAYED, (data) => this.playLevelUp(data)),
+            EventManager.on(EVENTS.UI.ACHIEVEMENT_DISPLAYED, (data) => this.playAchievement(data)),
+            EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage()),
+            EventManager.on(EVENTS.AUDIO.PLAY, (payload) => this._handleGenericPlay(payload))
+        ];
+    }
+
+    /**
+     * Limpia y destruye el manager
+     */
+    destroy() {
+        if (this._unsubscribe) {
+            this._unsubscribe.forEach(unsub => unsub());
+        }
+        if (this.engine) this.engine.destroy();
     }
 
     /**

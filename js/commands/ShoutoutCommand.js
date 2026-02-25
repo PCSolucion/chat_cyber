@@ -4,7 +4,11 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class ShoutoutCommand extends BaseCommand {
     constructor() {
-        super('so', ['shoutout', 'streamer'], 'moderator');
+        super('so', {
+            aliases: ['shoutout', 'streamer'],
+            requiredPermission: 'moderator',
+            description: 'Envía un grito (shoutout) a otro streamer'
+        });
     }
 
     async execute({ args }) {

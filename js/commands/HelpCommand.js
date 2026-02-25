@@ -4,22 +4,22 @@ import { EVENTS } from '../utils/EventTypes.js';
 
 export default class HelpCommand extends BaseCommand {
     constructor() {
-        super('ayuda', ['commands', 'comandos', 'help']);
+        super('ayuda', {
+            aliases: ['commands', 'comandos', 'help'],
+            description: 'Muestra los comandos disponibles'
+        });
     }
 
-    execute({ username }) {
-        const commands = [
-            '!nivel (XP/Rank)',
-            '!top (Leaderboard)',
-            '!logros (Tus logros)',
-            '!stats (Tus datos sesión)',
-            '!emotes (Top Emotes)',
-            '!racha (Días seguidos)',
-            '!bro (Contador Bro)',
-            '!uptime (Tiempo directo)'
-        ];
+    execute({ username, manager }) {
+        // Obtener comandos únicos (evitar duplicados por alias)
+        const uniqueCommands = Array.from(new Set(manager.commands.values()));
         
-        const message = `@${username} -> Comandos: ${commands.join(', ')}`;
+        const commandList = uniqueCommands
+            .filter(cmd => cmd.requiredPermission === 'everyone') // Solo mostrar comunes
+            .map(cmd => `!${cmd.name}`)
+            .join(', ');
+        
+        const message = `@${username} -> Comandos: ${commandList}`;
         EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
     }
 }

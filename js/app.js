@@ -158,11 +158,29 @@ class App {
 
 
     async destroy() {
-        console.log('🛑 Shutting down...');
-        if (this.predictionUnsubscribe) this.predictionUnsubscribe();
+        console.log('🛑 App: Shutting down...');
+        
+        // 1. Unsubscribe from Firebase/Streams first
+        if (this.predictionUnsubscribe) {
+            this.predictionUnsubscribe();
+            this.predictionUnsubscribe = null;
+        }
+
+        // 2. Stop services
         if (this.streamMonitor) this.streamMonitor.stop();
-        if (this.processor) await this.processor.destroy();
         if (this.twitchService) this.twitchService.disconnect();
+        
+        // 3. Destroy logic engine & managers
+        if (this.processor) {
+            await this.processor.destroy();
+        }
+
+        // 4. Cleanup Audio
+        if (this.audioManager) {
+            this.audioManager.destroy();
+        }
+
+        console.log('🏁 Shutdown Complete');
     }
 
     /**
