@@ -1,4 +1,5 @@
 import BaseScreen from './BaseScreen.js';
+import UIUtils from '../../../utils/UIUtils.js';
 import { IDLE } from '../../../constants/AppConstants.js';
 
 export default class TopSubsScreen extends BaseScreen {
@@ -31,7 +32,7 @@ export default class TopSubsScreen extends BaseScreen {
                 <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
-                        <span class="list-name" style="${index === 0 ? 'color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3);' : ''}">${user.username}</span>
+                        <span class="list-name" style="${index === 0 ? 'color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3);' : ''}">${UIUtils.escapeHTML(user.username)}</span>
                         <span class="list-sub tabular-nums">NIVEL ${user.level}</span>
                     </div>
                     <div class="list-stat">

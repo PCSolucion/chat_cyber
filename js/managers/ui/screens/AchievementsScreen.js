@@ -20,7 +20,7 @@ export default class AchievementsScreen extends BaseScreen {
             data.recent.slice(0, 3).forEach(levelUp => {
                 recentHtml += `
                     <div class="recent-levelup-item">
-                        <span class="levelup-user">${levelUp.username}</span>
+                        <span class="levelup-user">${UIUtils.escapeHTML(levelUp.username)}</span>
                         <div class="levelup-badge">LVL ${levelUp.newLevel}</div>
                     </div>
                 `;

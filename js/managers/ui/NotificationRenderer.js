@@ -50,17 +50,31 @@ export default class NotificationRenderer {
 
         const percent = Math.min(100, Math.max(0, (current / max) * 100));
 
-        notification.innerHTML = `
-            <div class="bro-header">
-                <div class="bro-title">
-                    <span>👊 BRO COUNT</span>
-                </div>
-                <div class="bro-count">${current} / ${max}</div>
-            </div>
-            <div class="bro-progress-container">
-                <div class="bro-progress-fill" style="width: 0%"></div>
-            </div>
-        `;
+        // Header
+        const header = document.createElement("div");
+        header.className = "bro-header";
+
+        const title = document.createElement("div");
+        title.className = "bro-title";
+        const titleSpan = document.createElement("span");
+        titleSpan.textContent = "👊 BRO COUNT";
+        title.appendChild(titleSpan);
+
+        const count = document.createElement("div");
+        count.className = "bro-count";
+        count.textContent = `${current} / ${max}`;
+        
+        header.append(title, count);
+
+        // Progress
+        const progressContainer = document.createElement("div");
+        progressContainer.className = "bro-progress-container";
+        const progressFill = document.createElement("div");
+        progressFill.className = "bro-progress-fill";
+        progressFill.style.width = "0%";
+        progressContainer.appendChild(progressFill);
+
+        notification.append(header, progressContainer);
 
         container.appendChild(notification);
 

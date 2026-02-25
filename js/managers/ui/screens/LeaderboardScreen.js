@@ -27,12 +27,13 @@ export default class LeaderboardScreen extends BaseScreen {
             const rankClass = index === 0 ? 'top-1' : index < 3 ? 'top-3' : '';
             const delayClass = 'animate-hidden animate-in';
             const delayStyle = `animation-delay: ${index * 0.3}s`;
+            const safeName = UIUtils.escapeHTML(user.username);
             
             usersHtml += `
                 <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
-                        <span class="list-name">${user.username}</span>
+                        <span class="list-name">${safeName}</span>
                         <span class="list-sub tabular-nums">NIVEL ${user.level}</span>
                     </div>
                     <div class="list-stat">

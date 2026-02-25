@@ -20,7 +20,7 @@ export default class StreaksScreen extends BaseScreen {
             streakContent = `
                 <div class="streak-battle-container">
                     <div class="battle-side side-left animate-hidden animate-in delay-2">
-                        <div class="battle-name">${p1.username}</div>
+                        <div class="battle-name">${UIUtils.escapeHTML(p1.username)}</div>
                         <div class="battle-days tabular-nums" id="stat-days-1">${p1.days}</div>
                         <div class="battle-label">DÍAS</div>
                     </div>
@@ -28,7 +28,7 @@ export default class StreaksScreen extends BaseScreen {
                     <div class="vs-divider animate-hidden animate-in delay-3">VS</div>
                     
                     <div class="battle-side side-right animate-hidden animate-in delay-4">
-                        <div class="battle-name">${p2.username}</div>
+                        <div class="battle-name">${UIUtils.escapeHTML(p2.username)}</div>
                         <div class="battle-days tabular-nums" id="stat-days-2">${p2.days}</div>
                         <div class="battle-label">DÍAS</div>
                     </div>
@@ -41,7 +41,7 @@ export default class StreaksScreen extends BaseScreen {
                     <div class="streak-days tabular-nums" id="stat-days-1">${p1.days}</div>
                     <div class="streak-label wide-spacing">DÍAS CONSECUTIVOS</div>
                     <div class="streak-owner-badge">
-                         ${p1.username}
+                         ${UIUtils.escapeHTML(p1.username)}
                     </div>
                 </div>
             `;

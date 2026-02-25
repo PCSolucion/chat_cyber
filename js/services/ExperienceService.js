@@ -23,8 +23,9 @@ export default class ExperienceService {
      * Constructor del servicio de experiencia
      * @param {Object} config - Configuración global
      * @param {UserStateManager} stateManager - Gestor de estado de usuarios
+     * @param {LevelCalculator} [levelCalculator] - Calculadora de niveles (opcional)
      */
-    constructor(config, stateManager) {
+    constructor(config, stateManager, levelCalculator = null) {
         this.config = config;
         this.stateManager = stateManager;
 
@@ -37,17 +38,11 @@ export default class ExperienceService {
         // Inicializar Gestores Especializados
         this.streakManager = new StreakManager(this.xpConfig);
         this.xpEvaluator = new XPSourceEvaluator(this.xpConfig);
-        this.levelCalculator = new LevelCalculator();
+        this.levelCalculator = levelCalculator || new LevelCalculator();
 
         this.currentDay = this.streakManager.getCurrentDay();
     }
 
-    /**
-     * @deprecated Sistema de leaderboard dinámico deshabilitado
-     */
-    setLeaderboardService(service) {
-        // Obsoleto
-    }
 
     /**
      * Verifica si un usuario está en la lista negra
@@ -153,15 +148,6 @@ export default class ExperienceService {
         return { userData, leveledUp, previousLevel, newLevel };
     }
 
-    /**
-     * @deprecated La configuración ahora se maneja en js/constants/XPWeights.js
-     * Se mantiene el método para compatibilidad si otros servicios lo llaman para lectura,
-     * pero ahora retorna el objeto centralizado.
-     * @returns {Object}
-     */
-    initXPConfig() {
-        return XP_CONFIG;
-    }
 
 
     /**
@@ -494,18 +480,6 @@ export default class ExperienceService {
     }
 
     getXPLeaderboard(limit = 10) {
-        // 1. Si tenemos LeaderboardService, usar los datos reales del ranking global
-        if (this.leaderboardService) {
-            return this.leaderboardService.getTopUsers(limit).map(u => ({
-                userId: u.username,
-                username: u.displayName || u.username,
-                xp: u.xp,
-                level: u.level,
-                messages: u.messages || 0,
-                title: this.levelCalculator.getLevelTitle(u.level)
-            }));
-        }
-
         // 2. Fallback: Solo usuarios cargados en RAM
         const users = Array.from(this.stateManager.getAllUsers().entries())
             .map(([id, data]) => ({
@@ -549,114 +523,6 @@ export default class ExperienceService {
         }
     }
 
-    /**
-     * Actualiza las estadísticas de ranking de los usuarios y emite eventos
-     * @param {Map} rankingMap - Mapa de username -> rank (desde RankingSystem dinámico)
-     * @param {boolean} isInitialLoad - Si es la carga inicial (para suprimir notificaciones)
-     */
-    async updateRankingStats(rankingMap, isInitialLoad = false) {
-        if (!rankingMap || rankingMap.size === 0) return;
-
-        const today = new Date().toDateString();
-        let changesCount = 0;
-
-        // 1. Identificar quién era el Top 1 anterior (según nuestros datos persistidos)
-        let previousTop1User = null;
-        for (const [username, userData] of this.stateManager.getAllUsers().entries()) {
-            if (userData.achievementStats && userData.achievementStats.currentRank === 1) {
-                previousTop1User = username;
-                break;
-            }
-        }
-
-        // 2. Iterar sobre todos los usuarios del ranking actual
-        // Usamos for...of para permitir operaciones asíncronas (carga bajo demanda de Top Users)
-        for (const [idOrName, rank] of rankingMap.entries()) {
-            const key = String(idOrName).toLowerCase();
-            let userData = this.stateManager.users.get(key);
-
-            // GESTIÓN DE OFFLINE: Si es un usuario Top 20 y no está en RAM, lo cargamos.
-            // Esto asegura que sus estadísticas (días en top, best rank) se actualicen aunque no esté en el chat.
-            if (!userData && rank <= 20) {
-                if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
-                await this.stateManager.ensureUserLoaded(key);
-                userData = this.stateManager.users.get(key);
-            }
-
-            if (!userData) continue;
-
-            const lowerUser = (userData.displayName || idOrName).toLowerCase();
-            const stats = userData.achievementStats || {};
-
-            const previousRank = stats.currentRank || 999;
-            let statsChanged = false;
-
-            // Actualizar ranking actual y mejor ranking
-            if (stats.currentRank !== rank) {
-                stats.currentRank = rank;
-                statsChanged = true;
-                
-                // Calcular subida
-                const climb = previousRank - rank;
-                if (climb > 0) {
-                    stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
-                    stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
-                }
-            }
-
-            if (rank < (stats.bestRank || 999)) {
-                stats.bestRank = rank;
-                statsChanged = true;
-            }
-
-            // Actualizaciones diarias (Solo una vez al día por usuario)
-            if (stats.lastRankUpdateDate !== today) {
-                stats.lastRankUpdateDate = today;
-                
-                if (rank === 1) {
-                    stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
-                }
-                
-                if (rank <= 10) {
-                    stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
-                }
-
-                if (rank <= 15) {
-                    stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
-                }
-                
-                statsChanged = true;
-            }
-
-            // Lógica de "Destronar" al Top 1
-            // Si soy el nuevo Top 1, y antes había otro Top 1 distinto a mí
-            if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
-                if (!stats.dethroned) {
-                    stats.dethroned = true;
-                    statsChanged = true;
-                    if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
-                }
-            }
-
-            // Guardar y notificar si hubo cambios relevantes
-            if (statsChanged) {
-                userData.achievementStats = stats;
-                this.stateManager.markDirty(idOrName);
-                changesCount++;
-
-                // Emitir evento para verificar logros de ranking
-                EventManager.emit(EVENTS.USER.RANKING_UPDATED, { 
-                    userId: String(idOrName),
-                    username: lowerUser, 
-                    isInitialLoad 
-                });
-            }
-        } // Cierre del for..of (antes era }); del forEach)
-
-        if (changesCount > 0 && this.config.DEBUG) {
-            console.log(`📊 Ranking stats updated for ${changesCount} users`);
-        }
-    }
 
     /**
      * Añade tiempo de visualización a los usuarios activos (Batch)

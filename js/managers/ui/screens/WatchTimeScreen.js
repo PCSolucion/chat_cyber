@@ -1,4 +1,5 @@
 import BaseScreen from './BaseScreen.js';
+import UIUtils from '../../../utils/UIUtils.js';
 import { IDLE } from '../../../constants/AppConstants.js';
 
 export default class WatchTimeScreen extends BaseScreen {
@@ -37,7 +38,7 @@ export default class WatchTimeScreen extends BaseScreen {
                 <div class="modern-list-item ${rankClass} ${delayClass}" style="${delayStyle}">
                     <div class="list-rank">#${index + 1}</div>
                     <div class="list-content">
-                        <span class="list-name">${user.username}</span>
+                        <span class="list-name">${UIUtils.escapeHTML(user.username)}</span>
                     </div>
                     <div class="list-stat">
                         <span class="stat-num tabular-nums" style="color: var(--cyber-cyan);">${user.formatted}</span>

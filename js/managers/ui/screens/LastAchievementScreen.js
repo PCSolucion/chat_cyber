@@ -1,5 +1,6 @@
 import BaseScreen from './BaseScreen.js';
 import UIUtils from '../../../utils/UIUtils.js';
+import { IDLE } from '../../../constants/AppConstants.js';
 
 export default class LastAchievementScreen extends BaseScreen {
     constructor() {
@@ -28,15 +29,15 @@ export default class LastAchievementScreen extends BaseScreen {
                 </div>
                 <div class="achievement-details">
                     <div class="achievement-header">
-                        <div class="achievement-name">${achData.name}</div>
+                        <div class="achievement-name">${UIUtils.escapeHTML(achData.name)}</div>
                         <div class="achievement-rarity ${achData.rarity || 'common'}">${achData.rarity ? achData.rarity.toUpperCase() : 'COMÚN'}</div>
                     </div>
-                    <div class="achievement-desc">${achData.description}</div>
+                    <div class="achievement-desc">${UIUtils.escapeHTML(achData.description)}</div>
                     
                     <div class="achievement-footer">
                         <div class="achievement-unlocker-info">
                              <div class="unlocker-label">DESBLOQUEADO POR</div>
-                             <div class="unlocker-name">${username}</div>
+                             <div class="unlocker-name">${UIUtils.escapeHTML(username)}</div>
                         </div>
                         <div class="achievement-time">
                             <span class="time-icon">🕒</span> ${timeStr}

@@ -84,28 +84,49 @@ export default class XPDisplayRenderer {
     renderStreak(streak) {
         if (!this.dom.xpStreak) return;
 
-        let streakHTML = '';
+        // Limpiar previo
+        this.dom.xpStreak.textContent = '';
+
         if (streak.isReturning && streak.daysAway > 0) {
-            streakHTML += `
-                <span class="reconnected-tag">
-                    <span class="reconnected-icon">⟐</span>
-                    <span class="reconnected-text">RECONNECTED</span>
-                    <span class="reconnected-days">${streak.daysAway}d OFF</span>
-                </span>
-            `;
+            const tag = document.createElement('span');
+            tag.className = 'reconnected-tag';
+            
+            const icon = document.createElement('span');
+            icon.className = 'reconnected-icon';
+            icon.textContent = '⟐';
+            
+            const text = document.createElement('span');
+            text.className = 'reconnected-text';
+            text.textContent = 'RECONNECTED';
+            
+            const days = document.createElement('span');
+            days.className = 'reconnected-days';
+            days.textContent = `${streak.daysAway}d OFF`;
+            
+            tag.append(icon, text, days);
+            this.dom.xpStreak.appendChild(tag);
         }
 
         if (streak.days >= 1) {
             const multDisplay = streak.multiplier % 1 === 0 ? streak.multiplier : streak.multiplier.toFixed(1);
-            streakHTML += `
-                <span class="streak-label">RACHA:</span>
-                <span class="streak-days">${streak.days}d</span>
-                <span class="streak-mult" style="font-size: 0.75em;">x${multDisplay}</span>
-            `;
+            
+            const label = document.createElement('span');
+            label.className = 'streak-label';
+            label.textContent = 'RACHA:';
+            
+            const daysValue = document.createElement('span');
+            daysValue.className = 'streak-days';
+            daysValue.textContent = `${streak.days}d`;
+            
+            const multValue = document.createElement('span');
+            multValue.className = 'streak-mult';
+            multValue.style.fontSize = '0.75em';
+            multValue.textContent = `x${multDisplay}`;
+            
+            this.dom.xpStreak.append(label, daysValue, multValue);
         }
 
-        this.dom.xpStreak.innerHTML = streakHTML;
-        if (streakHTML) {
+        if (this.dom.xpStreak.childNodes.length > 0) {
             this.dom.xpStreak.style.display = 'flex';
             this.dom.xpStreak.classList.add('active');
         } else {
@@ -124,15 +145,30 @@ export default class XPDisplayRenderer {
         const percentage = Math.min(100, Math.max(0, (unlocked / total) * 100));
 
         this.dom.xpAchievements.style.display = 'block';
-        this.dom.xpAchievements.innerHTML = `
-            <div class="achievement-bar-container" title="Logros: ${unlocked}/${total} (${percentage.toFixed(1)}%)">
-                <span class="achievement-label">LOGROS</span>
-                <div class="achievement-bar-track">
-                    <div class="achievement-bar-fill" style="width: ${percentage}%"></div>
-                </div>
-                <span class="achievement-bar-text">${unlocked}/${total}</span>
-            </div>
-        `;
+        this.dom.xpAchievements.textContent = '';
+
+        const container = document.createElement('div');
+        container.className = 'achievement-bar-container';
+        container.title = `Logros: ${unlocked}/${total} (${percentage.toFixed(1)}%)`;
+
+        const label = document.createElement('span');
+        label.className = 'achievement-label';
+        label.textContent = 'LOGROS';
+
+        const track = document.createElement('div');
+        track.className = 'achievement-bar-track';
+
+        const fill = document.createElement('div');
+        fill.className = 'achievement-bar-fill';
+        fill.style.width = `${percentage}%`;
+
+        const text = document.createElement('span');
+        text.className = 'achievement-bar-text';
+        text.textContent = `${unlocked}/${total}`;
+
+        track.appendChild(fill);
+        container.append(label, track, text);
+        this.dom.xpAchievements.appendChild(container);
     }
 
     /**

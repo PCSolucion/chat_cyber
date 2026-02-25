@@ -8,6 +8,7 @@ import ThirdPartyEmoteService from '../services/ThirdPartyEmoteService.js';
 import SessionStatsService from '../services/SessionStatsService.js';
 import WatchTimeService from '../services/WatchTimeService.js';
 import UserStateManager from '../services/UserStateManager.js';
+import LevelCalculator from '../services/LevelCalculator.js';
 import SpamFilterService from '../services/SpamFilterService.js';
 
 // Middlewares
@@ -106,18 +107,22 @@ export default class MessageProcessor {
 
 
             if (this.config.XP_SYSTEM_ENABLED) {
+                // Instancia compartida de LevelCalculator (Single Source of Truth)
+                const levelCalculator = new LevelCalculator();
+
                 // Nuevo Gestor de Estado Centralizado usando el StorageManager (Strategy)
                 this.services.stateManager = new UserStateManager(this.config, this.storageManager);
                 await this.services.stateManager.init(); // [FIX] Inicializar para configurar Firestore interno
                 
                 // Inyectar servicios en RankingSystem
                 this.services.ranking.setStateManager(this.services.stateManager);
-                
+                this.services.ranking.setLevelCalculator(levelCalculator);
+
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
                 await this.services.streamHistory.init().catch(e => console.error(e));
                 
-                // Inyectar stateManager en los servicios que lo necesitan
-                this.services.xp = new ExperienceService(this.config, this.services.stateManager);
+                // Inyectar stateManager y el calculator compartido
+                this.services.xp = new ExperienceService(this.config, this.services.stateManager, levelCalculator);
 
                 this.services.achievements = new AchievementService(this.config, this.services.xp, this.services.stateManager);
             }
@@ -247,7 +252,7 @@ export default class MessageProcessor {
             
             // Actualizar estadísticas de ranking en XP service
             if (this.services.xp && this.services.ranking.isLoaded) {
-                 this.services.xp.updateRankingStats(this.services.ranking.userRankings, true);
+                 this.services.ranking.updateRankingStats(this.services.ranking.userRankings, true);
             }
         }
 

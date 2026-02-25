@@ -1,4 +1,5 @@
 import BaseScreen from './BaseScreen.js';
+import UIUtils from '../../../utils/UIUtils.js';
 
 export default class TrendingScreen extends BaseScreen {
     constructor() {
@@ -20,8 +21,8 @@ export default class TrendingScreen extends BaseScreen {
             topEmotes.slice(0, 5).forEach((item, index) => {
                 const percent = Math.min(100, (item.count / (topEmotes[0].count || 1)) * 100);
                 const emoteDisplay = item.url
-                    ? `<img src="${item.url}" alt="${item.name}" class="trending-emote-img" />`
-                    : `<span class="trending-emote-text">${item.name}</span>`;
+                    ? `<img src="${item.url}" alt="${UIUtils.escapeHTML(item.name)}" class="trending-emote-img" />`
+                    : `<span class="trending-emote-text">${UIUtils.escapeHTML(item.name)}</span>`;
 
                 const delayClass = `animate-hidden animate-in delay-${Math.min(index + 1, 5)}`;
 
@@ -29,7 +30,7 @@ export default class TrendingScreen extends BaseScreen {
                     <div class="trending-emote-item ${delayClass}">
                         <div class="trending-emote-display">${emoteDisplay}</div>
                         <div class="trending-emote-info">
-                            <span class="trending-emote-name">${item.name}</span>
+                            <span class="trending-emote-name">${UIUtils.escapeHTML(item.name)}</span>
                             <span class="trending-emote-count tabular-nums">${item.count}x</span>
                         </div>
                         <div class="trend-bar-bg"><div class="trend-bar-fill fill-cyan" style="width: ${percent}%"></div></div>

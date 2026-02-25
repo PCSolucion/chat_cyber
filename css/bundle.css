@@ -733,55 +733,8 @@ body {
     flex: 0 0 auto;
 }
 
-/* Nombre de usuario - Big and Bold */
-.user-identity__name {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: var(--username-size);
-    color: var(--cyber-red);
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    text-shadow: var(--glow-red);
-    position: relative;
-    white-space: nowrap;
-    line-height: 1.6;
-    border-right: 3px solid transparent;
-    height: 1.6em;
-    display: flex;
-    align-items: center;
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Tamaños de fuente para nombres largos */
-.user-identity__name.small-text {
-    font-size: 1.1rem !important;
-    letter-spacing: 2px;
-}
-
-.user-identity__name.extra-small-text {
-    font-size: 0.9rem !important;
-    letter-spacing: 1px;
-}
-
-/* Contenedor de badges */
-.user-identity__badges {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-left: auto;
-    gap: 8px;
-    flex: 0 0 auto;
-    min-width: max-content;
-}
-
-/* ===========================================
-   LEGACY ALIASES (Compatibilidad temporal)
-   =========================================== */
-
-/* Alias para driver-name (legacy) */
+/* Nombre de usuario - Big and Bold (Alias .driver-name mantenido para legacy) */
+.user-identity__name,
 .driver-name {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
@@ -803,6 +756,18 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Contenedor de badges */
+.user-identity__badges {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: auto;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: max-content;
+}
+
+/* Tamaños de fuente para nombres largos */
 .user-identity__name.small-text,
 .driver-name.small-text {
     font-size: 1.1rem !important;

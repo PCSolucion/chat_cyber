@@ -66,7 +66,7 @@ class ScrambleEngine {
 
             if (state.iteration >= text.length) {
                 // Finalizar
-                element.innerHTML = `${quote}${text}${quote}`;
+                element.textContent = `${quote}${text}${quote}`;
                 this.activeAnimations.delete(element);
                 if (onComplete) onComplete();
                 return;

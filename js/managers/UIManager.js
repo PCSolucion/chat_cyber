@@ -220,8 +220,7 @@ export default class UIManager {
     _revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
         // Obtener datos de XP actuales
         const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(userId, username) : null);
-        const levelCalculator = this.experienceService ? this.experienceService.levelCalculator : null;
-        const userRole = this.rankingSystem.getUserRole(userId, username, xpData, levelCalculator);
+        const userRole = this.rankingSystem.getUserRole(userId, username, xpData);
 
         // Actualizar UI de XP
         if (this.xpDisplay) {
