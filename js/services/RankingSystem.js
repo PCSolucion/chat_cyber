@@ -23,7 +23,7 @@ export default class RankingSystem {
     constructor(config) {
         this.config = config;
         this.userRankings = new Map();
-        this.adminUser = 'liiukiin';
+        this.adminUser = config.TWITCH_CHANNEL;
         this.isLoaded = false;
         this.stateManager = null;
 

@@ -99,7 +99,7 @@ export default class MessageComponent {
             const isHighRank = ['admin', 'top'].includes(userRole.role);
             const hasImages = UIUtils.hasImages(processed);
 
-            if (username.toLowerCase() === 'liiukiin' && !hasImages) {
+            if (username.toLowerCase() === this.config.TWITCH_CHANNEL && !hasImages) {
                 UIUtils.scrambleText(this.el, processed);
             } else {
                 // processed aquí ya puede contener HTML (si hay emotes) o texto escapado
