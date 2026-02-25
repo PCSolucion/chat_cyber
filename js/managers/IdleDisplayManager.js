@@ -30,7 +30,6 @@ export default class IdleDisplayManager {
 
         // Estado visual
         this.idleContainer = null;
-        this._savedStates = {};
 
         // Inicializar
         this._createIdleContainer();
@@ -127,14 +126,12 @@ export default class IdleDisplayManager {
             container.classList.add('idle-mode');
             container.classList.remove('hidden', 'gold-mode-active', 'takeru-bg', 'x1lenz-bg', 'chandalf-bg', 'manguerazo-bg', 'duckcris-bg');
             if (this.uiManager) this.uiManager.clearAllTimers();
-            this._toggleElements(false);
             if (this.idleContainer) {
                 this.idleContainer.style.display = 'flex';
                 this.idleContainer.style.opacity = '1';
             }
         } else {
             container.classList.remove('idle-mode');
-            this._toggleElements(true);
             if (this.idleContainer) this.idleContainer.style.display = 'none';
         }
     }
@@ -143,61 +140,8 @@ export default class IdleDisplayManager {
      * Oculta o muestra elementos del widget original
      * @private
      */
-    _toggleElements(show) {
-        const elements = {
-            'particles-bg': 'id',
-            'message': 'id',
-            'xp-section': 'id',
-            'user-badge': 'id',
-            'user-icon': 'id',
-            'admin-icon': 'id',
-            'mission-icon': 'class',
-            'xp-achievements-container-wrapper': 'id'
-        };
+    // _toggleElements ha sido eliminado en favor de estilos CSS basados en .idle-mode
 
-        const usernameEl = document.getElementById('username');
-
-        if (!show) {
-            // Guardar y ocultar
-            Object.keys(elements).forEach(id => {
-                const el = elements[id] === 'id' ? document.getElementById(id) : document.querySelector('.' + id);
-                if (el) {
-                    this._savedStates[id] = el.style.display;
-                    el.style.display = 'none';
-                }
-            });
-
-            if (usernameEl) {
-                this._savedStates.username = { text: usernameEl.textContent, attr: usernameEl.getAttribute('data-text') };
-                usernameEl.classList.add('idle-stats-title');
-            }
-
-            const badge = document.getElementById('user-badge');
-            if (badge) {
-                this._savedStates.badge = { text: badge.textContent, class: badge.className };
-                badge.textContent = 'LIVE';
-                badge.className = 'badge idle-badge';
-            }
-        } else {
-            // Restaurar
-            Object.keys(elements).forEach(id => {
-                const el = elements[id] === 'id' ? document.getElementById(id) : document.querySelector('.' + id);
-                if (el) el.style.display = this._savedStates[id] || '';
-            });
-
-            if (usernameEl && this._savedStates.username) {
-                usernameEl.textContent = this._savedStates.username.text;
-                usernameEl.setAttribute('data-text', this._savedStates.username.attr);
-                usernameEl.classList.remove('idle-stats-title');
-            }
-
-            const badge = document.getElementById('user-badge');
-            if (badge && this._savedStates.badge) {
-                badge.textContent = this._savedStates.badge.text;
-                badge.className = this._savedStates.badge.class;
-            }
-        }
-    }
 
     _createIdleContainer() {
         if (document.getElementById('idle-stats-display')) {

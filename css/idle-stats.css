@@ -34,7 +34,15 @@
   overflow: hidden;
 }
 
-.container.idle-mode .xp-section {
+/* Ocultar elementos del widget base en modo idle */
+.container.idle-mode #message,
+.container.idle-mode #xp-section,
+.container.idle-mode #user-badge,
+.container.idle-mode #user-icon,
+.container.idle-mode #admin-icon,
+.container.idle-mode .mission-icon,
+.container.idle-mode #xp-achievements-container-wrapper,
+.container.idle-mode .particles-bg {
   display: none !important;
 }
 

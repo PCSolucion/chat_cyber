@@ -16,7 +16,7 @@ export default class IdleTimerService {
         // Parámetros de configuración
         this.idleTimeoutMs = Number(config.IDLE_TIMEOUT_MS) || 30000;
         this.screenRotationMs = Number(config.IDLE_ROTATION_MS) || 12000;
-        this.maxCycles = 1;
+        this.maxCycles = Number(config.MAX_CYCLES) || 1;
 
         // Estado del cronómetro
         this.isIdle = false;
@@ -107,13 +107,12 @@ export default class IdleTimerService {
     _scheduleNextRotation() {
         if (!this.isIdle) return;
 
-        // El delay puede ser dinámico si el manager lo proporciona mediante el callback onRotate
         let delay = this.screenRotationMs;
         
         if (this.callbacks.onRotate) {
             const rotationInfo = this.callbacks.onRotate(this.screensShown);
             
-            // Si el manager decide que ya es suficiente (basado en ciclos de datos reales)
+            // Si el manager devuelve explícitamente que no hay más datos, ocultar
             if (rotationInfo && rotationInfo.shouldHide) {
                 this.hide();
                 return;
