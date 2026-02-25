@@ -147,13 +147,9 @@ export default class UIManager {
      */
     _processQueue() {
         if (this.isIdle) return;
-        if (this.queue.isEmpty()) {
-            // Si la cola se vacía y el widget ya cumplió su ciclo, permitir ocultarse
-            return;
-        }
+        if (this.queue.isEmpty()) return;
 
-        // Si ya estamos procesando un mensaje, pero este es un swap (porque display es visible)
-        // debemos cancelar timers previos para que no solapen
+        // Si ya estamos procesando un mensaje, pero este es un swap, cancelar timers previos
         if (this.isProcessingQueue && this.display.isVisibleState()) {
             this.clearAllTimers();
         }
@@ -179,7 +175,6 @@ export default class UIManager {
             this.lastMessageTime = now;
             this.display.show();
 
-            // Calcular tiempo de visualización dinámico (Modo Turbo)
             const displayTime = this.queue.calculateDisplayTime(msgObj);
 
             if (shouldShowFullAnim) {
@@ -195,43 +190,38 @@ export default class UIManager {
     }
 
     _fastTransition(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
-        this.identity.dom.username.style.opacity = '0';
+        this.identity.fade(0);
         this.message.fade(0);
 
         this.timers.transition = setTimeout(() => {
             this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
             requestAnimationFrame(() => {
-                this.identity.dom.username.style.opacity = '1';
+                this.identity.fade(1);
                 this.message.fade(1);
             });
         }, 200);
     }
 
     _fullIncomingSequence(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
-        // Preparar estado de desencriptado sin vaciar completamente y causar saltos
-        this.identity.dom.username.classList.add('decrypting');
-        this.identity.dom.username.textContent = "SIGNAL DETECTED";
+        this.identity.showIncomingState();
         
         this.message.setDecrypting(true);
         this.message.setRawHTML("> INCOMING TRANSMISSION...");
 
         this.timers.decrypt = setTimeout(() => {
-            this.identity.dom.username.classList.remove('decrypting');
+            this.identity.clearIncomingState();
             this.message.setDecrypting(false);
             this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
         }, 800);
     }
 
     _revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
-        // Obtener datos de XP actuales (bien del resultado del mensaje o del servicio)
+        // Obtener datos de XP actuales
         const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(userId, username) : null);
-        
-        // Obtener Rol Unificado (Rank + Nivel + Admin)
         const levelCalculator = this.experienceService ? this.experienceService.levelCalculator : null;
-        
         const userRole = this.rankingSystem.getUserRole(userId, username, xpData, levelCalculator);
 
-        // Actualizar UI de XP de forma SÍNCRONA con el mensaje
+        // Actualizar UI de XP
         if (this.xpDisplay) {
             this.xpDisplay.updateXPDisplay(userId, username, xpResult);
         }
@@ -250,15 +240,11 @@ export default class UIManager {
         if (!subInfo.isSubscriber) return;
 
         this.timers.goldMode = setTimeout(() => {
-            this.identity.dom.container.classList.add('gold-mode-active');
-
-            const xpTitleEl = document.getElementById('xp-title');
-            if (xpTitleEl) {
-                const subValue = subInfo.badgeInfo?.subscriber || '1';
-                UIUtils.scrambleText(xpTitleEl, 'EXCELSIOR USER', 30, false);
-                this.timers.goldMode = setTimeout(() => {
-                    UIUtils.scrambleText(xpTitleEl, `SUB ${subValue} MESES`, 30, false);
-                }, 2000);
+            // Activar visuales en identidad y XP
+            this.identity.setGoldMode(true);
+            
+            if (this.xpDisplay) {
+                this.xpDisplay.handleGoldMode(subInfo);
             }
         }, 4000);
     }

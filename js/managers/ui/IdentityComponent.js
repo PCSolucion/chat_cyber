@@ -51,6 +51,39 @@ export default class IdentityComponent {
         if (personalTheme) this.dom.container.classList.add(personalTheme);
     }
 
+    /**
+     * Activa o desactiva visualmente el modo suscriptor (Gold)
+     */
+    setGoldMode(active) {
+        if (active) {
+            this.dom.container.classList.add('gold-mode-active');
+        } else {
+            this.dom.container.classList.remove('gold-mode-active');
+        }
+    }
+
+    /**
+     * Muestra el estado de búsqueda/descifrado inicial
+     */
+    showIncomingState() {
+        this.dom.username.classList.add('decrypting');
+        this.dom.username.textContent = "SIGNAL DETECTED";
+    }
+
+    /**
+     * Finaliza el estado de búsqueda
+     */
+    clearIncomingState() {
+        this.dom.username.classList.remove('decrypting');
+    }
+
+    /**
+     * Ajusta la opacidad del componente para transiciones
+     */
+    fade(opacity) {
+        this.dom.username.style.opacity = opacity.toString();
+    }
+
     _updateUserIcon(username, userRole) {
         // Compatibilidad: buscar tanto userIcon como adminIcon (legacy)
         const iconEl = this.dom.userIcon || this.dom.adminIcon;
