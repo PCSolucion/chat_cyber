@@ -21,24 +21,48 @@ export default class AudioManager {
         // Sonidos por defecto
         this.defaultSounds = {
             notification: this.config.AUDIO_URL || 'sounds/radiof1.mp3',
-            achievement: 'sounds/logro.mp3'
+            achievement: 'sounds/logro2.mp3', // [FIX] Corregido path (logro.mp3 no existía)
+            levelup: 'sounds/level15.mp3'
         };
 
         this.initialized = false;
-        this.init();
+        // El constructor no llama a init, se llama externamente en App.js
     }
 
     /**
-     * Inicializa los listeners
+     * Inicializa los listeners y pre-carga sonidos
      */
     init() {
         if (this.initialized) return;
         this._setupEventListeners();
+        
+        // [NUEVO] Pre-cargar sonidos críticos para evitar bloqueos del navegador
+        this._preloadSounds();
+        
         this.initialized = true;
         
         if (this.config.DEBUG) {
-            console.log('🔊 AudioManager inicializado con control de spam');
+            console.log('🔊 AudioManager inicializado y sonidos pre-cargados');
         }
+    }
+
+    /**
+     * Pre-carga y "censa" los sonidos para que el navegador los permita reproducir
+     * @private
+     */
+    _preloadSounds() {
+        const soundsToPreload = [
+            this.defaultSounds.notification,
+            'sounds/level15.mp3',
+            'sounds/logro2.mp3',
+            'sounds/logro3.mp3'
+        ];
+
+        soundsToPreload.forEach(path => {
+            // "Priming": Crear el objeto audio y cargarlo
+            // En versiones modernas de Chrome, esto ayuda a que play() sea instantáneo después del primer gesto
+            this._playSoundFile(path, 0.001); // Volumen casi inaudible para priming
+        });
     }
 
     _setupEventListeners() {
@@ -49,10 +73,40 @@ export default class AudioManager {
         EventManager.on(EVENTS.UI.LEVEL_UP_DISPLAYED, (data) => this.playLevelUp(data));
         
         // 3. Achievements (Sincronizado con la animación)
-        EventManager.on(EVENTS.UI.ACHIEVEMENT_DISPLAYED, (data) => this.playAchievement(data));
+        EventManager.on(EVENTS.UI.ACHIEVEMENT_DISPLAYED, (data) => {
+            if (this.config.DEBUG) console.log('🔊 AudioManager: Evento ACHIEVEMENT_DISPLAYED recibido', data);
+            this.playAchievement(data);
+        });
         
         // 4. Test sound
         EventManager.on(EVENTS.AUDIO.TEST, () => this.playChatMessage());
+
+        // 5. Generic Play (Soporte para múltiples formatos de eventos)
+        EventManager.on(EVENTS.AUDIO.PLAY, (payload) => {
+            if (!payload) return;
+            const id = payload.id || payload; // Soporta {id: 'name'} o 'name'
+            
+            if (this.config.DEBUG) console.log(`🔊 AudioManager: Reproducción genérica solicitada para ID: ${id}`);
+            
+            switch(id) {
+                case 'level-up':
+                case 'levelup':
+                    this.playLevelUp();
+                    break;
+                case 'achievement':
+                case 'logro':
+                    this.playAchievement();
+                    break;
+                case 'chat':
+                case 'message':
+                    this.playChatMessage();
+                    break;
+                default:
+                    if (typeof id === 'string' && id.includes('.mp3')) {
+                        this._playSoundFile(id);
+                    }
+            }
+        });
     }
 
     /**
@@ -101,9 +155,13 @@ export default class AudioManager {
     playAchievement(data) {
         const rarity = (data?.achievement?.rarity || 'common').toLowerCase();
         
+        if (this.config.DEBUG) {
+            console.log(`🔊 AudioManager: Procesando sonido de logro (Rareza: ${rarity})`);
+        }
+
         // Mapeo de sonidos por rareza
         // Rarezas: common, uncommon, rare, epic, legendary
-        let soundFile = 'sounds/logro2.mp3'; // Default
+        let soundFile = this.defaultSounds.achievement; // Default (logro2.mp3)
         
         if (['legendary', 'epic', 'rare'].includes(rarity)) {
             soundFile = 'sounds/logro3.mp3'; // Sonido premium/raro
@@ -118,13 +176,17 @@ export default class AudioManager {
      * Lógica interna de reproducción con pooling para eficiencia
      * @param {string} path - Ruta al archivo
      */
-    _playSoundFile(path) {
-        const configVol = this.config.AUDIO_VOLUME;
-        const volume = (configVol !== undefined && configVol !== null) 
-            ? configVol 
-            : (AUDIO.DEFAULT_VOLUME || 0.8);
+    _playSoundFile(path, forceVolume = null) {
+        let volume = forceVolume;
+        
+        if (volume === null) {
+            const configVol = this.config.AUDIO_VOLUME;
+            volume = (configVol !== undefined && configVol !== null) 
+                ? configVol 
+                : (AUDIO.DEFAULT_VOLUME || 0.8);
+        }
 
-        if (volume <= 0) return;
+        if (volume <= 0 && forceVolume === null) return;
 
         try {
             // Gestión de Pool por archivo
@@ -140,23 +202,32 @@ export default class AudioManager {
                 // Si no hay libres y no hemos llegado al límite, crear uno nuevo
                 if (pool.length < (AUDIO.MAX_OVERLAPPING_SOUNDS || 5)) {
                     audio = new Audio(path);
+                    audio.preload = 'auto'; // Asegurar carga
                     pool.push(audio);
                 } else {
                     // Si el pool está lleno, forzar reutilización del primero
                     audio = pool[0];
                     audio.pause();
+                    if (this.config.DEBUG) console.log(`🔊 AudioManager: Pool lleno para ${path}, reutilizando canal.`);
                 }
             }
 
-            // [FIX] Asegurar que el audio empieza desde el principio
+            // [FIX] Asegurar que el audio empieza desde el principio y tiene el volumen correcto
             audio.currentTime = 0;
             audio.volume = Math.max(0, Math.min(1, volume));
             
+            // Forzar carga si estuviera en estado suspendido
+            if (audio.readyState === 0) audio.load();
+
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    if (this.config.DEBUG) {
-                        console.warn(`⚠️ AudioManager: No se pudo reproducir ${path} (Posible bloqueo del navegador)`);
+                    // No loguear error si es por priming (volumen casi 0)
+                    if (volume > 0.01) {
+                        console.error(`⚠️ AudioManager: Error al reproducir ${path}:`, error.message);
+                        if (error.name === 'NotAllowedError') {
+                            console.warn('💡 Tip: El navegador bloqueó el audio. Se requiere interacción del usuario o permiso de Autoplay.');
+                        }
                     }
                 });
             }

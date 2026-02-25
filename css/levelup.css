@@ -27,6 +27,8 @@
 }
 
 .cp-levelup-overlay.hiding {
+    opacity: 1;
+    visibility: visible;
     animation: signal-lost-glitch 0.25s steps(2) forwards;
 }
 

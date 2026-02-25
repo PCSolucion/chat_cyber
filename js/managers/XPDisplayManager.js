@@ -401,9 +401,14 @@ export default class XPDisplayManager {
         }
 
         // Mostrar Overlay
-        this.dom.cpLevelOverlay.classList.remove('hidden');
-        void this.dom.cpLevelOverlay.offsetWidth; // Force reflow
-        this.dom.cpLevelOverlay.classList.add('show');
+        if (this.dom.cpLevelOverlay) {
+            this.dom.cpLevelOverlay.classList.remove('hidden');
+            void this.dom.cpLevelOverlay.offsetWidth; // Force reflow
+            this.dom.cpLevelOverlay.classList.add('show');
+            if (this.config.DEBUG) console.log('✨ [XP] HUD Level Up activado para:', eventData.username);
+        } else {
+            console.error('❌ [XP] No se encontró el elemento HUD Level Up para mostrarlo');
+        }
 
         // Añadir efectos globales al container
         const container = document.querySelector('.container');

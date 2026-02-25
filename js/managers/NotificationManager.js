@@ -556,10 +556,11 @@ export default class NotificationManager {
     const banner = overlay.querySelector('.banner');
     const display = overlay.querySelector('.achieve_disp');
 
-    requestAnimationFrame(() => {
-      // Emit sound immediately as the animation starts (circle pop-in)
-      EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { achievement: { rarity: rarity } });
+    // Emit sound immediately as the animation sequence starts
+    if (this.config.DEBUG) console.log(`🏆 [Notification] Emitiendo sonido de logro (Rareza: ${rarity})`);
+    EventManager.emit(EVENTS.UI.ACHIEVEMENT_DISPLAYED, { achievement: { rarity: rarity } });
 
+    requestAnimationFrame(() => {
       overlay.classList.add("show");
       circle.classList.add("circle_animate");
       banner.classList.add("banner-animate");
