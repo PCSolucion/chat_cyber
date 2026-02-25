@@ -25,6 +25,20 @@ export default class NotificationRenderer {
     }
 
     /**
+     * Escapa caracteres HTML para prevenir XSS (Especialmente util en OBS widgets)
+     */
+    _escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+
+    /**
      * Muestra una barra de progreso para el contador de "Bro"
      */
     renderBroProgress(current, max) {
@@ -88,10 +102,10 @@ export default class NotificationRenderer {
 
         const displayAchievements = achievements.slice(0, 5);
         const iconsHTML = displayAchievements.map(ach => 
-            `<img class="batch-icon" src="${ach.image || 'img/logros/default.png'}" title="${ach.name}" onerror="this.src='img/logros/default.png'">`
+            `<img class="batch-icon" src="${this._escapeHTML(ach.image || 'img/logros/default.png')}" title="${this._escapeHTML(ach.name)}" onerror="this.src='img/logros/default.png'">`
         ).join('');
         
-        const names = achievements.map(a => a.name).join(', ');
+        const names = achievements.map(a => this._escapeHTML(a.name)).join(', ');
 
         notification.innerHTML = `
             <div class="achievement-content" style="padding-left: 5px;">
@@ -123,7 +137,10 @@ export default class NotificationRenderer {
         notification.className = "achievement-notification";
         notification.setAttribute("data-rarity", eventData.achievement.rarity);
 
-        const imagePath = eventData.achievement.image || "img/logros/default.png";
+        const imagePath = this._escapeHTML(eventData.achievement.image || "img/logros/default.png");
+        const safeName = this._escapeHTML(achievement.name);
+        const safeDesc = this._escapeHTML(achievement.description);
+        const safeCond = this._escapeHTML(achievement.condition);
 
         notification.innerHTML = `
             <div class="achievement-icon">
@@ -131,8 +148,8 @@ export default class NotificationRenderer {
             </div>
             <div class="achievement-content">
                 <div class="achievement-label">LOGRO DESBLOQUEADO</div>
-                <div class="achievement-name"><span>${achievement.name}</span></div>
-                <div class="achievement-desc"><span>${achievement.description} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${achievement.condition}]</span></span></div>
+                <div class="achievement-name"><span>${safeName}</span></div>
+                <div class="achievement-desc"><span>${safeDesc} <span style="color: var(--cyber-cyan); opacity: 0.9;">[${safeCond}]</span></span></div>
             </div>
             <div class="achievement-timer"></div>
         `;
@@ -187,6 +204,9 @@ export default class NotificationRenderer {
         const titleText = `${username} está ON FIRE! 🔥`;
         const namesList = achievements.map(a => a.name).join(' • ');
 
+        const safeTitle = this._escapeHTML(titleText);
+        const safeNamesList = this._escapeHTML(namesList);
+
         const maxChars = Math.max(titleText.length, namesList.length);
         let bannerWidth = 532;
         if (maxChars > 30) {
@@ -213,14 +233,14 @@ export default class NotificationRenderer {
               <div class="banner-outer">
                 <div class="banner">
                   <div class="achieve_disp">
-                    <span class="unlocked">${titleText}</span>
+                    <span class="unlocked">${safeTitle}</span>
                     <div class="score_disp">
                       <div class="gamerscore">
                         <img width="30px" src="img/G.svg" alt="G"/>
                         <span class="acheive_score">${totalXP}</span>
                       </div>
                       <span class="hyphen_sep">-</span>
-                      <span class="achiev_name">${namesList}</span>
+                      <span class="achiev_name">${safeNamesList}</span>
                     </div>
                   </div>
                 </div>
@@ -229,7 +249,7 @@ export default class NotificationRenderer {
           </div>
         `;
 
-        this.animateOverlay(overlay, namesList, 'rare');
+        this.animateOverlay(overlay, safeNamesList, 'rare');
     }
 
     /**
@@ -244,6 +264,9 @@ export default class NotificationRenderer {
         
         const xpReward = XP.ACHIEVEMENT_REWARDS[achievement.rarity] || 50;
         const unlockedText = `${username} ha desbloqueado el logro`;
+
+        const safeUnlockedText = this._escapeHTML(unlockedText);
+        const safeAchievementName = this._escapeHTML(achievement.name);
 
         const nameLength = eventData.achievement.name.length;
         const maxChars = Math.max(unlockedText.length, (nameLength + 15));
@@ -275,14 +298,14 @@ export default class NotificationRenderer {
               <div class="banner-outer">
                 <div class="banner">
                   <div class="achieve_disp">
-                    <span class="unlocked">${unlockedText}</span>
+                    <span class="unlocked">${safeUnlockedText}</span>
                     <div class="score_disp">
                       <div class="gamerscore">
                         <img width="30px" src="img/G.svg" alt="G"/>
                         <span class="acheive_score">${xpReward}</span>
                       </div>
                       <span class="hyphen_sep">-</span>
-                      <span class="achiev_name">${achievement.name}</span>
+                      <span class="achiev_name">${safeAchievementName}</span>
                     </div>
                   </div>
                 </div>
@@ -291,7 +314,7 @@ export default class NotificationRenderer {
           </div>
         `;
 
-        this.animateOverlay(overlay, achievement.name, achievement.rarity);
+        this.animateOverlay(overlay, safeAchievementName, achievement.rarity);
     }
 
     /**
