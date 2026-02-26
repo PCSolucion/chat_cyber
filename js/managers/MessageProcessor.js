@@ -316,6 +316,9 @@ export default class MessageProcessor {
      */
     setTwitchService(twitchService) {
         this.services.twitch = twitchService;
+        if (this.services.xp) {
+            this.services.xp.setTwitchService(twitchService);
+        }
         if (this.services.watchTime) {
             this.services.watchTime.setTwitchService(twitchService);
         }

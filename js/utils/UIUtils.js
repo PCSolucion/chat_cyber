@@ -295,8 +295,11 @@ const UIUtils = {
      * @param {number} end Valor final
      * @param {number} duration Duración de la animación
      */
-    animateValue(elementId, start, end, duration) {
-        const obj = document.getElementById(elementId);
+    animateValue(elementOrId, start, end, duration) {
+        let obj = (typeof elementOrId === 'string') 
+            ? document.getElementById(elementOrId) 
+            : elementOrId;
+
         if (!obj) return;
         
         let startTimestamp = null;

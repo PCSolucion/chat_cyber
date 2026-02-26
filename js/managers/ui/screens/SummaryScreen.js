@@ -111,10 +111,14 @@ export default class SummaryScreen extends BaseScreen {
         setTimeout(() => {
             const msgsEl = container.querySelector('#stat-msgs');
             const usersEl = container.querySelector('#stat-users');
+            const mpmEl = container.querySelector('#stat-mpm');
             
-            if (msgsEl) UIUtils.animateValue('stat-msgs', 0, parseInt(data.messages) || 0, 2500);
-            if (usersEl) UIUtils.animateValue('stat-users', 0, parseInt(data.users) || 0, 2500);
+            if (msgsEl) UIUtils.animateValue(msgsEl, 0, parseInt(data.messages) || 0, 2500);
+            if (usersEl) UIUtils.animateValue(usersEl, 0, parseInt(data.users) || 0, 2500);
+            if (mpmEl) UIUtils.animateValue(mpmEl, 0, parseFloat(data.avgMpm) || 0, 2500);
             
+            // 18 es el factor si el máximo es 10 MPM. Si el máximo es 60, debería ser 3.
+            // Para un look más Cyberpunk, permitimos que llegue a 180deg (10 MPM es un chat muy activo en este contexto)
             const targetRotation = Math.min(180, (parseFloat(data.avgMpm) || 0) * 18);
             const needle = container.querySelector('#gauge-needle');
             if (needle) {

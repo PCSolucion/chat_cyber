@@ -158,6 +158,17 @@ export default class NotificationManager {
    * @param {Object} eventData
    */
   showLevelUp(eventData) {
+    // 1. Verificar si es el usuario que actualmente tiene el "foco" en el widget de XP
+    const isCurrentFocus = this.uiManager?.xpDisplay?.currentUsername?.toLowerCase() === eventData.username?.toLowerCase();
+
+    // 2. [FILTRO CRÍTICO] Solo mostrar visuales si el usuario está PRESENTE o si es el foco actual
+    // Esto evita animaciones de usuarios que ganaron una predicción pero ya se fueron del stream.
+    if (!eventData.isPresent && !isCurrentFocus) { 
+        if (this.config.DEBUG) Logger.info('UI', `⏭️ Saltando animación LevelUp: ${eventData.username} no está presente.`);
+        return;
+    }
+
+    if (this.config.DEBUG) Logger.debug('UI', `📥 Encolando LevelUp para: ${eventData.username}`);
     this.queue.push({ type: "levelup", data: eventData });
     this._processQueue();
   }

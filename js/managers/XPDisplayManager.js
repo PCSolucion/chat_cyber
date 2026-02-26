@@ -121,6 +121,7 @@ export default class XPDisplayManager {
      * Muestra la animación de Level Up Inline
      */
     showLevelUp(eventData) {
+        if (this.config.DEBUG) Logger.debug('XP', `🎬 Iniciando LevelUp INLINE para: ${eventData.username}`, eventData);
         this.renderer.renderLevelUpInline(eventData.newLevel);
     }
 
@@ -128,6 +129,7 @@ export default class XPDisplayManager {
      * Muestra la animación de Level Up en el Overlay Superior
      */
     showTopLevelUp(eventData) {
+        if (this.config.DEBUG) Logger.debug('XP', `🎬 Iniciando LevelUp OVERLAY para: ${eventData.username}`, eventData);
         this.renderer.renderTopLevelUp(eventData);
     }
 

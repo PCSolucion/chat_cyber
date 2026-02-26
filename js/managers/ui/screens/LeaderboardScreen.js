@@ -1,4 +1,5 @@
 import BaseScreen from './BaseScreen.js';
+import UIUtils from '../../../utils/UIUtils.js';
 import { IDLE } from '../../../constants/AppConstants.js';
 
 export default class LeaderboardScreen extends BaseScreen {

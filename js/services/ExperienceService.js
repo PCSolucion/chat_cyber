@@ -41,6 +41,15 @@ export default class ExperienceService {
         this.levelCalculator = levelCalculator || new LevelCalculator();
 
         this.currentDay = this.streakManager.getCurrentDay();
+        this.twitchService = null; // Inyectado dinámicamente
+    }
+
+    /**
+     * Inyecta el servicio de Twitch para verificación de presencia
+     * @param {TwitchService} twitchService
+     */
+    setTwitchService(twitchService) {
+        this.twitchService = twitchService;
     }
 
 
@@ -119,27 +128,41 @@ export default class ExperienceService {
 
         // 5. Notificar Eventos
         if (!suppressEvents) {
+            const isPresent = this._isUserPresent(username);
+            const isPassive = passive || (xp > 0 && messages === 0);
+
             if (xp !== 0) {
+                Logger.info('XP', `✨ Trayendo XP para ${username}: +${xp} (Total: ${userData.xp}, Source: ${source || 'MSG'}, Present: ${isPresent})`);
                 EventManager.emit(EVENTS.USER.XP_GAINED, {
                     userId,
                     username: username, // Mantener caja original para UI
                     amount: xp,
                     total: userData.xp,
-                    passive: passive || (xp > 0 && messages === 0),
+                    passive: isPassive,
+                    isPresent,
                     source
                 });
             }
 
             if (leveledUp) {
-                EventManager.emit(EVENTS.USER.LEVEL_UP, {
-                    userId,
-                    username: username, // Original casing if possible
-                    oldLevel: previousLevel,
-                    newLevel,
-                    totalXP: userData.xp,
-                    title: this.levelCalculator.getLevelTitle(newLevel),
-                    timestamp: Date.now()
-                });
+                // [VALIDACIÓN ANTI-BUG] Solo emitir si el nivel realmente es mayor que 1 (evitar spam en carga inicial fallida)
+                if (newLevel > 1) {
+                    Logger.info('XP', `🎊 LEVEL UP DETECTADO: ${username} (${previousLevel} -> ${newLevel}, Present: ${isPresent})`);
+                    EventManager.emit(EVENTS.USER.LEVEL_UP, {
+                        userId,
+                        username: username, // Original casing if possible
+                        oldLevel: previousLevel,
+                        newLevel,
+                        totalXP: userData.xp,
+                        title: this.levelCalculator.getLevelTitle(newLevel),
+                        timestamp: Date.now(),
+                        passive: isPassive,
+                        isPresent,
+                        source
+                    });
+                } else {
+                    Logger.warn('XP', `⚠️ Bloqueado Level Up sospechoso a Nivel 1 para ${username}.`);
+                }
             }
         }
 
@@ -265,9 +288,11 @@ export default class ExperienceService {
         totalXP = Math.min(totalXP, (this.xpConfig.settings.maxXPPerMessage * streakMultiplier));
 
         // 7. Aplicar actividad (Centralizado)
+        Logger.debug('XP', `🔍 Procesando XP para ${username}: Base=${xpBeforeMultiplier}, Final=${totalXP}, Mult=${streakMultiplier}x`);
         const result = this._applyActivity(userId, username, {
             xp: totalXP,
             messages: 1,
+            source: 'MESSAGE', // Identificar explícitamente la fuente
             suppressEvents: false
         });
 
@@ -615,6 +640,24 @@ export default class ExperienceService {
             lastUpdated: new Date().toISOString(),
             version: '1.2'
         }, null, 2);
+    }
+
+    /**
+     * Verifica si un usuario está presente en el stream (vía TwitchService)
+     * @private
+     */
+    _isUserPresent(username) {
+        if (!this.twitchService || !username) return false;
+        const key = username.toLowerCase();
+        
+        // 1. Verificar en el set de chatters activos de Twitch
+        if (this.twitchService.activeChatters && this.twitchService.activeChatters.has(key)) {
+            return true;
+        }
+        
+        // 2. Fallback: Si no hay TwitchService o Set vacío, consideramos que no está presente
+        // pero permitimos que los mensajes pasen (UIRendererMiddleware maneja el resto)
+        return false;
     }
 
     // Método eliminado: _mergeInitialSubscribers movido a UserStateManager

@@ -59,18 +59,19 @@ export default class IdleScreenRenderer {
             screen.render(screenData, screenContent);
         } catch (error) {
             Logger.error('UI', `Error rendering idle screen of type ${screenData.type}`, error);
-            this._renderError(screenContent, screenData.type);
             
-            // Fallback al resumen
-            if (screenData.type !== 'summary') {
-                setTimeout(() => {
-                    try { 
-                        this.screens['summary'].render(screenData, screenContent); 
-                    } catch(e) {
-                         Logger.error('UI', 'Fatal error during idle screen fallback rendering', e);
-                    }
-                }, 1000);
-            }
+            // Si falla la renderización, mostramos error específico en lugar de summary con datos erróneos
+            screenContent.innerHTML = `
+                <div class="empty-message animate-in">
+                    <div style="color: var(--cyber-red); margin-bottom: 10px; font-weight: bold;">[SISTEMA_ERROR]</div>
+                    FALLO EN LA GENERACIÓN DE DATOS<br>
+                    TIPO: ${screenData.type.toUpperCase()}<br>
+                    REINTENTANDO EN EL PRÓXIMO CICLO...
+                </div>
+            `;
+            
+            // Ya no hacemos fallback al summary porque screenData.data 
+            // no corresponde con lo que espera SummaryScreen y causa datos vacíos/erróneos.
         }
     }
 
