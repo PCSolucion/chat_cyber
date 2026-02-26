@@ -27,8 +27,8 @@
 export const ACHIEVEMENTS_DATA = {
     _metadata: {
         version: "1.1",
-        totalAchievements: 143, // +3 logros de streams TW3
-        categories: ["messages", "streaks", "levels", "xp", "ranking", "stream", "holidays", "special", "bro", "cyberpunk2077", "witcher3"],
+        totalAchievements: 120, // Ajustado
+        categories: ["messages", "streaks", "levels", "xp", "ranking", "stream", "holidays", "special", "bro"],
         rarities: ["common", "uncommon", "rare", "epic", "legendary"],
         lastUpdated: "2026-01-28"
     },
@@ -67,7 +67,7 @@ export const ACHIEVEMENTS_DATA = {
         },
         motormouth: {
             name: "Motormouth",
-            description: "Hablas más que un fixer",
+            description: "No puedes parar de hablar",
             condition: "250 mensajes",
             category: "messages",
             rarity: "uncommon",
@@ -75,8 +75,8 @@ export const ACHIEVEMENTS_DATA = {
             image: "img/logros/motormouth.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 250 }
         },
-        choom_speaker: {
-            name: "Choom Speaker",
+        chat_speaker: {
+            name: "Chat Speaker",
             description: "Maestro de la conversación",
             condition: "500 mensajes",
             category: "messages",
@@ -85,13 +85,13 @@ export const ACHIEVEMENTS_DATA = {
             image: "img/logros/choom speaker.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 500 }
         },
-        voice_of_night_city: {
-            name: "Voice of Night City",
-            description: "Tu voz resuena en las calles",
+        voice_of_the_city: {
+            name: "Voice of the City",
+            description: "Tu voz resuena en el chat",
             condition: "1,000 mensajes",
             category: "messages",
             rarity: "rare",
-            icon: "🌃",
+            icon: "🌆",
             image: "img/logros/voice of night city.png",
             rule: { field: "userData.totalMessages", operator: ">=", value: 1000 }
         },
@@ -1222,14 +1222,14 @@ export const ACHIEVEMENTS_DATA = {
             icon: "🏅",
             rule: { field: "userData.achievements.length", operator: ">=", value: 90 }
         },
-        cyberpunk_legend: {
-            name: "Cyberpunk Legend",
-            description: "Leyenda Cyberpunk",
-            condition: "TODOS los logros",
+        channel_legend: {
+            name: "Channel Legend",
+            description: "Leyenda del canal",
+            condition: "Desbloquear 110 logros",
             category: "special",
             rarity: "legendary",
             icon: "🌟",
-            rule: { field: "userData.achievements.length", operator: ">=", value: 138 }
+            rule: { field: "userData.achievements.length", operator: ">=", value: 110 }
         },
 
         // ==================== BRO ====================
@@ -1303,263 +1303,6 @@ export const ACHIEVEMENTS_DATA = {
             icon: "🌙",
             image: "img/logros/trasnochador.png",
             rule: { field: "stats.earlyMorningMessages", operator: ">=", value: 1 }
-        },
-
-        // ==================== CYBERPUNK 2077 (Solo en categoría CP2077) ====================
-        cp_welcome_to_nc: {
-            name: "Welcome to Night City",
-            description: "Tu primera conexión en Night City",
-            condition: "1 mensaje en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "common",
-            icon: "🌃",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 1 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_street_samurai: {
-            name: "Street Samurai",
-            description: "Dominando las calles de Night City",
-            condition: "25 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "common",
-            icon: "⚔️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 25 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_chrome_junkie: {
-            name: "Chrome Junkie",
-            description: "Adicto a los implantes cibernéticos",
-            condition: "50 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "uncommon",
-            icon: "🦾",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 50 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_edgerunner: {
-            name: "Edgerunner",
-            description: "Viviendo al límite en Night City",
-            condition: "100 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "uncommon",
-            icon: "🔥",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 100 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_arasaka_nightmare: {
-            name: "Arasaka's Nightmare",
-            description: "Una pesadilla para las corporaciones",
-            condition: "200 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "rare",
-            icon: "🏢",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 200 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_johnny_silverhand: {
-            name: "Wake Up, Samurai",
-            description: "Johnny estaría orgulloso",
-            condition: "350 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "rare",
-            icon: "🎸",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 350 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_relic_malfunction: {
-            name: "Relic Malfunction",
-            description: "El chip te está consumiendo",
-            condition: "500 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "epic",
-            icon: "🧠",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 500 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_afterlife_vip: {
-            name: "Afterlife VIP",
-            description: "Tienes tu bebida en el Afterlife",
-            condition: "750 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "epic",
-            icon: "🍸",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 750 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_never_fade_away: {
-            name: "Never Fade Away",
-            description: "Tu leyenda vivirá para siempre",
-            condition: "1000 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "legendary",
-            icon: "💀",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 1000 },
-            gameCategory: "Cyberpunk 2077"
-        },
-        cp_city_of_dreams: {
-            name: "City of Dreams",
-            description: "Night City es tu hogar",
-            condition: "2000 mensajes en Cyberpunk 2077",
-            category: "cyberpunk2077",
-            rarity: "legendary",
-            icon: "🌟",
-            image: "img/logros/default.png",
-            rule: { field: "stats.cyberpunk2077Messages", operator: ">=", value: 2000 },
-            gameCategory: "Cyberpunk 2077"
-        },
-
-        // ==================== THE WITCHER 3 (Solo en categoría TW3) ====================
-        tw3_white_wolf: {
-            name: "The White Wolf",
-            description: "Tu primera caza ha comenzado",
-            condition: "1 mensaje en The Witcher 3",
-            category: "witcher3",
-            rarity: "common",
-            icon: "🐺",
-            image: "img/logros/thewhitewolf.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 1 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_monster_slayer: {
-            name: "Monster Slayer",
-            description: "Matador de monstruos novato",
-            condition: "25 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "common",
-            icon: "🗡️",
-            image: "img/logros/monsterslayer.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 25 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_gwent_player: {
-            name: "Gwent Player",
-            description: "¿Una partidita de Gwent?",
-            condition: "50 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "uncommon",
-            icon: "🃏",
-            image: "img/logros/gwentplayer.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 50 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_path_warrior: {
-            name: "Path Warrior",
-            description: "Recorriendo el Sendero del Brujo",
-            condition: "100 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "uncommon",
-            icon: "🛤️",
-            image: "img/logros/pathwarrior.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 100 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_butcher_blaviken: {
-            name: "Butcher of Blaviken",
-            description: "La reputación te precede",
-            condition: "200 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "rare",
-            icon: "⚔️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 200 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_kaer_morhen: {
-            name: "Kaer Morhen Guardian",
-            description: "Protector de la fortaleza de brujos",
-            condition: "350 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "rare",
-            icon: "🏰",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 350 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_wild_hunt_slayer: {
-            name: "Wild Hunt Slayer",
-            description: "Los jinetes fantasma te temen",
-            condition: "500 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "epic",
-            icon: "👻",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 500 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_witcher_senses: {
-            name: "Witcher Senses",
-            description: "Tus sentidos están perfeccionados",
-            condition: "750 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "epic",
-            icon: "👁️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 750 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_master_witcher: {
-            name: "Master Witcher",
-            description: "Maestro de las dos espadas",
-            condition: "1000 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "legendary",
-            icon: "🎖️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 1000 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_legendary_witcher: {
-            name: "Legendary Witcher",
-            description: "Geralt de Rivia te reconoce como igual",
-            condition: "2000 mensajes en The Witcher 3",
-            category: "witcher3",
-            rarity: "legendary",
-            icon: "🌟",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Messages", operator: ">=", value: 2000 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_stream_2: {
-            name: "First Contract",
-            description: "Participar en 2 directos de The Witcher 3",
-            condition: "2 directos distintos en TW3",
-            category: "witcher3",
-            rarity: "common",
-            icon: "📜",
-            image: "img/logros/firstcontract.png",
-            rule: { field: "stats.witcher3Streams", operator: ">=", value: 2 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_stream_5: {
-            name: "Loyal Companion",
-            description: "Acompañando a Geralt en su viaje",
-            condition: "5 directos distintos en TW3",
-            category: "witcher3",
-            rarity: "rare",
-            icon: "🛡️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Streams", operator: ">=", value: 5 },
-            gameCategory: "The Witcher 3: Wild Hunt"
-        },
-        tw3_stream_10: {
-            name: "Veteran of the Path",
-            description: "Un verdadero veterano del sendero",
-            condition: "10 directos distintos en TW3",
-            category: "witcher3",
-            rarity: "epic",
-            icon: "🗺️",
-            image: "img/logros/default.png",
-            rule: { field: "stats.witcher3Streams", operator: ">=", value: 10 },
-            gameCategory: "The Witcher 3: Wild Hunt"
         }
     }
 };

@@ -38,6 +38,11 @@ export default class AchievementService {
             this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
         });
 
+        EventManager.on(EVENTS.USER.LEVEL_UP, (data) => {
+            const username = data.username;
+            this.checkAchievements(username, { isLevelUp: true });
+        });
+
         // RETRO: Escuchar carga de usuarios para otorgar logros retroactivos
         EventManager.on(EVENTS.USER.LOADED, (eventData) => {
             const username = eventData.username;
@@ -113,29 +118,39 @@ export default class AchievementService {
             obj = obj[part];
         }
 
+        // Fallbacks inteligentes según el campo
         if (obj === undefined || obj === null) {
             if (field.includes('level')) return 1;
-            if (field.includes('Count') || field.includes('Messages') || field.includes('Days')) return 0;
-            if (field.includes('achievements')) return [];
+            if (field.includes('achieved') || field.includes('used')) return false;
+            if (field.includes('Count') || field.includes('Messages') || field.includes('Days') || field.includes('Rank') || field.includes('xp')) return 0;
+            if (field.includes('achievements') || field.includes('holidays')) return [];
             return 0;
         }
         return obj;
     }
 
     _evaluateOperator(fieldValue, operator, targetValue) {
+        // Asegurar tipos básicos para comparaciones numéricas
+        const isNumericOp = ['>', '>=', '<', '<='].includes(operator);
+        const val = isNumericOp ? Number(fieldValue || 0) : fieldValue;
+        const target = isNumericOp ? Number(targetValue) : targetValue;
+
         switch (operator) {
-            case '>=': return (fieldValue || 0) >= targetValue;
-            case '<=': return (fieldValue || 999) <= targetValue;
-            case '>': return (fieldValue || 0) > targetValue;
-            case '<': return (fieldValue || 999) < targetValue;
+            case '>=': return val >= target;
+            case '<=': return val <= target;
+            case '>': return val > target;
+            case '<': return val < target;
             case '==': 
-            case '===': return fieldValue === targetValue;
+            case '===': return val === target;
             case '!=': 
-            case '!==': return fieldValue !== targetValue;
+            case '!==': return val !== target;
             case 'includes':
-                if (Array.isArray(fieldValue)) return fieldValue.includes(targetValue);
+                if (Array.isArray(val)) return val.includes(target);
+                if (typeof val === 'string') return val.includes(String(target));
                 return false;
-            default: return false;
+            default: 
+                console.warn(`[AchievementService] Operador no soportado: ${operator}`);
+                return false;
         }
     }
 
@@ -179,10 +194,6 @@ export default class AchievementService {
                 streamOpenerCount: savedStats.streamOpenerCount || 0,
                 primeTimeMessages: savedStats.primeTimeMessages || 0,
                 holidays: savedStats.holidays || [],
-                cyberpunk2077Messages: savedStats.cyberpunk2077Messages || 0,
-                witcher3Messages: savedStats.witcher3Messages || 0,
-                witcher3Streams: savedStats.witcher3Streams || 0,
-                lastWitcher3Date: savedStats.lastWitcher3Date || null,
                 // Preservar cualquier otro
                 ...savedStats
             });
@@ -225,9 +236,13 @@ export default class AchievementService {
             if (context.streakMultiplier > 1.0) stats.streakBonusCount = (stats.streakBonusCount || 0) + 1;
         }
 
-        if (context.isStreamLive) {
+        if (this.isStreamOnline) {
             stats.liveMessages = (stats.liveMessages || 0) + 1;
-            if (context.isStreamStart) stats.streamOpenerCount = (stats.streamOpenerCount || 0) + 1;
+            
+            // Si el stream empezó hace menos de 5 minutos
+            const streamDurationMinutes = this.streamStartTime ? (Date.now() - this.streamStartTime) / 60000 : 999;
+            if (streamDurationMinutes <= 5) stats.streamOpenerCount = (stats.streamOpenerCount || 0) + 1;
+            
             if (hour >= 19 && hour < 23) stats.primeTimeMessages = (stats.primeTimeMessages || 0) + 1;
         } else {
             stats.offlineMessages = (stats.offlineMessages || 0) + 1;
@@ -235,21 +250,7 @@ export default class AchievementService {
 
         this._updateHolidayStats(stats, now);
 
-        // Game specific
-        if (this.currentStreamCategory && this.isStreamOnline) {
-            const cat = this.currentStreamCategory.toLowerCase();
-            if (cat.includes('cyberpunk') && cat.includes('2077')) {
-                stats.cyberpunk2077Messages = (stats.cyberpunk2077Messages || 0) + 1;
-            }
-            if (cat.includes('witcher 3')) {
-                stats.witcher3Messages = (stats.witcher3Messages || 0) + 1;
-                const todayStr = now.toDateString();
-                if (stats.lastWitcher3Date !== todayStr) {
-                    stats.witcher3Streams = (stats.witcher3Streams || 0) + 1;
-                    stats.lastWitcher3Date = todayStr;
-                }
-            }
-        }
+
 
         // Guardar en RAM stateManager para persistencia
         const userData = this.stateManager.getUser(key);
@@ -276,46 +277,88 @@ export default class AchievementService {
         // 1. Asegurar usuario cargado
         await this.stateManager.ensureUserLoaded(key);
 
-        // 2. Update Stats
+        // 2. Update Stats (Mutación controlada)
         this.updateUserStats(key, context);
 
         const userData = this.stateManager.getUser(key);
+        if (!userData) return [];
+
         const userStats = this.getUserStats(key);
         const unlockedNow = [];
 
-        let existingAchievements = userData.achievements || [];
-        // Support legacy strings
-        const unlockedIds = existingAchievements.map(a => (typeof a === 'string' ? a : a.id));
+        // 2.5 Determinar categorías a chequear (Optimización)
+        let categoriesToCheck = null;
+        if (context.isRankingUpdate) {
+            categoriesToCheck = ['ranking', 'special'];
+        } else if (context.isLevelUp) {
+            categoriesToCheck = ['levels', 'special'];
+        } else if (context.isRetroactiveCheck) {
+            categoriesToCheck = null; // Check all
+        } else {
+            // Mensaje normal de chat
+            categoriesToCheck = ['messages', 'streaks', 'xp', 'stream', 'holidays', 'bro', 'special'];
+        }
 
-        // 3. Check All
+        // 3. Normalización de persistencia (Legacy Fix)
+        if (!userData.achievements) userData.achievements = [];
+        
+        // Convertir strings legacy a objetos {id, unlockedAt} de una sola vez
+        let needsNormalization = false;
+        userData.achievements = userData.achievements.map(ach => {
+            if (typeof ach === 'string') {
+                needsNormalization = true;
+                return { id: ach, unlockedAt: new Date().toISOString(), isLegacy: true };
+            }
+            return ach;
+        });
+
+        if (needsNormalization) {
+            this.stateManager.markDirty(key);
+        }
+
+        const unlockedIds = new Set(userData.achievements.map(a => a.id));
+
+        // 4. Check All
         for (const [achId, achievement] of Object.entries(this.achievements)) {
-            if (unlockedIds.includes(achId)) continue;
+            if (unlockedIds.has(achId)) continue; // Ya lo tiene
+
+            // Filtrado por categoría (Optimización)
+            if (categoriesToCheck && !categoriesToCheck.includes(achievement.category)) {
+                continue;
+            }
 
             if (achievement.check(userData, userStats)) {
-                // UNLOCKED
-                const entry = { id: achId, unlockedAt: new Date().toISOString() };
+                // UNLOCKED!
+                const entry = { 
+                    id: achId, 
+                    unlockedAt: new Date().toISOString() 
+                };
                 
                 // Dar XP
                 await this.experienceService.addAchievementXP(key, achievement.rarity, { 
                     suppressEvents: context.isInitialLoad 
                 });
 
-                existingAchievements.push(entry);
+                userData.achievements.push(entry);
                 unlockedNow.push(achievement);
-                unlockedIds.push(achId); // Prevent double add in same loop
+                unlockedIds.add(achId); // Evitar duplicados en el mismo ciclo
 
                 if (this.config.DEBUG && !context.isInitialLoad) {
-                    console.log(`🏆 LOGRO: ${key} -> ${achievement.name}`);
+                    console.log(`🏆 LOGRO DESBLOQUEADO: [${key}] -> ${achievement.name}`);
                 }
             }
         }
 
         if (unlockedNow.length > 0) {
-            userData.achievements = existingAchievements;
             this.stateManager.markDirty(key);
 
             if (!context.isInitialLoad) {
-                unlockedNow.forEach(ach => this.emitAchievementUnlocked(key, ach));
+                // Throttling básico: Emitir eventos con un pequeño delay si son muchos
+                unlockedNow.forEach((ach, index) => {
+                    setTimeout(() => {
+                        this.emitAchievementUnlocked(key, ach);
+                    }, index * 500); // 500ms entre popups
+                });
             }
         }
 
@@ -356,5 +399,12 @@ export default class AchievementService {
     getTotalAchievements() { return Object.keys(this.achievements).length; }
     
     setStreamCategory(cat) { this.currentStreamCategory = cat; }
-    setStreamStatus(online) { this.isStreamOnline = online; }
+    setStreamStatus(online) { 
+        this.isStreamOnline = online; 
+        if (online) {
+            this.streamStartTime = this.streamStartTime || Date.now();
+        } else {
+            this.streamStartTime = null;
+        }
+    }
 }

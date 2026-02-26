@@ -16,7 +16,10 @@ export default class AchievementMiddleware {
         const achContext = {
             ...ctx.xpContext,
             isFirstMessageOfDay: ctx.xpResult?.xpSources?.some(s => s.source === 'FIRST_MESSAGE_DAY'),
-            streakMultiplier: ctx.xpResult?.streakMultiplier || 1
+            streakMultiplier: ctx.xpResult?.streakMultiplier || 1,
+            message: ctx.message,
+            hasEmotes: !!ctx.emotes || (ctx.tags && ctx.tags.emotes),
+            hasMention: ctx.message && ctx.message.includes('@')
         };
 
         // checkAchievements ya es async y tiene su propia protección de carga interna
