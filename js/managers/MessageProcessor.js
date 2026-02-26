@@ -253,7 +253,7 @@ export default class MessageProcessor {
             
             // Actualizar estadísticas de ranking en XP service
             if (this.services.xp && this.services.ranking.isLoaded) {
-                 this.services.ranking.updateRankingStats(this.services.ranking.userRankings, true);
+                 await this.services.ranking.updateRankingStats(this.services.ranking.userRankings, true);
             }
         }
 

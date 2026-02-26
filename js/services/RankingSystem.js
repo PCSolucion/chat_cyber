@@ -27,10 +27,7 @@ export default class RankingSystem {
         this.isLoaded = false;
         this.stateManager = null;
 
-        // Escuchar carga de usuarios (opcional para rankings estáticos)
-        EventManager.on(EVENTS.USER.LOADED, () => {
-             // En modo Gist no solemos recalcular al cargar usuario
-        });
+        this.stateManager = null;
     }
 
     /**
@@ -58,7 +55,9 @@ export default class RankingSystem {
                 if (parts.length >= 2) {
                     const rank = parseInt(parts[0]);
                     const username = parts[1].trim().toLowerCase();
-                    if (!isNaN(rank) && username) {
+                    
+                    // Validación de seguridad: Rango positivo y formato de username Twitch (alfanumérico + _)
+                    if (!isNaN(rank) && rank > 0 && username && /^[a-z0-9_]+$/.test(username)) {
                         this.userRankings.set(username, rank);
                     }
                 }
@@ -71,10 +70,81 @@ export default class RankingSystem {
         }
     }
 
-    getUserRank(userId, username) {
+    getUserRank(username) {
         if (!username) return null;
         const lowerName = username.toLowerCase();
         return this.userRankings.get(lowerName) || null;
+    }
+
+    /**
+     * Identifica al usuario que ostentaba el Top 1 antes de la actualización
+     * @private
+     * @returns {string|null} Username en minúsculas
+     */
+    _getPreviousTop1() {
+        if (!this.stateManager) return null;
+        for (const [username, userData] of this.stateManager.getAllUsers().entries()) {
+            if (userData.achievementStats && userData.achievementStats.currentRank === 1) {
+                return username;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Procesa y actualiza las estadísticas de rango y récords de un usuario
+     * @private
+     * @param {Object} userData - Datos de usuario
+     * @param {number} rank - Rango actual en el ranking
+     * @param {string} previousTop1User - Username del Top 1 anterior
+     * @param {string} today - Fecha actual en string
+     * @returns {boolean} True si hubo cambios en los datos
+     */
+    _updateUserRankStats(userData, rank, previousTop1User, today) {
+        const stats = userData.achievementStats || {};
+        const previousRank = stats.currentRank || 999;
+        const lowerUser = (userData.displayName || '').toLowerCase();
+        let changed = false;
+
+        // 1. Lógica de Rango y Ascensos
+        if (stats.currentRank !== rank) {
+            stats.currentRank = rank;
+            changed = true;
+            const climb = previousRank - rank;
+            if (climb > 0) {
+                stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
+                stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
+            }
+        }
+
+        // 2. Récord Histórico de Rango
+        if (rank < (stats.bestRank || 999)) {
+            stats.bestRank = rank;
+            changed = true;
+        }
+
+        // 3. Contadores de Días en el Top (Persistencia diaria)
+        if (stats.lastRankUpdateDate !== today) {
+            stats.lastRankUpdateDate = today;
+            if (rank === 1) stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
+            if (rank <= 10) stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
+            if (rank <= 15) stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
+            changed = true;
+        }
+
+        // 4. Lógica de Destronamiento
+        if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
+            if (!stats.dethroned) {
+                stats.dethroned = true;
+                changed = true;
+                if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
+            }
+        }
+
+        if (changed) {
+            userData.achievementStats = stats;
+        }
+        return changed;
     }
 
     /**
@@ -88,76 +158,34 @@ export default class RankingSystem {
         const today = new Date().toDateString();
         let changesCount = 0;
 
-        // 1. Identificar quién era el Top 1 anterior
-        let previousTop1User = null;
-        for (const [username, userData] of this.stateManager.getAllUsers().entries()) {
-            if (userData.achievementStats && userData.achievementStats.currentRank === 1) {
-                previousTop1User = username;
-                break;
-            }
-        }
+        const previousTop1User = this._getPreviousTop1();
 
-        // 2. Iterar sobre todos los usuarios del ranking actual
         for (const [idOrName, rank] of rankingMap.entries()) {
             const key = String(idOrName).toLowerCase();
-            let userData = this.stateManager.users.get(key);
+            let userData = this.stateManager.getUser(key);
 
+            // Carga bajo demanda para usuarios del Top que no están en RAM (lurkers o ausentes)
             if (!userData && rank <= 20) {
                 try {
                     if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
                     await this.stateManager.ensureUserLoaded(key);
-                    userData = this.stateManager.users.get(key);
+                    userData = this.stateManager.getUser(key);
                 } catch (error) {
                     console.error(`❌ Error cargando usuario offline para ranking (${key}):`, error);
-                    continue; // Continuar con el siguiente usuario si falla la carga de este
+                    continue;
                 }
             }
 
             if (!userData) continue;
 
-            const lowerUser = (userData.displayName || idOrName).toLowerCase();
-            const stats = userData.achievementStats || {};
-            const previousRank = stats.currentRank || 999;
-            let statsChanged = false;
-
-            if (stats.currentRank !== rank) {
-                stats.currentRank = rank;
-                statsChanged = true;
-                const climb = previousRank - rank;
-                if (climb > 0) {
-                    stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
-                    stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
-                }
-            }
-
-            if (rank < (stats.bestRank || 999)) {
-                stats.bestRank = rank;
-                statsChanged = true;
-            }
-
-            if (stats.lastRankUpdateDate !== today) {
-                stats.lastRankUpdateDate = today;
-                if (rank === 1) stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
-                if (rank <= 10) stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
-                if (rank <= 15) stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
-                statsChanged = true;
-            }
-
-            if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
-                if (!stats.dethroned) {
-                    stats.dethroned = true;
-                    statsChanged = true;
-                    if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
-                }
-            }
+            const statsChanged = this._updateUserRankStats(userData, rank, previousTop1User, today);
 
             if (statsChanged) {
-                userData.achievementStats = stats;
-                this.stateManager.markDirty(idOrName);
+                this.stateManager.markDirty(key);
                 changesCount++;
                 EventManager.emit(EVENTS.USER.RANKING_UPDATED, { 
                     userId: String(idOrName),
-                    username: lowerUser, 
+                    username: (userData.displayName || key).toLowerCase(), 
                     isInitialLoad 
                 });
             }
