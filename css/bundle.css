@@ -1338,8 +1338,7 @@ body {
     min-height: 100px;
     flex: 1; /* Ocupar el resto del contenedor fijo */
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    display: block;
     font-size: var(--message-size);
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
@@ -1384,6 +1383,7 @@ body {
     vertical-align: middle;
     margin: 0 3px;
     height: 1.5em !important;
+    width: auto !important;
     filter: drop-shadow(0 0 3px rgba(var(--cyber-cyan-rgb), 0.3));
 }
 

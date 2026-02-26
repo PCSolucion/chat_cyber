@@ -2,6 +2,7 @@ import EventManager from "../utils/EventEmitter.js";
 import { EVENTS } from "../utils/EventTypes.js";
 import { NOTIFICATIONS } from "../constants/AppConstants.js";
 import NotificationRenderer from "./ui/NotificationRenderer.js";
+import Logger from "../utils/Logger.js";
 
 /**
  * NotificationManager - Gestor de Notificaciones (Orquestador)
@@ -194,31 +195,35 @@ export default class NotificationManager {
 
     let totalWaitTime = this.displayTime + this.fadeTime;
 
-    switch (notification.type) {
-      case "achievement_batch":
-        this.renderer.renderAchievementBatch(notification.data);
-        this.renderer.renderTopOverlayAchievementBatch(notification.data);
-        totalWaitTime = Math.max(totalWaitTime, 11500); // Sincronizado con animación overlay
-        break;
+    try {
+      switch (notification.type) {
+        case "achievement_batch":
+          this.renderer.renderAchievementBatch(notification.data);
+          this.renderer.renderTopOverlayAchievementBatch(notification.data);
+          totalWaitTime = Math.max(totalWaitTime, 11500);
+          break;
 
-      case "levelup":
-        if (this.uiManager && this.uiManager.xpDisplay) {
-          this.uiManager.xpDisplay.showTopLevelUp(notification.data);
-          this.uiManager.xpDisplay.showLevelUp(notification.data);
-        }
-        EventManager.emit(EVENTS.UI.LEVEL_UP_DISPLAYED, notification.data);
-        totalWaitTime = 6500;
-        break;
+        case "levelup":
+          if (this.uiManager && this.uiManager.xpDisplay) {
+            this.uiManager.xpDisplay.showTopLevelUp(notification.data);
+            this.uiManager.xpDisplay.showLevelUp(notification.data);
+          }
+          EventManager.emit(EVENTS.UI.LEVEL_UP_DISPLAYED, notification.data);
+          totalWaitTime = 6500;
+          break;
 
-      case "prediction_result":
-        this.renderer.renderPredictionResult(notification.data);
-        totalWaitTime = 3500;
-        break;
+        case "prediction_result":
+          this.renderer.renderPredictionResult(notification.data);
+          totalWaitTime = 3500;
+          break;
 
-      default:
-        this.isShowingNotification = false;
-        this._processQueue();
-        return;
+        default:
+          this.isShowingNotification = false;
+          this._processQueue();
+          return;
+      }
+    } catch (e) {
+      console.error(`❌ [NotificationManager] Error processing "${notification.type}":`, e);
     }
 
     setTimeout(() => {

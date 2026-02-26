@@ -111,8 +111,15 @@ export default class DevTools {
 
     _simulateMessage(usuario, mensaje, extraTags = {}) {
         console.log('🧪 Simulando mensaje de:', usuario, extraTags);
+        
+        // Registrar artificialmente al usuario como presente para pasar filtros
+        if (this.app.twitchService && this.app.twitchService.activeChatters) {
+            this.app.twitchService.activeChatters.add(usuario.toLowerCase());
+        }
+
         const tags = { 
             'display-name': usuario, 
+            username: usuario.toLowerCase(), // Añadido para compatibilidad correcta de tags
             emotes: {},
             ...extraTags 
         };
@@ -125,12 +132,15 @@ export default class DevTools {
         }
     }
 
-    _testLevelUp(lvl) {
+    _testLevelUp(eventData = {}) {
         const data = {
-            username: 'TestUser',
-            newLevel: lvl || 10,
-            title: 'DEBUG RANK'
+            username: eventData.username || 'TestUser',
+            newLevel: eventData.level || eventData.newLevel || 10,
+            title: eventData.title || 'DEBUG RANK',
+            isPresent: true // Forzar presencia para que pase los filtros de NotificationManager
         };
+        
+        console.log('🎬 DevTools: Ejecutando Test LevelUp', data);
         this.notificationManager?.showLevelUp(data);
     }
 
@@ -239,7 +249,7 @@ export default class DevTools {
             if (!data || !data.type) return;
 
             if (data.type === 'TEST_LEVEL_UP') {
-                this._testLevelUp(data.level);
+                this._testLevelUp(data);
             }
         });
     }

@@ -1,6 +1,7 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import XPDisplayRenderer from './ui/XPDisplayRenderer.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * XPDisplayManager - Gestión de Lógica de UI para el Sistema de XP

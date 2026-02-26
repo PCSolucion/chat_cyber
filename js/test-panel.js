@@ -419,13 +419,15 @@ class TestPanelController {
 
     testLevelUp() {
         const win = this.getWidgetWindow();
-        if (!win) return;
-        win.postMessage({
-            type: 'TEST_LEVEL_UP',
+        if (!win?.WidgetDebug?.xp) {
+            console.error('❌ Widget not ready: WidgetDebug.xp not available');
+            return;
+        }
+        win.WidgetDebug.xp.testLevelUp({
             username: 'NetRunner_Test',
             level: Math.floor(Math.random() * 50) + 10,
             title: 'LEGEND OF NIGHT CITY'
-        }, '*');
+        });
     }
 
 
