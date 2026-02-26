@@ -3,6 +3,33 @@ import { EVENTS } from '../utils/EventTypes.js';
 import { DATA_SOURCES } from '../constants/AppConstants.js';
 
 /**
+ * Configuración de roles estáticos para evitar re-asignación en cada llamada.
+ */
+const ROLES_CONFIG = {
+    ADMIN: {
+        role: 'admin',
+        badge: 'ADMIN',
+        containerClass: 'admin-user',
+        badgeClass: 'admin',
+        rankTitle: { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' }
+    },
+    SYSTEM: {
+        role: 'admin', 
+        badge: 'ROOT',
+        containerClass: 'admin-user',
+        badgeClass: 'admin',
+        rankTitle: { title: 'AI CONSTRUCT', icon: 'icon-netwatch' }
+    },
+    CITIZEN: {
+        role: 'normal',
+        badge: '',
+        containerClass: '',
+        badgeClass: '',
+        rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } 
+    }
+};
+
+/**
  * RankingSystem - Sistema de Gestión de Rankings y Roles (Gist Edition)
  * 
  * Responsabilidades:
@@ -35,7 +62,6 @@ export default class RankingSystem {
     setStateManager(stateManager) {
         this.stateManager = stateManager;
     }
-
 
     async loadRankings() {
         try {
@@ -100,85 +126,110 @@ export default class RankingSystem {
      */
     _updateUserRankStats(userData, rank, previousTop1User, today) {
         const stats = userData.achievementStats || {};
-        const previousRank = stats.currentRank || 999;
         const lowerUser = (userData.displayName || '').toLowerCase();
         let changed = false;
 
-        // 1. Lógica de Rango y Ascensos
-        if (stats.currentRank !== rank) {
-            const previousStoredRank = stats.currentRank || 999;
-            stats.currentRank = rank;
-            changed = true;
-            const climb = previousStoredRank - rank;
-            
-            if (climb > 0) {
-                // ASCENSO
-                stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
-                stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
-
-                // [FIX] Lógica de Comebacks (Volver al Top 10)
-                if (rank <= 10 && previousStoredRank > 10 && stats.hasBeenInTop10) {
-                    stats.comebacks = (stats.comebacks || 0) + 1;
-                }
-
-                // [FIX] Lógica de Rivals Defeated (Superar a quien te superó)
-                if (stats.whoSurpassedMe && stats.whoSurpassedMe.length > 0) {
-                    // Nota: Esta es una aproximación. Idealmente compararíamos contra todos los usuarios,
-                    // pero para no saturar memoria, solo comprobamos si el ascenso es significativo 
-                    // o si tenemos rivales pendientes.
-                    const surpassedNow = []; // En el stream real compararíamos contra el listado de usuarios
-                    
-                    // Si el ascenso es grande, asumimos que derrotó a sus rivales recientes
-                    if (climb >= 1) {
-                        stats.rivalsDefeated = (stats.rivalsDefeated || 0) + 1;
-                        // Limpiar lista de rivales para simplificar
-                        stats.whoSurpassedMe = [];
-                    }
-                }
-            } else if (climb < 0) {
-                // DESCENSO
-                // Marcar que fuimos superados
-                if (!stats.whoSurpassedMe) stats.whoSurpassedMe = [];
-                if (stats.whoSurpassedMe.length < 5) { // Límite para no inflar stats
-                    stats.whoSurpassedMe.push('someone'); // Usamos placeholder por simplicidad de memoria
-                }
-            }
-        }
-
-        // Marcar histórico de Top 10
-        if (rank <= 10 && !stats.hasBeenInTop10) {
-            stats.hasBeenInTop10 = true;
-            changed = true;
-        }
+        // 1. Lógica de Rango y Movimientos (Ascensos/Descensos)
+        if (this._handleRankMovement(stats, rank)) changed = true;
 
         // 2. Récord Histórico de Rango
-        if (rank < (stats.bestRank || 999)) {
-            stats.bestRank = rank;
-            changed = true;
-        }
+        if (this._updateHistoricalRecords(stats, rank)) changed = true;
 
         // 3. Contadores de Días en el Top (Persistencia diaria)
-        if (stats.lastRankUpdateDate !== today) {
-            stats.lastRankUpdateDate = today;
-            if (rank === 1) stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
-            if (rank <= 10) stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
-            if (rank <= 15) stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
-            changed = true;
-        }
+        if (this._manageDailyCounters(stats, rank, today)) changed = true;
 
         // 4. Lógica de Destronamiento
-        if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
-            if (!stats.dethroned) {
-                stats.dethroned = true;
-                changed = true;
-                if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
-            }
-        }
+        if (this._detectDethronement(stats, rank, previousTop1User, lowerUser)) changed = true;
 
         if (changed) {
             userData.achievementStats = stats;
         }
         return changed;
+    }
+
+    /**
+     * Gestiona la lógica de ascensos, descensos, comebacks y rivales
+     * @private
+     */
+    _handleRankMovement(stats, rank) {
+        if (stats.currentRank === rank) return false;
+
+        const previousStoredRank = stats.currentRank || 999;
+        stats.currentRank = rank;
+        const climb = previousStoredRank - rank;
+        
+        if (climb > 0) {
+            // ASCENSO
+            stats.bestDailyClimb = Math.max(stats.bestDailyClimb || 0, climb);
+            stats.bestClimb = Math.max(stats.bestClimb || 0, climb);
+
+            // Lógica de Comebacks (Volver al Top 10)
+            if (rank <= 10 && previousStoredRank > 10 && stats.hasBeenInTop10) {
+                stats.comebacks = (stats.comebacks || 0) + 1;
+            }
+
+            // Lógica de Rivals Defeated (Superar a quien te superó)
+            if (stats.whoSurpassedMe && stats.whoSurpassedMe.length > 0) {
+                if (climb >= 1) {
+                    stats.rivalsDefeated = (stats.rivalsDefeated || 0) + 1;
+                    stats.whoSurpassedMe = [];
+                }
+            }
+        } else if (climb < 0) {
+            // DESCENSO
+            if (!stats.whoSurpassedMe) stats.whoSurpassedMe = [];
+            if (stats.whoSurpassedMe.length < 5) {
+                stats.whoSurpassedMe.push('someone');
+            }
+        }
+
+        if (rank <= 10 && !stats.hasBeenInTop10) {
+            stats.hasBeenInTop10 = true;
+        }
+
+        return true;
+    }
+
+    /**
+     * Actualiza el récord histórico de mejor rango
+     * @private
+     */
+    _updateHistoricalRecords(stats, rank) {
+        if (rank < (stats.bestRank || 999)) {
+            stats.bestRank = rank;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gestiona los contadores de días en rangos específicos
+     * @private
+     */
+    _manageDailyCounters(stats, rank, today) {
+        if (stats.lastRankUpdateDate !== today) {
+            stats.lastRankUpdateDate = today;
+            if (rank === 1) stats.daysAsTop1 = (stats.daysAsTop1 || 0) + 1;
+            if (rank <= 10) stats.daysInTop10 = (stats.daysInTop10 || 0) + 1;
+            if (rank <= 15) stats.daysInTop15 = (stats.daysInTop15 || 0) + 1;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Detecta si un usuario ha tomado el trono del Top 1
+     * @private
+     */
+    _detectDethronement(stats, rank, previousTop1User, lowerUser) {
+        if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
+            if (!stats.dethroned) {
+                stats.dethroned = true;
+                if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -208,9 +259,15 @@ export default class RankingSystem {
             }
         }
 
-        // 2. Cargar todos los usuarios faltantes en paralelo (Batch processing)
+        // 2. Cargar todos los usuarios faltantes en paralelo (Batch processing) con tolerancia a fallos
         if (missingUserPromises.length > 0) {
-            await Promise.all(missingUserPromises);
+            const results = await Promise.allSettled(missingUserPromises);
+            
+            // Log de errores específicos para usuarios del Top 20 que fallaron
+            const failures = results.filter(r => r.status === 'rejected');
+            if (failures.length > 0 && this.config.DEBUG) {
+                console.warn(`⚠️ Fallaron ${failures.length} precargas de usuarios offline.`);
+            }
         }
 
         // 3. Aplicar actualizaciones una vez que los datos están listos
@@ -277,37 +334,12 @@ export default class RankingSystem {
         const safeUsername = (username && typeof username === 'string') ? username.toLowerCase() : '';
         const id = safeUsername; 
 
-        // Definición de presets para evitar repetición de lógica
-        const ROLES_CONFIG = {
-            ADMIN: {
-                role: 'admin',
-                badge: 'ADMIN',
-                containerClass: 'admin-user',
-                badgeClass: 'admin',
-                rankTitle: { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' }
-            },
-            SYSTEM: {
-                role: 'admin', 
-                badge: 'ROOT',
-                containerClass: 'admin-user',
-                badgeClass: 'admin',
-                rankTitle: { title: 'AI CONSTRUCT', icon: 'icon-netwatch' }
-            },
-            CITIZEN: {
-                role: 'normal',
-                badge: '',
-                containerClass: '',
-                badgeClass: '',
-                rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } 
-            }
-        };
-
         // 1. Casos Especiales (Admin / System)
         if (safeUsername === this.adminUser) return ROLES_CONFIG.ADMIN;
         if (safeUsername === 'system') return ROLES_CONFIG.SYSTEM;
 
         // 2. Lógica de Ranking (Top Users)
-        const rank = this.userRankings.get(id);
+        const rank = this.userRankings.get(safeUsername);
         let result = { ...ROLES_CONFIG.CITIZEN };
 
         if (rank) {
