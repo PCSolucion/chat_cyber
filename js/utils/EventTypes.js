@@ -19,6 +19,7 @@ export const EVENTS = {
         ACHIEVEMENT_UNLOCKED: 'user:achievementUnlocked',
         XP_GAINED: 'user:xpGained',
         RANKING_UPDATED: 'user:rankingUpdated',
+        RANKING_BATCH_UPDATED: 'user:rankingBatchUpdated',
         LOADED: 'user:loaded',
         PREDICTION_RESULT: 'user:predictionResult'
     },

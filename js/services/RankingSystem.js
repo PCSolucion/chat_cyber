@@ -26,8 +26,6 @@ export default class RankingSystem {
         this.adminUser = config.TWITCH_CHANNEL;
         this.isLoaded = false;
         this.stateManager = null;
-
-        this.stateManager = null;
     }
 
     /**
@@ -71,7 +69,7 @@ export default class RankingSystem {
     }
 
     getUserRank(username) {
-        if (!username) return null;
+        if (!username || typeof username !== 'string') return null;
         const lowerName = username.toLowerCase();
         return this.userRankings.get(lowerName) || null;
     }
@@ -157,24 +155,34 @@ export default class RankingSystem {
 
         const today = new Date().toDateString();
         let changesCount = 0;
-
         const previousTop1User = this._getPreviousTop1();
+
+        // 1. Identificar usuarios del Top 20 que faltan en memoria
+        const missingUserPromises = [];
+        for (const [idOrName, rank] of rankingMap.entries()) {
+            const key = String(idOrName).toLowerCase();
+            const userData = this.stateManager.getUser(key);
+
+            if (!userData && rank <= 20) {
+                if (this.config.DEBUG) console.log(`🔄 Preparando carga paralela de Top User offline: ${key} (Rank ${rank})`);
+                missingUserPromises.push(
+                    this.stateManager.ensureUserLoaded(key)
+                        .catch(err => console.error(`❌ Falló precarga de ${key}:`, err))
+                );
+            }
+        }
+
+        // 2. Cargar todos los usuarios faltantes en paralelo (Batch processing)
+        if (missingUserPromises.length > 0) {
+            await Promise.all(missingUserPromises);
+        }
+
+        // 3. Aplicar actualizaciones una vez que los datos están listos
+        const updatedUsers = [];
 
         for (const [idOrName, rank] of rankingMap.entries()) {
             const key = String(idOrName).toLowerCase();
-            let userData = this.stateManager.getUser(key);
-
-            // Carga bajo demanda para usuarios del Top que no están en RAM (lurkers o ausentes)
-            if (!userData && rank <= 20) {
-                try {
-                    if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
-                    await this.stateManager.ensureUserLoaded(key);
-                    userData = this.stateManager.getUser(key);
-                } catch (error) {
-                    console.error(`❌ Error cargando usuario offline para ranking (${key}):`, error);
-                    continue;
-                }
-            }
+            const userData = this.stateManager.getUser(key);
 
             if (!userData) continue;
 
@@ -183,11 +191,25 @@ export default class RankingSystem {
             if (statsChanged) {
                 this.stateManager.markDirty(key);
                 changesCount++;
-                EventManager.emit(EVENTS.USER.RANKING_UPDATED, { 
+                
+                updatedUsers.push({
                     userId: String(idOrName),
-                    username: (userData.displayName || key).toLowerCase(), 
-                    isInitialLoad 
+                    username: (userData.displayName || key).toLowerCase(),
+                    rank: rank
                 });
+            }
+        }
+
+        // 4. Emisión de eventos eficiente (Batch)
+        if (updatedUsers.length > 0) {
+            EventManager.emit(EVENTS.USER.RANKING_BATCH_UPDATED, { 
+                users: updatedUsers,
+                isInitialLoad 
+            });
+
+            // Compatibilidad hacia atrás (Opcional: solo si hay listeners antiguos)
+            if (updatedUsers.length < 5) {
+                updatedUsers.forEach(u => EventManager.emit(EVENTS.USER.RANKING_UPDATED, { ...u, isInitialLoad }));
             }
         }
 
@@ -215,43 +237,43 @@ export default class RankingSystem {
      * @returns {Object} Objeto con información del rol
      */
     getUserRole(userId, username, userData = null, levelCalculator = null) {
-        const lowerUser = username ? username.toLowerCase() : '';
-        const id = lowerUser; 
+        // Normalización defensiva de entrada
+        const safeUsername = (username && typeof username === 'string') ? username.toLowerCase() : '';
+        const id = safeUsername; 
 
-        // ADMIN
-        if (lowerUser === this.adminUser) {
-            return {
+        // Definición de presets para evitar repetición de lógica
+        const ROLES_CONFIG = {
+            ADMIN: {
                 role: 'admin',
                 badge: 'ADMIN',
                 containerClass: 'admin-user',
                 badgeClass: 'admin',
                 rankTitle: { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' }
-            };
-        }
-
-        // SYSTEM BOT
-        if (lowerUser === 'system') {
-            return {
+            },
+            SYSTEM: {
                 role: 'admin', 
                 badge: 'ROOT',
                 containerClass: 'admin-user',
                 badgeClass: 'admin',
                 rankTitle: { title: 'AI CONSTRUCT', icon: 'icon-netwatch' }
-            };
-        }
-
-        const rank = this.userRankings.get(id);
-        
-        // Estructura base
-        let result = {
-            role: 'normal',
-            badge: '',
-            containerClass: '',
-            badgeClass: '',
-            rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } 
+            },
+            CITIZEN: {
+                role: 'normal',
+                badge: '',
+                containerClass: '',
+                badgeClass: '',
+                rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } 
+            }
         };
 
-        // Lógica de Ranking (Top Users)
+        // 1. Casos Especiales (Admin / System)
+        if (safeUsername === this.adminUser) return ROLES_CONFIG.ADMIN;
+        if (safeUsername === 'system') return ROLES_CONFIG.SYSTEM;
+
+        // 2. Lógica de Ranking (Top Users)
+        const rank = this.userRankings.get(id);
+        let result = { ...ROLES_CONFIG.CITIZEN };
+
         if (rank) {
             if (rank === 1) {
                 result = {
@@ -280,16 +302,18 @@ export default class RankingSystem {
             }
         }
 
-        // Lógica de Fusión con Nivel
+        // 3. Lógica de Fusión con Nivel (Solo si no es Top 15)
         const finalCalculator = levelCalculator || this.levelCalculator;
-        const isHighRank = rank && rank <= 15;
+        const hasCustomTitle = rank && rank <= 15;
         
-        if (!isHighRank && userData && userData.level && finalCalculator) {
+        if (!hasCustomTitle && userData?.level && finalCalculator) {
             const levelTitle = finalCalculator.getLevelTitle(userData.level);
-            result.rankTitle = { 
-                title: levelTitle, 
-                icon: result.rankTitle.icon 
-            };
+            if (levelTitle) {
+                result.rankTitle = { 
+                    title: levelTitle, 
+                    icon: result.rankTitle.icon 
+                };
+            }
         }
 
         return result;
