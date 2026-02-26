@@ -163,13 +163,16 @@ export default class UserStateManager {
             this.pendingStructuralChanges.add(key);
         }
 
+        // [FIX] Guardar nivel anterior ANTES del merge para protección anti-degradación
+        const previousLevel = currentData.level;
+
         // Merge in-place para preservar referencias usadas por otros servicios (ej. ExperienceService)
         Object.assign(currentData, newData);
         
-        // Protección simple contra degradación de nivel (Sólo advertencia, permitimos corrección)
-        if (newData.level && newData.level < currentData.level) {
-            if(this.config.DEBUG) Logger.warn('UserStateManager', `⚠️ Nivel bajó de ${currentData.level} a ${newData.level} para ${key}. Manteniendo nivel alto.`);
-            currentData.level = Math.max(currentData.level, newData.level || 0);
+        // Protección contra degradación de nivel (Comparar contra el valor PRE-merge)
+        if (newData.level !== undefined && newData.level < previousLevel) {
+            if(this.config.DEBUG) Logger.warn('UserStateManager', `⚠️ Nivel bajó de ${previousLevel} a ${newData.level} para ${key}. Manteniendo nivel alto.`);
+            currentData.level = previousLevel;
         }
         
         // El objeto en this.users ya está actualizado por Object.assign

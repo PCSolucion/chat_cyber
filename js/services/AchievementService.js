@@ -38,6 +38,16 @@ export default class AchievementService {
             this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
         });
 
+        // [FIX] También escuchar eventos batch (≥5 usuarios) para no perder chequeos de ranking
+        EventManager.on(EVENTS.USER.RANKING_BATCH_UPDATED, (data) => {
+            const isInitialLoad = data.isInitialLoad || false;
+            if (data.users && Array.isArray(data.users)) {
+                data.users.forEach(u => {
+                    this.checkAchievements(u.username, { isRankingUpdate: true, isInitialLoad });
+                });
+            }
+        });
+
         EventManager.on(EVENTS.USER.LEVEL_UP, (data) => {
             const username = data.username;
             this.checkAchievements(username, { isLevelUp: true });
@@ -193,6 +203,9 @@ export default class AchievementService {
                 offlineMessages: savedStats.offlineMessages || 0,
                 streamOpenerCount: savedStats.streamOpenerCount || 0,
                 primeTimeMessages: savedStats.primeTimeMessages || 0,
+                uniqueStreams: savedStats.uniqueStreams || 0,
+                marathonStreams: savedStats.marathonStreams || 0,
+                attendedStreams: savedStats.attendedStreams || [], // Array de IDs de streams
                 holidays: savedStats.holidays || [],
                 // Preservar cualquier otro
                 ...savedStats
@@ -236,6 +249,46 @@ export default class AchievementService {
             if (context.streakMultiplier > 1.0) stats.streakBonusCount = (stats.streakBonusCount || 0) + 1;
         }
 
+        // [FIX] Tracking de Level Ups diarios/semanales (para logros fast_learner, grinder)
+        if (context.isLevelUp) {
+            const todayStr = now.toDateString();
+            if (stats.lastLevelUpDate !== todayStr) {
+                stats.levelUpsToday = 1;
+                stats.lastLevelUpDate = todayStr;
+            } else {
+                stats.levelUpsToday = (stats.levelUpsToday || 0) + 1;
+            }
+            stats.levelUpsThisWeek = (stats.levelUpsThisWeek || 0) + 1;
+
+            // Resetear contador semanal cada lunes
+            const dayOfWeek = now.getDay();
+            if (dayOfWeek === 1 && stats._lastWeekReset !== todayStr) {
+                stats.levelUpsThisWeek = 1;
+                stats._lastWeekReset = todayStr;
+            }
+        }
+
+        // [FIX] Tracking de Streak Resets y Phoenix (para logros streak_recovery, never_give_up, phoenix)
+        const userData = this.stateManager.getUser(key);
+        if (userData) {
+            const currentStreak = userData.streakDays || 0;
+            const previousStreak = stats._previousStreakSnapshot || 0;
+
+            // Detectar rotura de racha: la racha bajó a 1 desde un valor mayor
+            if (currentStreak === 1 && previousStreak > 1) {
+                stats.streakResets = (stats.streakResets || 0) + 1;
+                stats.maxStreakLost = Math.max(stats.maxStreakLost || 0, previousStreak);
+            }
+
+            // Lógica Phoenix: alcanzar 7 días después de haber perdido una racha de 14+
+            if (!stats.phoenixAchieved && currentStreak >= 7 && (stats.maxStreakLost || 0) >= 14) {
+                stats.phoenixAchieved = true;
+            }
+
+            // Actualizar snapshot de racha para comparaciones futuras
+            stats._previousStreakSnapshot = currentStreak;
+        }
+
         if (this.isStreamOnline) {
             stats.liveMessages = (stats.liveMessages || 0) + 1;
             
@@ -244,30 +297,109 @@ export default class AchievementService {
             if (streamDurationMinutes <= 5) stats.streamOpenerCount = (stats.streamOpenerCount || 0) + 1;
             
             if (hour >= 19 && hour < 23) stats.primeTimeMessages = (stats.primeTimeMessages || 0) + 1;
+
+            // [FIX] Lógica de Unique Streams y Maratones
+            if (this.currentStreamId) {
+                // 1. Unique Streams (Asistencia a diferentes directos)
+                if (!stats.attendedStreams) stats.attendedStreams = [];
+                if (!stats.attendedStreams.includes(this.currentStreamId)) {
+                    stats.attendedStreams.push(this.currentStreamId);
+                    stats.uniqueStreams = stats.attendedStreams.length;
+                    
+                    // Limpieza opcional: Mantener solo los últimos 110 (suficiente para el logro legendario)
+                    if (stats.attendedStreams.length > 120) {
+                        stats.attendedStreams.shift();
+                    }
+                }
+
+                // 2. Marathon Streams (Activo por 4+ horas en un stream)
+                const streamDurationHours = (Date.now() - this.streamStartTime) / 3600000;
+                if (streamDurationHours >= 4 && stats._lastMarathonStreamId !== this.currentStreamId) {
+                    stats.marathonStreams = (stats.marathonStreams || 0) + 1;
+                    stats._lastMarathonStreamId = this.currentStreamId; 
+                }
+            }
         } else {
             stats.offlineMessages = (stats.offlineMessages || 0) + 1;
         }
 
         this._updateHolidayStats(stats, now);
 
-
-
         // Guardar en RAM stateManager para persistencia
-        const userData = this.stateManager.getUser(key);
         if (userData) {
             userData.achievementStats = stats;
             this.stateManager.markDirty(key);
         }
     }
 
+    /**
+     * Detecta festivos y añade las claves correspondientes al array de holidays del usuario.
+     * Cada clave sólo se añade una vez (idempotente).
+     * @private
+     */
     _updateHolidayStats(stats, now) {
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const holidays = stats.holidays || [];
-        // Lógica simplificada de festivos
-        const key = `${month}-${day}`; 
-        // Implementación completa sería extensa, mantenemos lo básico
         if (!stats.holidays) stats.holidays = [];
+        const holidays = stats.holidays;
+        const month = now.getMonth() + 1; // 1-12
+        const day = now.getDate();
+        const hour = now.getHours();
+        const dayOfWeek = now.getDay(); // 0=domingo
+
+        const toAdd = [];
+
+        // Año Nuevo: 1 de Enero
+        if (month === 1 && day === 1) toAdd.push('new_year');
+
+        // Countdown: 31 Dic 23:50+ o 1 Ene 00:00-00:10
+        if ((month === 12 && day === 31 && hour >= 23) || (month === 1 && day === 1 && hour === 0)) {
+            toAdd.push('countdown');
+        }
+
+        // San Valentín: 14 de Febrero
+        if (month === 2 && day === 14) toAdd.push('valentines');
+
+        // Año bisiesto: 29 de Febrero
+        if (month === 2 && day === 29) toAdd.push('leap_day');
+
+        // Primavera: 21 de Marzo
+        if (month === 3 && day === 21) toAdd.push('spring');
+
+        // April Fools: 1 de Abril
+        if (month === 4 && day === 1) toAdd.push('april_fools');
+
+        // Verano: 21 de Junio
+        if (month === 6 && day === 21) toAdd.push('summer');
+
+        // 4 de Julio
+        if (month === 7 && day === 4) toAdd.push('july4');
+
+        // Halloween: 31 de Octubre
+        if (month === 10 && day === 31) toAdd.push('halloween');
+
+        // Día de Muertos: 1-2 de Noviembre
+        if (month === 11 && (day === 1 || day === 2)) toAdd.push('day_of_dead');
+
+        // Thanksgiving: 4to jueves de Noviembre
+        if (month === 11 && dayOfWeek === 4 && day >= 22 && day <= 28) toAdd.push('thanksgiving');
+
+        // Nochebuena: 24 de Diciembre
+        if (month === 12 && day === 24) toAdd.push('christmas_eve');
+
+        // Navidad: 25 de Diciembre
+        if (month === 12 && day === 25) toAdd.push('christmas');
+
+        // Fin de Año: 31 de Diciembre
+        if (month === 12 && day === 31) toAdd.push('new_years_eve');
+
+        // Viernes 13
+        if (dayOfWeek === 5 && day === 13) toAdd.push('friday_13');
+
+        // Añadir solo los que no estén ya registrados (idempotente)
+        for (const key of toAdd) {
+            if (!holidays.includes(key)) {
+                holidays.push(key);
+            }
+        }
     }
 
     async checkAchievements(username, context = {}) {
@@ -296,7 +428,8 @@ export default class AchievementService {
             categoriesToCheck = null; // Check all
         } else {
             // Mensaje normal de chat
-            categoriesToCheck = ['messages', 'streaks', 'xp', 'stream', 'holidays', 'bro', 'special'];
+            // [FIX] Añadida 'watch_time' para que logros de visualización se comprueben con mensajes normales
+            categoriesToCheck = ['messages', 'streaks', 'xp', 'stream', 'holidays', 'bro', 'watch_time', 'special'];
         }
 
         // 3. Normalización de persistencia (Legacy Fix)
@@ -403,8 +536,14 @@ export default class AchievementService {
         this.isStreamOnline = online; 
         if (online) {
             this.streamStartTime = this.streamStartTime || Date.now();
+            // Generar un ID único para este stream si no existe (ej. formato 'YYYY-MM-DD-HH')
+            if (!this.currentStreamId) {
+                const now = new Date();
+                this.currentStreamId = `stream-${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}-${now.getHours()}`;
+            }
         } else {
             this.streamStartTime = null;
+            this.currentStreamId = null;
         }
     }
 }
