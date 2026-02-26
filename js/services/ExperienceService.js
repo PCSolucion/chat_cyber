@@ -42,6 +42,15 @@ export default class ExperienceService {
 
         this.currentDay = this.streakManager.getCurrentDay();
         this.twitchService = null; // Inyectado dinámicamente
+        this.rankingSystem = null; // Inyectado dinámicamente
+    }
+
+    /**
+     * Inyecta el sistema de ranking para unificación de títulos
+     * @param {RankingSystem} rankingSystem
+     */
+    setRankingSystem(rankingSystem) {
+        this.rankingSystem = rankingSystem;
     }
 
     /**
@@ -473,11 +482,20 @@ export default class ExperienceService {
         const userData = this.getUserData(userId, username);
         const progress = this.levelCalculator.getLevelProgress(userData.xp, userData.level);
     
+        // Obtener título unificado (SSoT: RankingSystem > LevelCalculator)
+        let title = this.levelCalculator.getLevelTitle(userData.level);
+        if (this.rankingSystem) {
+            const roleInfo = this.rankingSystem.getUserRole(userId, finalUsername, userData, this.levelCalculator);
+            if (roleInfo && roleInfo.rankTitle && roleInfo.rankTitle.title) {
+                title = roleInfo.rankTitle.title;
+            }
+        }
+
         return {
             username: userData.displayName || finalUsername,
             xp: userData.xp,
             level: userData.level,
-            title: this.levelCalculator.getLevelTitle(userData.level),
+            title,
             progress,
             streakDays: userData.streakDays || 0,
             streakMultiplier: this.streakManager.getStreakMultiplier(userData.streakDays || 0),
@@ -568,11 +586,13 @@ export default class ExperienceService {
                 return loaded;
             });
         } else {
-            // MODO COMPLETO (Legacy): Intenta cargar a todos (Costoso en lecturas)
+            // MODO COMPLETO (Legacy): Intenta cargar a todos sin abortar el lote si uno falla
             targetUsers = chatters;
-            // Pre-argar en paralelo
+            // Pre-cargar en paralelo encapsulando errores en cada promesa
             await Promise.all(targetUsers.map(username => 
-                this.stateManager.ensureUserLoaded(username)
+                this.stateManager.ensureUserLoaded(username).catch(err => {
+                    if (this.config.DEBUG) console.warn(`⚠️ Omitiendo ${username} por error de carga en WatchTime:`, err);
+                })
             ));
         }
 
@@ -582,7 +602,10 @@ export default class ExperienceService {
         const totalXP = this._calculateWatchTimeXP(minutes);
 
         targetUsers.forEach(username => {
-            // Ya sabemos que están cargados o se acaban de cargar
+            // Verificar si la carga falló (en tal caso el catch devolvió o se saltó, no está en memoria)
+            if (!this.stateManager.users.has(username.toLowerCase())) return;
+
+            // Al estar ya validado que están en RAM, procedemos
             const result = this._applyActivity(null, username, {
                 xp: totalXP,
                 watchTime: minutes,
@@ -660,5 +683,5 @@ export default class ExperienceService {
         return false;
     }
 
-    // Método eliminado: _mergeInitialSubscribers movido a UserStateManager
+
 }

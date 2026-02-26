@@ -1,5 +1,6 @@
 import { IDLE } from '../constants/AppConstants.js';
 import Logger from '../utils/Logger.js';
+import UIUtils from '../utils/UIUtils.js';
 import SummaryScreen from './ui/screens/SummaryScreen.js';
 import LeaderboardScreen from './ui/screens/LeaderboardScreen.js';
 import TopSubsScreen from './ui/screens/TopSubsScreen.js';
@@ -60,12 +61,14 @@ export default class IdleScreenRenderer {
         } catch (error) {
             Logger.error('UI', `Error rendering idle screen of type ${screenData.type}`, error);
             
+            const safeType = UIUtils.escapeHTML(screenData.type || 'UNKNOWN').toUpperCase();
+            
             // Si falla la renderización, mostramos error específico en lugar de summary con datos erróneos
             screenContent.innerHTML = `
                 <div class="empty-message animate-in">
                     <div style="color: var(--cyber-red); margin-bottom: 10px; font-weight: bold;">[SISTEMA_ERROR]</div>
                     FALLO EN LA GENERACIÓN DE DATOS<br>
-                    TIPO: ${screenData.type.toUpperCase()}<br>
+                    TIPO: ${safeType}<br>
                     REINTENTANDO EN EL PRÓXIMO CICLO...
                 </div>
             `;

@@ -103,9 +103,14 @@ export default class RankingSystem {
             let userData = this.stateManager.users.get(key);
 
             if (!userData && rank <= 20) {
-                if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
-                await this.stateManager.ensureUserLoaded(key);
-                userData = this.stateManager.users.get(key);
+                try {
+                    if (this.config.DEBUG) console.log(`🔄 Pre-cargando Top User offline: ${key} (Rank ${rank})`);
+                    await this.stateManager.ensureUserLoaded(key);
+                    userData = this.stateManager.users.get(key);
+                } catch (error) {
+                    console.error(`❌ Error cargando usuario offline para ranking (${key}):`, error);
+                    continue; // Continuar con el siguiente usuario si falla la carga de este
+                }
             }
 
             if (!userData) continue;

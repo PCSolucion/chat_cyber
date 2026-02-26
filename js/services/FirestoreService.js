@@ -15,7 +15,7 @@ export default class FirestoreService {
         this.isConfigured = false;
         
         // Métricas básicas para debugging
-        this.metrics = { reads: 0, writes: 0 };
+        this.metrics = { reads: 0, writes: 0, failures: 0 };
     }
 
     /**
@@ -136,9 +136,10 @@ export default class FirestoreService {
             
             if (this.config.DEBUG) Logger.debug('Firestore', `📈 Incrementados contadores para ${key}:`, increments);
         } catch (e) {
+            this.metrics.failures++; // Increment general failures
             // Si el documento no existe, fallback a setDoc (saveUser)
             if (e.code === 'not-found') {
-                Logger.warn('Firestore', `⚠️ Documento ${key} no existe para increment. Creando...`);
+                Logger.warn('Firestore', `⚠️ Documento ${key} no existe para increment. El UserStateManager debería manejar esto.`);
                 // No tenemos los datos completos aquí, el UserStateManager debería manejar esto
             } else {
                 Logger.error('Firestore', `Error incrementando contadores de ${key}:`, e);
@@ -210,8 +211,9 @@ export default class FirestoreService {
             await setDoc(ref, cleanData, { merge: true });
             return true;
         } catch (e) {
+            this.metrics.failures++;
             Logger.error('Firestore', `Error guardando system/${docId}:`, e);
-            return false;
+            throw e; // Bubble up for caller handling
         }
     }
 
@@ -267,8 +269,9 @@ export default class FirestoreService {
             if (this.config.DEBUG) Logger.debug('Firestore', `💾 Archivo guardado: ${docId}`);
             return true;
         } catch (e) {
+            this.metrics.failures++;
             Logger.error('Firestore', `Error guardando archivo ${fileName}:`, e);
-            return false;
+            throw e; // Bubble up
         }
     }
 

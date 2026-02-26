@@ -59,6 +59,8 @@ export default class SessionStatsService {
             // Tiempo de visualización en sesión
             sessionWatchTime: new Map() // { username: minutes }
         };
+        
+        this._unsubscribers = [];
 
         // Iniciar tracking de actividad por minuto
         this._startMinuteTracker();
@@ -108,25 +110,31 @@ export default class SessionStatsService {
      */
     _bindToServices() {
         // Suscribirse a level-ups vía EventManager
-        EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
-            this.stats.levelUps.push({
-                ...eventData,
-                timestamp: Date.now()
-            });
-        });
-
+        this._unsubscribers.push(
+            EventManager.on(EVENTS.USER.LEVEL_UP, (eventData) => {
+                this.stats.levelUps.push({
+                    ...eventData,
+                    timestamp: Date.now()
+                });
+            })
+        );
+    
         // Suscribirse a cambios de estado del stream
-        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
-            this.setStreamStatus(isOnline);
-        });
-
+        this._unsubscribers.push(
+            EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
+                this.setStreamStatus(isOnline);
+            })
+        );
+    
         // Suscribirse a achievements vía EventManager
-        EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
-            this.stats.achievementsUnlocked.push({
-                ...eventData,
-                timestamp: Date.now()
-            });
-        });
+        this._unsubscribers.push(
+            EventManager.on(EVENTS.USER.ACHIEVEMENT_UNLOCKED, (eventData) => {
+                this.stats.achievementsUnlocked.push({
+                    ...eventData,
+                    timestamp: Date.now()
+                });
+            })
+        );
     }
 
     /**
@@ -581,6 +589,14 @@ export default class SessionStatsService {
     destroy() {
         if (this.minuteInterval) {
             clearInterval(this.minuteInterval);
+        }
+        
+        // Limpiar suscripciones a eventos para evitar memory leaks
+        if (this._unsubscribers) {
+            this._unsubscribers.forEach(unsub => {
+                if (typeof unsub === 'function') unsub();
+            });
+            this._unsubscribers = [];
         }
     }
 }

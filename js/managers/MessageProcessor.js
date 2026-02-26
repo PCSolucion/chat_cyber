@@ -123,6 +123,7 @@ export default class MessageProcessor {
                 
                 // Inyectar stateManager y el calculator compartido
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager, levelCalculator);
+                this.services.xp.setRankingSystem(this.services.ranking);
 
                 this.services.achievements = new AchievementService(this.config, this.services.xp, this.services.stateManager);
             }
