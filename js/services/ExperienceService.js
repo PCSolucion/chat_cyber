@@ -4,8 +4,7 @@ import XPSourceEvaluator from './XPSourceEvaluator.js';
 import Logger from '../utils/Logger.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
-import { XP, TIMING, QUALITY } from '../constants/AppConstants.js';
-import { INITIAL_SUBSCRIBERS } from '../data/subscribers.js';
+import { TIMING } from '../constants/AppConstants.js';
 import XP_CONFIG from '../constants/XPWeights.js';
 
 /**
@@ -358,7 +357,6 @@ export default class ExperienceService {
         // Asegurar carga antes de añadir XP pasiva
         await this.stateManager.ensureUserLoaded(username);
         
-        const lowerUser = username.toLowerCase();
         const xpEarned = this._calculateWatchTimeXP(minutes);
 
         const result = this._applyActivity(username, {
@@ -380,7 +378,6 @@ export default class ExperienceService {
      */
     async addAchievementXP(username, rarity, options = {}) {
         await this.stateManager.ensureUserLoaded(username);
-        const lowerUser = username.toLowerCase();
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
         const result = this._applyActivity(username, {
@@ -485,7 +482,7 @@ export default class ExperienceService {
      * @param {string} period - Periodo ('total', 'week', 'month') - Por ahora solo soporta 'total'
      * @returns {number} Minutos visualizados
      */
-    getWatchTimeStats(username, period = 'total') {
+    getWatchTimeStats(username) {
         const userData = this.getUserData(username);
         if (!userData) return 0;
 
@@ -549,20 +546,17 @@ export default class ExperienceService {
     async addWatchTimeBatch(chatters, minutes = 1, onlyLoaded = false) {
         if (!chatters || !Array.isArray(chatters)) return;
 
-        let targetUsers = [];
+        let targetUsers;
         
         if (onlyLoaded) {
             // MODO OPTIMIZADO: Solo usuarios conocidos en RAM (Activos recientemente)
             targetUsers = chatters.filter(username => {
                 const loaded = this.stateManager.hasUser(username);
-                if (!loaded && this.config.DEBUG) {
-                    // console.log(`Skipping WatchTime for lurker/unknown: ${username}`);
-                }
                 return loaded;
             });
         } else {
             // MODO COMPLETO (Legacy): Intenta cargar a todos sin abortar el lote si uno falla
-            targetUsers = chatters;
+            targetUsers = [...chatters];
             // Pre-cargar en paralelo encapsulando errores en cada promesa
             await Promise.all(targetUsers.map(username => 
                 this.stateManager.ensureUserLoaded(username).catch(err => {

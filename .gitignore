@@ -23,3 +23,7 @@ viewer/js/config.js
 
 # Documentación local (no incluir en el repositorio)
 documentacion/
+.eslintrc.json
+package-lock.json
+package.json
+.gitignore
