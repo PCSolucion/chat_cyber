@@ -73,8 +73,6 @@
     <div class="container-wrapper">
       <div class="container" role="region" aria-label="Chat de Twitch">
 
-        <!-- Animated border glow -->
-        <div class="border-glow"></div>
 
         <!-- Status bar top -->
         <aside class="status-bar">
@@ -83,7 +81,7 @@
             <div class="net-led tx" id="led-tx" title="TRANSMITTING"></div>
           </div>
           <span class="status-text hidden" id="system-status-text">SYS.ONLINE</span>
-          <span class="status-divider">|</span>
+          <span class="status-divider" aria-hidden="true">|</span>
           <span class="status-code" id="stream-category">CHAT.STREAM</span>
         </aside>
 
@@ -92,7 +90,7 @@
           <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
           <div class="user-identity">
             <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
-            <span class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</span>
+            <h1 class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</h1>
             <div class="user-identity__badges">
               <span class="badge" id="user-badge"></span>
             </div>
@@ -143,7 +141,7 @@
         </div>
 
         <!-- Digital Particles BG (Top Users) -->
-        <div id="particles-bg" class="particles-bg"></div>
+        <div id="particles-bg" class="particles-bg" aria-hidden="true"></div>
 
         <!-- Message display -->
         <main class="quote" id="message" role="log" aria-live="polite">
@@ -171,12 +169,7 @@
   <!-- Aplicación principal (ES Module) -->
   <script type="module" src="js/app.js"></script>
 
-  <!-- Fallback para navegadores sin JavaScript -->
-  <noscript>
-    <div style="text-align: center; padding: 20px; color: white;">
-      Este overlay requiere JavaScript para funcionar.
-    </div>
-  </noscript>
+
 </body>
 
 </html>
