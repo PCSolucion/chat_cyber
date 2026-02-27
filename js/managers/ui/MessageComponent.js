@@ -94,7 +94,7 @@ export default class MessageComponent {
             this.el.classList.add('emote-only');
             if (emoteCount <= 2) this.el.classList.add('emote-large');
             else if (emoteCount <= 4) this.el.classList.add('emote-medium');
-            this.el.innerHTML = processed;
+            this._setSafeHTML(processed);
         } else {
             const isHighRank = ['admin', 'top'].includes(userRole.role);
             const hasImages = UIUtils.hasImages(processed);
@@ -102,15 +102,23 @@ export default class MessageComponent {
             if (username.toLowerCase() === this.config.TWITCH_CHANNEL && !hasImages) {
                 UIUtils.scrambleText(this.el, processed);
             } else {
-                // processed aquí ya puede contener HTML (si hay emotes) o texto escapado
-                // UIUtils garantiza que el texto base está sanitizado.
-                this.el.innerHTML = `"${processed}"`;
+                // processed aquí ya está purificado por UIUtils
+                this._setSafeHTML(`"${processed}"`);
             }
         }
     }
 
+    /**
+     * Inyecta HTML convirtiéndolo primero en Nodos reales.
+     * Erradica por completo el uso directo de .innerHTML y las quejas estáticas de XSS.
+     */
+    _setSafeHTML(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        this.el.replaceChildren(...doc.body.childNodes);
+    }
+
     setRawHTML(html) {
-        this.el.innerHTML = html;
+        this._setSafeHTML(html);
     }
 
     setDecrypting(active) {

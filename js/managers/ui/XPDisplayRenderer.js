@@ -294,7 +294,7 @@ export default class XPDisplayRenderer {
 
     createLevelUpParticles() {
         if (!this.dom.cpParticles) return;
-        this.dom.cpParticles.innerHTML = '';
+        this.dom.cpParticles.replaceChildren();
 
         for (let i = 0; i < 40; i++) {
             const bit = document.createElement('div');
@@ -339,7 +339,7 @@ export default class XPDisplayRenderer {
     }
 
     reset() {
-        if (this.dom.xpGainContainer) this.dom.xpGainContainer.innerHTML = '';
+        if (this.dom.xpGainContainer) this.dom.xpGainContainer.replaceChildren();
         this.hideTopLevelUp();
         this.hideLevelUpInline();
     }

@@ -266,7 +266,7 @@ const UIUtils = {
         }
 
         // Limpiar contenido previo
-        container.innerHTML = '';
+        container.replaceChildren();
 
         // Crear barras con delays de animación variados
         const fragment = document.createDocumentFragment();

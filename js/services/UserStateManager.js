@@ -24,9 +24,6 @@ export default class UserStateManager {
         // Bloqueo de carga concurrente: Map<username, Promise>
         this.loadingPromises = new Map();
 
-        // Suscripciones reales a Firestore: Map<username, unsubscribeFn>
-        this.subscriptions = new Map();
-
         // Acumulador de incrementos pendientes: Map<username, {xp: 0, "stats.messages": 0, ...}>
         this.pendingIncrements = new Map();
 
@@ -375,17 +372,8 @@ export default class UserStateManager {
         await Promise.all(promises);
         Logger.info('UserStateManager', '✅ Todos los datos han sido persistidos.');
     }
-
-    // Stub para compatibilidad
-    async load() { return true; }
     
     resetAll() { 
-        // Cancelar todas las suscripciones activas
-        for (const unsub of this.subscriptions.values()) {
-            if (typeof unsub === 'function') unsub();
-        }
-        this.subscriptions.clear();
-
         // Limpiar timers
         for (const timer of this.saveTimers.values()) {
             clearTimeout(timer);

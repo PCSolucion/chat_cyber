@@ -180,14 +180,6 @@ export default class ExperienceService {
 
 
     /**
-     * Carga los datos delegando al stateManager
-     * @returns {Promise<void>}
-     */
-    async loadData() {
-        await this.stateManager.load();
-    }
-
-    /**
      * Trackea un mensaje y asigna XP correspondiente
      * Punto de entrada principal para actividad
      * 

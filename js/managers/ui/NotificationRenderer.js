@@ -242,7 +242,7 @@ export default class NotificationRenderer {
         if (!overlay) return;
 
         // Limpiar previo
-        overlay.innerHTML = "";
+        overlay.replaceChildren();
 
         // Cálculos de layout (Preservando lógica original)
         const maxChars = Math.max(titleText.length, subTitleText.length);
@@ -375,7 +375,7 @@ export default class NotificationRenderer {
                 circle.classList.remove("circle_animate");
                 banner.classList.remove("banner-animate");
                 display.classList.remove("achieve_disp_animate");
-                overlay.innerHTML = "";
+                overlay.replaceChildren();
             }, 1000);
         }, displayTime > animationDuration ? displayTime : animationDuration);
     }

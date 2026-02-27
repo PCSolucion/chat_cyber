@@ -236,10 +236,8 @@ export default class MessageProcessor {
      * Carga datos asíncronos (Rankings, XP, Emotes de terceros)
      */
     async loadAsyncData() {
-        // 1. Cargar datos XP primero (los rankings dependen de esto)
+        // 1. Cargar datos XP (Eliminado asíncrono explícito obsoleto)
         if (this.services.xp) {
-            await this.services.xp.loadData().catch(e => console.error(e));
-
             if (this.services.firestore?.isConfigured) {
                 this.services.firestore.testConnection().then(conn => {
                     Logger.info('XP', conn ? '✅ Firestore connected' : '⚠️ Local mode only');
@@ -247,7 +245,7 @@ export default class MessageProcessor {
             }
         }
 
-        // 2. Calcular rankings dinámicos desde los datos cargados
+        // 2. Cargar rankings
         if (this.services.ranking) {
             await this.services.ranking.loadRankings().catch(e => console.error(e));
             

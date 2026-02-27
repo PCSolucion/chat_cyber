@@ -129,7 +129,8 @@ class Logger {
 
             localStorage.setItem('cyber_error_log', JSON.stringify(history));
         } catch (e) {
-            // Silencio radio si falla el storage
+            // Avisar si falla el storage en lugar de fallar silenciosamente
+            console.warn('[Logger] ⚠️ No se pudo persistir error en localStorage:', e.message);
         }
     }
 

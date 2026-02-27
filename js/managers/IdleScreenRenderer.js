@@ -47,8 +47,8 @@ export default class IdleScreenRenderer {
             return;
         }
 
-        // Limpiar contenedor
-        container.innerHTML = '';
+        // Limpiar
+        container.replaceChildren();
 
         // Crear contenedor para el contenido de la pantalla
         const screenContent = document.createElement('div');

@@ -564,6 +564,8 @@ body {
     transform 0.5s ease-in;
   opacity: 1;
   will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
 /* Hidden state defines the 'out' position */
