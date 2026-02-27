@@ -286,7 +286,6 @@ export default class RankingSystem {
                 changesCount++;
                 
                 updatedUsers.push({
-                    userId: String(idOrName),
                     username: (userData.displayName || key).toLowerCase(),
                     rank: rank
                 });
@@ -323,13 +322,12 @@ export default class RankingSystem {
      * Determina el rol completo y título de un usuario, fusionando Ranking y Nivel
      * Incluye: role, badge, clases CSS, título Cyberpunk final
      * 
-     * @param {string} userId - ID del usuario
      * @param {string} username - Nombre del usuario
      * @param {Object} [userData] - Datos de usuario (opcional, para nivel)
      * @param {Object} [levelCalculator] - Instancia de LevelCalculator (opcional, usa la inyectada si no se provee)
      * @returns {Object} Objeto con información del rol
      */
-    getUserRole(userId, username, userData = null, levelCalculator = null) {
+    getUserRole(username, userData = null, levelCalculator = null) {
         // Normalización defensiva de entrada
         const safeUsername = (username && typeof username === 'string') ? username.toLowerCase() : '';
         const id = safeUsername; 

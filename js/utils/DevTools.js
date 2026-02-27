@@ -18,6 +18,8 @@ export default class DevTools {
         this.idleManager = null;
         this.firestoreService = null;
         this.notificationManager = null;
+        this.quotaInterval = null;
+        this._boundPostMessageListener = null;
     }
 
     /**
@@ -82,7 +84,7 @@ export default class DevTools {
         if (this.app.processor) {
             this.firestoreService = this.app.processor.getService('firestore');
             if (this.firestoreService) {
-                setInterval(() => this._sendQuotaUpdate(), 2000);
+                this.quotaInterval = setInterval(() => this._sendQuotaUpdate(), 2000);
             }
         }
 
@@ -174,7 +176,7 @@ export default class DevTools {
     _setTestStreak(username, days) {
         if (!this.xpService) return;
         // getUserData espera (userId, username)
-        const userData = this.xpService.getUserData(null, username);
+        const userData = this.xpService.getUserData(username);
         if (!userData) return;
         
         userData.streakDays = parseInt(days);
@@ -244,13 +246,36 @@ export default class DevTools {
 
     /** @private */
     _setupPostMessageListener() {
-        window.addEventListener('message', (event) => {
+        this._boundPostMessageListener = (event) => {
             const data = event.data;
             if (!data || !data.type) return;
 
             if (data.type === 'TEST_LEVEL_UP') {
                 this._testLevelUp(data);
             }
-        });
+        };
+        window.addEventListener('message', this._boundPostMessageListener);
+    }
+
+    /**
+     * Limpia recursos y detiene intervalos
+     */
+    destroy() {
+        if (this.quotaInterval) {
+            clearInterval(this.quotaInterval);
+            this.quotaInterval = null;
+        }
+
+        if (this._boundPostMessageListener) {
+            window.removeEventListener('message', this._boundPostMessageListener);
+            this._boundPostMessageListener = null;
+        }
+
+        // Limpiar objeto global
+        if (window.WidgetDebug) {
+            delete window.WidgetDebug;
+        }
+        
+        console.log('🛑 DevTools: Destroyed');
     }
 }

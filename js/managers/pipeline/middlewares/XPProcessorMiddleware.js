@@ -22,7 +22,7 @@ export default class XPProcessorMiddleware {
             message: ctx.message
         };
 
-        ctx.xpResult = this.xpService.trackMessage(ctx.userId, ctx.username, xpContext);
+        ctx.xpResult = this.xpService.trackMessage(ctx.username, xpContext);
         ctx.xpContext = xpContext;
 
         if (this.xpDisplayManager) {

@@ -132,7 +132,7 @@ class App {
         console.log(`[App DEBUG] 📨 PROCESANDO: '${username}' (Raw: ${tags.username})`);
         
         // [DEBUG] Comando de emergencia para probar Firestore directamente
-        if (message.startsWith('!debugfire')) {
+        if (this.config.DEBUG && message.startsWith('!debugfire')) {
             console.log('🔥 EJECUTANDO DEBUG FIRESTORE MANUAL');
             const targetUser = message.split(' ')[1] || username;
             
@@ -215,8 +215,8 @@ class App {
                 
                 // Si el usuario está en RAM, aplicamos el XP y obtenemos el resultado para la UI
                 let xpResult = null;
-                if (xpService && stateManager.users.has(res.username.toLowerCase())) {
-                    xpResult = xpService.awardPredictionXP(null, res.username, res.xp, res.isWinner);
+                if (xpService && stateManager.hasUser(res.username)) {
+                    xpResult = xpService.awardPredictionXP(res.username, res.xp, res.isWinner);
                     console.log(`✨ [PredictionSync] XP Awarded to ${res.username}: +${res.xp} (Level: ${xpResult.level})`);
                 }
 

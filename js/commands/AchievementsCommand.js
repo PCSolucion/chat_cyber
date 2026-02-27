@@ -14,7 +14,7 @@ export default class AchievementsCommand extends BaseCommand {
         if (!services.achievements) return;
 
         // Pasamos null como userId para forzar uso de username
-        const userAchievements = services.achievements.getUserAchievements(null, username) || [];
+        const userAchievements = services.achievements.getUserAchievements(username) || [];
         const progress = {
             unlocked: userAchievements.length,
             total: services.achievements.getTotalAchievements()

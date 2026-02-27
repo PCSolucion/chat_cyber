@@ -84,10 +84,10 @@ export default class ExperienceService {
      * @param {Object} options 
      * @returns {Object|null} null si está blacklisted, de lo contrario datos del resultado
      */
-    _applyActivity(userId, username, { xp = 0, messages = 0, watchTime = 0, passive = false, source = null, suppressEvents = false }) {
+    _applyActivity(username, { xp = 0, messages = 0, watchTime = 0, passive = false, source = null, suppressEvents = false }) {
         if (this._isBlacklisted(username)) return null;
 
-        const userData = this.getUserData(userId, username);
+        const userData = this.getUserData(username);
         const previousLevel = userData.level;
 
         // 1. Actualizar XP y Actividad básica
@@ -143,7 +143,6 @@ export default class ExperienceService {
             if (xp !== 0) {
                 Logger.info('XP', `✨ Trayendo XP para ${username}: +${xp} (Total: ${userData.xp}, Source: ${source || 'MSG'}, Present: ${isPresent})`);
                 EventManager.emit(EVENTS.USER.XP_GAINED, {
-                    userId,
                     username: username, // Mantener caja original para UI
                     amount: xp,
                     total: userData.xp,
@@ -158,7 +157,6 @@ export default class ExperienceService {
                 if (newLevel > 1) {
                     Logger.info('XP', `🎊 LEVEL UP DETECTADO: ${username} (${previousLevel} -> ${newLevel}, Present: ${isPresent})`);
                     EventManager.emit(EVENTS.USER.LEVEL_UP, {
-                        userId,
                         username: username, // Original casing if possible
                         oldLevel: previousLevel,
                         newLevel,
@@ -196,14 +194,9 @@ export default class ExperienceService {
      * 
      * @param {string} username - Nombre del usuario
      * @param {Object} context - Contexto del mensaje
-     * @param {boolean} context.hasEmotes - Si el mensaje tiene emotes
-     * @param {number} context.emoteCount - Cantidad de emotes
-     * @param {boolean} context.isStreamLive - Si el stream está activo
-     * @param {boolean} context.isStreamStart - Si es inicio de stream
-     * @param {boolean} context.hasMention - Si menciona a otro usuario
      * @returns {Object} Resultado del tracking
      */
-    trackMessage(userId, username, context = {}) {
+    trackMessage(username, context = {}) {
         const lowerUser = username.toLowerCase();
 
         // 1. Verificar blacklist
@@ -230,7 +223,7 @@ export default class ExperienceService {
         this.checkDayReset();
 
         // Obtener datos del usuario
-        let userData = this.getUserData(userId, username);
+        let userData = this.getUserData(username);
 
         // 2. [REMOVED] Lógica de Welcome Back
 
@@ -298,7 +291,7 @@ export default class ExperienceService {
 
         // 7. Aplicar actividad (Centralizado)
         Logger.debug('XP', `🔍 Procesando XP para ${username}: Base=${xpBeforeMultiplier}, Final=${totalXP}, Mult=${streakMultiplier}x`);
-        const result = this._applyActivity(userId, username, {
+        const result = this._applyActivity(username, {
             xp: totalXP,
             messages: 1,
             source: 'MESSAGE', // Identificar explícitamente la fuente
@@ -330,12 +323,11 @@ export default class ExperienceService {
 
     /**
      * Obtiene los datos de un usuario delegando al stateManager
-     * @param {string} userId
      * @param {string} username - Nombre del usuario
      * @returns {Object}
      */
-    getUserData(userId, username) {
-        return this.stateManager.getUser(username || userId);
+    getUserData(username) {
+        return this.stateManager.getUser(username);
     }
 
     /**
@@ -346,7 +338,7 @@ export default class ExperienceService {
     async updateSubscription(username, months) {
         // Asegurar carga antes de modificar para evitar sobrescrituras de nivel 1
         await this.stateManager.ensureUserLoaded(username);
-        const userData = this.getUserData(null, username);
+        const userData = this.getUserData(username);
         
         // Si el valor es nuevo o mayor, actualizar y guardar
         if (months > (userData.subMonths || 0)) {
@@ -380,7 +372,7 @@ export default class ExperienceService {
         const lowerUser = username.toLowerCase();
         const xpEarned = this._calculateWatchTimeXP(minutes);
 
-        const result = this._applyActivity(null, username, {
+        const result = this._applyActivity(username, {
             xp: xpEarned,
             watchTime: minutes,
             passive: true,
@@ -402,7 +394,7 @@ export default class ExperienceService {
         const lowerUser = username.toLowerCase();
         const xpToGain = this.xpConfig.achievementRewards[rarity] || 50;
 
-        const result = this._applyActivity(null, username, {
+        const result = this._applyActivity(username, {
             xp: xpToGain,
             passive: true,
             source: 'achievement',
@@ -431,16 +423,13 @@ export default class ExperienceService {
 
     /**
      * Aplica XP ganado en una predicción y devuelve el resultado completo.
-     * @param {string} userId - ID numérico de Twitch
-     * @param {string} username - Nombre del usuario
-     * @param {number} xp - Cantidad de XP a añadir
      * @param {boolean} isWinner - Si es ganador o no
      * @returns {Object|null}
      */
-    awardPredictionXP(userId, username, xp, isWinner = false) {
+    awardPredictionXP(username, xp, isWinner = false) {
         if (this._isBlacklisted(username)) return null;
 
-        const userData = this.getUserData(userId, username);
+        const userData = this.getUserData(username);
         
         // Actualizar estadísticas de predicción en el objeto de datos
         if (!userData.stats) userData.stats = {};
@@ -448,7 +437,7 @@ export default class ExperienceService {
         userData.stats.prediction_participations = (userData.stats.prediction_participations || 0) + 1;
 
         // Aplicar la actividad de XP
-        const result = this._applyActivity(userId, username, {
+        const result = this._applyActivity(username, {
             xp: xp,
             messages: 0,
             source: 'PREDICTION',
@@ -476,23 +465,21 @@ export default class ExperienceService {
      * @param {string} username - Nombre del usuario
      * @returns {Object} Información de XP
      */
-    getUserXPInfo(userId, username) {
-        // Soporte para llamadas con un solo argumento (userId as name)
-        const finalUsername = username || userId;
-        const userData = this.getUserData(userId, username);
+    getUserXPInfo(username) {
+        const userData = this.getUserData(username);
         const progress = this.levelCalculator.getLevelProgress(userData.xp, userData.level);
     
         // Obtener título unificado (SSoT: RankingSystem > LevelCalculator)
         let title = this.levelCalculator.getLevelTitle(userData.level);
         if (this.rankingSystem) {
-            const roleInfo = this.rankingSystem.getUserRole(userId, finalUsername, userData, this.levelCalculator);
+            const roleInfo = this.rankingSystem.getUserRole(username, userData, this.levelCalculator);
             if (roleInfo && roleInfo.rankTitle && roleInfo.rankTitle.title) {
                 title = roleInfo.rankTitle.title;
             }
         }
 
         return {
-            username: userData.displayName || finalUsername,
+            username: userData.displayName || username,
             xp: userData.xp,
             level: userData.level,
             title,
@@ -506,12 +493,11 @@ export default class ExperienceService {
 
     /**
      * Obtiene estadísticas de tiempo de visualización de un usuario
-     * @param {string} username - Nombre del usuario
      * @param {string} period - Periodo ('total', 'week', 'month') - Por ahora solo soporta 'total'
      * @returns {number} Minutos visualizados
      */
-    getWatchTimeStats(userId, username, period = 'total') {
-        const userData = this.getUserData(userId, username);
+    getWatchTimeStats(username, period = 'total') {
+        const userData = this.getUserData(username);
         if (!userData) return 0;
 
         // Por ahora retornamos el total. 
@@ -579,7 +565,7 @@ export default class ExperienceService {
         if (onlyLoaded) {
             // MODO OPTIMIZADO: Solo usuarios conocidos en RAM (Activos recientemente)
             targetUsers = chatters.filter(username => {
-                const loaded = this.stateManager.users.has(username.toLowerCase());
+                const loaded = this.stateManager.hasUser(username);
                 if (!loaded && this.config.DEBUG) {
                     // console.log(`Skipping WatchTime for lurker/unknown: ${username}`);
                 }
@@ -603,10 +589,10 @@ export default class ExperienceService {
 
         targetUsers.forEach(username => {
             // Verificar si la carga falló (en tal caso el catch devolvió o se saltó, no está en memoria)
-            if (!this.stateManager.users.has(username.toLowerCase())) return;
+            if (!this.stateManager.hasUser(username)) return;
 
             // Al estar ya validado que están en RAM, procedemos
-            const result = this._applyActivity(null, username, {
+            const result = this._applyActivity(username, {
                 xp: totalXP,
                 watchTime: minutes,
                 passive: true

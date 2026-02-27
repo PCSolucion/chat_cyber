@@ -23,7 +23,7 @@ export default class UIRendererMiddleware {
             this.xpService.updateSubscription(ctx.username, months);
         }
 
-        this.uiManager.displayMessage(ctx.userId, ctx.username, ctx.message, ctx.tags.emotes, subInfo, ctx.xpResult);
+        this.uiManager.displayMessage(ctx.username, ctx.message, ctx.tags.emotes, subInfo, ctx.xpResult);
         next();
     }
 }

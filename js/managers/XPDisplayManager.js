@@ -59,7 +59,7 @@ export default class XPDisplayManager {
                            data.username.toLowerCase() === this.currentUsername.toLowerCase());
             
             if (isMatch) {
-                this.updateXPDisplay(null, data.username);
+                this.updateXPDisplay(data.username);
             }
         });
     }
@@ -79,14 +79,13 @@ export default class XPDisplayManager {
     /**
      * Actualiza toda la UI de XP para un usuario activo
      */
-    updateXPDisplay(userId, username, xpResult = null) {
+    updateXPDisplay(username, xpResult = null) {
         if (!this.experienceService) return;
         
         this.currentUsername = username;
-        this.currentUserId = null;
 
         // Obtener info de XP
-        const xpInfo = xpResult || this.experienceService.getUserXPInfo(null, username);
+        const xpInfo = xpResult || this.experienceService.getUserXPInfo(username);
         const progress = xpInfo.levelProgress || xpInfo.progress;
 
         // Preparar datos para el renderer
@@ -105,7 +104,7 @@ export default class XPDisplayManager {
                 daysAway: xpResult ? xpResult.daysAway : 0
             },
             achievements: this.totalAchievements > 0 ? {
-                unlocked: (this.experienceService.getUserData(null, username).achievements || []).length,
+                unlocked: (this.experienceService.getUserData(username).achievements || []).length,
                 total: this.totalAchievements
             } : null
         };

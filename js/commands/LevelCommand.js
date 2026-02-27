@@ -23,7 +23,7 @@ export default class LevelCommand extends BaseCommand {
             
             // Getting info delegates to ExperienceService -> StateManager
             // We pass null as ID to force username usage
-            const xpInfo = services.xp.getUserXPInfo(null, key);
+            const xpInfo = services.xp.getUserXPInfo(key);
             
             if (!xpInfo) {
                 console.warn(`[LevelCommand] No XP info found for ${username}`);

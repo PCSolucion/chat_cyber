@@ -26,11 +26,11 @@ export default class AchievementMiddleware {
         await this.achievementService.checkAchievements(ctx.username, achContext);
         
         // Logros específicos: Progreso de Bro
-        this._handleBroProgress(ctx.userId, ctx.username, ctx.message);
+        this._handleBroProgress(ctx.username, ctx.message);
 
         // Actualizar objeto de logros para el renderizado
         if (ctx.xpResult) {
-            const freshData = this.xpService.getUserData(ctx.userId, ctx.username);
+            const freshData = this.xpService.getUserData(ctx.username);
             ctx.xpResult.achievements = freshData.achievements || [];
             ctx.xpResult.level = freshData.level;
             ctx.xpResult.xp = freshData.xp;
@@ -40,7 +40,7 @@ export default class AchievementMiddleware {
         await next();
     }
 
-    _handleBroProgress(userId, username, message) {
+    _handleBroProgress(username, message) {
         if (/\bbro\b/i.test(message)) {
             const stats = this.achievementService.getUserStats(username);
             const broCount = stats.broCount || 0;

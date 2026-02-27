@@ -87,7 +87,7 @@ export default class UIManager {
         this._handlers.systemMessage = (data) => {
             const text = typeof data === 'string' ? data : data.text;
             // Corregido: 'SYSTEM' como ID, 'SYSTEM' como nombre, y el texto como CUERPO del mensaje
-            this.displayMessage('SYSTEM', 'SYSTEM', text, {}, { isSubscriber: false });
+            this.displayMessage('SYSTEM', text, {}, { isSubscriber: false });
         };
 
         this._handlers.messageHidden = () => {
@@ -121,17 +121,17 @@ export default class UIManager {
     /**
      * Punto de entrada principal para mostrar mensajes (Añade a cola)
      */
-    displayMessage(userId, username, message, emotes, subscriberInfo = {}, xpResult = null) {
+    displayMessage(username, message, emotes, subscriberInfo = {}, xpResult = null) {
         if (this.config.DEBUG) {
-            console.log(`[UIManager] 📩 Incoming display: ${username} (ID: ${userId}) -> "${message}"`);
+            console.log(`[UIManager] 📩 Incoming display: ${username} -> "${message}"`);
         }
 
         try {
             // 1. Añadir a la cola primero para que esté disponible si el despertar dispara el procesado
-            this.queue.add({ userId, username, message, emotes, subscriberInfo, xpResult });
+            this.queue.add({ username, message, emotes, subscriberInfo, xpResult });
 
             // 2. Despertar al manager de inactividad y resetear timers
-            EventManager.emit(EVENTS.USER.ACTIVITY, { userId, username });
+            EventManager.emit(EVENTS.USER.ACTIVITY, { username });
 
             // 3. Si no estamos procesando o si el widget ya es visible (y queremos swap rápido)
             if (!this.isProcessingQueue || this.display.isVisibleState()) {
@@ -160,7 +160,7 @@ export default class UIManager {
         const msgObj = this.queue.getNext();
         if (!msgObj) return;
 
-        const { userId, username, message, emotes, subscriberInfo, xpResult } = msgObj;
+        const { username, message, emotes, subscriberInfo, xpResult } = msgObj;
 
         // Resetear visualización de XP antes de mostrar el nuevo usuario
         if (this.xpDisplay) {
@@ -180,9 +180,9 @@ export default class UIManager {
             const displayTime = this.queue.calculateDisplayTime(msgObj);
 
             if (shouldShowFullAnim) {
-                this._fullIncomingSequence(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
+                this._fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime);
             } else {
-                this._fastTransition(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
+                this._fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime);
             }
 
         } catch (error) {
@@ -191,12 +191,12 @@ export default class UIManager {
         }
     }
 
-    _fastTransition(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _fastTransition(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         this.identity.fade(0);
         this.message.fade(0);
 
         this.timers.transition = setTimeout(() => {
-            this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
+            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
             requestAnimationFrame(() => {
                 this.identity.fade(1);
                 this.message.fade(1);
@@ -204,7 +204,7 @@ export default class UIManager {
         }, 200);
     }
 
-    _fullIncomingSequence(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _fullIncomingSequence(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         this.identity.showIncomingState();
         
         this.message.setDecrypting(true);
@@ -213,18 +213,18 @@ export default class UIManager {
         this.timers.decrypt = setTimeout(() => {
             this.identity.clearIncomingState();
             this.message.setDecrypting(false);
-            this._revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime);
+            this._revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime);
         }, 800);
     }
 
-    _revealMessage(userId, username, message, emotes, subscriberInfo, xpResult, displayTime) {
+    _revealMessage(username, message, emotes, subscriberInfo, xpResult, displayTime) {
         // Obtener datos de XP actuales
-        const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(userId, username) : null);
-        const userRole = this.rankingSystem.getUserRole(userId, username, xpData);
+        const xpData = xpResult || (this.experienceService ? this.experienceService.getUserData(username) : null);
+        const userRole = this.rankingSystem.getUserRole(username, xpData);
 
         // Actualizar UI de XP
         if (this.xpDisplay) {
-            this.xpDisplay.updateXPDisplay(userId, username, xpResult);
+            this.xpDisplay.updateXPDisplay(username, xpResult);
         }
 
         // Delegar actualizaciones a los componentes

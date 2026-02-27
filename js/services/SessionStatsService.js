@@ -35,7 +35,6 @@ export default class SessionStatsService {
             userMessageCounts: new Map(),  // { username: count }
 
             // Emotes
-            emotesUsed: new Map(),  // { emoteName: count }
             emotesUsedByName: new Map(), // { emoteName: { count, provider, url } }
             totalEmotesUsed: 0,
 
@@ -139,12 +138,12 @@ export default class SessionStatsService {
 
     /**
      * Trackea un mensaje entrante
-     * @param {string} userId - ID numérico de Twitch
+     * Trackea un mensaje entrante
      * @param {string} username - Nombre del usuario
      * @param {string} message - Contenido del mensaje
      * @param {Object} context - Contexto adicional
      */
-    trackMessage(userId, username, message, context = {}) {
+    trackMessage(username, message, context = {}) {
         const lowerUser = username.toLowerCase();
         // FORCE USERNAME AS ID: El sistema ahora es username-centric
         const id = lowerUser;
@@ -186,7 +185,7 @@ export default class SessionStatsService {
         // Actualizar rachas si están disponibles
         if (this.experienceService) {
             try {
-                const userData = this.experienceService.getUserData(userId, username);
+                const userData = this.experienceService.getUserData(username);
                 if (userData && userData.streakDays > 0) {
                     this.stats.currentActiveStreaks.set(id, userData.streakDays);
                 }
@@ -201,7 +200,7 @@ export default class SessionStatsService {
      * @param {string} username 
      * @param {number} minutes 
      */
-    trackSessionWatchTime(userId, username, minutes) {
+    trackSessionWatchTime(username, minutes) {
         const lowerUser = username.toLowerCase();
         // FORCE USERNAME AS ID
         const id = lowerUser;
@@ -224,7 +223,7 @@ export default class SessionStatsService {
         if (!chatters || !Array.isArray(chatters)) return;
 
         chatters.forEach(username => {
-            this.trackSessionWatchTime(null, username, minutes);
+            this.trackSessionWatchTime(username, minutes);
         });
     }
 
@@ -362,7 +361,7 @@ export default class SessionStatsService {
                 // Filtrar usuarios blacklisted y justinfan
                 if (String(id).startsWith('justinfan')) return false;
                 // Si el ID es un nombre, verificar blacklist. Si es numérico, intentamos buscar nombre.
-                const name = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                const name = isNaN(id) ? id : (this.stateManager?.getUser(id)?.displayName || id);
                 if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(name.toLowerCase())) return false;
                 return true;
             })
@@ -376,7 +375,7 @@ export default class SessionStatsService {
 
                 if (this.experienceService) {
                     try {
-                        const userData = this.stateManager?.users.get(id);
+                        const userData = this.stateManager?.getUser(id);
                         if (userData) {
                             level = userData.level;
                             title = this.experienceService.levelCalculator.getLevelTitle(level);
@@ -406,14 +405,14 @@ export default class SessionStatsService {
                 if (String(id).startsWith('justinfan')) return false;
                 
                 // Resolver nombre para filtrar por blacklist
-                const name = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                const name = isNaN(id) ? id : (this.stateManager?.getUser(id)?.displayName || id);
                 if (this.config.BLACKLISTED_USERS && this.config.BLACKLISTED_USERS.includes(String(name).toLowerCase())) return false;
                 return true;
             })
             .sort((a, b) => b[1] - a[1])
             .slice(0, n)
             .map(([id, days]) => {
-                const displayName = isNaN(id) ? id : (this.stateManager?.users.get(id)?.displayName || id);
+                const displayName = isNaN(id) ? id : (this.stateManager?.getUser(id)?.displayName || id);
                 return {
                     username: UIUtils.formatUsername(displayName),
                     days
@@ -463,7 +462,8 @@ export default class SessionStatsService {
             users = Array.from(this.stateManager.getAllUsers().entries()).map(([id, data]) => ({
                 id,
                 username: data.displayName || id,
-                minutes: this.experienceService.getWatchTimeStats(id, data.displayName, period)
+                // stats[id] es el nombre en este caso (Map key)
+                minutes: this.experienceService.getWatchTimeStats(id, period)
             }));
         }
 
@@ -524,14 +524,12 @@ export default class SessionStatsService {
             messagesByMinute: [],
             uniqueUsers: new Set(),
             userMessageCounts: new Map(),
-            emotesUsed: new Map(),
             emotesUsedByName: new Map(),
             totalEmotesUsed: 0,
             levelUps: [],
             achievementsUnlocked: [],
             currentActiveStreaks: new Map(),
             commandsUsed: new Map(),
-            wordFrequency: new Map(),
             activityHistory: [],
             sessionWatchTime: new Map()
         };

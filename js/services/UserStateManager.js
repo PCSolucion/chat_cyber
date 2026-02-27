@@ -84,14 +84,10 @@ export default class UserStateManager {
                     this.newUsers.add(key);
                 }
 
-                this.users.set(key, finalData);
-
                 // OPTIMIZACIÓN LECTURAS: Eliminamos onSnapshot.
                 // Al ser un overlay de OBS, el propio sistema es la fuente de verdad en RAM.
-                // Esto evita cobrar 1 lectura extra cada vez que el usuario sube de XP.
-                if (!this.users.has(key)) {
-                    this.users.set(key, finalData);
-                }
+                // Esto evita cobrar 1 lectura extra cada vez que el usuario aumenta de XP o cambia de estado.
+                this.users.set(key, finalData);
                 
                 EventManager.emit(EVENTS.USER.LOADED, { username: key, data: finalData });
                 return true;
@@ -114,6 +110,14 @@ export default class UserStateManager {
     getUser(username) {
         if (!username) return null;
         return this.users.get(username.toLowerCase());
+    }
+
+    /**
+     * Verifica si un usuario está cargado en memoria
+     */
+    hasUser(username) {
+        if (!username) return false;
+        return this.users.has(username.toLowerCase());
     }
 
     /**

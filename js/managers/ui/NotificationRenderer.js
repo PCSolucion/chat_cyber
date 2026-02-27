@@ -414,7 +414,6 @@ export default class NotificationRenderer {
 
         if (this.uiManager) {
             this.uiManager.displayMessage(
-                null, 
                 username, 
                 message, 
                 {}, 

@@ -18,10 +18,7 @@ export default class AchievementService {
         this.achievements = {};
         this.isLoaded = false;
         
-        // Map<username, statsObject>
-        this.userStats = new Map();
-        
-        this.currentStreamCategory = null;
+        this._unsubscribers = [];
 
         this._loadAchievementsFromModule();
 
@@ -29,39 +26,38 @@ export default class AchievementService {
             console.log(`✅ AchievementService inicializado: ${Object.keys(this.achievements).length} logros definidos`);
         }
 
-        EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline));
-        EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category));
-        
-        EventManager.on(EVENTS.USER.RANKING_UPDATED, (data) => {
-            const username = data.username;
-            const isInitialLoad = data.isInitialLoad || false;
-            this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
-        });
+        this._unsubscribers.push(
+            EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => this.setStreamStatus(isOnline)),
+            EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => this.setStreamCategory(category)),
+            
+            EventManager.on(EVENTS.USER.RANKING_UPDATED, (data) => {
+                const username = data.username;
+                const isInitialLoad = data.isInitialLoad || false;
+                this.checkAchievements(username, { isRankingUpdate: true, isInitialLoad });
+            }),
 
-        // [FIX] También escuchar eventos batch (≥5 usuarios) para no perder chequeos de ranking
-        EventManager.on(EVENTS.USER.RANKING_BATCH_UPDATED, (data) => {
-            const isInitialLoad = data.isInitialLoad || false;
-            if (data.users && Array.isArray(data.users)) {
-                data.users.forEach(u => {
-                    this.checkAchievements(u.username, { isRankingUpdate: true, isInitialLoad });
-                });
-            }
-        });
+            // [FIX] También escuchar eventos batch (≥5 usuarios) para no perder chequeos de ranking
+            EventManager.on(EVENTS.USER.RANKING_BATCH_UPDATED, (data) => {
+                const isInitialLoad = data.isInitialLoad || false;
+                if (data.users && Array.isArray(data.users)) {
+                    data.users.forEach(u => {
+                        this.checkAchievements(u.username, { isRankingUpdate: true, isInitialLoad });
+                    });
+                }
+            }),
 
-        EventManager.on(EVENTS.USER.LEVEL_UP, (data) => {
-            const username = data.username;
-            this.checkAchievements(username, { isLevelUp: true });
-        });
+            EventManager.on(EVENTS.USER.LEVEL_UP, (data) => {
+                const username = data.username;
+                this.checkAchievements(username, { isLevelUp: true });
+            }),
 
-        // RETRO: Escuchar carga de usuarios para otorgar logros retroactivos
-        EventManager.on(EVENTS.USER.LOADED, (eventData) => {
-            const username = eventData.username;
-            if (this.config.DEBUG) {
-                // console.log(`🔄 Checking retroactive achievements for ${username}`);
-            }
-            // isInitialLoad=true silencia el popup (para no spammear al inicio), pero otorga el logro
-            this.checkAchievements(username, { isInitialLoad: true, isRetroactiveCheck: true });
-        });
+            // RETRO: Escuchar carga de usuarios para otorgar logros retroactivos
+            EventManager.on(EVENTS.USER.LOADED, (eventData) => {
+                const username = eventData.username;
+                // isInitialLoad=true silencia el popup (para no spammear al inicio), pero otorga el logro
+                this.checkAchievements(username, { isInitialLoad: true, isRetroactiveCheck: true });
+            })
+        );
     }
 
     _loadAchievementsFromModule() {
@@ -545,5 +541,19 @@ export default class AchievementService {
             this.streamStartTime = null;
             this.currentStreamId = null;
         }
+    }
+
+    /**
+     * Limpia los recursos y desuscribe eventos
+     */
+    destroy() {
+        if (this._unsubscribers && this._unsubscribers.length > 0) {
+            this._unsubscribers.forEach(unsub => {
+                if (typeof unsub === 'function') unsub();
+            });
+            this._unsubscribers = [];
+        }
+        this.userStats.clear();
+        if (this.config.DEBUG) console.log('🛑 AchievementService: Destroyed');
     }
 }
