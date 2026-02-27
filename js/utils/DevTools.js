@@ -175,7 +175,7 @@ export default class DevTools {
 
     _setTestStreak(username, days) {
         if (!this.xpService) return;
-        // getUserData espera (userId, username)
+        // getUserData espera (username)
         const userData = this.xpService.getUserData(username);
         if (!userData) return;
         

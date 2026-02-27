@@ -16,6 +16,7 @@ export default class AchievementService {
         this.stateManager = stateManager;
 
         this.achievements = {};
+        this.userStats = new Map(); // Mapa de stats auxiliares por usuario
         this.isLoaded = false;
         
         this._unsubscribers = [];
@@ -499,9 +500,8 @@ export default class AchievementService {
             console.log(`[AchievementService] Emitting achievement unlocked for ${username}:`, achievement.name);
         }
         EventManager.emit(EVENTS.USER.ACHIEVEMENT_UNLOCKED, {
-            userId: null, 
-            username: username,
-            achievement: achievement,
+            username,
+            achievement,
             timestamp: Date.now()
         });
     }

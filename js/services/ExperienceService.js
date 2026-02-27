@@ -79,7 +79,6 @@ export default class ExperienceService {
      * Gestiona: XP, Nivel, Historial Diario, Persistencia y Eventos.
      * 
      * @private
-     * @param {string} userId
      * @param {string} username 
      * @param {Object} options 
      * @returns {Object|null} null si está blacklisted, de lo contrario datos del resultado
@@ -247,9 +246,7 @@ export default class ExperienceService {
         }
 
         // 4. Lógica de Racha
-        const isBot = (this.config.BLACKLISTED_USERS || [])
-            .map(u => u.toLowerCase())
-            .includes(lowerUser);
+        const isBot = this._isBlacklisted(lowerUser);
 
         let streakResult = {
             streakDays: userData.streakDays || 0,
