@@ -23,7 +23,7 @@ class App {
         // DETECCIÓN DE MODO TEST (Panel de Pruebas Offline)
         const params = new URLSearchParams(window.location.search);
         if (params.get('mode') === 'test') {
-            console.warn('🧪 MODO TEST ACTIVO: Firestore DESACTIVADO (Solo IndexedDB/Local)');
+            Logger.warn('app', '🧪 MODO TEST ACTIVO: Firestore DESACTIVADO (Solo IndexedDB/Local)');
             this.config.TEST_MODE = true;
             this.config.FIREBASE = null; // Anular config de Firebase para asegurar desconexión
         }
@@ -94,7 +94,7 @@ class App {
 
         // Conectar a Twitch
         if (this.twitchService) {
-            console.log('📡 Connecting to Twitch...');
+            Logger.info('app', '📡 Connecting to Twitch...');
             
             // Inyectar TwitchService en el processor para WatchTimeService
             if (this.processor) {
@@ -114,7 +114,7 @@ class App {
 
         // Notificar que el widget está listo (para Test Panel)
         window.dispatchEvent(new CustomEvent('widget-ready'));
-        console.log('✅ Widget Initialization Complete');
+        Logger.info('app', '✅ Widget Initialization Complete');
     }
 
 
@@ -125,26 +125,26 @@ class App {
     onMessageReceived(tags, message) {
         const username = tags['display-name'] || tags.username;
         if (!username) {
-             console.error('[App] ❌ FATAL: Mensaje recibido sin usuario:', tags);
+             Logger.error('app', '[App] ❌ FATAL: Mensaje recibido sin usuario:', tags);
              return;
         }
 
-        console.log(`[App DEBUG] 📨 PROCESANDO: '${username}' (Raw: ${tags.username})`);
+        Logger.info('app', `[App DEBUG] 📨 PROCESANDO: '${username}' (Raw: ${tags.username})`);
         
         // [DEBUG] Comando de emergencia para probar Firestore directamente
         if (this.config.DEBUG && message.startsWith('!debugfire')) {
-            console.log('🔥 EJECUTANDO DEBUG FIRESTORE MANUAL');
+            Logger.info('app', '🔥 EJECUTANDO DEBUG FIRESTORE MANUAL');
             const targetUser = message.split(' ')[1] || username;
             
             if (this.processor && this.processor.services && this.processor.services.stateManager) {
                 const firestore = this.processor.services.stateManager.firestore;
                 if (firestore) {
                     firestore.getUser(targetUser).then(u => {
-                        console.log('🔥 [RESULTADO DEBUG] Usuario:', u);
-                        console.log('LEVEL:', u ? u.level : 'NULL');
-                    }).catch(e => console.error('🔥 [ERROR DEBUG]', e));
+                        Logger.info('app', '🔥 [RESULTADO DEBUG] Usuario:', u);
+                        Logger.info('app', 'LEVEL:', u ? u.level : 'NULL');
+                    }).catch(e => Logger.error('app', '🔥 [ERROR DEBUG]', e));
                 } else {
-                    console.error('🔥 Firestore Service no disponible');
+                    Logger.error('app', '🔥 Firestore Service no disponible');
                 }
             }
             return;
@@ -158,7 +158,7 @@ class App {
 
 
     async destroy() {
-        console.log('🛑 App: Shutting down...');
+        Logger.info('app', '🛑 App: Shutting down...');
         
         // 1. Unsubscribe from Firebase/Streams first
         if (this.predictionUnsubscribe) {
@@ -180,7 +180,7 @@ class App {
             this.audioManager.destroy();
         }
 
-        console.log('🏁 Shutdown Complete');
+        Logger.info('app', '🏁 Shutdown Complete');
     }
 
     /**
@@ -192,21 +192,21 @@ class App {
         const firestore = this.processor.services.stateManager.firestore;
         if (!firestore) return;
 
-        console.log('🔮 Sincronización de predicciones activa');
+        Logger.info('app', '🔮 Sincronización de predicciones activa');
         
         // Track the last processed timestamp (allow 5 second grace period for recent reloads)
         let lastProcessedTime = Date.now() - 5000;
 
         this.predictionUnsubscribe = firestore.watchSystemDoc('last_prediction_result', (data) => {
-            console.log('🔮 [PredictionSync] Doc updated:', data);
+            Logger.info('app', '🔮 [PredictionSync] Doc updated:', data);
             if (!data || !data.results || data.timestamp <= lastProcessedTime) {
-                console.log(`⏭️ [PredictionSync] Skipping update (Time: ${data?.timestamp} <= ${lastProcessedTime})`);
+                Logger.info('app', `⏭️ [PredictionSync] Skipping update (Time: ${data?.timestamp} <= ${lastProcessedTime})`);
                 return;
             }
             
             lastProcessedTime = data.timestamp;
-            console.log('🏆 [PredictionSync] Processing Results:', data.results.length, 'users');
-            console.log('📦 Results data:', data.results);
+            Logger.info('app', '🏆 [PredictionSync] Processing Results:', data.results.length, 'users');
+            Logger.info('app', '📦 Results data:', data.results);
 
             // Emitir eventos para cada usuario
             data.results.forEach(res => {
@@ -217,7 +217,7 @@ class App {
                 let xpResult = null;
                 if (xpService && stateManager.hasUser(res.username)) {
                     xpResult = xpService.awardPredictionXP(res.username, res.xp, res.isWinner);
-                    console.log(`✨ [PredictionSync] XP Awarded to ${res.username}: +${res.xp} (Level: ${xpResult.level})`);
+                    Logger.info('app', `✨ [PredictionSync] XP Awarded to ${res.username}: +${res.xp} (Level: ${xpResult.level})`);
                 }
 
                 // Notificar el resultado (NotificationManager lo capturará)

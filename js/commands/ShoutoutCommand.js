@@ -1,6 +1,7 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 export default class ShoutoutCommand extends BaseCommand {
     constructor() {
@@ -37,7 +38,7 @@ export default class ShoutoutCommand extends BaseCommand {
             EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, message);
 
         } catch (error) {
-            console.error('Error executing !so:', error);
+            Logger.error('ShoutoutCommand', 'Error executing !so:', error);
         }
     }
 }

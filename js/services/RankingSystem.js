@@ -1,6 +1,7 @@
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import { DATA_SOURCES } from '../constants/AppConstants.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * Configuración de roles estáticos para evitar re-asignación en cada llamada.
@@ -88,9 +89,9 @@ export default class RankingSystem {
             });
 
             this.isLoaded = true;
-            console.log(`🏆 Global Rankings loaded from Gist: ${this.userRankings.size} users`);
+            Logger.info('RankingSystem', `🏆 Global Rankings loaded from Gist: ${this.userRankings.size} users`);
         } catch (error) {
-            console.error('❌ Error al cargar rankings desde Gist:', error);
+            Logger.error('RankingSystem', '❌ Error al cargar rankings desde Gist:', error);
         }
     }
 
@@ -225,7 +226,7 @@ export default class RankingSystem {
         if (rank === 1 && previousTop1User && previousTop1User !== lowerUser) {
             if (!stats.dethroned) {
                 stats.dethroned = true;
-                if (this.config.DEBUG) console.log(`👑 ${lowerUser} destronó a ${previousTop1User}!`);
+                if (this.config.DEBUG) Logger.info('RankingSystem', `👑 ${lowerUser} destronó a ${previousTop1User}!`);
                 return true;
             }
         }
@@ -251,10 +252,10 @@ export default class RankingSystem {
             const userData = this.stateManager.getUser(key);
 
             if (!userData && rank <= 20) {
-                if (this.config.DEBUG) console.log(`🔄 Preparando carga paralela de Top User offline: ${key} (Rank ${rank})`);
+                if (this.config.DEBUG) Logger.info('RankingSystem', `🔄 Preparando carga paralela de Top User offline: ${key} (Rank ${rank})`);
                 missingUserPromises.push(
                     this.stateManager.ensureUserLoaded(key)
-                        .catch(err => console.error(`❌ Falló precarga de ${key}:`, err))
+                        .catch(err => Logger.error('RankingSystem', `❌ Falló precarga de ${key}:`, err))
                 );
             }
         }
@@ -266,7 +267,7 @@ export default class RankingSystem {
             // Log de errores específicos para usuarios del Top 20 que fallaron
             const failures = results.filter(r => r.status === 'rejected');
             if (failures.length > 0 && this.config.DEBUG) {
-                console.warn(`⚠️ Fallaron ${failures.length} precargas de usuarios offline.`);
+                Logger.warn('RankingSystem', `⚠️ Fallaron ${failures.length} precargas de usuarios offline.`);
             }
         }
 
@@ -306,7 +307,7 @@ export default class RankingSystem {
         }
 
         if (changesCount > 0 && this.config.DEBUG) {
-            console.log(`📊 Ranking stats updated for ${changesCount} users`);
+            Logger.info('RankingSystem', `📊 Ranking stats updated for ${changesCount} users`);
         }
     }
 

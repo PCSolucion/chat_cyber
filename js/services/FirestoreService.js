@@ -23,7 +23,7 @@ export default class FirestoreService {
      */
     async configure(firebaseConfig) {
         if (this.config.TEST_MODE) {
-            console.warn('[Firestore] Test Mode: Disabled');
+            Logger.warn('FirestoreService', '[Firestore] Test Mode: Disabled');
             return;
         }
 
@@ -70,7 +70,7 @@ export default class FirestoreService {
         try {
             this.metrics.reads++;
             let ref = doc(this.db, 'users', key);
-            console.log(`[Firestore] 🔍 Buscando usuario en ruta: users/${key}`);
+            Logger.info('FirestoreService', `[Firestore] 🔍 Buscando usuario en ruta: users/${key}`);
             let snap = await getDoc(ref);
             
             if (snap.exists()) {
@@ -80,7 +80,7 @@ export default class FirestoreService {
                 // OPTIMIZACIÓN LECTURAS: Si no existe en minúsculas, asumimos que es nuevo.
                 // Eliminados los fallbacks legacy (ID, Case Sensitive) que triplicaban el coste
                 // de lectura para usuarios nuevos (First Time Chatters).
-                if (this.config.DEBUG) console.log(`[Firestore] Usuario nuevo o no encontrado: ${key}`);
+                if (this.config.DEBUG) Logger.info('FirestoreService', `[Firestore] Usuario nuevo o no encontrado: ${key}`);
                 return null;
             }
         } catch (e) {

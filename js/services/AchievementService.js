@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS_DATA } from '../../viewer/data/AchievementsData.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * AchievementService - Sistema de Logros (Refactorizado Username Key)
@@ -24,7 +25,7 @@ export default class AchievementService {
         this._loadAchievementsFromModule();
 
         if (this.config.DEBUG) {
-            console.log(`✅ AchievementService inicializado: ${Object.keys(this.achievements).length} logros definidos`);
+            Logger.info('AchievementService', `✅ AchievementService inicializado: ${Object.keys(this.achievements).length} logros definidos`);
         }
 
         this._unsubscribers.push(
@@ -68,11 +69,11 @@ export default class AchievementService {
                 this._processAchievementData(ACHIEVEMENTS_DATA);
                 this.isLoaded = true;
             } else {
-                console.warn('⚠️ ACHIEVEMENTS_DATA no encontrado, logros vacíos.');
+                Logger.warn('AchievementService', '⚠️ ACHIEVEMENTS_DATA no encontrado, logros vacíos.');
                 this.achievements = {};
             }
         } catch (e) {
-            console.error('❌ Error cargando logros:', e);
+            Logger.error('AchievementService', '❌ Error cargando logros:', e);
             this.achievements = {};
         }
     }
@@ -101,6 +102,7 @@ export default class AchievementService {
                 const fieldValue = this._getFieldValue(rule.field, userData, stats);
                 return this._evaluateOperator(fieldValue, rule.operator, rule.value);
             } catch (error) {
+                Logger.debug('AchievementService', 'Error evaluando condición de logro:', error);
                 return false;
             }
         };
@@ -156,7 +158,7 @@ export default class AchievementService {
                 if (typeof val === 'string') return val.includes(String(target));
                 return false;
             default: 
-                console.warn(`[AchievementService] Operador no soportado: ${operator}`);
+                Logger.warn('AchievementService', `[AchievementService] Operador no soportado: ${operator}`);
                 return false;
         }
     }
@@ -485,7 +487,7 @@ export default class AchievementService {
                 unlockedIds.add(achId); // Evitar duplicados en el mismo ciclo
 
                 if (this.config.DEBUG && !context.isInitialLoad) {
-                    console.log(`🏆 LOGRO DESBLOQUEADO: [${key}] -> ${achievement.name}`);
+                    Logger.info('AchievementService', `🏆 LOGRO DESBLOQUEADO: [${key}] -> ${achievement.name}`);
                 }
             }
         }
@@ -508,7 +510,7 @@ export default class AchievementService {
 
     emitAchievementUnlocked(username, achievement) {
         if (this.config.DEBUG) {
-            console.log(`[AchievementService] Emitting achievement unlocked for ${username}:`, achievement.name);
+            Logger.info('AchievementService', `[AchievementService] Emitting achievement unlocked for ${username}:`, achievement.name);
         }
         EventManager.emit(EVENTS.USER.ACHIEVEMENT_UNLOCKED, {
             username,
@@ -565,6 +567,6 @@ export default class AchievementService {
             this._unsubscribers = [];
         }
         this.userStats.clear();
-        if (this.config.DEBUG) console.log('🛑 AchievementService: Destroyed');
+        if (this.config.DEBUG) Logger.info('AchievementService', '🛑 AchievementService: Destroyed');
     }
 }

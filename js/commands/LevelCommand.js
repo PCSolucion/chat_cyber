@@ -1,6 +1,7 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 export default class LevelCommand extends BaseCommand {
     constructor() {
@@ -26,7 +27,7 @@ export default class LevelCommand extends BaseCommand {
             const xpInfo = services.xp.getUserXPInfo(key);
             
             if (!xpInfo) {
-                console.warn(`[LevelCommand] No XP info found for ${username}`);
+                Logger.warn('LevelCommand', `[LevelCommand] No XP info found for ${username}`);
                 return;
             }
 
@@ -35,14 +36,14 @@ export default class LevelCommand extends BaseCommand {
             // ExperienceService devuelve 'progress' con los datos calculados
             const xpProgress = xpInfo.progress || { xpInCurrentLevel: 0, xpNeededForNext: 100 };
 
-            console.log(`📊 !nivel solicitado por ${username}: Nivel ${level} (${title})`);
+            Logger.info('LevelCommand', `📊 !nivel solicitado por ${username}: Nivel ${level} (${title})`);
 
             const msg = `@${username} -> Nivel ${level} | ${title} | XP: ${Math.floor(xpProgress.xpInCurrentLevel)}/${Math.floor(xpProgress.xpNeededForNext)}`;
 
             // Emitir evento para mostrar en UI
             EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, msg);
         } catch (error) {
-            console.error('[LevelCommand] Error:', error);
+            Logger.error('LevelCommand', '[LevelCommand] Error:', error);
             throw error; // Let CommandManager handle it
         }
     }

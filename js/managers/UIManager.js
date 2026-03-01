@@ -123,7 +123,7 @@ export default class UIManager {
      */
     displayMessage(username, message, emotes, subscriberInfo = {}, xpResult = null) {
         if (this.config.DEBUG) {
-            console.log(`[UIManager] 📩 Incoming display: ${username} -> "${message}"`);
+            Logger.info('UIManager', `[UIManager] 📩 Incoming display: ${username} -> "${message}"`);
         }
 
         try {
@@ -278,7 +278,7 @@ export default class UIManager {
      * Limpia y destruye el UIManager (previene memory leaks)
      */
     destroy() {
-        console.log('[UIManager] Destruyendo instancia y limpiando eventos...');
+        Logger.info('UIManager', '[UIManager] Destruyendo instancia y limpiando eventos...');
         this.clearAllTimers();
 
         // 1. Eliminar Event Listeners globales

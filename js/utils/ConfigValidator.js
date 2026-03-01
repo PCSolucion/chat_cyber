@@ -118,8 +118,8 @@ export default class ConfigValidator {
      * @private
      */
     static _displayFatalError(errors) {
-        console.error('%c 🛑 ERROR DE CONFIGURACIÓN FATAL ', 'background: red; color: white; font-size: 20px;');
-        errors.forEach(e => console.error(`- ${e}`));
+        Logger.error('ConfigValidator', '%c 🛑 ERROR DE CONFIGURACIÓN FATAL ', 'background: red; color: white; font-size: 20px;');
+        errors.forEach(e => Logger.error('ConfigValidator', `- ${e}`));
         
         setTimeout(() => {
             const errorDiv = document.createElement('div');

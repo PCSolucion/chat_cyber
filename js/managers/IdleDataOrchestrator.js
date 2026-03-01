@@ -1,3 +1,5 @@
+import Logger from '../utils/Logger.js';
+
 /**
  * IdleDataOrchestrator - Orquestador de Datos para el Modo Idle
  *
@@ -149,7 +151,7 @@ export default class IdleDataOrchestrator {
 
       return screenData;
     } catch (error) {
-      console.error("❌ Error orchestrating idle data:", error);
+      Logger.error('IdleDataOrchestrator', "❌ Error orchestrating idle data:", error);
       return {
         type: "summary",
         title: "ERROR DE SISTEMA",

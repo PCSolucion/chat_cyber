@@ -43,7 +43,7 @@ export default class NotificationManager {
 
     this._handlers = {};
 
-    console.log("📢 NotificationManager (Orchestrator) initialized");
+    Logger.info('NotificationManager', "📢 NotificationManager (Orchestrator) initialized");
     this._setupEventListeners();
   }
 
@@ -142,7 +142,7 @@ export default class NotificationManager {
     if (!achievements || achievements.length === 0) return;
 
     if (this.queue.length >= this.queueMaxSize) {
-      if (this.config.DEBUG) console.log(`🏆 Cola llena, batch descartado para ${displayUsername}`);
+      if (this.config.DEBUG) Logger.info('NotificationManager', `🏆 Cola llena, batch descartado para ${displayUsername}`);
       return;
     }
 
@@ -223,7 +223,7 @@ export default class NotificationManager {
           return;
       }
     } catch (e) {
-      console.error(`❌ [NotificationManager] Error processing "${notification.type}":`, e);
+      Logger.error('NotificationManager', `❌ [NotificationManager] Error processing "${notification.type}":`, e);
     }
 
     setTimeout(() => {

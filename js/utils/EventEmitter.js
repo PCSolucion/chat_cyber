@@ -1,3 +1,5 @@
+import Logger from './Logger.js';
+
 /**
  * EventEmitter - Sistema de Pub/Sub minimalista para desacoplar componentes
  */
@@ -47,7 +49,7 @@ class EventEmitter {
             try {
                 callback(data);
             } catch (error) {
-                console.error(`❌ Error en listener de evento "${event}":`, error);
+                Logger.error('EventEmitter', `❌ Error en listener de evento "${event}":`, error);
             }
         });
     }

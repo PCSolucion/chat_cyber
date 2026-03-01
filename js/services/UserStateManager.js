@@ -334,7 +334,7 @@ export default class UserStateManager {
     }
 
     _createNewUser(username) {
-        if (this.config.DEBUG) console.warn(`[UserStateManager] ⚠️ CREANDO NUEVO USUARIO (Nivel 1): ${username}`);
+        if (this.config.DEBUG) Logger.warn('UserStateManager', `[UserStateManager] ⚠️ CREANDO NUEVO USUARIO (Nivel 1): ${username}`);
         return {
             displayName: username,
             xp: 0,

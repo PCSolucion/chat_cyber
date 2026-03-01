@@ -5,6 +5,7 @@ import IdleScreenRenderer from './IdleScreenRenderer.js';
 import IdleDataOrchestrator from './IdleDataOrchestrator.js';
 import IdleTimerService from './IdleTimerService.js';
 import UIUtils from '../utils/UIUtils.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * IdleDisplayManager - Gestiona la visualización cuando no hay chat activo
@@ -103,7 +104,7 @@ export default class IdleDisplayManager {
      */
     _enterIdleMode() {
         this.currentCycleIndex = 0;
-        console.log('💤 Entering idle mode - showing stats');
+        Logger.info('IdleDisplayManager', '💤 Entering idle mode - showing stats');
         EventManager.emit('idle:start');
 
         this._applyIdleVisuals(true);
@@ -115,7 +116,7 @@ export default class IdleDisplayManager {
      * @private
      */
     _exitIdleMode() {
-        console.log('🔔 Exiting idle mode');
+        Logger.info('IdleDisplayManager', '🔔 Exiting idle mode');
         EventManager.emit('idle:stop');
         this._applyIdleVisuals(false);
     }

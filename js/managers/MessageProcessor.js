@@ -119,7 +119,7 @@ export default class MessageProcessor {
                 this.services.ranking.setLevelCalculator(levelCalculator);
 
                 this.services.streamHistory = new StreamHistoryService(this.config, this.storageManager);
-                await this.services.streamHistory.init().catch(e => console.error(e));
+                await this.services.streamHistory.init().catch(e => Logger.error('MessageProcessor', e));
                 
                 // Inyectar stateManager y el calculator compartido
                 this.services.xp = new ExperienceService(this.config, this.services.stateManager, levelCalculator);
@@ -247,7 +247,7 @@ export default class MessageProcessor {
 
         // 2. Cargar rankings
         if (this.services.ranking) {
-            await this.services.ranking.loadRankings().catch(e => console.error(e));
+            await this.services.ranking.loadRankings().catch(e => Logger.error('MessageProcessor', e));
             
             // Actualizar estadísticas de ranking en XP service
             if (this.services.xp && this.services.ranking.isLoaded) {
@@ -256,7 +256,7 @@ export default class MessageProcessor {
         }
 
         if (this.services.thirdPartyEmotes) {
-            await this.services.thirdPartyEmotes.loadEmotes().catch(e => console.warn(e));
+            await this.services.thirdPartyEmotes.loadEmotes().catch(e => Logger.warn('MessageProcessor', e));
         }
 
         if (this.managers.idleDisplay) this.managers.idleDisplay.start();
@@ -304,6 +304,7 @@ export default class MessageProcessor {
         if (this.services.sessionStats) this.services.sessionStats.destroy();
         if (this.services.watchTime) this.services.watchTime.stop();
         if (this.services.spamFilter) this.services.spamFilter.destroy();
+        if (this.services.streamHistory) this.services.streamHistory.destroy();
     }
 
     getService(name) { return this.services[name]; }

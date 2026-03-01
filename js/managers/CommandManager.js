@@ -143,10 +143,10 @@ export default class CommandManager {
             } else {
                 // Ejecución final del comando
                 try {
-                    console.log(`[CommandManager] 🛠️ Executing command: !${commandName} for ${context.username}`);
+                    Logger.info('CommandManager', `[CommandManager] 🛠️ Executing command: !${commandName} for ${context.username}`);
                     await command.execute(context);
                 } catch (error) {
-                    console.error(`❌ Error executing command !${commandName}:`, error);
+                    Logger.error('CommandManager', `❌ Error executing command !${commandName}:`, error);
                     // Emitir error visual para el usuario
                     EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, `⚠️ ERROR: !${commandName} could not be executed.`);
                 }

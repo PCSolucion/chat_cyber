@@ -1,5 +1,6 @@
 import CONFIG from '../config.js';
 import ScrambleEngine from './ScrambleEngine.js';
+import Logger from './Logger.js';
 
 /**
  * UIUtils - Utilidades para la Interfaz de Usuario
@@ -114,7 +115,7 @@ const UIUtils = {
                 }).join('');
 
             } catch (error) {
-                console.error('Error al procesar emotes de Twitch:', error);
+                Logger.error('UIUtils', 'Error al procesar emotes de Twitch:', error);
                 result = this.escapeHTML(text);
             }
         } else {
@@ -126,7 +127,7 @@ const UIUtils = {
             try {
                 result = thirdPartyService.processThirdPartyEmotes(result, emoteSize);
             } catch (error) {
-                console.error('Error al procesar emotes de terceros:', error);
+                Logger.error('UIUtils', 'Error al procesar emotes de terceros:', error);
             }
         }
 
@@ -261,7 +262,7 @@ const UIUtils = {
     initEqualizer(containerId = 'equalizer', barCount = 20) {
         const container = document.getElementById(containerId);
         if (!container) {
-            console.warn(`⚠️ Equalizer container #${containerId} not found`);
+            Logger.warn('UIUtils', `⚠️ Equalizer container #${containerId} not found`);
             return;
         }
 
@@ -285,7 +286,7 @@ const UIUtils = {
         container.appendChild(fragment);
 
         if (typeof CONFIG !== 'undefined' && CONFIG.DEBUG) {
-            console.log(`🎵 Equalizer initialized with ${barCount} bars`);
+            Logger.info('UIUtils', `🎵 Equalizer initialized with ${barCount} bars`);
         }
     },
     /**

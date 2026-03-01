@@ -3,6 +3,7 @@ import { EVENTS } from "../../utils/EventTypes.js";
 import { NOTIFICATIONS, XP } from "../../constants/AppConstants.js";
 import UIUtils from "../../utils/UIUtils.js";
 import FXManager from "../../utils/FXManager.js";
+import Logger from '../../utils/Logger.js';
 
 /**
  * NotificationRenderer - Gestión de UI y Animaciones para Notificaciones
@@ -103,7 +104,7 @@ export default class NotificationRenderer {
     renderAchievementBatch(data) {
         // Solicitud usuario: no mostrar banner de batch en el widget si ya sale el overlay arriba.
         if (this.config.DEBUG) {
-            console.log(`🏆 Batch of ${data.achievements.length} achievements skipped in widget (Overlay only).`);
+            Logger.info('NotificationRenderer', `🏆 Batch of ${data.achievements.length} achievements skipped in widget (Overlay only).`);
         }
     }
 
@@ -202,7 +203,7 @@ export default class NotificationRenderer {
         }, NOTIFICATIONS.DISPLAY_TIME_MS);
 
         if (this.config.DEBUG) {
-            console.log(`🏆 Notification shown: ${username} -> ${debugLabel}`);
+            Logger.info('NotificationRenderer', `🏆 Notification shown: ${username} -> ${debugLabel}`);
         }
     }
 
@@ -397,7 +398,7 @@ export default class NotificationRenderer {
                 descSpan.classList.add("marquee-active");
             }
         } catch (e) {
-            console.warn("Error checking overflow:", e);
+            Logger.warn('NotificationRenderer', "Error checking overflow:", e);
         }
     }
 

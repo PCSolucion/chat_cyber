@@ -2,6 +2,7 @@ import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
 import { STATS, TIMING } from '../constants/AppConstants.js';
 import UIUtils from '../utils/UIUtils.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * SessionStatsService - Estadísticas en Tiempo Real de la Sesión
@@ -190,7 +191,7 @@ export default class SessionStatsService {
                     this.stats.currentActiveStreaks.set(id, userData.streakDays);
                 }
             } catch (e) {
-                // Ignorar errores
+                Logger.debug('SessionStats', 'Error al obtener racha para el mensaje:', e);
             }
         }
     }
@@ -344,7 +345,8 @@ export default class SessionStatsService {
      */
     getGlobalLeaderboard(limit = 10) {
         if (!this.experienceService) return [];
-        return this.experienceService.getXPLeaderboard(limit);
+        // Nota: Debería usar xpLeaderboard, parche temporal si falla
+        return window.WidgetCentral?.xpLeaderboardService?.getXPLeaderboard(limit) || [];
     }
 
     /**
@@ -382,7 +384,7 @@ export default class SessionStatsService {
                             displayName = userData.displayName || id;
                         }
                     } catch (e) {
-                        // Ignorar
+                        Logger.debug('SessionStats', 'Error al recuperar nivel/título en el cálculo de ranking:', e);
                     }
                 }
 
@@ -546,13 +548,13 @@ export default class SessionStatsService {
         if (isOnline) {
             // Si pasamos a ONLINE y no estábamos trackeando, iniciamos sesión
             if (!this.isLive) {
-                console.log('🔴 Stream ONLINE detector: Starting session stats...');
+                Logger.info('SessionStatsService', '🔴 Stream ONLINE detector: Starting session stats...');
                 this.startSession();
             }
         } else {
             // Si pasamos a OFFLINE y estábamos trackeando, paramos
             if (this.isLive) {
-                console.log('⚫ Stream OFFLINE detector: Stopping session stats...');
+                Logger.info('SessionStatsService', '⚫ Stream OFFLINE detector: Stopping session stats...');
                 this.stopSession();
             }
         }

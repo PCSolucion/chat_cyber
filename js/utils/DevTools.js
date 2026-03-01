@@ -47,8 +47,8 @@ export default class DevTools {
             },
 
             xp: {
-                getStats: () => this.xpService?.getGlobalStats(),
-                getTopUsers: (limit) => this.xpService?.getXPLeaderboard(limit),
+                getStats: () => window.WidgetCentral?.xpLeaderboardService?.getGlobalStats(),
+                getTopUsers: (limit) => window.WidgetCentral?.xpLeaderboardService?.getXPLeaderboard(limit),
                 testLevelUp: (lvl) => this._testLevelUp(lvl),
                 resetAll: () => this._resetAllXP(),
                 exportData: () => this._exportXPData(),

@@ -477,35 +477,6 @@ export default class ExperienceService {
         };
     }
 
-    /**
-     * Obtiene estadísticas de tiempo de visualización de un usuario
-     * @param {string} period - Periodo ('total', 'week', 'month') - Por ahora solo soporta 'total'
-     * @returns {number} Minutos visualizados
-     */
-    getWatchTimeStats(username) {
-        const userData = this.getUserData(username);
-        if (!userData) return 0;
-
-        // Por ahora retornamos el total. 
-        // Implementar lógica de periodos si activityHistory se parsea correctamente.
-        return userData.watchTimeMinutes || 0;
-    }
-
-    getXPLeaderboard(limit = 10) {
-        // 2. Fallback: Solo usuarios cargados en RAM
-        const users = Array.from(this.stateManager.getAllUsers().entries())
-            .map(([id, data]) => ({
-                userId: id,
-                username: data.displayName || id,
-                xp: data.xp,
-                level: data.level,
-                title: this.levelCalculator.getLevelTitle(data.level)
-            }))
-            .sort((a, b) => b.xp - a.xp)
-            .slice(0, limit);
-
-        return users;
-    }
 
     /**
      * Añade una nueva fuente de XP
@@ -560,7 +531,7 @@ export default class ExperienceService {
             // Pre-cargar en paralelo encapsulando errores en cada promesa
             await Promise.all(targetUsers.map(username => 
                 this.stateManager.ensureUserLoaded(username).catch(err => {
-                    if (this.config.DEBUG) console.warn(`⚠️ Omitiendo ${username} por error de carga en WatchTime:`, err);
+                    if (this.config.DEBUG) Logger.warn('ExperienceService', `⚠️ Omitiendo ${username} por error de carga en WatchTime:`, err);
                 })
             ));
         }
@@ -590,49 +561,10 @@ export default class ExperienceService {
         }
 
         if (this.config.DEBUG && updatedCount > 0) {
-            console.log(`⏱️ Watch time updated for ${updatedCount}/${chatters.length} users (+${minutes}m, +${totalXP}xp)`);
+            Logger.info('ExperienceService', `⏱️ Watch time updated for ${updatedCount}/${chatters.length} users (+${minutes}m, +${totalXP}xp)`);
         }
     }
 
-    getGlobalStats() {
-        let totalXP = 0;
-        let totalMessages = 0;
-        let highestLevel = 1;
-        const users = this.stateManager.getAllUsers();
-
-        users.forEach(data => {
-            totalXP += data.xp;
-            totalMessages += data.totalMessages;
-            if (data.level > highestLevel) highestLevel = data.level;
-        });
-
-        return {
-            totalUsers: users.size,
-            totalXP,
-            totalMessages,
-            highestLevel,
-            averageXP: users.size > 0 ? Math.floor(totalXP / users.size) : 0
-        };
-    }
-
-    async resetAllData() {
-        await this.stateManager.resetAll();
-        this.dailyFirstMessage.clear();
-        console.log('☢️ SYSTEM PURGE: ALL XP DATA CLEARED');
-    }
-
-    getAllDataJSON() {
-        const usersData = {};
-        this.stateManager.getAllUsers().forEach((data, id) => {
-            usersData[id] = data;
-        });
-
-        return JSON.stringify({
-            users: usersData,
-            lastUpdated: new Date().toISOString(),
-            version: '1.2'
-        }, null, 2);
-    }
 
     /**
      * Verifica si un usuario está presente en el stream (vía TwitchService)

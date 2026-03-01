@@ -14,7 +14,7 @@ export default class TopCommand extends BaseCommand {
         if (!services.xp) return;
 
         // Obtener leaderboard (top 5)
-        const leaderboard = services.xp.getXPLeaderboard(3);
+        const leaderboard = services.xpLeaderboard.getXPLeaderboard(3);
 
         if (!leaderboard || leaderboard.length === 0) {
             EventManager.emit(EVENTS.UI.SYSTEM_MESSAGE, 'Aún no hay datos de ranking.');

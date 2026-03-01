@@ -1,6 +1,7 @@
 import BaseCommand from './BaseCommand.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 export default class AchievementsCommand extends BaseCommand {
     constructor() {
@@ -21,7 +22,7 @@ export default class AchievementsCommand extends BaseCommand {
         };
         
         // Emitir evento para mostrar modal de logros (si existiera) o notificación
-        console.log(`🏆 !logros solicitado por ${username}: ${progress.unlocked}/${progress.total}`);
+        Logger.info('AchievementsCommand', `🏆 !logros solicitado por ${username}: ${progress.unlocked}/${progress.total}`);
         
         // Simular notificación visual en el overlay
         const message = `@${username} -> Has desbloqueado ${progress.unlocked} de ${progress.total} logros.`;

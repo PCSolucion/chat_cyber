@@ -1,6 +1,7 @@
 import { TIMING } from '../constants/AppConstants.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * StreamHistoryService
@@ -36,50 +37,51 @@ export default class StreamHistoryService {
         // OPTIMIZACIÓN: Eliminada lectura inicial de historial. 
         // El widget no usa datos históricos, solo escribe la sesión actual.
         // Esto ahorra 1 lectura de documento grande en cada recarga.
-        console.log('✅ StreamHistoryService inicializado (Modo Escritura Unica)');
+        Logger.info('StreamHistoryService', '✅ StreamHistoryService inicializado (Modo Escritura Unica)');
         return true;
     }
 
     _setupListeners() {
+        this._unsubscribers = [];
         // Reaccionar al estado del stream
         if (typeof EventManager !== 'undefined') { // Safety check
-            EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
+            this._unsubscribers.push(EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
                 if (isOnline) {
                     this._handleStreamStart();
                 } else {
                     this._handleStreamEnd();
                 }
-            });
+            }));
 
             // Reaccionar a cambios de categoría
-            EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
+            this._unsubscribers.push(EventManager.on(EVENTS.STREAM.CATEGORY_UPDATED, (category) => {
                 this.currentSession.category = category;
                 if (this.isTracking) {
                     this._autoSave();
                 }
-            });
+            }));
 
             // Reaccionar a cambios de título
-            EventManager.on('stream:titleUpdated', (title) => {
+            this._unsubscribers.push(EventManager.on('stream:titleUpdated', (title) => {
                 this.currentSession.title = title;
                 if (this.isTracking) {
                     this._autoSave();
                 }
-            });
+            }));
 
             // Trackear XP generado en la sesión
-            EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
+            this._unsubscribers.push(EventManager.on(EVENTS.USER.XP_GAINED, (data) => {
                 if (this.isTracking) {
                     this.currentSession.xp += (data.amount || 0);
                 }
-            });
+            }));
 
             // Trackear mensajes enviados en la sesión
-            EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
+            this._unsubscribers.push(EventManager.on(EVENTS.CHAT.MESSAGE_RECEIVED, () => {
                 if (this.isTracking) {
                     this.currentSession.messages++;
                 }
-            });
+            }));
         }
     }
 
@@ -90,7 +92,7 @@ export default class StreamHistoryService {
         const today = now.toISOString().split('T')[0];
         const time = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
         
-        console.log(`🔴 Historial: Stream ONLINE detectado. Iniciando sesión: ${today}_${time}`);
+        Logger.info('StreamHistoryService', `🔴 Historial: Stream ONLINE detectado. Iniciando sesión: ${today}_${time}`);
         
         this.isTracking = true;
         this.sessionStartTime = now.getTime();
@@ -106,7 +108,7 @@ export default class StreamHistoryService {
     async _handleStreamEnd() {
         if (!this.isTracking) return;
 
-        console.log('🏁 Historial: Stream finalizado. Guardando datos finales...');
+        Logger.info('StreamHistoryService', '🏁 Historial: Stream finalizado. Guardando datos finales...');
         await this.saveHistory(true);
         this.isTracking = false;
         this.sessionStartTime = null;
@@ -139,7 +141,7 @@ export default class StreamHistoryService {
 
             // 2. Detectar cambio de día (Medianoche UTC) durante el directo
             if (this.activeDate !== today) {
-                console.log(`📅 Cambio de día detectado en historial (${this.activeDate} -> ${today}). Finalizando parte de sesión...`);
+                Logger.info('StreamHistoryService', `📅 Cambio de día detectado en historial (${this.activeDate} -> ${today}). Finalizando parte de sesión...`);
                 
                 // 1. Guardar la parte del día anterior con el ID actual
                 await this._saveCurrentSnapshot(now, true);
@@ -152,12 +154,12 @@ export default class StreamHistoryService {
                 
                 // Los contadores de XP y mensajes siguen acumulándose o podrías resetearlos si prefieres
                 // estadísticas por "trozo de día". Los mantendremos acumulados por ahora.
-                console.log(`🚀 Iniciada nueva parte de sesión: ${this.currentSessionId}`);
+                Logger.info('StreamHistoryService', `🚀 Iniciada nueva parte de sesión: ${this.currentSessionId}`);
             }
 
             await this._saveCurrentSnapshot(now, final);
         } catch (error) {
-            console.error('❌ Error al guardar historial de stream:', error);
+            Logger.error('StreamHistoryService', '❌ Error al guardar historial de stream:', error);
         }
     }
 
@@ -201,7 +203,7 @@ export default class StreamHistoryService {
         const success = await this.storage.save(this.fileName, updatePayload, new Set([this.currentSessionId]));
         
         if (success) {
-            if (this.DEBUG) console.log(`✅ Sesión ${this.currentSessionId} guardada (${sessionMinutes}m)`);
+            if (this.DEBUG) Logger.info('StreamHistoryService', `✅ Sesión ${this.currentSessionId} guardada (${sessionMinutes}m)`);
             // window.STREAM_HISTORY ya no se actualiza localmente porque no tenemos todo el historial.
         }
     }
@@ -209,4 +211,14 @@ export default class StreamHistoryService {
     // Métodos legacy para compatibilidad si se llaman (vaciados)
     startMonitoring() {}
     stopMonitoring() {}
+
+    destroy() {
+        if (this._unsubscribers) {
+            this._unsubscribers.forEach(unsub => {
+                if (typeof unsub === 'function') unsub();
+            });
+            this._unsubscribers = [];
+        }
+        if (this.DEBUG) Logger.info('StreamHistoryService', '🛑 StreamHistoryService: Destroyed');
+    }
 }
