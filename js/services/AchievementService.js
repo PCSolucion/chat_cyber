@@ -100,7 +100,7 @@ export default class AchievementService {
             try {
                 const fieldValue = this._getFieldValue(rule.field, userData, stats);
                 return this._evaluateOperator(fieldValue, rule.operator, rule.value);
-            } catch (e) {
+            } catch (error) {
                 return false;
             }
         };
@@ -220,7 +220,30 @@ export default class AchievementService {
         const now = new Date();
         const hour = now.getHours();
 
-        // Actualizar lógica de contadores...
+        // 1. Actividad básica de chat y mensajes
+        this._updateMessageActivityStats(stats, context, hour);
+
+        // 2. Multiplicadores y Rachas (Streaks)
+        this._updateStreakStats(key, stats, context);
+
+        // 3. Actividad de Stream (Live/Offline/Maratones)
+        this._updateStreamActivityStats(stats, hour);
+
+        // 4. Festivos (Holidays)
+        this._updateHolidayStats(stats, now);
+
+        // 5. Persistencia en UserStateManager
+        const userData = this.stateManager.getUser(key);
+        if (userData) {
+            userData.achievementStats = stats;
+            this.stateManager.markDirty(key);
+        }
+    }
+
+    /**
+     * @private - Lógica de contadores y contenido de mensajes
+     */
+    _updateMessageActivityStats(stats, context, hour) {
         if (context.isFirstMessageOfDay) stats.firstMessageDays = (stats.firstMessageDays || 0) + 1;
         if (context.hasEmotes) stats.messagesWithEmotes = (stats.messagesWithEmotes || 0) + 1;
         if (context.hasMention) stats.mentionCount = (stats.mentionCount || 0) + 1;
@@ -229,25 +252,18 @@ export default class AchievementService {
         if (hour >= 4 && hour < 6) stats.earlyMorningMessages = (stats.earlyMorningMessages || 0) + 1;
 
         if (context.message) {
-            if (/\bbro\b/i.test(context.message)) {
-                const matches = context.message.match(/\bbro\b/gi);
-                if (matches) stats.broCount = (stats.broCount || 0) + matches.length;
-            }
-            if (/\bgg\b/i.test(context.message)) {
-                const matches = context.message.match(/\bgg\b/gi);
-                if (matches) stats.ggCount = (stats.ggCount || 0) + matches.length;
-            }
+            const broRegex = /\bbro\b/gi;
+            const ggRegex = /\bgg\b/gi;
+            
+            const broMatches = context.message.match(broRegex);
+            if (broMatches) stats.broCount = (stats.broCount || 0) + broMatches.length;
+
+            const ggMatches = context.message.match(ggRegex);
+            if (ggMatches) stats.ggCount = (stats.ggCount || 0) + ggMatches.length;
         }
 
-        if (context.streakMultiplier) {
-            if (context.streakMultiplier >= 1.5) stats.usedMultiplier15 = true;
-            if (context.streakMultiplier >= 2.0) stats.usedMultiplier2 = true;
-            if (context.streakMultiplier >= 3.0) stats.usedMultiplier3 = true;
-            if (context.streakMultiplier > 1.0) stats.streakBonusCount = (stats.streakBonusCount || 0) + 1;
-        }
-
-        // [FIX] Tracking de Level Ups diarios/semanales (para logros fast_learner, grinder)
         if (context.isLevelUp) {
+            const now = new Date();
             const todayStr = now.toDateString();
             if (stats.lastLevelUpDate !== todayStr) {
                 stats.levelUpsToday = 1;
@@ -258,14 +274,24 @@ export default class AchievementService {
             stats.levelUpsThisWeek = (stats.levelUpsThisWeek || 0) + 1;
 
             // Resetear contador semanal cada lunes
-            const dayOfWeek = now.getDay();
-            if (dayOfWeek === 1 && stats._lastWeekReset !== todayStr) {
+            if (now.getDay() === 1 && stats._lastWeekReset !== todayStr) {
                 stats.levelUpsThisWeek = 1;
                 stats._lastWeekReset = todayStr;
             }
         }
+    }
 
-        // [FIX] Tracking de Streak Resets y Phoenix (para logros streak_recovery, never_give_up, phoenix)
+    /**
+     * @private - Lógica de multiplicadores y detección de rotura de rachas
+     */
+    _updateStreakStats(key, stats, context) {
+        if (context.streakMultiplier) {
+            if (context.streakMultiplier >= 1.5) stats.usedMultiplier15 = true;
+            if (context.streakMultiplier >= 2.0) stats.usedMultiplier2 = true;
+            if (context.streakMultiplier >= 3.0) stats.usedMultiplier3 = true;
+            if (context.streakMultiplier > 1.0) stats.streakBonusCount = (stats.streakBonusCount || 0) + 1;
+        }
+
         const userData = this.stateManager.getUser(key);
         if (userData) {
             const currentStreak = userData.streakDays || 0;
@@ -282,34 +308,31 @@ export default class AchievementService {
                 stats.phoenixAchieved = true;
             }
 
-            // Actualizar snapshot de racha para comparaciones futuras
             stats._previousStreakSnapshot = currentStreak;
         }
+    }
 
+    /**
+     * @private - Lógica de asistencia a directos y maratones
+     */
+    _updateStreamActivityStats(stats, hour) {
         if (this.isStreamOnline) {
             stats.liveMessages = (stats.liveMessages || 0) + 1;
             
-            // Si el stream empezó hace menos de 5 minutos
             const streamDurationMinutes = this.streamStartTime ? (Date.now() - this.streamStartTime) / 60000 : 999;
             if (streamDurationMinutes <= 5) stats.streamOpenerCount = (stats.streamOpenerCount || 0) + 1;
             
             if (hour >= 19 && hour < 23) stats.primeTimeMessages = (stats.primeTimeMessages || 0) + 1;
 
-            // [FIX] Lógica de Unique Streams y Maratones
             if (this.currentStreamId) {
-                // 1. Unique Streams (Asistencia a diferentes directos)
                 if (!stats.attendedStreams) stats.attendedStreams = [];
                 if (!stats.attendedStreams.includes(this.currentStreamId)) {
                     stats.attendedStreams.push(this.currentStreamId);
                     stats.uniqueStreams = stats.attendedStreams.length;
                     
-                    // Limpieza opcional: Mantener solo los últimos 110 (suficiente para el logro legendario)
-                    if (stats.attendedStreams.length > 120) {
-                        stats.attendedStreams.shift();
-                    }
+                    if (stats.attendedStreams.length > 120) stats.attendedStreams.shift();
                 }
 
-                // 2. Marathon Streams (Activo por 4+ horas en un stream)
                 const streamDurationHours = (Date.now() - this.streamStartTime) / 3600000;
                 if (streamDurationHours >= 4 && stats._lastMarathonStreamId !== this.currentStreamId) {
                     stats.marathonStreams = (stats.marathonStreams || 0) + 1;
@@ -318,14 +341,6 @@ export default class AchievementService {
             }
         } else {
             stats.offlineMessages = (stats.offlineMessages || 0) + 1;
-        }
-
-        this._updateHolidayStats(stats, now);
-
-        // Guardar en RAM stateManager para persistencia
-        if (userData) {
-            userData.achievementStats = stats;
-            this.stateManager.markDirty(key);
         }
     }
 
@@ -416,17 +431,13 @@ export default class AchievementService {
         const unlockedNow = [];
 
         // 2.5 Determinar categorías a chequear (Optimización)
-        let categoriesToCheck = null;
+        let categoriesToCheck = ['messages', 'streaks', 'xp', 'stream', 'holidays', 'bro', 'watch_time', 'special'];
         if (context.isRankingUpdate) {
             categoriesToCheck = ['ranking', 'special'];
         } else if (context.isLevelUp) {
             categoriesToCheck = ['levels', 'special'];
         } else if (context.isRetroactiveCheck) {
             categoriesToCheck = null; // Check all
-        } else {
-            // Mensaje normal de chat
-            // [FIX] Añadida 'watch_time' para que logros de visualización se comprueben con mensajes normales
-            categoriesToCheck = ['messages', 'streaks', 'xp', 'stream', 'holidays', 'bro', 'watch_time', 'special'];
         }
 
         // 3. Normalización de persistencia (Legacy Fix)
