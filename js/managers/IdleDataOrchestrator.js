@@ -59,10 +59,7 @@ export default class IdleDataOrchestrator {
             topEmotes: this.statsService.getTopEmotes
               ? this.statsService.getTopEmotes(3)
               : [],
-            totalEmotes:
-              (this.statsService.stats &&
-                this.statsService.stats.totalEmotesUsed) ||
-              0,
+            totalEmotes: displayStats.totalEmotesUsed || 0,
           },
           isValid: (s) => s.data.totalEmotes > 0 || s.data.topEmotes.length > 0,
         },

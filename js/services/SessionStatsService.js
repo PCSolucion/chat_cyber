@@ -460,12 +460,12 @@ export default class SessionStatsService {
                 .map(([username, minutes]) => ({ username, minutes }));
         } else if (this.stateManager) {
             // Iterar sobre todos los usuarios conocidos por StateManager
-            // Usar entries para tener el objeto de datos y evitar llamadas innecesarias a getUser
             users = Array.from(this.stateManager.getAllUsers().entries()).map(([id, data]) => ({
                 id,
                 username: data.displayName || id,
-                // stats[id] es el nombre en este caso (Map key)
-                minutes: this.experienceService.getWatchTimeStats(id, period)
+                minutes: (this.experienceService && typeof this.experienceService.getWatchTimeStats === 'function')
+                    ? this.experienceService.getWatchTimeStats(id, period)
+                    : 0
             }));
         }
 

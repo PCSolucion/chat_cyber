@@ -107,9 +107,9 @@ export default class FirestoreService {
             const cleanData = JSON.parse(JSON.stringify(data));
             
             await setDoc(ref, cleanData, { merge });
-            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Guardado: ${key}`);
+            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Guardado en ${ref.path}`);
         } catch (e) {
-            Logger.error('Firestore', `Error guardando usuario ${key}:`, e);
+            Logger.error('Firestore', `Error guardando en ${key}:`, e);
             throw e;
         }
     }
@@ -266,11 +266,11 @@ export default class FirestoreService {
             const cleanData = JSON.parse(JSON.stringify(data));
             
             await setDoc(ref, cleanData, { merge: true });
-            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Archivo guardado: ${docId}`);
+            if (this.config.DEBUG) Logger.debug('Firestore', `💾 Archivo guardado: system/${docId}`);
             return true;
         } catch (e) {
             this.metrics.failures++;
-            Logger.error('Firestore', `Error guardando archivo ${fileName}:`, e);
+            Logger.error('Firestore', `Error guardando archivo system/${docId}:`, e);
             throw e; // Bubble up
         }
     }

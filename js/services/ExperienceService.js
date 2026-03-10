@@ -319,6 +319,25 @@ export default class ExperienceService {
     }
 
     /**
+     * Obtiene las estadísticas de tiempo de visualización para un usuario
+     * @param {string} username 
+     * @param {string} period 'total', 'session', etc.
+     * @returns {number} Minutos
+     */
+    getWatchTimeStats(username, period = 'total') {
+        const userData = this.getUserData(username);
+        if (!userData) return 0;
+
+        if (period === 'total') {
+            return userData.watchTimeMinutes || 0;
+        }
+
+        // Para otros periodos, si no queremos implementar lógica compleja aquí,
+        // devolvemos el total o 0
+        return userData.watchTimeMinutes || 0;
+    }
+
+    /**
      * Actualiza el tiempo de suscripción de un usuario
      * @param {string} username 
      * @param {number} months 

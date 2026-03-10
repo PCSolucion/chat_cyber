@@ -27,7 +27,8 @@ export const EVENTS = {
     // Eventos de Stream (Twitch)
     STREAM: {
         STATUS_CHANGED: 'stream:statusChanged',
-        CATEGORY_UPDATED: 'stream:categoryUpdated'
+        CATEGORY_UPDATED: 'stream:categoryUpdated',
+        TITLE_UPDATED: 'stream:titleUpdated'
     },
 
     // Eventos de Interfaz (UI)

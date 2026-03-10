@@ -18,6 +18,7 @@ export default class StreamMonitorService {
         this.timer = null;
         this.isStreamOnline = false;
         this.currentCategory = null;
+        this.currentTitle = null;
     }
 
     /**
@@ -67,7 +68,7 @@ export default class StreamMonitorService {
 
             if (title && title !== this.currentTitle) {
                 this.currentTitle = title;
-                EventManager.emit('stream:titleUpdated', title);
+                EventManager.emit(EVENTS.STREAM.TITLE_UPDATED, title);
             }
 
             // 3. Programar siguiente check basado en el estado

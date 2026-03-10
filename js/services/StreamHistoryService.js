@@ -16,7 +16,9 @@ export default class StreamHistoryService {
         this.fileName = 'stream_history.json';
         this.isTracking = false;
         this.sessionStartTime = null;
+        if (this.backupInterval) { clearInterval(this.backupInterval); this.backupInterval = null; }
         this.lastSaveTime = null;
+        this.backupInterval = null;
 
         this.currentSession = {
             duration: 0,
@@ -62,7 +64,7 @@ export default class StreamHistoryService {
             }));
 
             // Reaccionar a cambios de título
-            this._unsubscribers.push(EventManager.on('stream:titleUpdated', (title) => {
+            this._unsubscribers.push(EventManager.on(EVENTS.STREAM.TITLE_UPDATED, (title) => {
                 this.currentSession.title = title;
                 if (this.isTracking) {
                     this._autoSave();
@@ -100,9 +102,21 @@ export default class StreamHistoryService {
         this.activeDate = today;
         
         // Resetear contadores de esta sesión específica
-        this.currentSession.xp = 0;
-        this.currentSession.messages = 0;
-        this.initialDayDuration = undefined; 
+        this.currentSession = {
+            duration: 0,
+            category: this.currentSession.category || 'N/A', // Mantener categorías previas si las hay
+            title: this.currentSession.title || 'N/A',
+            xp: 0,
+            messages: 0
+        };
+        
+        this.initialDayDuration = undefined;
+        this._hasSavedInitialSnapshot = false;
+        if (this.backupInterval) clearInterval(this.backupInterval);
+        this.backupInterval = setInterval(() => { if (this.isTracking) this.saveHistory(); }, 5 * 60 * 1000); 
+        
+        // Guardar snapshot inicial inmediatamente
+        this.saveHistory();
     }
 
     async _handleStreamEnd() {
@@ -169,7 +183,7 @@ export default class StreamHistoryService {
      */
     async _saveCurrentSnapshot(now, final = false) {
         const sessionMinutes = Math.floor((now - this.sessionStartTime) / TIMING.MINUTE_MS);
-        if (sessionMinutes < 1 && !this.DEBUG && !final) return;
+        if (sessionMinutes < 1 && !this.DEBUG && !final && this._hasSavedInitialSnapshot) return;
 
         // OPTIMIZACIÓN: No leemos el historial antiguo. Solo escribimos la sesión actual.
         // Firestore hará merge automáticamente gracias a setDoc con merge: true (en FirestoreService).
@@ -203,8 +217,10 @@ export default class StreamHistoryService {
         const success = await this.storage.save(this.fileName, updatePayload, new Set([this.currentSessionId]));
         
         if (success) {
-            if (this.DEBUG) Logger.info('StreamHistoryService', `✅ Sesión ${this.currentSessionId} guardada (${sessionMinutes}m)`);
-            // window.STREAM_HISTORY ya no se actualiza localmente porque no tenemos todo el historial.
+            this._hasSavedInitialSnapshot = true;
+            if (this.DEBUG) Logger.info('StreamHistoryService', `✅ Sesión ${this.currentSessionId} guardada (${sessionMinutes}m - final: ${final})`);
+        } else {
+            Logger.warn('StreamHistoryService', `⚠️ No se pudo guardar la sesión ${this.currentSessionId}. Revisa logs de Firestore.`);
         }
     }
 
@@ -214,6 +230,10 @@ export default class StreamHistoryService {
 
     destroy() {
         if (this._unsubscribers) {
+            if (this.isTracking) {
+                Logger.info('StreamHistoryService', '🛑 Destruyendo servicio durante tracking... Intentando guardado final.');
+                this.saveHistory(true);
+            }
             this._unsubscribers.forEach(unsub => {
                 if (typeof unsub === 'function') unsub();
             });
