@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js';
-import { getFirestore, doc, updateDoc, increment, setDoc } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
+import { getFirestore, doc, updateDoc, increment, setDoc, onSnapshot, getDoc } from 'https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js';
 import CONFIG from '../../js/config.js';
 
 const PREDICTION_CONFIG = {
@@ -37,18 +37,129 @@ class PredictionApp {
         this.lastResolvedPrediction = null; // Para guardar la última finalizada
         this.lastWinner = null;
 
-        // DOM Elements
         this.overlay = document.getElementById('prediction-overlay');
         this.timerEl = document.getElementById('timer-text');
         this.questionEl = document.getElementById('question-text');
         this.optionsContainer = document.getElementById('options-list');
 
+        this.syncing = false; // Flag to avoid loops
+        this.lastResolvedId = null; // Track to avoid double XP award
+
         this.init();
     }
 
     async init() {
-        console.log('🔮 Incializando Prediction Engine (Silencioso)...');
+        console.log('🔮 Incializando Prediction Engine (Sync Mode)...');
+        this.setupStateSync();
         this.connect();
+    }
+
+    setupStateSync() {
+        if (!this.db) return;
+        
+        const stateRef = doc(this.db, 'system', 'current_prediction');
+        onSnapshot(stateRef, (snapshot) => {
+            const data = snapshot.data();
+            if (!data) return;
+            
+            // Si hay una transición de !resolved a resolved, y no hemos procesado este XP
+            if (data.resolved && data.lastId !== this.lastResolvedId) {
+                console.log('🎯 Resolution detected from sync:', data.winner);
+                this.lastResolvedId = data.lastId;
+                this.applySyncedState(data);
+                return;
+            }
+
+            // Sync general (votos, nueva predicción, etc)
+            this.applySyncedState(data);
+        });
+    }
+
+    applySyncedState(data) {
+        if (!data.active) {
+            if (this.active) this.resetPrediction(false); // Reset locally without clearing DB
+            return;
+        }
+
+        // Convert Firestore data to local state
+        const options = {};
+        Object.entries(data.options).forEach(([label, optData]) => {
+            options[label] = {
+                text: optData.text,
+                voters: new Set(optData.voters || [])
+            };
+        });
+
+        // Detectar si es una nueva predicción o continuación
+        const isNew = !this.active || this.prediction.question !== data.question;
+        
+        this.active = true;
+        this.resolved = data.resolved;
+        this.votingOpen = !data.resolved && (Date.now() < (data.startTime + data.duration * 1000));
+        this.prediction = {
+            question: data.question,
+            options: options,
+            totalVotes: data.totalVotes || 0
+        };
+
+        // Timer
+        const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
+        this.timer = Math.max(0, data.duration - elapsed);
+
+        if (isNew) {
+            this.renderAll();
+            this.overlay.classList.add('show');
+            this.overlay.classList.remove('hiding');
+            if (this.timer > 0 && !this.resolved) {
+                this.startTimer();
+            } else if (!this.resolved) {
+                this.onTimerEnd();
+            }
+        } else {
+            this.renderOptions(data.winner);
+        }
+
+        if (this.resolved) {
+            this.timerEl.textContent = "PREDICCIÓN RESUELTA";
+            this.overlay.classList.add('resolved');
+            this.overlay.classList.add('show');
+            // If it was appena resolved, we might want to trigger the hide timeout
+            if (!this.resolutionConfirmed) {
+                this.resolutionConfirmed = true;
+                this.scheduleHide(15000);
+            }
+        }
+    }
+
+    async saveState(winner = null) {
+        if (!this.db || this.syncing) return;
+        
+        const stateRef = doc(this.db, 'system', 'current_prediction');
+        const optionsToSave = {};
+        Object.entries(this.prediction.options).forEach(([label, data]) => {
+            optionsToSave[label] = {
+                text: data.text,
+                voters: Array.from(data.voters)
+            };
+        });
+
+        const statePayload = {
+            active: this.active,
+            resolved: this.resolved,
+            question: this.prediction.question,
+            startTime: this.startTime || Date.now(),
+            duration: this.duration || 0,
+            options: optionsToSave,
+            totalVotes: this.prediction.totalVotes,
+            winner: winner,
+            lastId: this.resolved ? (this.lastResolvedId || Date.now()) : null
+        };
+
+        try {
+            await setDoc(stateRef, statePayload);
+        } catch (e) {
+            console.error('❌ Error saving state:', e);
+        }
     }
 
     connect() {
@@ -171,19 +282,29 @@ class PredictionApp {
         this.votingOpen = true; // Abrir votaciones
         this.prediction = { question, options, totalVotes: 0 };
         this.timer = minutes * 60;
+        this.startTime = Date.now();
+        this.duration = this.timer;
+        this.resolutionConfirmed = false;
 
         this.renderAll();
         this.startTimer();
         this.overlay.classList.remove('resolved');
         this.overlay.classList.add('show');
+
+        // Persistir en Firestore
+        this.saveState();
     }
 
     addVote(username, optionLabel) {
         // Un usuario solo puede tener un voto activo (cambiar si ya votó)
-        Object.values(this.prediction.options).forEach(opt => opt.voters.delete(username));
+        let changed = false;
+        Object.values(this.prediction.options).forEach(opt => {
+            if (opt.voters.delete(username)) changed = true;
+        });
         
         this.prediction.options[optionLabel].voters.add(username);
         this.updateVotes();
+        this.saveState(); // Sync vote
     }
 
     updateVotes() {
@@ -245,10 +366,18 @@ class PredictionApp {
         this.votingOpen = false; 
         if (this.timerInterval) clearInterval(this.timerInterval);
         
-        // Guardar para consultar luego
+        // Guardar copia profunda para consultar luego (Evitar JSON.stringify por los Sets)
+        const optionsCopy = {};
+        Object.entries(this.prediction.options).forEach(([lbl, opt]) => {
+            optionsCopy[lbl] = {
+                text: opt.text,
+                voters: new Set(opt.voters)
+            };
+        });
+
         this.lastResolvedPrediction = {
             question: this.prediction.question,
-            options: JSON.parse(JSON.stringify(this.prediction.options)),
+            options: optionsCopy,
             totalVotes: this.prediction.totalVotes
         };
         this.lastWinner = winnerLabel;
@@ -261,35 +390,54 @@ class PredictionApp {
         this.timerEl.textContent = "PREDICCIÓN RESUELTA";
         this.renderOptions(winnerLabel);
 
+        // Persistir resolución antes de premiar
+        this.lastResolvedId = Date.now();
+        this.saveState(winnerLabel);
+
         // Award XP and Sync with Widget
         this.awardXPAndSync(winnerLabel);
 
         // Ocultar definitivamente después de 15 segundos
-        setTimeout(() => {
+        this.scheduleHide(15000);
+    }
+
+    scheduleHide(ms) {
+        if (this.fadeTimeout) clearTimeout(this.fadeTimeout);
+        this.fadeTimeout = setTimeout(() => {
             this.overlay.classList.add('hiding');
             this.overlay.classList.remove('show');
             setTimeout(() => {
                 this.overlay.classList.remove('hiding');
                 this.overlay.classList.remove('resolved');
-                this.active = false; // Ahora sí se libera para una nueva predicción
+                // No apagamos 'active' para permitir que se siga viendo si se refresca antes de una nueva
+                // Pero sí liberamos para que se pueda crear otra
+                this.active = false;
+                // Importante: No borramos Firestore aquí para mantener el historial si se refresca
             }, 700);
-        }, 15000);
+        }, ms);
     }
 
-    resetPrediction() {
+    async resetPrediction(clearDB = true) {
         console.log('🔄 Resetting prediction...');
         if (this.timerInterval) clearInterval(this.timerInterval);
         if (this.helpTimeout) clearTimeout(this.helpTimeout);
         if (this.resultTimeout) clearTimeout(this.resultTimeout);
         if (this.resolutionHideTimeout) clearTimeout(this.resolutionHideTimeout);
+        if (this.fadeTimeout) clearTimeout(this.fadeTimeout);
 
         this.active = false;
         this.resolved = false;
         this.votingOpen = false;
+        this.resolutionConfirmed = false;
 
         this.overlay.classList.add('hiding');
         this.overlay.classList.remove('show');
         
+        if (clearDB && this.db) {
+            const stateRef = doc(this.db, 'system', 'current_prediction');
+            await setDoc(stateRef, { active: false });
+        }
+
         setTimeout(() => {
             this.overlay.classList.remove('hiding');
             this.overlay.classList.remove('resolved');
@@ -306,7 +454,10 @@ class PredictionApp {
     renderOptions(winner = null) {
         this.optionsContainer.innerHTML = '';
         
-        Object.entries(this.prediction.options).forEach(([label, data]) => {
+        // Ordenar opciones alfabéticamente (a, b, c...)
+        const sortedOptions = Object.entries(this.prediction.options).sort((a, b) => a[0].localeCompare(b[0]));
+
+        sortedOptions.forEach(([label, data]) => {
             const count = data.voters.size;
             const percent = this.prediction.totalVotes > 0 
                 ? Math.round((count / this.prediction.totalVotes) * 100) 
@@ -336,12 +487,16 @@ class PredictionApp {
     }
 
     showHelp() {
-        if (this.active) return; // No mostrar ayuda si hay una activa
+        // Permitir ayuda si no hay una predicción REALMENTE activa y visible en pantalla
+        if (this.active && this.overlay.classList.contains('show') && !this.resolved) return; 
 
+        this.overlay.classList.remove('hiding');
+        this.overlay.classList.remove('resolved');
         this.overlay.classList.add('show');
         this.questionEl.textContent = "CÓMO USAR PREDICCIONES";
         this.timerEl.textContent = "HELPER_MODE";
         this.timerEl.style.color = '#05d5fa';
+        this.timerEl.style.textShadow = 'var(--glow-cyan)';
         
         this.optionsContainer.innerHTML = `
             <div class="option-item">
@@ -377,11 +532,47 @@ class PredictionApp {
         }, 20000);
     }
 
-    showLastResult() {
-        if (this.active && !this.resolved) return; // No interrumpir una activa
+    async showLastResult() {
+        if (this.active && !this.resolved && this.overlay.classList.contains('show')) return; 
+
+        // Si no hay resultado local, intentar buscar el último evento de sistema en Firestore
         if (!this.lastResolvedPrediction) {
-            console.warn('⚠️ No hay encuestas previas guardadas');
-            return;
+            console.log('🔍 Buscando último resultado en base de datos...');
+            const eventRef = doc(this.db, 'system', 'last_prediction_result');
+            try {
+                const docSnap = await getDoc(eventRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Reconstruir estructura de opciones con Sets para los votantes
+                    const options = {};
+                    let totalVotes = 0;
+                    
+                    if (data.options) {
+                        Object.entries(data.options).forEach(([label, optData]) => {
+                            const votersArray = optData.voters || [];
+                            totalVotes += votersArray.length;
+                            options[label] = {
+                                text: optData.text,
+                                voters: new Set(votersArray)
+                            };
+                        });
+                    }
+
+                    this.lastResolvedPrediction = {
+                        question: data.question,
+                        options: options,
+                        totalVotes: totalVotes
+                    };
+                    this.lastWinner = data.winner;
+                } else {
+                    console.warn('⚠️ No hay encuestas previas en la DB');
+                    return;
+                }
+            } catch (e) {
+                console.error('❌ Error cargando historial:', e);
+                return;
+            }
         }
 
         // Restaurar estado visual del último resultado
@@ -393,8 +584,9 @@ class PredictionApp {
         this.renderOptions(this.lastWinner);
 
         this.overlay.classList.add('show');
-        this.timerEl.textContent = "RESULT_HISTORY";
-        this.timerEl.style.color = '#fbee09';
+        this.timerEl.textContent = "HISTORIAL";
+        this.timerEl.style.color = '#fcee09';
+        this.timerEl.style.textShadow = '3px 3px 0px #000';
 
         // Ocultar tras 15 segundos
         if (this.resultTimeout) clearTimeout(this.resultTimeout);
@@ -464,12 +656,23 @@ class PredictionApp {
             });
         });
 
-        // Notificar al widget principal a través de una colección de sistema
+        // Guardar estado completo para historial persistente
+        const optionsToSave = {};
+        Object.entries(this.prediction.options).forEach(([label, data]) => {
+            optionsToSave[label] = {
+                text: data.text,
+                voters: Array.from(data.voters)
+            };
+        });
+
+        // Notificar al widget principal y guardar historial
         const eventRef = doc(this.db, 'system', 'last_prediction_result');
         setDoc(eventRef, {
             timestamp: Date.now(),
             question: this.prediction.question,
-            results: usersToSync
+            results: usersToSync,
+            options: optionsToSave,
+            winner: winnerLabel
         }).then(() => {
             console.log('✅ Prediction results synced to Firestore');
         }).catch(err => {
