@@ -1,53 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Twitch Predictions Overlay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
     <div id="app">
-        <div id="prediction-overlay" class="prediction-overlay">
-            
-            <div class="levelup-hud-container">
-                <div class="levelup-hud-content">
-                    <div class="hud-bracket left"></div>
-                    
-                    <div class="hud-data-core">
-                        <div class="hud-header">
-                            <div class="hud-status">PREDICCIÓN</div>
-                            <div class="hud-timer">
-                                <span class="timer-tag">TIEMPO RESTANTE:</span>
-                                <span id="timer-text">LOADING...</span>
-                            </div>
-                        </div>
-                        
-                        <div class="hud-main-display">
-                            <div class="prediction-info">
-                                <div id="question-text" class="question">ESPERANDO PREDICCIÓN...</div>
-                                <div id="options-list" class="options-container">
-                                    <!-- Se llenará dinámicamente -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="hud-footer">
-                            <div class="hud-bit-line"></div>
-                            <div id="cmd-hint" class="cmd-hint">ESCRIBIR: !a, !b... EN EL CHAT</div>
-                        </div>
-                    </div>
-                    
-                    <div class="hud-bracket right"></div>
-                </div>
-            </div>
+      <div id="prediction-overlay" class="prediction-overlay">
+        <!-- Background Layer for decorative glow -->
+        <div class="bg-layer">
+          <div class="bg-orb"></div>
         </div>
+
+        <div class="levelup-hud-container">
+          <div class="levelup-hud-content">
+            <div class="hud-bracket left"></div>
+
+            <div class="hud-data-core">
+              <div class="hud-header">
+                <div class="hud-status">PREDICCIÓN</div>
+                <div class="hud-timer">
+                  <span class="timer-tag">TIEMPO RESTANTE:</span>
+                  <span id="timer-text">LOADING...</span>
+                </div>
+              </div>
+
+              <div class="hud-main-display">
+                <div class="prediction-info">
+                  <div id="question-text" class="question">
+                    ESPERANDO PREDICCIÓN...
+                  </div>
+                  <div id="options-list" class="options-container">
+                    <!-- Se llenará dinámicamente -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="hud-footer">
+                <div class="hud-bit-line"></div>
+                <div id="cmd-hint" class="cmd-hint">
+                  ESCRIBIR: !a, !b... EN EL CHAT
+                </div>
+              </div>
+            </div>
+
+            <div class="hud-bracket right"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
     <script src="../libs/regenerator-runtime.min.js"></script>
     <script src="../libs/tmi.min.js"></script>
     <script type="module" src="js/app.js"></script>
-</body>
+  </body>
 </html>
