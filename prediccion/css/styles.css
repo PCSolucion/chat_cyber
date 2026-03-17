@@ -83,7 +83,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 900px;
-  background: #0a0a12;
+  background: #000000; /* Fondo totalmente opaco */
   border-right: 5px solid var(--cyber-red);
   padding: 60px 80px;
   display: flex;

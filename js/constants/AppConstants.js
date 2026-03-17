@@ -81,7 +81,7 @@ export const XP = {
     MIN_TIME_BETWEEN_XP_MS: 1000,       // Cooldown global entre ganancias de XP
     SAVE_DEBOUNCE_MS: 45000,            // 45 segundos: Más reactivo para el usuario, sigue siendo seguro para la cuota.
     MAX_XP_PER_MESSAGE: 100,            // Tope de XP por un solo mensaje
-    WATCH_TIME_XP: 40,                 // XP otorgada por cada intervalo de 20 min (2 XP/min)
+    WATCH_TIME_XP: 80,                 // XP otorgada por cada intervalo de 20 min (4 XP/min)
     // Recompensas fijas por logros (No se ven afectadas por multiplicadores)
     ACHIEVEMENT_REWARDS: {
         common: 50,
