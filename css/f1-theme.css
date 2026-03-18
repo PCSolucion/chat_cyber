@@ -4,15 +4,17 @@
    =========================================== */
 
 /* === TYPOGRAPHY === */
-@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap");
+
 
 /* === DESIGN TOKENS === */
 :root {
   /* F1 Core Colors */
-  --f1-red: #e10600;
-  --f1-red-rgb: 225, 6, 0;
+  --f1-red: #d80d0d;
+  --f1-red-rgb: 216, 13, 13;
   --f1-white: #ffffff;
   --f1-black: #15151e;
+  --f1-black-rgb: 21, 21, 30;
   --f1-dark: #1a1a2e;
   --f1-gray-100: #f0f0f0;
   --f1-gray-200: #c8c8c8;
@@ -70,7 +72,7 @@
 
   /* Dimensions */
   --container-width: 340px;
-  --username-size: 1.5rem;
+  --username-size: 1.1rem;
   --message-size: 1.25rem;
 
   /* Animation */
@@ -83,11 +85,12 @@
   --xp-primary-dark: #b00500;
   --xp-primary-light: #ff2d22;
   --xp-accent: var(--f1-yellow);
-  --xp-bg: rgba(21, 21, 30, 0.9);
+  --xp-bg: var(--f1-black);
   --xp-text: var(--f1-white);
   --xp-text-secondary: rgba(255, 255, 255, 0.5);
 
   /* Fonts */
+  --font-f1turbo: 'Share Tech Mono', monospace;
   --font-orbitron: "Outfit", "Titillium Web", sans-serif;
   --font-rajdhani: "Titillium Web", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
@@ -396,7 +399,7 @@ body {
 
 /* Status Bar variants */
 .container.status-red .status-bar {
-  border-bottom: 2px solid var(--f1-red);
+  border-bottom: 2px solid var(--f1-gray-400);
 }
 
 .container.status-red .status-dot {
@@ -409,7 +412,7 @@ body {
 .header {
   padding: 14px 16px 16px;
   position: relative;
-  background: transparent;
+  background: linear-gradient(rgba(var(--f1-black-rgb), 0.6), rgba(var(--f1-black-rgb), 0.6)), url("../img/f1 grid.png") center center / cover no-repeat;
   min-height: 158px;
   height: 158px;
   display: flex;
@@ -443,8 +446,8 @@ body {
 .user-identity__name,
 .driver-name {
   margin: 0;
-  font-family: "Outfit", "Titillium Web", sans-serif;
-  font-weight: 900;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   font-size: var(--username-size);
   color: var(--f1-white);
   text-transform: uppercase;
@@ -731,7 +734,7 @@ body {
 
 .container.admin-user .status-bar {
   background: var(--f1-black);
-  border-bottom: 2px solid var(--f1-red);
+  border-bottom: 2px solid rgb(49, 49, 49);
 }
 
 .container.admin-user .status-text {
@@ -1012,9 +1015,10 @@ body {
   background: var(--f1-red);
   padding: 4px 12px;
   clip-path: none;
-  border-radius: 4px;
+  border-radius: 0;
   min-width: 56px;
   transform: translateY(-8px);
+  margin-left: 10px;
 }
 
 .xp-bar__level-label,
@@ -1054,7 +1058,7 @@ body {
   background: rgba(255, 255, 255, 0.06);
   border: none;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 /* Ghost & Fill */
@@ -1078,7 +1082,7 @@ body {
   border-right: 1px solid rgba(255, 255, 255, 0.4);
   z-index: 1;
   transition: none !important;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .xp-bar__fill,
@@ -1092,7 +1096,7 @@ body {
   box-shadow: none;
   overflow: hidden;
   position: relative;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .xp-bar__fill::after,
@@ -1509,7 +1513,7 @@ body {
 
 .container.gold-mode-active .xp-bar__level-value,
 .container.gold-mode-active .xp-level-value {
-  color: #1a1200 !important;
+  color: #ffffff !important;
   text-shadow: none !important;
   font-weight: 900 !important;
   z-index: 2;

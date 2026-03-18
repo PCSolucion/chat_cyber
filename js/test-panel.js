@@ -71,12 +71,30 @@ class TestPanelController {
         });
 
         // --- THEME SELECTOR ---
-        document.getElementById('theme-selector')?.addEventListener('change', (e) => {
-            const theme = e.target.value;
-            console.log(`🔌 Switching theme to ${theme}...`);
-            this.widgetFrame.src = `${theme}?mode=test`;
-            this._waitingForEvent = false;
-        });
+        const themeSelector = document.getElementById('theme-selector');
+
+        // Restaurar último tema usado (si existe)
+        if (themeSelector) {
+            const savedTheme = window.localStorage.getItem('widget-theme');
+            if (savedTheme) {
+                themeSelector.value = savedTheme;
+                console.log(`🔌 Restoring theme ${savedTheme} from localStorage...`);
+                this.widgetFrame.src = `${savedTheme}?mode=test`;
+            }
+
+            themeSelector.addEventListener('change', (e) => {
+                const theme = e.target.value;
+                console.log(`🔌 Switching theme to ${theme}...`);
+                // Guardar preferencia
+                try {
+                    window.localStorage.setItem('widget-theme', theme);
+                } catch (err) {
+                    console.warn('⚠️ Unable to persist theme preference:', err);
+                }
+                this.widgetFrame.src = `${theme}?mode=test`;
+                this._waitingForEvent = false;
+            });
+        }
     }
 
     /**
