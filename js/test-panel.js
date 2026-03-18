@@ -69,6 +69,14 @@ class TestPanelController {
                 console.log('Keep Visible:', e.target.checked);
             }
         });
+
+        // --- THEME SELECTOR ---
+        document.getElementById('theme-selector')?.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            console.log(`🔌 Switching theme to ${theme}...`);
+            this.widgetFrame.src = `${theme}?mode=test`;
+            this._waitingForEvent = false;
+        });
     }
 
     /**

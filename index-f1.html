@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Twitch Chat Overlay - F1 Edition</title>
+  <meta name="description" content="Twitch Chat Overlay con estética de Formula 1. Diseño minimalista inspirado en el live timing de F1.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Preload Critical Resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://static-cdn.jtvnw.net">
+  <link rel="preload" href="img/arasaka.png" as="image">
+
+  <!-- F1 Theme CSS -->
+  <link rel="stylesheet" href="css/f1-theme.css">
+  <link rel="stylesheet" href="css/f1-achievements.css">
+  <link rel="stylesheet" href="css/f1-idle-stats.css">
+  <link rel="stylesheet" href="css/f1-levelup.css">
+  <link rel="icon" href="img/arasaka.png" type="image/png">
+</head>
+
+<body>
+  <div id="chat-overlay-widget">
+    <!-- Cyberpunk Level Up Overlay (HUD Design) -->
+    <div id="cp-levelup-overlay" class="cp-levelup-overlay">
+      <div class="levelup-hud-container">
+        <!-- Background Layer: Glitchy Text -->
+        <div class="levelup-ghost-text">LEVEL UP</div>
+        
+        <!-- Main HUD Area -->
+        <div class="levelup-hud-content">
+          <div class="hud-bracket left"></div>
+          
+          <div class="hud-data-core">
+            <div class="hud-header">
+              <span class="hud-tag">ID: INTERNAL_NEURAL_LINK</span>
+              <span class="hud-status">SYNC_COMPLETE</span>
+            </div>
+            
+            <div class="hud-main-display">
+              <div class="hud-level-box">
+                <span class="hud-level-lbl">LVL</span>
+                <span id="cp-new-level" class="hud-level-val">--</span>
+              </div>
+              <div class="hud-user-info">
+                <span id="cp-username" class="hud-user-name">---</span>
+                <div class="hud-rank-tag">
+                  <span class="hud-rank-lbl">RANK_UPDATE:</span>
+                  <span id="cp-new-title" class="hud-rank-val">---</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hud-footer">
+              <div class="hud-bit-line"></div>
+              <span class="hud-warning">CONNECTION STABLE // UPLOADING NEW PERKS...</span>
+            </div>
+          </div>
+
+          <div class="hud-bracket right"></div>
+        </div>
+
+        </div>
+        <!-- New: Particle Container -->
+        <div id="levelup-particles" class="levelup-particles"></div>
+      </div>
+    <!-- Achievement Overlay (Top of Screen) -->
+    <div id="cp-achievement-overlay" class="cp-achievement-overlay">
+      <!-- Content injected via JS -->
+    </div>
+    <div class="container-wrapper">
+      <div class="container" role="region" aria-label="Chat de Twitch">
+
+
+        <!-- Status bar top -->
+        <aside class="status-bar">
+          <div class="network-activity">
+            <div class="net-led rx" id="led-rx" title="RECEIVING"></div>
+            <div class="net-led tx" id="led-tx" title="TRANSMITTING"></div>
+          </div>
+          <span class="status-text hidden" id="system-status-text">SYS.ONLINE</span>
+          <span class="status-divider" aria-hidden="true">|</span>
+          <span class="status-code" id="stream-category">CHAT.STREAM</span>
+        </aside>
+
+        <!-- Header with username -->
+        <header class="header">
+          <!-- User Identity Section (Nombre, icono, badges) - PRIMERO -->
+          <div class="user-identity">
+            <img class="user-identity__icon" id="user-icon" src="img/arasaka.png" alt="Rank">
+            <h1 class="user-identity__name" id="username" data-text="NETRUNNER">NETRUNNER</h1>
+            <div class="user-identity__badges">
+              <span class="badge" id="user-badge"></span>
+            </div>
+          </div>
+
+          <!-- XP Display Section (Sistema de experiencia) - DESPUÉS -->
+          <section class="xp-display" id="xp-section" aria-label="Nivel y Experiencia">
+            <!-- Level Up Notification (overlay) -->
+            <div class="xp-levelup" id="xp-levelup-inline">
+              <span class="xp-levelup__star">★</span>
+              <span class="xp-levelup__text">LEVEL UP</span>
+              <span class="xp-levelup__chevrons">❯❯❯</span>
+              <span class="xp-levelup__number" id="levelup-number">2</span>
+            </div>
+
+            <!-- XP Bar -->
+            <div class="xp-bar">
+              <div class="xp-bar__level">
+                <span class="xp-bar__level-label">LVL</span>
+                <span class="xp-bar__level-value" id="xp-level">--</span>
+              </div>
+              <div class="xp-bar__progress">
+                <div class="xp-bar__track">
+                  <div class="xp-bar__ghost" id="xp-progress-ghost"></div>
+                  <div class="xp-bar__fill" id="xp-progress-fill"></div>
+                </div>
+                <div class="xp-bar__text">
+                  <span class="xp-bar__current" id="xp-current">--</span>
+                  <span class="xp-bar__divider">/</span>
+                  <span class="xp-bar__next" id="xp-next">--</span>
+                  <span class="xp-bar__suffix">XP</span>
+                </div>
+              </div>
+              <div class="xp-bar__gain" id="xp-gain-container"></div>
+            </div>
+
+            <!-- XP Info (Title + Streak) -->
+            <div class="xp-info">
+              <span class="xp-info__title" id="xp-title">...</span>
+              <span class="xp-info__streak" id="xp-streak"></span>
+            </div>
+          </section>
+        </header>
+
+        <!-- Data stream indicator -->
+        <div class="data-stream">
+          <div class="stream-line"></div>
+        </div>
+
+        <!-- Digital Particles BG (Top Users) -->
+        <div id="particles-bg" class="particles-bg" aria-hidden="true"></div>
+
+        <!-- Message display -->
+        <main class="quote" id="message" role="log" aria-live="polite">
+          [CONNECTING...] 
+        </main>
+
+        <!-- Achievement Notifications (Dentro del widget) -->
+        <div class="achievement-notifications" id="achievement-notifications"></div>
+
+        <!-- Achievement Counter (Absolute position near footer) -->
+        <div class="xp-achievements-container" id="xp-achievements-container-wrapper">
+          <span class="xp-achievements" id="xp-achievements"></span>
+          <!-- Watch Time: Bottom Right Pegado al Borde -->
+          <div id="watch-time-container" class="hidden"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts externos -->
+  <script src="libs/regenerator-runtime.min.js"></script>
+  <script src="libs/tmi.min.js" defer></script>
+
+  <!-- Aplicación principal (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+
+
+</body>
+
+</html>

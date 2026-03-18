@@ -1,0 +1,1711 @@
+/* ===========================================
+   F1 FORMULA 1 - MINIMALIST CHAT WIDGET
+   Theme: Clean, technical, race-inspired
+   =========================================== */
+
+/* === TYPOGRAPHY === */
+@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap");
+
+/* === DESIGN TOKENS === */
+:root {
+  /* F1 Core Colors */
+  --f1-red: #e10600;
+  --f1-red-rgb: 225, 6, 0;
+  --f1-white: #ffffff;
+  --f1-black: #15151e;
+  --f1-dark: #1a1a2e;
+  --f1-gray-100: #f0f0f0;
+  --f1-gray-200: #c8c8c8;
+  --f1-gray-300: #8c8c8c;
+  --f1-gray-400: #505060;
+  --f1-gray-500: #38384a;
+  --f1-gray-600: #2a2a3c;
+  --f1-gray-700: #1e1e30;
+
+  /* Accent Colors */
+  --f1-green: #00d2be;
+  --f1-green-rgb: 0, 210, 190;
+  --f1-yellow: #ffd700;
+  --f1-yellow-rgb: 255, 215, 0;
+  --f1-purple: #9b59b6;
+  --f1-blue: #3498db;
+
+  /* Sector Colors */
+  --sector-best: #a855f7;
+  --sector-personal: #22c55e;
+  --sector-slower: #eab308;
+
+  /* Map from Cyberpunk tokens to F1 tokens */
+  --cyber-red: var(--f1-red);
+  --cyber-red-rgb: var(--f1-red-rgb);
+  --cyber-yellow: var(--f1-yellow);
+  --cyber-yellow-rgb: var(--f1-yellow-rgb);
+  --takeru-yellow: var(--f1-yellow);
+  --takeru-yellow-rgb: var(--f1-yellow-rgb);
+  --cyber-cyan: var(--f1-green);
+  --cyber-cyan-rgb: var(--f1-green-rgb);
+  --cyber-magenta: var(--f1-purple);
+  --cyber-blue: var(--f1-blue);
+  --cyber-hot-pink: var(--f1-red);
+
+  /* Backgrounds */
+  --bg-dark: var(--f1-black);
+  --bg-panel: var(--f1-dark);
+  --bg-overlay: rgba(21, 21, 30, 0.85);
+  --bg-solid: rgba(26, 26, 46, 0.95);
+
+  /* Text */
+  --text-bright: var(--f1-white);
+  --text-dim: rgba(255, 255, 255, 0.7);
+  --text-stroke: none;
+
+  /* Glows - Minimal */
+  --glow-yellow: none;
+  --glow-cyan: none;
+  --glow-red: none;
+
+  /* VIP */
+  --vip-gold: var(--f1-yellow);
+  --vip-glow: none;
+
+  /* Dimensions */
+  --container-width: 340px;
+  --username-size: 1.5rem;
+  --message-size: 1.25rem;
+
+  /* Animation */
+  --transition-speed: 0.3s;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* XP System Colors (override) */
+  --xp-primary: var(--f1-red);
+  --xp-primary-rgb: var(--f1-red-rgb);
+  --xp-primary-dark: #b00500;
+  --xp-primary-light: #ff2d22;
+  --xp-accent: var(--f1-yellow);
+  --xp-bg: rgba(21, 21, 30, 0.9);
+  --xp-text: var(--f1-white);
+  --xp-text-secondary: rgba(255, 255, 255, 0.5);
+
+  /* Fonts */
+  --font-orbitron: "Outfit", "Titillium Web", sans-serif;
+  --font-rajdhani: "Titillium Web", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* === RESET & BASE === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: transparent;
+  color: var(--text-bright);
+  font-family: "Titillium Web", sans-serif;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* === UTILITY === */
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  transform: translateX(-15px);
+}
+
+/* =========================================
+   WATCH TIME BADGE (LURK)
+   ========================================= */
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--f1-green-rgb), 0.08);
+  border: 1px solid rgba(var(--f1-green-rgb), 0.3);
+  color: var(--f1-green);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: auto;
+}
+
+.time-badge .label {
+  margin-right: 4px;
+  opacity: 0.7;
+  font-size: 9px;
+}
+
+/* === KEYFRAMES (Minimal / Clean) === */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes fadeInSmooth {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOutSmooth {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-20px); }
+}
+
+@keyframes pingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes dataFlow {
+  0% { left: -30%; }
+  100% { left: 100%; }
+}
+
+@keyframes cyberEQ {
+  0%, 100% { height: 3px; opacity: 0.05; }
+  50% { height: 18px; opacity: 0.25; }
+}
+
+@keyframes digitalRain {
+  0% { background-position: 0 0, 20px 20px; }
+  100% { background-position: 0 40px, 20px 80px; }
+}
+
+@keyframes gradientFlow {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 0% 100%; }
+}
+
+@keyframes decryptPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes scanlines {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 4px; }
+}
+
+@keyframes usernameGlow {
+  0%, 100% { color: var(--f1-white); }
+}
+
+@keyframes adminGlow {
+  0%, 100% { color: var(--f1-white); }
+}
+
+@keyframes topBadgePulse {
+  0%, 100% { border-color: var(--f1-red); }
+}
+
+@keyframes adminBadgePulse {
+  0%, 100% { border-color: var(--f1-red); }
+}
+
+@keyframes activeBorderPulse {
+  0%, 100% { border-color: rgba(var(--f1-red-rgb), 0.2); }
+}
+
+@keyframes activeBorderPulseCyan {
+  0%, 100% { border-color: rgba(var(--f1-green-rgb), 0.2); }
+}
+
+@keyframes redBarPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes fadeInSlide {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOutSlide {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-20px); }
+}
+
+
+/* ===========================================
+   CONTAINER - F1 Timing Panel
+   =========================================== */
+.container-wrapper {
+  perspective: 600px;
+  perspective-origin: left center;
+  position: absolute;
+  left: 0;
+  bottom: 20%;
+  transform: scale(1.27);
+  transform-origin: bottom left;
+}
+
+.container {
+  width: var(--container-width);
+  background: var(--f1-black);
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+
+  min-height: 405px;
+  height: 405px;
+  max-height: 405px;
+
+  /* 3D HUD effect - Positive rotation to compress RIGHT side */
+  transform: translateX(0) rotateY(5deg) scale(1) !important;
+  transform-origin: left center;
+
+  /* Cyberpunk corner cuts - Bottom Right cut (subtle) */
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 15px),
+    calc(100% - 15px) 100%,
+    0 100%
+  );
+  border-radius: 8px;
+
+  /* Subtle border and shadow */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  /* Smooth transitions */
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 1;
+  will-change: opacity, transform;
+}
+
+.container.hidden {
+  opacity: 0 !important;
+  transform: translateX(-10px) rotateY(5deg) scale(0.99) !important;
+  pointer-events: none;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.container:not(.hidden) {
+  opacity: 1;
+  transform: translateX(0) rotateY(5deg) scale(1);
+}
+
+/* No decorative ::before / ::after */
+.container::before {
+  display: none;
+}
+
+.container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: none !important;
+}
+
+/* Particles - hidden in F1 theme */
+.particles-bg {
+  display: none !important;
+}
+
+/* Status variants (keep classes for JS) */
+.container.status-red,
+.container.top-user,
+.container.vip-user,
+.container.admin-user,
+.container.ranked-user {
+  opacity: 1;
+  transform: translateX(0) rotateY(5deg) scale(1);
+}
+
+/* ===========================================
+   STATUS BAR - Race Header Strip
+   =========================================== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--f1-black);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  border-radius: 8px 8px 0 0;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--f1-gray-400);
+  border-radius: 50%;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.status-text {
+  color: var(--f1-gray-300);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.status-divider {
+  display: none;
+}
+
+.status-code {
+  display: block;
+  color: var(--f1-red);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Status Bar variants */
+.container.status-red .status-bar {
+  border-bottom: 2px solid var(--f1-red);
+}
+
+.container.status-red .status-dot {
+  background: var(--f1-red);
+}
+
+/* ===========================================
+   HEADER - Driver Card
+   =========================================== */
+.header {
+  padding: 14px 16px 16px;
+  position: relative;
+  background: transparent;
+  min-height: 158px;
+  height: 158px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ===========================================
+   USER IDENTITY - Driver Name
+   =========================================== */
+.user-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  overflow: hidden;
+}
+
+.user-identity__icon {
+  display: none;
+  height: 32px;
+  width: auto;
+  margin-right: 4px;
+  filter: none;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.user-identity__name,
+.driver-name {
+  margin: 0;
+  font-family: "Outfit", "Titillium Web", sans-serif;
+  font-weight: 900;
+  font-size: var(--username-size);
+  color: var(--f1-white);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: none;
+  position: relative;
+  white-space: nowrap;
+  line-height: 1.6;
+  border-right: none;
+  height: 1.6em;
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Size variants */
+.user-identity__name.small-text,
+.driver-name.small-text {
+  font-size: 1.15rem !important;
+  letter-spacing: 1.5px;
+}
+
+.user-identity__name.extra-small-text,
+.driver-name.extra-small-text {
+  font-size: 0.95rem !important;
+  letter-spacing: 1px;
+}
+
+.user-identity__badges {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: auto;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+/* ===========================================
+   BADGE STYLES - Clean F1 Tag
+   =========================================== */
+.badge,
+.user-badge {
+  display: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
+  border-radius: 4px;
+}
+
+/* VIP Badge */
+.badge.vip,
+.user-badge.vip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--f1-white);
+  background: rgba(var(--f1-red-rgb), 0.15);
+  border: 1px solid rgba(var(--f1-red-rgb), 0.4);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.badge.vip::before,
+.user-badge.vip::before {
+  content: none;
+}
+
+/* TOP Badge */
+.badge.top-user,
+.user-badge.top-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--f1-white);
+  background: var(--f1-red);
+  border: none;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  animation: none;
+}
+
+.badge.top-user::before,
+.user-badge.top-user::before {
+  content: none;
+}
+
+/* Admin Badge */
+.badge.admin,
+.user-badge.admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--f1-white);
+  background: linear-gradient(135deg, var(--f1-red), #ff2d22);
+  border: none;
+  padding: 4px 10px;
+  font-size: 10px;
+  border-radius: 4px;
+}
+
+.badge.admin::before,
+.user-badge.admin::before {
+  content: none;
+}
+
+/* Ranked Badge */
+.badge.ranked,
+.user-badge.ranked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.badge.ranked::before,
+.user-badge.ranked::before {
+  content: none;
+}
+
+/* ===========================================
+   CUSTOM USER BACKGROUNDS
+   =========================================== */
+.container.takeru-bg,
+.container.chandalf-bg,
+.container.x1lenz-bg,
+.container.manguerazo-bg,
+.container.duckcris-bg {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.container.takeru-bg {
+  background:
+    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
+    url("../img/takeru.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
+    var(--f1-black) !important;
+}
+
+.container.chandalf-bg {
+  background:
+    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
+    url("../img/chandalf.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
+    var(--f1-black) !important;
+}
+
+.container.x1lenz-bg {
+  background:
+    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
+    url("../img/x1lenz.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
+    var(--f1-black) !important;
+}
+
+.container.manguerazo-bg {
+  background:
+    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
+    url("../img/manguerazo.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
+    var(--f1-black) !important;
+}
+
+.container.duckcris-bg {
+  background:
+    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
+    url("../img/duckcris.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
+    var(--f1-black) !important;
+}
+
+.container.takeru-bg .status-bar,
+.container.takeru-bg .header,
+.container.x1lenz-bg .status-bar,
+.container.x1lenz-bg .header,
+.container.chandalf-bg .status-bar,
+.container.chandalf-bg .header,
+.container.manguerazo-bg .status-bar,
+.container.manguerazo-bg .header,
+.container.duckcris-bg .status-bar,
+.container.duckcris-bg .header {
+  background: var(--f1-black) !important;
+  z-index: 2;
+}
+
+/* ===========================================
+   RANK ICONS (Simplified)
+   =========================================== */
+[id^="rank-icon"] {
+  display: none;
+  width: 14px;
+  height: 14px;
+  background-color: var(--f1-green);
+  position: relative;
+}
+
+.icon-admin { background-color: var(--f1-red) !important; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.icon-admin::after { content: "⚡"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%); font-size: 8px; color: #000; }
+
+.icon-arasaka {
+  background-color: transparent !important;
+  background-image: url("../img/arasaka.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  clip-path: none !important;
+  box-shadow: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  transform: translateY(-2px);
+}
+
+.icon-skull { clip-path: polygon(20% 0, 80% 0, 100% 30%, 80% 100%, 20% 100%, 0 30%); }
+.icon-skull::after { content: ""; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px; background: #000; clip-path: polygon(20% 0, 80% 0, 100% 30%, 80% 100%, 20% 100%, 0 30%); }
+.icon-corp { background-color: var(--f1-yellow) !important; clip-path: polygon(20% 100%, 20% 20%, 40% 20%, 40% 10%, 60% 10%, 60% 20%, 80% 20%, 80% 100%); }
+.icon-sword { background-color: var(--f1-yellow) !important; clip-path: polygon(10% 0, 0 10%, 40% 50%, 0 90%, 10% 100%, 50% 60%, 90% 100%, 100% 90%, 60% 50%, 100% 10%, 90% 0, 50% 40%); }
+.icon-eye { border: 1px solid var(--f1-yellow); border-radius: 50%; background: transparent !important; }
+.icon-eye::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; background: var(--f1-yellow); border-radius: 50%; }
+.icon-cross { background-color: var(--f1-red) !important; clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%); }
+.icon-chip { background-color: var(--f1-green) !important; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 80% 100%, 80% 80%, 20% 80%, 20% 100%, 0% 100%, 0% 80%, 20% 80%, 20% 20%, 0% 20%); }
+.icon-oni { background-color: var(--f1-red) !important; clip-path: polygon(20% 0, 80% 0, 100% 40%, 80% 100%, 50% 80%, 20% 100%, 0 40%); }
+.icon-med { background-color: var(--f1-red) !important; clip-path: circle(50% at 50% 50%); }
+.icon-med::after { content: "+"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: #000; font-weight: bold; font-size: 10px; }
+.icon-target { border: 1px solid var(--f1-red); border-radius: 50%; background: transparent !important; display: flex; align-items: center; justify-content: center; }
+.icon-target::before { content: ""; width: 100%; height: 1px; background: var(--f1-red); position: absolute; }
+.icon-target::after { content: ""; height: 100%; width: 1px; background: var(--f1-red); position: absolute; }
+.icon-gun { background-color: var(--f1-yellow) !important; clip-path: polygon(0 0, 70% 0, 100% 30%, 100% 60%, 70% 60%, 70% 100%, 30% 100%, 30% 30%, 0 30%); }
+.icon-tech { background-color: var(--text-dim) !important; clip-path: polygon(0 0, 50% 0, 100% 50%, 50% 100%, 0 100%, 0 50%, 25% 25%); }
+
+/* ===========================================
+   USER ROLE STYLES
+   =========================================== */
+.container.vip-user {
+  border-left: 3px solid var(--f1-red);
+  border-radius: 0 8px 8px 0;
+}
+
+.container.vip-user .user-identity__name,
+.container.vip-user .driver-name {
+  color: var(--f1-white) !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+.container.top-user {
+  border-left: 3px solid var(--f1-red);
+  border-radius: 0 8px 8px 0;
+}
+
+.container.top-user .user-identity__name,
+.container.top-user .driver-name {
+  color: var(--f1-white);
+  text-shadow: none;
+}
+
+.container.top-user .quote {
+  border-left: none;
+}
+
+.container.admin-user {
+  border-left: 3px solid var(--f1-red);
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.container.admin-user .user-identity__name,
+.container.admin-user .driver-name {
+  color: var(--f1-white) !important;
+  text-shadow: none !important;
+}
+
+.container.admin-user .user-identity__icon {
+  filter: none;
+}
+
+.container.admin-user .status-bar {
+  background: var(--f1-black);
+  border-bottom: 2px solid var(--f1-red);
+}
+
+.container.admin-user .status-text {
+  color: var(--f1-red);
+}
+
+.container.ranked-user {
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0 8px 8px 0;
+}
+
+.container.ranked-user .user-identity__name,
+.container.ranked-user .driver-name {
+  color: var(--text-bright);
+  text-shadow: none;
+}
+
+/* Status Red message styling */
+.container.status-red .quote {
+  color: #fff;
+}
+
+/* ===========================================
+   HEADER DECORATIONS
+   =========================================== */
+.watch-time-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: rgba(var(--f1-green-rgb), 0.08);
+  border: 1px solid rgba(var(--f1-green-rgb), 0.3);
+  color: var(--f1-green);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.watch-time-container .label {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-right: 2px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  margin-top: 5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+/* ===========================================
+   DATA STREAM - Divider Line
+   =========================================== */
+.data-stream {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  width: 100%;
+  margin: 0;
+}
+
+.data-stream::before,
+.stream-line,
+.stream-line::after {
+  display: none;
+}
+
+/* ===========================================
+   MESSAGE - Main Content
+   =========================================== */
+.quote {
+  padding: 18px 16px;
+  min-height: 100px;
+  flex: 1;
+  overflow: hidden;
+  display: block;
+  font-size: var(--message-size);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Titillium Web", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  line-height: 1.65;
+  border-left: none !important;
+  border-right: none;
+  position: relative;
+  background: transparent;
+}
+
+/* No quote marks */
+.quote::before,
+.quote::after {
+  display: none;
+}
+
+.quote strong {
+  color: var(--f1-red);
+  font-weight: 700;
+}
+
+/* ===========================================
+   EMOTES
+   =========================================== */
+.emote-img {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 3px;
+  height: 1.5em !important;
+  width: auto !important;
+  filter: none;
+}
+
+.quote.emote-only::after {
+  display: none;
+}
+
+.quote.emote-only {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quote.emote-large .emote-img {
+  height: 3.5em !important;
+}
+
+.quote.emote-medium .emote-img {
+  height: 2.5em !important;
+}
+
+/* ===========================================
+   DECRYPTION ANIMATION (Simplified)
+   =========================================== */
+.decrypting {
+  font-family: "JetBrains Mono", monospace !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--f1-green) !important;
+  border-right: 2px solid var(--f1-green);
+  background: rgba(var(--f1-green-rgb), 0.03);
+  line-height: 1.6 !important;
+}
+
+.user-identity__name.decrypting,
+.driver-name.decrypting {
+  height: 1.6em !important;
+}
+
+.container:has(.decrypting) .equalizer {
+  opacity: 0;
+}
+
+/* ===========================================
+   FOOTER
+   =========================================== */
+.footer-tech {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: transparent !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+}
+
+.tech-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tech-line.left .bracket {
+  color: var(--f1-gray-400);
+}
+
+.tech-line.left .tech-data {
+  color: var(--f1-gray-300);
+  letter-spacing: 0.5px;
+}
+
+.tech-line.right {
+  color: var(--f1-green);
+  display: none;
+}
+
+.container.idle-mode .tech-line.right {
+  display: flex;
+}
+
+.tech-data {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.bracket {
+  color: var(--f1-gray-400);
+  opacity: 0.5;
+  font-size: 10px;
+}
+
+.ping-indicator {
+  width: 5px;
+  height: 5px;
+  background: var(--f1-green);
+  border-radius: 50%;
+  animation: pingPulse 1.5s ease-in-out infinite;
+}
+
+/* ===========================================
+   CUSTOM USER IMAGES
+   =========================================== */
+#custom-user-image img {
+  display: block;
+  max-height: 55px;
+  position: relative;
+  border-radius: 4px;
+}
+
+.admin-user #custom-user-image img {
+  border: 1px solid rgba(var(--f1-red-rgb), 0.4);
+}
+
+.top-user #custom-user-image img {
+  border: 1px solid rgba(var(--f1-red-rgb), 0.4);
+}
+
+.vip-user #custom-user-image img {
+  border: 1px solid rgba(var(--f1-green-rgb), 0.4);
+}
+
+/* ===========================================
+   XP SYSTEM - Timing Bar Style
+   =========================================== */
+.xp-display,
+.xp-section {
+  position: relative;
+  padding: 5px 0;
+  margin: 0 -16px;
+  width: calc(100% + 32px);
+  height: auto;
+  min-height: 60px;
+  overflow: visible;
+}
+
+.xp-bar,
+.xp-bar-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Level Container - Clean F1 badge */
+.xp-bar__level,
+.xp-level-container {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  background: var(--f1-red);
+  padding: 4px 12px;
+  clip-path: none;
+  border-radius: 4px;
+  min-width: 56px;
+  transform: translateY(-8px);
+}
+
+.xp-bar__level-label,
+.xp-level-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1px;
+}
+
+.xp-bar__level-value,
+.xp-level-value {
+  font-family: "Outfit", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--f1-white);
+  line-height: 1;
+}
+
+/* Progress Container */
+.xp-bar__progress,
+.xp-progress-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  transform: translateY(-4px);
+}
+
+/* Track */
+.xp-bar__track,
+.xp-progress-bar {
+  position: relative;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+/* Ghost & Fill */
+.xp-bar__ghost,
+.xp-bar__fill,
+.xp-progress-ghost,
+.xp-progress-fill,
+.xp-progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
+.xp-bar__ghost,
+.xp-progress-ghost {
+  width: 0%;
+  background: rgba(255, 255, 255, 0.2) !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  z-index: 1;
+  transition: none !important;
+  border-radius: 3px;
+}
+
+.xp-bar__fill,
+.xp-progress-fill {
+  width: 0%;
+  background: var(--f1-red) !important;
+  background-size: initial !important;
+  animation: none !important;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  box-shadow: none;
+  overflow: hidden;
+  position: relative;
+  border-radius: 3px;
+}
+
+.xp-bar__fill::after,
+.xp-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+  animation: none;
+}
+
+@keyframes liquidFlow {
+  0%, 100% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+}
+
+@keyframes liquidPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.xp-progress-glow {
+  display: none;
+}
+
+/* Progress Text */
+.xp-bar__text,
+.xp-progress-text {
+  display: flex;
+  gap: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.xp-bar__current,
+.xp-current {
+  color: var(--f1-white);
+  font-weight: 600;
+}
+
+.xp-bar__divider,
+.xp-divider {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.xp-bar__next,
+.xp-next {
+  color: var(--f1-gray-300);
+}
+
+.xp-bar__suffix,
+.xp-suffix {
+  color: var(--f1-red);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* XP Gain */
+.xp-bar__gain,
+.xp-gain-container {
+  position: relative;
+  min-width: 40px;
+  height: 100%;
+}
+
+.xp-gain-indicator {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(0);
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--f1-yellow);
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.xp-gain-indicator.show {
+  opacity: 1;
+  transform: translateY(-120%);
+  animation: none;
+}
+
+.xp-gain-indicator.fade-out {
+  opacity: 0;
+}
+
+/* XP Info */
+.xp-info,
+.xp-title-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 5px;
+  padding-left: 5px;
+}
+
+.xp-info__title,
+.xp-title-text {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.xp-title-icon {
+  display: none !important;
+}
+
+/* ===========================================
+   XP LEVEL UP - Clean Alert
+   =========================================== */
+.xp-levelup,
+.xp-levelup-inline {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--f1-red);
+  clip-path: none;
+  border-radius: 4px;
+  opacity: 0;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+
+.xp-levelup.show,
+.xp-levelup-inline.show {
+  animation: levelUpSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.xp-levelup.hiding,
+.xp-levelup-inline.hiding {
+  animation: levelUpSlideOut 0.3s ease-in forwards;
+}
+
+@keyframes levelUpSlideIn {
+  0% { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes levelUpSlideOut {
+  0% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(0); }
+}
+
+.xp-levelup__star,
+.levelup-star {
+  font-size: 14px;
+  color: var(--f1-white);
+  background: rgba(255, 255, 255, 0.2);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.xp-levelup__text,
+.levelup-text {
+  font-family: "Outfit", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--f1-white);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.xp-levelup__chevrons,
+.levelup-chevrons {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: bold;
+}
+
+.xp-levelup__number,
+.levelup-number {
+  font-family: "Outfit", monospace;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--f1-red);
+  background: var(--f1-white);
+  padding: 2px 12px;
+  line-height: 1.2;
+  border-radius: 3px;
+}
+
+/* Level Up Widget Effect */
+.container.level-up-effect {
+  animation: containerLevelUp 0.5s ease-out;
+}
+
+@keyframes containerLevelUp {
+  0%, 100% { filter: brightness(1); }
+  30% { filter: brightness(1.15); }
+}
+
+/* ===========================================
+   STREAK STYLES
+   =========================================== */
+.xp-info__streak,
+.xp-streak {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-left: auto;
+  padding-right: 5px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+}
+
+.xp-streak::before,
+.xp-achievements::before {
+  content: none;
+}
+
+.streak-label {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+
+.streak-days {
+  color: var(--f1-red);
+  font-size: 13px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.streak-mult {
+  color: var(--f1-yellow);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.streak-mult:not([style*="opacity: 0.5"]) {
+  animation: none;
+}
+
+@keyframes mult-pulse {
+  0%, 100% { opacity: 1; }
+}
+
+/* ===========================================
+   ACHIEVEMENT BAR
+   =========================================== */
+.xp-achievements {
+  display: none;
+  justify-content: flex-start !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 100%;
+}
+
+.achievement-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.achievement-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--xp-text-secondary) !important;
+  text-shadow: none !important;
+  background: none !important;
+  padding-left: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.achievement-bar-track {
+  height: 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: none !important;
+  border-radius: 3px;
+  flex-grow: 1 !important;
+  min-width: 50px !important;
+  width: auto !important;
+  margin: 0 8px !important;
+}
+
+.achievement-bar-fill {
+  background: var(--f1-red) !important;
+  background-size: initial !important;
+  box-shadow: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  border-radius: 3px;
+}
+
+.achievement-bar-text {
+  color: rgba(255, 255, 255, 0.5) !important;
+  text-shadow: none !important;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  min-width: fit-content !important;
+  line-height: 1 !important;
+}
+
+#xp-achievements-container-wrapper {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  padding: 0 16px;
+  padding-bottom: 6px;
+  box-sizing: border-box;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ===========================================
+   NETWORK ACTIVITY
+   =========================================== */
+.network-activity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.net-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 7px;
+  color: var(--f1-gray-400);
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+}
+
+.net-led {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.05s ease-out, box-shadow 0.05s ease-out;
+  position: relative;
+}
+
+.net-led:not(.active) {
+  transition: background 0.6s ease-in, box-shadow 0.6s ease-in;
+}
+
+.net-led.rx.active {
+  background: var(--f1-green) !important;
+  box-shadow: 0 0 4px var(--f1-green) !important;
+}
+
+.net-led.tx.active {
+  background: var(--f1-red) !important;
+  box-shadow: 0 0 4px var(--f1-red) !important;
+}
+
+/* ===========================================
+   GOLD MODE (Subscriber)
+   =========================================== */
+.container.gold-mode-active .xp-bar__level,
+.container.gold-mode-active .xp-level-container {
+  background: linear-gradient(135deg, #b8860b, #daa520, #f0d060, #daa520, #b8860b) !important;
+  border: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.container.gold-mode-active .xp-bar__level::after,
+.container.gold-mode-active .xp-level-container::after {
+  display: none;
+}
+
+.container.gold-mode-active .xp-bar__level-label,
+.container.gold-mode-active .xp-level-label {
+  color: #1a1200 !important;
+  font-weight: 800 !important;
+  text-shadow: none !important;
+  z-index: 2;
+}
+
+.container.gold-mode-active .xp-bar__level-value,
+.container.gold-mode-active .xp-level-value {
+  color: #1a1200 !important;
+  text-shadow: none !important;
+  font-weight: 900 !important;
+  z-index: 2;
+}
+
+.container.gold-mode-active .xp-bar__fill,
+.container.gold-mode-active .xp-progress-fill {
+  background: linear-gradient(90deg, #b8860b, #daa520, #f0d060, #daa520, #b8860b) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.container.gold-mode-active .badge,
+.container.gold-mode-active .user-badge {
+  background: rgba(218, 165, 32, 0.15) !important;
+  border: 1px solid rgba(218, 165, 32, 0.5) !important;
+  border-left: 3px solid #daa520 !important;
+  color: #f0d060 !important;
+  box-shadow: none !important;
+  border-radius: 4px;
+}
+
+.container.gold-mode-active .user-identity__icon {
+  filter: none !important;
+  background: transparent !important;
+}
+
+.container.gold-mode-active .status-text,
+.container.gold-mode-active .xp-info__title,
+.container.gold-mode-active .xp-title-text {
+  color: #daa520 !important;
+  text-shadow: none;
+}
+
+@keyframes goldCircuitryFlow {
+  0%, 100% { background-position: 0% 50%; }
+}
+
+@keyframes goldPulse {
+  0%, 100% { opacity: 1; }
+}
+
+/* ===========================================
+   BRO NOTIFICATION
+   =========================================== */
+.bro-notification {
+  margin-top: 8px;
+  background: var(--f1-gray-700);
+  border: 1px solid rgba(var(--f1-yellow-rgb), 0.2);
+  border-left: 3px solid var(--f1-yellow);
+  padding: 8px 12px;
+  position: relative;
+  overflow: hidden;
+  animation: slideInLeft 0.4s ease forwards;
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.bro-notification.hiding {
+  opacity: 0;
+  transform: translateX(-15px);
+  transition: all 0.4s ease;
+}
+
+.bro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.bro-title {
+  color: var(--f1-yellow);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bro-count {
+  color: #fff;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.bro-progress-container {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bro-progress-fill {
+  height: 100%;
+  background: var(--f1-yellow);
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+/* ===========================================
+   STREAK OWNER BADGE
+   =========================================== */
+.streak-owner-badge {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ===========================================
+   GLITCH FX (Disabled in F1 theme)
+   =========================================== */
+.fx-glitch {
+  animation: none;
+}
+
+@keyframes fx-glitch-anim {
+  0%, 100% { transform: none; }
+}
+
+/* ===========================================
+   RECONNECTED TAG
+   =========================================== */
+.reconnected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--f1-green);
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+  padding: 2px 8px;
+  background: rgba(var(--f1-green-rgb), 0.06);
+  border-left: 2px solid rgba(var(--f1-green-rgb), 0.4);
+  border-radius: 3px;
+}
+
+.reconnected-icon {
+  font-size: 12px;
+  color: var(--f1-green);
+}
+
+.reconnected-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===========================================
+   CONTAINER SHAKE (Minimal)
+   =========================================== */
+@keyframes widget-shake {
+  0%, 100% { transform: translateX(0) scale(1) !important; }
+  25% { transform: translateX(-1px) scale(1) !important; }
+  75% { transform: translateX(1px) scale(1) !important; }
+}
+
+.container.shake-impact {
+  animation: widget-shake 0.35s ease-in-out;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+@media (max-width: 400px) {
+  :root {
+    --container-width: 300px;
+    --username-size: 1.2rem;
+    --message-size: 1.1rem;
+  }
+
+  .quote {
+    padding: 14px;
+    min-height: 80px;
+  }
+
+  .header {
+    padding: 12px;
+  }
+}
+
+/* Hide popup legacy */
+.level-up-popup {
+  display: none !important;
+}
+
+/* ===========================================
+   CONTAINER > * z-index (from base)
+   =========================================== */
+.container > *:not(.container::before):not(.container::after) {
+  position: relative;
+}
