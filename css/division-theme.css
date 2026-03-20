@@ -1,0 +1,388 @@
+/* ===========================================
+   THE DIVISION 2 HUD - CHAT WIDGET THEME
+   Rebuilt from Scratch : The Authentic SHD Style
+   =========================================== */
+
+/* === TYPOGRAPHY === */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+/* === DESIGN TOKENS === */
+:root {
+  /* SHD Colors */
+  --div-orange: #fca02d;      /* Slightly softer, more glowing ISAC orange */
+  --div-orange-rgb: 252, 160, 45;
+  --div-white: #e6e6e6;
+  --div-black: #050505;
+  --div-gray-panel: rgba(15, 15, 20, 0.55);
+  --div-gray-border: rgba(255, 255, 255, 0.15);
+  
+  /* Status Colors */
+  --div-red: #fca02d; /* OVERRIDDEN: User wants all reds to be orange in this theme */
+  --div-red-rgb: 252, 160, 45;
+  --div-green: #3cff8c;
+  --div-blue: #00bfff;
+
+  /* App Bindings (Backward compat to ensure JS logic works) */
+  --cyber-red: var(--div-orange);
+  --cyber-yellow: var(--div-orange);
+  --cyber-cyan: var(--div-orange);
+  --f1-red: var(--div-orange);
+  --f1-green: var(--div-orange);
+  --f1-dark: rgba(10, 10, 12, 0.95);
+  --f1-gray-800: var(--div-gray-panel);
+  --f1-gray-700: var(--div-gray-panel);
+
+  /* Fonts */
+  --font-main: 'Rajdhani', sans-serif;
+  --font-header: 'Bebas Neue', cursive;
+  --font-digital: 'Share Tech Mono', monospace;
+}
+
+/* === RESET & BASE === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: transparent;
+  color: var(--div-white);
+  font-family: var(--font-main);
+  overflow: hidden;
+}
+
+/* === UTILITY === */
+.hidden { opacity: 0; pointer-events: none; }
+
+/* === KEYFRAMES === */
+@keyframes shdPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; box-shadow: 0 0 5px var(--div-orange); } }
+@keyframes shdGlitchText { 0% { opacity: 1; transform: translateX(0); } 30% { transform: translateX(-1px); } 35% { transform: translateX(2px); opacity: 0.7; } 40% { transform: translateX(0); opacity: 1; } }
+@keyframes svgRingRotate { 100% { transform: rotate(360deg); } }
+@keyframes svgRingDraw { 0% { stroke-dasharray: 0, 300; } 100% { stroke-dasharray: 260, 40; } }
+
+/* ===========================================
+   3D PERSPECTIVE WRAPPER
+   Taller on Left, Shorter on Right
+   =========================================== */
+.container-wrapper {
+  position: absolute;
+  left: 0;
+  bottom: 20%;
+  perspective: 700px;
+  perspective-origin: left center;
+  transform: scale(1.27);
+  transform-origin: bottom left;
+}
+
+/* ===========================================
+   MAIN SHD PANEL
+   Highly transparent, wireframe structure
+   =========================================== */
+.container {
+  width: 360px;
+  height: 405px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 10, 12, 0.15); /* 15% glass opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* 3D Geometry */
+  transform: translateX(0) rotateY(6deg) scale(1) !important;
+  transform-origin: left center;
+  
+  /* Minimalist boundary */
+  border-left: 1px solid rgba(var(--div-orange-rgb), 0.5);
+  box-shadow: none; /* Removed inner glows for flat minimalism */
+}
+
+/* Grid overlay styling removed per user request */
+
+/* ===========================================
+   SHD TACTICAL CORNERS - REMOVED FOR MINIMALISM
+   =========================================== */
+.shd-corner { display: none; }
+
+/* ===========================================
+   ISAC STATUS LINE (Top Subheader)
+   =========================================== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  padding: 6px 15px;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.2);
+  font-family: var(--font-digital);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  background: transparent;
+  z-index: 5;
+  position: relative;
+}
+
+.network-activity {
+  display: flex;
+  gap: 4px;
+  margin-right: 12px;
+}
+
+.net-led { width: 4px; height: 4px; border-radius: 50%; }
+.net-led.rx { background: var(--div-orange); animation: shdPulse 0.5s infinite; }
+.net-led.tx { background: #fff; animation: shdPulse 0.8s infinite; opacity: 0.3; }
+
+.status-text { color: var(--div-orange); letter-spacing: 1px; }
+.status-divider { margin: 0 8px; opacity: 0.3; }
+.status-code { margin-left: auto; letter-spacing: 1px; }
+
+/* ===========================================
+   HEADER (USER DATA & SHD NODE)
+   =========================================== */
+.header {
+  padding: 15px 20px;
+  z-index: 10;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Avatar Subsystem */
+.user-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.shd-avatar-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.user-identity__icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.shd-avatar-ring {
+  position: absolute;
+  top: -4px; left: -4px;
+  width: calc(100% + 8px); height: calc(100% + 8px);
+  fill: none;
+  stroke: var(--div-orange);
+  stroke-width: 1.5;
+  stroke-dasharray: 240, 60;
+  stroke-linecap: square;
+  transform-origin: center;
+  animation: svgRingRotate 15s linear infinite;
+  opacity: 0.6;
+}
+
+.user-identity__name {
+  font-family: var(--font-header);
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  color: var(--div-white);
+  line-height: 1;
+}
+
+/* Badges */
+.user-identity__badges { display: flex; gap: 5px; margin-left: auto; }
+.badge {
+  font-family: var(--font-digital);
+  font-size: 9px;
+  padding: 0;
+  color: var(--div-orange);
+  background: transparent;
+  letter-spacing: 1px;
+}
+
+/* ===========================================
+   XP SYSTEM TELEMENTRY
+   =========================================== */
+.xp-display {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Inline level up notice */
+.xp-levelup {
+  display: none;
+}
+.xp-levelup.active {
+  display: flex;
+  font-family: var(--font-digital);
+  font-size: 10px;
+  color: var(--div-orange);
+  background: transparent;
+  padding: 0;
+  border: none;
+  margin-bottom: 2px;
+}
+
+.xp-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.xp-bar__level {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.xp-bar__level-label {
+  font-family: var(--font-digital);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.xp-bar__level-value {
+  font-family: var(--font-header);
+  font-size: 1.8rem;
+  color: var(--div-orange);
+  line-height: 1;
+}
+
+.xp-bar__progress {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.xp-bar__track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  width: 100%;
+}
+
+.xp-bar__fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: var(--div-orange);
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.1, 0.7, 0.1, 1);
+  box-shadow: none;
+}
+
+.xp-bar__text {
+  align-self: flex-end;
+  font-family: var(--font-digital);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+}
+
+.xp-bar__current { color: var(--div-white); }
+.xp-bar__dividend { margin: 0 2px; }
+
+.xp-info {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.xp-info__title {
+  font-family: var(--font-digital);
+  font-size: 10px;
+  color: var(--div-orange);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.xp-info__streak {
+  font-family: var(--font-digital);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ===========================================
+   COMMUNICATION FEED / CHAT MESSAGE
+   =========================================== */
+.quote {
+  padding: 10px 20px;
+  flex: 1;
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.35;
+  position: relative;
+  z-index: 10;
+  letter-spacing: 0.5px;
+  /* Thin vertical line separating chat text */
+  border-left: 1px dotted rgba(255, 255, 255, 0.2);
+  margin-left: 20px;
+  margin-top: 5px;
+  animation: shdGlitchText 0.4s ease-out forwards;
+}
+
+/* ===========================================
+   FOOTER (ACHIEVEMENT COUNT & WATCH TIME)
+   =========================================== */
+.xp-achievements-container {
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: none;
+  z-index: 10;
+  position: relative;
+  background: transparent;
+}
+
+.xp-achievements {
+  font-family: var(--font-digital);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+#watch-time-container {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-digital);
+  font-size: 9px;
+  color: var(--div-orange);
+  padding: 0;
+  border: none;
+}
+
+/* ===========================================
+   ACHIEVEMENT NOTIFICATIONS (Internal Wrapper)
+   =========================================== */
+.achievement-notifications {
+  position: absolute;
+  bottom: 40px; 
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+}
+
+/* ===========================================
+   CUSTOM USER BACKGROUNDS (Compat)
+   Disabled in Division 2 theme to preserve glass blur effect
+   =========================================== */
+.container[class*="-bg"] {
+  background: rgba(10, 10, 12, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.container.status-red { border-left-color: var(--div-red); }
+.container.status-red .shd-avatar-ring { stroke: var(--div-red); filter: none; }
+.container.status-red .xp-bar__fill { background: var(--div-red); box-shadow: none; }
+.container.status-red .net-led.rx { background: var(--div-red); }
+.container.status-red .xp-bar__level-value { color: var(--div-red); }

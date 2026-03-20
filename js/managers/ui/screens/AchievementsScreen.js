@@ -16,8 +16,31 @@ export default class AchievementsScreen extends BaseScreen {
         const { data } = screenData;
 
         let recentHtml = '';
-        if (data.recent && data.recent.length > 0) {
-            data.recent.slice(0, 3).forEach(levelUp => {
+        
+        // Render Achievements first (since the user likely cares more about them here)
+        if (data.recentAchievements && data.recentAchievements.length > 0) {
+            recentHtml += `
+                <div class="section-label wide-spacing">ÚLTIMOS LOGROS</div>
+                <div class="idle-list-container">
+            `;
+            data.recentAchievements.slice(0, 3).forEach(ach => {
+                recentHtml += `
+                    <div class="recent-levelup-item achievement-item">
+                        <span class="levelup-user">${UIUtils.escapeHTML(ach.username)}</span>
+                        <div class="levelup-badge achievement-badge">${UIUtils.escapeHTML(ach.achievement.name)}</div>
+                    </div>
+                `;
+            });
+            recentHtml += `</div>`;
+        }
+
+        // Render Level Ups if space permits or if achievements are empty
+        if (data.recentLevelUps && data.recentLevelUps.length > 0) {
+             recentHtml += `
+                <div class="section-label wide-spacing" style="margin-top: 10px;">ÚLTIMOS ASCENSOS</div>
+                <div class="idle-list-container">
+            `;
+            data.recentLevelUps.slice(0, 3).forEach(levelUp => {
                 recentHtml += `
                     <div class="recent-levelup-item">
                         <span class="levelup-user">${UIUtils.escapeHTML(levelUp.username)}</span>
@@ -25,7 +48,10 @@ export default class AchievementsScreen extends BaseScreen {
                     </div>
                 `;
             });
-        } else {
+            recentHtml += `</div>`;
+        }
+
+        if (!recentHtml) {
             recentHtml = '<div class="empty-message small">NINGUNO RECIENTEMENTE</div>';
         }
 
@@ -41,7 +67,6 @@ export default class AchievementsScreen extends BaseScreen {
                 </div>
             </div>
             <div class="recent-section animate-hidden animate-in delay-4">
-                <div class="section-label wide-spacing">ÚLTIMOS ASCENSOS</div>
                 ${recentHtml}
             </div>
         `;

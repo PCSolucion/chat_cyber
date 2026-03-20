@@ -264,7 +264,7 @@ body {
 
 .container {
   width: var(--container-width);
-  background: var(--f1-black);
+  background: rgba(var(--f1-black-rgb), 0.99);
   position: relative;
   overflow: visible;
   display: flex;
@@ -412,7 +412,7 @@ body {
 .header {
   padding: 14px 16px 16px;
   position: relative;
-  background: linear-gradient(rgba(var(--f1-black-rgb), 0.6), rgba(var(--f1-black-rgb), 0.6)), url("../img/f1 grid.png") center center / cover no-repeat;
+  background: transparent;
   min-height: 158px;
   height: 158px;
   display: flex;
@@ -1199,7 +1199,8 @@ body {
   gap: 10px;
   margin-top: 8px;
   margin-bottom: 5px;
-  padding-left: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .xp-info__title,
@@ -1317,15 +1318,16 @@ body {
 .xp-streak {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  justify-content: flex-start;
+  gap: 0;
   margin-left: auto;
-  padding-right: 5px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  letter-spacing: 0.5px;
+  font-family: 'Share Tech Mono', monospace;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  height: 22px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .xp-streak::before,
@@ -1334,26 +1336,45 @@ body {
 }
 
 .streak-label {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 10px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-right: 2px;
+  padding: 0 10px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 22px;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .streak-days {
   color: var(--f1-red);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  margin-right: 6px;
+  padding: 0 10px;
+  height: 100%;
+  background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 22px;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .streak-mult {
-  color: var(--f1-yellow);
-  font-size: 13px;
-  font-weight: 700;
+  color: #fff;
+  background: #8A29A4;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 0 10px;
+  height: 100%;
   transition: all 0.3s ease;
+  line-height: 22px;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .streak-mult:not([style*="opacity: 0.5"]) {
@@ -1368,12 +1389,13 @@ body {
    ACHIEVEMENT BAR
    =========================================== */
 .xp-achievements {
-  display: none;
+  display: flex;
   justify-content: flex-start !important;
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
   width: 100%;
+  margin-top: 5px;
 }
 
 .achievement-bar-container {

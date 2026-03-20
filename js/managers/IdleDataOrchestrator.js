@@ -69,14 +69,8 @@ export default class IdleDataOrchestrator {
           data: {
             levelUps: displayStats.totalLevelUps || 0,
             achievements: displayStats.totalAchievements || 0,
-            recent: (displayStats.recentLevelUps || [])
-              .reduce((unique, item) => {
-                if (!unique.some((u) => u.username === item.username)) {
-                  unique.push(item);
-                }
-                return unique;
-              }, [])
-              .slice(0, 3),
+            recentLevelUps: (displayStats.recentLevelUps || []).slice(0, 3),
+            recentAchievements: (displayStats.recentAchievements || []).slice(0, 3),
           },
           isValid: (s) => s.data.levelUps > 0 || s.data.achievements > 0,
         },
