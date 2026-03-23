@@ -4,7 +4,7 @@
    =========================================== */
 
 /* === TYPOGRAPHY === */
-@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap");
 
 
 /* === DESIGN TOKENS === */
@@ -54,7 +54,7 @@
   --bg-dark: var(--f1-black);
   --bg-panel: var(--f1-dark);
   --bg-overlay: rgba(21, 21, 30, 0.85);
-  --bg-solid: rgba(26, 26, 46, 0.95);
+  --bg-solid: rgba(26, 26, 46, 0.99);
 
   /* Text */
   --text-bright: var(--f1-white);
@@ -264,7 +264,7 @@ body {
 
 .container {
   width: var(--container-width);
-  background: rgba(var(--f1-black-rgb), 0.99);
+  background: rgba(var(--f1-black-rgb), 0.98);
   position: relative;
   overflow: visible;
   display: flex;
@@ -638,7 +638,7 @@ body {
 .container.manguerazo-bg .header,
 .container.duckcris-bg .status-bar,
 .container.duckcris-bg .header {
-  background: var(--f1-black) !important;
+  background: rgba(var(--f1-black-rgb), 0.99) !important;
   z-index: 2;
 }
 
@@ -734,7 +734,7 @@ body {
 
 .container.admin-user .status-bar {
   background: var(--f1-black);
-  border-bottom: 2px solid rgb(49, 49, 49);
+  border-bottom: 2px solid rgb(31, 31, 37);
 }
 
 .container.admin-user .status-text {

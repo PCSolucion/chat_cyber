@@ -110,7 +110,7 @@
 /* Data Core */
 .hud-data-core {
   flex: 1;
-  background: rgba(21, 21, 30, 0.95);
+  background: rgba(21, 21, 30, 0.99);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom: 2px solid var(--f1-red, #e10600);
   display: flex;
