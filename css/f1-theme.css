@@ -6,6 +6,20 @@
 /* === TYPOGRAPHY === */
 @import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap");
 
+@font-face {
+  font-family: "Formula1";
+  src: url("../fonts/Formula1-Regular_web_0.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Formula1";
+  src: url("../fonts/Formula1-Display-Bold-Bold.ttf.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+
 
 /* === DESIGN TOKENS === */
 :root {
@@ -13,8 +27,8 @@
   --f1-red: #d80d0d;
   --f1-red-rgb: 216, 13, 13;
   --f1-white: #ffffff;
-  --f1-black: #15151e;
-  --f1-black-rgb: 21, 21, 30;
+  --f1-black: #0f1014;
+  --f1-black-rgb: 15, 16, 20;
   --f1-dark: #1a1a2e;
   --f1-gray-100: #f0f0f0;
   --f1-gray-200: #c8c8c8;
@@ -54,7 +68,7 @@
   --bg-dark: var(--f1-black);
   --bg-panel: var(--f1-dark);
   --bg-overlay: rgba(21, 21, 30, 0.85);
-  --bg-solid: rgba(26, 26, 46, 0.99);
+  --bg-solid: rgba(15, 16, 20, 0.99);
 
   /* Text */
   --text-bright: var(--f1-white);
@@ -67,13 +81,13 @@
   --glow-red: none;
 
   /* VIP */
-  --vip-gold: var(--f1-yellow);
+  --vip-gold: #8A29A4;
   --vip-glow: none;
 
   /* Dimensions */
   --container-width: 340px;
   --username-size: 1.1rem;
-  --message-size: 1.25rem;
+  --message-size: 1.1rem;
 
   /* Animation */
   --transition-speed: 0.3s;
@@ -84,13 +98,13 @@
   --xp-primary-rgb: var(--f1-red-rgb);
   --xp-primary-dark: #b00500;
   --xp-primary-light: #ff2d22;
-  --xp-accent: var(--f1-yellow);
+  --xp-accent: #8A29A4;
   --xp-bg: var(--f1-black);
   --xp-text: var(--f1-white);
   --xp-text-secondary: rgba(255, 255, 255, 0.5);
 
   /* Fonts */
-  --font-f1turbo: 'Share Tech Mono', monospace;
+  --font-f1turbo: "Formula1", "Titillium Web", sans-serif;
   --font-orbitron: "Outfit", "Titillium Web", sans-serif;
   --font-rajdhani: "Titillium Web", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
@@ -264,7 +278,7 @@ body {
 
 .container {
   width: var(--container-width);
-  background: rgba(var(--f1-black-rgb), 0.98);
+  background: rgba(var(--f1-black-rgb), 0.99);
   position: relative;
   overflow: visible;
   display: flex;
@@ -279,13 +293,7 @@ body {
   transform-origin: left center;
 
   /* Cyberpunk corner cuts - Bottom Right cut (subtle) */
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% calc(100% - 15px),
-    calc(100% - 15px) 100%,
-    0 100%
-  );
+  clip-path: none;
   border-radius: 8px;
 
   /* Subtle border and shadow */
@@ -385,11 +393,12 @@ body {
 
 .status-code {
   display: block;
-  color: var(--f1-red);
+  color: #8c8c8c;
+  font-family: var(--font-f1turbo);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 700;
+  font-weight: 400;
   margin-left: auto;
   white-space: nowrap;
   overflow: hidden;
@@ -399,7 +408,7 @@ body {
 
 /* Status Bar variants */
 .container.status-red .status-bar {
-  border-bottom: 2px solid var(--f1-gray-400);
+  border-bottom: 2px solid rgb(31, 31, 37);
 }
 
 .container.status-red .status-dot {
@@ -433,6 +442,10 @@ body {
   overflow: hidden;
 }
 
+.user-identity__badges {
+  display: none !important;
+}
+
 .user-identity__icon {
   display: none;
   height: 32px;
@@ -447,7 +460,10 @@ body {
 .driver-name {
   margin: 0;
   font-family: var(--font-f1turbo);
-  font-weight: 400;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-style: normal;
+  letter-spacing: -0.5px;
   font-size: var(--username-size);
   color: var(--f1-white);
   text-transform: uppercase;
@@ -583,68 +599,23 @@ body {
 }
 
 /* ===========================================
-   CUSTOM USER BACKGROUNDS
+   RANK ICONS & NUMBERS (F1 Edition)
    =========================================== */
-.container.takeru-bg,
-.container.chandalf-bg,
-.container.x1lenz-bg,
-.container.manguerazo-bg,
-.container.duckcris-bg {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+.user-identity__rank-number {
+  font-family: "Formula1", sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--f1-white);
+  padding-right: 8px;
+  min-width: 32px;
+  text-align: right;
+  margin-right: 10px;
+  line-height: 1;
 }
 
-.container.takeru-bg {
-  background:
-    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
-    url("../img/takeru.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
-    var(--f1-black) !important;
+.user-identity__rank-number:empty {
+  display: none;
 }
-
-.container.chandalf-bg {
-  background:
-    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
-    url("../img/chandalf.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
-    var(--f1-black) !important;
-}
-
-.container.x1lenz-bg {
-  background:
-    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
-    url("../img/x1lenz.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
-    var(--f1-black) !important;
-}
-
-.container.manguerazo-bg {
-  background:
-    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
-    url("../img/manguerazo.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
-    var(--f1-black) !important;
-}
-
-.container.duckcris-bg {
-  background:
-    linear-gradient(180deg, rgba(26, 26, 46, 0.8), rgba(26, 26, 46, 0.85)),
-    url("../img/duckcris.jpg") center calc(100% + 35px) / 100% 65% no-repeat,
-    var(--f1-black) !important;
-}
-
-.container.takeru-bg .status-bar,
-.container.takeru-bg .header,
-.container.x1lenz-bg .status-bar,
-.container.x1lenz-bg .header,
-.container.chandalf-bg .status-bar,
-.container.chandalf-bg .header,
-.container.manguerazo-bg .status-bar,
-.container.manguerazo-bg .header,
-.container.duckcris-bg .status-bar,
-.container.duckcris-bg .header {
-  background: rgba(var(--f1-black-rgb), 0.99) !important;
-  z-index: 2;
-}
-
-/* ===========================================
-   RANK ICONS (Simplified)
-   =========================================== */
 [id^="rank-icon"] {
   display: none;
   width: 14px;
@@ -690,8 +661,8 @@ body {
    USER ROLE STYLES
    =========================================== */
 .container.vip-user {
-  border-left: 3px solid var(--f1-red);
-  border-radius: 0 8px 8px 0;
+  border-left: none;
+  border-radius: 8px;
 }
 
 .container.vip-user .user-identity__name,
@@ -702,8 +673,8 @@ body {
 }
 
 .container.top-user {
-  border-left: 3px solid var(--f1-red);
-  border-radius: 0 8px 8px 0;
+  border-left: none;
+  border-radius: 8px;
 }
 
 .container.top-user .user-identity__name,
@@ -717,8 +688,8 @@ body {
 }
 
 .container.admin-user {
-  border-left: 3px solid var(--f1-red);
-  border-radius: 0 8px 8px 0;
+  border-left: none;
+  border-radius: 8px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
@@ -742,8 +713,8 @@ body {
 }
 
 .container.ranked-user {
-  border-left: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0 8px 8px 0;
+  border-left: none;
+  border-radius: 8px;
 }
 
 .container.ranked-user .user-identity__name,
@@ -770,8 +741,8 @@ body {
   color: var(--f1-green);
   padding: 2px 8px;
   font-size: 11px;
-  font-family: "JetBrains Mono", monospace;
-  font-weight: 600;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   border-radius: 4px;
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -787,7 +758,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.8);
   letter-spacing: 0.5px;
@@ -826,9 +798,9 @@ body {
   display: block;
   font-size: var(--message-size);
   color: rgba(255, 255, 255, 0.92);
-  font-family: "Titillium Web", sans-serif;
+  font-family: var(--font-f1turbo);
   font-weight: 400;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.1px;
   line-height: 1.65;
   border-left: none !important;
   border-right: none;
@@ -884,7 +856,8 @@ body {
    DECRYPTION ANIMATION (Simplified)
    =========================================== */
 .decrypting {
-  font-family: "JetBrains Mono", monospace !important;
+  font-family: var(--font-f1turbo) !important;
+  font-weight: 400;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--f1-green) !important;
@@ -914,8 +887,9 @@ body {
   padding: 8px 16px;
   background: transparent !important;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-f1turbo);
   font-size: 9px;
+  font-weight: 400;
 }
 
 .tech-line {
@@ -1018,7 +992,6 @@ body {
   border-radius: 0;
   min-width: 56px;
   transform: translateY(-8px);
-  margin-left: 10px;
 }
 
 .xp-bar__level-label,
@@ -1205,9 +1178,9 @@ body {
 
 .xp-info__title,
 .xp-title-text {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-f1turbo);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1321,7 +1294,8 @@ body {
   justify-content: flex-start;
   gap: 0;
   margin-left: auto;
-  font-family: 'Share Tech Mono', monospace;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 2px;
@@ -1336,45 +1310,37 @@ body {
 }
 
 .streak-label {
-  color: rgba(255, 255, 255, 0.5);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0 10px;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  line-height: 22px;
-  display: inline-block;
-  vertical-align: top;
+  display: none;
 }
 
 .streak-days {
-  color: var(--f1-red);
-  font-size: 11px;
-  font-weight: 700;
+  color: #15151e;
+  background: #36d639;
+  font-family: var(--font-f1turbo);
+  font-size: 12px !important;
+  font-weight: 400;
   padding: 0 10px;
   height: 100%;
-  background: transparent;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
-  line-height: 22px;
-  display: inline-block;
-  vertical-align: top;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 22px !important;
 }
 
 .streak-mult {
   color: #fff;
   background: #8A29A4;
-  font-size: 11px;
-  font-weight: 900;
+  font-family: var(--font-f1turbo);
+  font-size: 12px !important;
+  font-weight: 400;
   padding: 0 10px;
   height: 100%;
   transition: all 0.3s ease;
-  line-height: 22px;
-  display: inline-block;
-  vertical-align: top;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 22px !important;
 }
 
 .streak-mult:not([style*="opacity: 0.5"]) {
@@ -1411,9 +1377,8 @@ body {
 }
 
 .achievement-label {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
-  font-weight: 500;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   color: var(--xp-text-secondary) !important;
   text-shadow: none !important;
   background: none !important;
@@ -1514,7 +1479,7 @@ body {
    =========================================== */
 .container.gold-mode-active .xp-bar__level,
 .container.gold-mode-active .xp-level-container {
-  background: linear-gradient(135deg, #b8860b, #daa520, #f0d060, #daa520, #b8860b) !important;
+  background: linear-gradient(135deg, #6a1b9a, #8a29a4, #b342cc, #8a29a4, #6a1b9a) !important;
   border: none !important;
   box-shadow: none !important;
   animation: none !important;
@@ -1527,7 +1492,7 @@ body {
 
 .container.gold-mode-active .xp-bar__level-label,
 .container.gold-mode-active .xp-level-label {
-  color: #1a1200 !important;
+  color: #ffffff !important;
   font-weight: 800 !important;
   text-shadow: none !important;
   z-index: 2;
@@ -1543,17 +1508,17 @@ body {
 
 .container.gold-mode-active .xp-bar__fill,
 .container.gold-mode-active .xp-progress-fill {
-  background: linear-gradient(90deg, #b8860b, #daa520, #f0d060, #daa520, #b8860b) !important;
+  background: linear-gradient(90deg, #6a1b9a, #8a29a4, #b342cc, #8a29a4, #6a1b9a) !important;
   box-shadow: none !important;
   animation: none !important;
 }
 
 .container.gold-mode-active .badge,
 .container.gold-mode-active .user-badge {
-  background: rgba(218, 165, 32, 0.15) !important;
-  border: 1px solid rgba(218, 165, 32, 0.5) !important;
-  border-left: 3px solid #daa520 !important;
-  color: #f0d060 !important;
+  background: rgba(138, 41, 164, 0.15) !important;
+  border: 1px solid rgba(138, 41, 164, 0.5) !important;
+  border-left: 3px solid #8A29A4 !important;
+  color: #b342cc !important;
   box-shadow: none !important;
   border-radius: 4px;
 }
@@ -1566,7 +1531,7 @@ body {
 .container.gold-mode-active .status-text,
 .container.gold-mode-active .xp-info__title,
 .container.gold-mode-active .xp-title-text {
-  color: #daa520 !important;
+  color: #8A29A4 !important;
   text-shadow: none;
 }
 
@@ -1584,8 +1549,8 @@ body {
 .bro-notification {
   margin-top: 8px;
   background: var(--f1-gray-700);
-  border: 1px solid rgba(var(--f1-yellow-rgb), 0.2);
-  border-left: 3px solid var(--f1-yellow);
+  border: 1px solid rgba(138, 41, 164, 0.2);
+  border-left: 3px solid #8A29A4;
   padding: 8px 12px;
   position: relative;
   overflow: hidden;
@@ -1609,19 +1574,17 @@ body {
 }
 
 .bro-title {
-  color: var(--f1-yellow);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
+  color: #8A29A4;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .bro-count {
   color: #fff;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.9rem;
-  font-weight: bold;
+  font-family: var(--font-f1turbo);
+  font-weight: 400;
 }
 
 .bro-progress-container {
@@ -1634,7 +1597,7 @@ body {
 
 .bro-progress-fill {
   height: 100%;
-  background: var(--f1-yellow);
+  background: #8A29A4;
   width: 0%;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 2px;

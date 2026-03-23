@@ -90,9 +90,9 @@
 
 /* Label */
 .achievement-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
+  font-family: 'Formula1', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
   color: var(--f1-red, #e10600);
   text-shadow: none;
   text-transform: uppercase;
@@ -113,9 +113,9 @@
 
 /* Name */
 .achievement-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Formula1', sans-serif;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -149,9 +149,9 @@
 
 /* Description */
 .achievement-desc {
-  font-family: 'Titillium Web', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: 'Formula1', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
   overflow: hidden;
@@ -261,8 +261,8 @@
 }
 
 .achievement-progress-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-family: 'Formula1', sans-serif;
+  font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.4);
   text-align: right;
 }
@@ -426,7 +426,8 @@
   color: white;
   font-weight: 600;
   font-size: 16pt;
-  font-family: 'Titillium Web', sans-serif;
+  font-family: 'Formula1', sans-serif;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -451,7 +452,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-family: 'Outfit', 'Titillium Web', sans-serif;
+  font-family: 'Formula1', sans-serif;
   font-weight: 700;
 }
 
@@ -461,7 +462,8 @@
   color: white;
   font-weight: 700;
   font-size: 20pt;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Formula1', sans-serif;
+  font-weight: 700;
 }
 
 .gamerscore {
@@ -476,7 +478,7 @@
   color: white;
   font-size: 15pt;
   line-height: 24px;
-  font-family: 'Titillium Web', sans-serif;
+  font-family: 'Formula1', sans-serif;
 }
 
 /* Diamond / Rare */
@@ -646,7 +648,7 @@
 }
 
 .more-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Formula1', sans-serif;
   font-size: 0.7rem;
   color: var(--f1-green, #00d2be);
   background: rgba(0, 210, 190, 0.08);

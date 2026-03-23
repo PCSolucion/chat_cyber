@@ -157,7 +157,13 @@ export default class MessageProcessor {
             }
 
             this.managers.ui = new UIManager(this.config, this.services.ranking, this.services.xp, this.services.thirdPartyEmotes, this.managers.xpDisplay);
-            this.managers.idleDisplay = new IdleDisplayManager(this.config, this.services.sessionStats, this.managers.ui);
+            // Solo crear e iniciar modo idle si no estamos en el tema F1
+            const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
+            if (isF1) {
+                this.managers.idleDisplay = null;
+            } else {
+                this.managers.idleDisplay = new IdleDisplayManager(this.config, this.services.sessionStats, this.managers.ui);
+            }
             this.notificationManager = new NotificationManager(this.config, this.managers.ui);
             this.managers.notification = this.notificationManager;
         } catch (e) {
@@ -259,7 +265,11 @@ export default class MessageProcessor {
             await this.services.thirdPartyEmotes.loadEmotes().catch(e => Logger.warn('MessageProcessor', e));
         }
 
-        if (this.managers.idleDisplay) this.managers.idleDisplay.start();
+        // Solo iniciar modo idle si no estamos en el tema F1
+        const isF1Theme = !!document.querySelector('link[href*="f1-theme.css"]');
+        if (this.managers.idleDisplay && !isF1Theme) {
+            this.managers.idleDisplay.start();
+        }
 
         return {
             rankedUsers: this.services.ranking?.getTotalRankedUsers() || 0,
