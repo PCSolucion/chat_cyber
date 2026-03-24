@@ -91,27 +91,7 @@ export default class IdentityComponent {
         
         if (!iconEl) return;
 
-        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
-        
-        if (isF1) {
-            // Lógica F1: Mostrar número en lugar de icono
-            iconEl.style.display = 'none';
-            if (rankNumberEl) {
-                // Extraer número de "TOP X"
-                const rankMatch = (userRole.badge || "").match(/TOP\s*(\d+)/i);
-                let rank = rankMatch ? rankMatch[1] : "";
-                
-                // Si es ADMIN (broadcaster), mostrar 1 si no hay ranking
-                if (!rank && username.toLowerCase() === (this.config.TWITCH_CHANNEL || '').toLowerCase()) {
-                    rank = "1";
-                }
-                
-                rankNumberEl.textContent = rank ? `${rank}º` : "";
-                rankNumberEl.style.display = rank ? 'inline-block' : 'none';
-            }
-            return;
-        }
-
+        // --- Obtener Icono (Común para todos los temas) ---
         const uiConfig = this.config.UI || { RANK_ICONS: {}, SPECIAL_ICONS: {} };
         const isAdmin = username.toLowerCase() === (this.config.BROADCASTER_USERNAME || '').toLowerCase();
         
@@ -128,6 +108,24 @@ export default class IdentityComponent {
             iconEl.style.display = 'block';
         } else {
             iconEl.style.display = 'none';
+        }
+
+        // --- Lógica Específica para F1 (Número de Rango) ---
+        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
+        if (isF1 && rankNumberEl) {
+            // Extraer número de "TOP X"
+            const rankMatch = (userRole.badge || "").match(/TOP\s*(\d+)/i);
+            let rank = rankMatch ? rankMatch[1] : "";
+            
+            // Si es ADMIN (broadcaster), mostrar 1 si no hay ranking
+            if (!rank && isAdmin) {
+                rank = "1";
+            }
+            
+            rankNumberEl.textContent = rank ? rank : "";
+            rankNumberEl.style.display = rank ? 'flex' : 'none';
+        } else if (rankNumberEl) {
+            rankNumberEl.style.display = 'none';
         }
     }
 

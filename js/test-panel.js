@@ -56,6 +56,7 @@ class TestPanelController {
             this.fitPreview();
             this._attachToWidget();
             this.setupBroadcaster();
+            this.syncInitialFlags();
         });
 
         // --- DELEGATED EVENT LISTENERS (ACTION DISPATCHER) ---
@@ -94,6 +95,20 @@ class TestPanelController {
                 this.widgetFrame.src = `${theme}?mode=test`;
                 this._waitingForEvent = false;
             });
+        }
+    }
+
+    /**
+     * Sincroniza el estado inicial de los checkboxes con la ventana del widget
+     */
+    syncInitialFlags() {
+        const win = this.getWidgetWindow();
+        if (win) {
+            const keepVisibleCheckbox = document.getElementById('keep-visible-checkbox');
+            if (keepVisibleCheckbox) {
+                win.KEEP_WIDGET_VISIBLE = keepVisibleCheckbox.checked;
+                console.log('🔄 Initial synchronization - Keep Visible:', keepVisibleCheckbox.checked);
+            }
         }
     }
 

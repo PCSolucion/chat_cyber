@@ -348,7 +348,7 @@ export default class RankingSystem {
                     badge: 'TOP 1',
                     containerClass: 'top-user',
                     badgeClass: 'top-user',
-                    rankTitle: { title: 'LEGEND OF NIGHT CITY', icon: 'icon-max-tac' }
+                    rankTitle: { title: 'NIGHT CITY LEGEND', icon: 'icon-max-tac' }
                 };
             } else if (rank <= 15) {
                 result = {
@@ -356,7 +356,7 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'vip-user',
                     badgeClass: 'vip',
-                    rankTitle: { title: 'ELITE MERCENARY', icon: 'icon-fixer' }
+                    rankTitle: { title: 'SOLO', icon: 'icon-fixer' }
                 };
             } else {
                 result = {
@@ -364,7 +364,7 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'ranked-user',
                     badgeClass: 'ranked',
-                    rankTitle: { title: 'KNOWN RUNNER', icon: 'icon-tech' }
+                    rankTitle: { title: 'MERCENARY', icon: 'icon-tech' }
                 };
             }
         }

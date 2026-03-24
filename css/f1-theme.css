@@ -87,7 +87,7 @@
   /* Dimensions */
   --container-width: 340px;
   --username-size: 1.1rem;
-  --message-size: 1.1rem;
+  --message-size: 0.9rem;
 
   /* Animation */
   --transition-speed: 0.3s;
@@ -419,7 +419,7 @@ body {
    HEADER - Driver Card
    =========================================== */
 .header {
-  padding: 14px 16px 16px;
+  padding: 14px 16px 16px 8px;
   position: relative;
   background: transparent;
   min-height: 158px;
@@ -436,9 +436,10 @@ body {
 .user-identity {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-height: 40px;
+  background-color: transparent;
   overflow: hidden;
 }
 
@@ -447,10 +448,10 @@ body {
 }
 
 .user-identity__icon {
-  display: none;
-  height: 32px;
+  display: block;
+  height: 24px;
   width: auto;
-  margin-right: 4px;
+  margin-right: 0;
   filter: none;
   object-fit: contain;
   flex: 0 0 auto;
@@ -603,14 +604,19 @@ body {
    =========================================== */
 .user-identity__rank-number {
   font-family: "Formula1", sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 400;
   color: var(--f1-white);
-  padding-right: 8px;
-  min-width: 32px;
-  text-align: right;
-  margin-right: 10px;
-  line-height: 1;
+  background: var(--f1-red);
+  min-width: 40px;
+  height: 40px;
+  text-align: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  line-height: 1 !important;
+  padding-top: 0px !important; /* Visual correction for F1 font center */
 }
 
 .user-identity__rank-number:empty {
@@ -966,7 +972,7 @@ body {
 .xp-section {
   position: relative;
   padding: 5px 0;
-  margin: 0 -16px;
+  margin: 14px -16px;
   width: calc(100% + 32px);
   height: auto;
   min-height: 60px;
@@ -986,8 +992,8 @@ body {
   display: flex;
   align-items: baseline;
   gap: 3px;
-  background: var(--f1-red);
-  padding: 4px 12px;
+  background: #1d1e22;
+  padding: 4px 16px;
   clip-path: none;
   border-radius: 0;
   min-width: 56px;
@@ -1006,7 +1012,7 @@ body {
 .xp-bar__level-value,
 .xp-level-value {
   font-family: "Outfit", sans-serif;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--f1-white);
   line-height: 1;
@@ -1126,7 +1132,7 @@ body {
 
 .xp-bar__suffix,
 .xp-suffix {
-  color: var(--f1-red);
+  color: #fff;
   font-weight: 700;
   margin-left: 2px;
 }
@@ -1147,7 +1153,7 @@ body {
   font-family: "Outfit", sans-serif;
   font-size: 15px;
   font-weight: 800;
-  color: var(--f1-yellow);
+  color: #8a29a4;
   opacity: 0;
   white-space: nowrap;
   pointer-events: none;
@@ -1248,10 +1254,10 @@ body {
 .xp-levelup__text,
 .levelup-text {
   font-family: "Outfit", sans-serif;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--f1-white);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
@@ -1317,7 +1323,7 @@ body {
   color: #15151e;
   background: #36d639;
   font-family: var(--font-f1turbo);
-  font-size: 12px !important;
+  font-size: 9px !important;
   font-weight: 400;
   padding: 0 10px;
   height: 100%;
@@ -1332,7 +1338,7 @@ body {
   color: #fff;
   background: #8A29A4;
   font-family: var(--font-f1turbo);
-  font-size: 12px !important;
+  font-size: 9px !important;
   font-weight: 400;
   padding: 0 10px;
   height: 100%;
@@ -1479,7 +1485,7 @@ body {
    =========================================== */
 .container.gold-mode-active .xp-bar__level,
 .container.gold-mode-active .xp-level-container {
-  background: linear-gradient(135deg, #6a1b9a, #8a29a4, #b342cc, #8a29a4, #6a1b9a) !important;
+ /* background: linear-gradient(135deg, #6a1b9a, #8a29a4, #b342cc, #8a29a4, #6a1b9a) !important;*/
   border: none !important;
   box-shadow: none !important;
   animation: none !important;
@@ -1579,12 +1585,14 @@ body {
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-size: 10px;
 }
 
 .bro-count {
   color: #fff;
   font-family: var(--font-f1turbo);
   font-weight: 400;
+  font-size: 9px;
 }
 
 .bro-progress-container {
