@@ -329,7 +329,7 @@ export default class XPDisplayRenderer {
         const subValue = subInfo.badgeInfo?.subscriber || '1';
         
         // Efecto Scramble para resaltar estatus
-        UIUtils.scrambleText(this.dom.xpTitle, 'EXCELSIOR USER', 30, false);
+        UIUtils.scrambleText(this.dom.xpTitle, 'TEAM SPONSOR', 30, false);
         
         setTimeout(() => {
             if (this.dom.xpTitle) {

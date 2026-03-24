@@ -301,7 +301,9 @@ export default class ExperienceService {
             previousLevel: result.previousLevel,
             leveledUp: result.leveledUp,
             progress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
-            title: this.levelCalculator.getLevelTitle(userData.level),
+            title: this.rankingSystem ? 
+                  this.rankingSystem.getUserRole(username, userData, this.levelCalculator).rankTitle.title : 
+                  this.levelCalculator.getLevelTitle(userData.level),
             streakDays: userData.streakDays || 0,
             streakMultiplier,
             achievements: userData.achievements || [],
@@ -460,7 +462,9 @@ export default class ExperienceService {
             previousLevel: result.previousLevel,
             leveledUp: result.leveledUp,
             levelProgress: this.levelCalculator.getLevelProgress(userData.xp, userData.level),
-            levelTitle: this.levelCalculator.getLevelTitle(userData.level),
+            levelTitle: this.rankingSystem ? 
+                        this.rankingSystem.getUserRole(username, userData, this.levelCalculator).rankTitle.title : 
+                        this.levelCalculator.getLevelTitle(userData.level),
             isWinner
         };
     }

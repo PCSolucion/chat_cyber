@@ -12,7 +12,7 @@ const ROLES_CONFIG = {
         badge: 'ADMIN',
         containerClass: 'admin-user',
         badgeClass: 'admin',
-        rankTitle: { title: 'SYSTEM OVERLORD', icon: 'icon-arasaka' }
+        rankTitle: { title: 'RACE DIRECTOR', icon: 'icon-arasaka' }
     },
     SYSTEM: {
         role: 'admin', 
@@ -369,9 +369,11 @@ export default class RankingSystem {
             }
         }
 
-        // 3. Lógica de Fusión con Nivel (Solo si no es Top 15)
+        // 3. Lógica de Fusión con Nivel (Solo si no es Top 15 o Admin/System)
         const finalCalculator = levelCalculator || this.levelCalculator;
-        const hasCustomTitle = rank && rank <= 15;
+        const isAdminOrSystem = safeUsername === this.adminUser || safeUsername === 'system';
+        const isTop15 = rank && rank <= 15;
+        const hasCustomTitle = isTop15 || isAdminOrSystem;
         
         if (!hasCustomTitle && userData?.level && finalCalculator) {
             const levelTitle = finalCalculator.getLevelTitle(userData.level);
