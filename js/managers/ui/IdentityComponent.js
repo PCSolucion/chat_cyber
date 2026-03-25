@@ -100,7 +100,13 @@ export default class IdentityComponent {
         else if (username === 'SYSTEM') icon = uiConfig.SPECIAL_ICONS?.SYSTEM;
         else {
             const title = (userRole.rankTitle?.title || '').toUpperCase();
-            icon = uiConfig.RANK_ICONS?.[title];
+            
+            // Especial: Level 1-10 uses Williams icon
+            if (userRole.level >= 1 && userRole.level <= 10) {
+                icon = 'williams.png';
+            } else {
+                icon = uiConfig.RANK_ICONS?.[title];
+            }
         }
 
         if (icon) {

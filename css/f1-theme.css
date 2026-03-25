@@ -450,6 +450,7 @@ body {
 .user-identity__icon {
   display: block;
   height: 24px;
+  max-width: 60px;
   width: auto;
   margin-right: 0;
   filter: none;

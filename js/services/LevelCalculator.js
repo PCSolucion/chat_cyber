@@ -24,19 +24,21 @@ export default class LevelCalculator {
 
             // Títulos por nivel exacto o rango inicial
             titles: {
-                1: 'CIVILIAN',
-                5: 'ROOKIE',
-                10: 'MERCENARY',
-                15: 'SOLO',
-                20: 'NETRUNNER',
-                30: 'FIXER',
-                40: 'CORPO',
-                50: 'NIGHT CITY LEGEND',
-                60: 'CYBERPSYCHO',
-                70: 'MAXTAC',
-                80: 'TRAUMA TEAM',
-                90: 'AFTERLIFE LEGEND',
-                100: 'CHOOMBA SUPREME'
+                1: 'PADDOCK GUEST',
+                3: 'KARTING PRODIGY',
+                6: 'SIMULATION DRIVER',
+                10: 'YOUTH ACADEMY STAR',
+                16: 'FORMULA 3 RACER',
+                22: 'FORMULA 2 CONTENDER',
+                28: 'TEST DRIVER',
+                35: 'RESERVE DRIVER',
+                45: 'F1 GRID ROOKIE',
+                60: 'MIDFIELD STAR',
+                80: 'PODIUM REGULAR',
+                100: 'GRAND PRIX WINNER',
+                130: 'MULTIPLE CHAMPION',
+                170: 'TRACK LEGEND',
+                220: 'F1 ALL-TIME GOAT'
             },
 
             // Título por defecto para niveles sin título específico

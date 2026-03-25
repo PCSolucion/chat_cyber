@@ -159,24 +159,29 @@ export const DEFAULTS = {
     BLACKLISTED_USERS: ['tangiabot', 'wizebot', 'streamelements', 'streamroutine_bot', 'botrixoficial'],
     UI: {
         RANK_ICONS: {
-            'CIVILIAN': 'civilian.png',
-            'ROOKIE': 'streetrat.png',
-            'MERCENARY': 'mercenary.png',
-            'SOLO': 'solo.png',
-            'NETRUNNER': 'netrunner.png',
-            'FIXER': 'fixer.png',
-            'CORPO': 'corpo.png',
-            'NIGHT CITY LEGEND': 'solo.png',
-            'CYBERPSYCHO': 'mercenary.png',
-            'MAXTAC': 'netrunner.png',
-            'TRAUMA TEAM': 'fixer.png',
-            'AFTERLIFE LEGEND': 'corpo.png',
-            'CHOOMBA SUPREME': 'corpo.png',
-            'CITIZEN OF NIGHT CITY': 'civilian.png'
+            'PADDOCK GUEST': 'williams.png',
+            'KARTING PRODIGY': 'williams.png',
+            'SIMULATION DRIVER': 'williams.png',
+            'YOUTH ACADEMY STAR': 'toro.png',
+            'FORMULA 3 RACER': 'alpine.png',
+            'FORMULA 2 CONTENDER': 'alpine.png',
+            'TEST DRIVER': 'toro.png',
+            'RESERVE DRIVER': 'toro.png',
+            'F1 GRID ROOKIE': 'aston.png',
+            'MIDFIELD STAR': 'aston.png',
+            'PODIUM REGULAR': 'redbull-logo.png',
+            'GRAND PRIX WINNER': 'mclaren-logo.png',
+            'MULTIPLE CHAMPION': 'mercedes-logo.png',
+            'TRACK LEGEND': 'ferrari.png',
+            'F1 ALL-TIME GOAT': 'redbull-logo.png',
+            'FIA CONTROL': 'arasaka.png',
+            'GRID COMPETITOR': 'toro.png',
+            'ELITE RACER': 'redbull-logo.png',
+            'WORLD CHAMPION': 'redbull-logo.png'
         },
         SPECIAL_ICONS: {
             'ADMIN': 'arasaka.png',
-            'SYSTEM': 'netrunner.png'
+            'SYSTEM': 'arasaka.png'
         },
         USER_THEMES: {}
     },

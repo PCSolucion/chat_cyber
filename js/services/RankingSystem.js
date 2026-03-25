@@ -19,14 +19,14 @@ const ROLES_CONFIG = {
         badge: 'ROOT',
         containerClass: 'admin-user',
         badgeClass: 'admin',
-        rankTitle: { title: 'AI CONSTRUCT', icon: 'icon-netwatch' }
+        rankTitle: { title: 'FIA CONTROL', icon: 'icon-netwatch' }
     },
     CITIZEN: {
         role: 'normal',
         badge: '',
         containerClass: '',
         badgeClass: '',
-        rankTitle: { title: 'CITIZEN OF NIGHT CITY', icon: 'icon-tech' } 
+        rankTitle: { title: 'SPECTATOR', icon: 'icon-tech' } 
     }
 };
 
@@ -348,7 +348,7 @@ export default class RankingSystem {
                     badge: 'TOP 1',
                     containerClass: 'top-user',
                     badgeClass: 'top-user',
-                    rankTitle: { title: 'NIGHT CITY LEGEND', icon: 'icon-max-tac' }
+                    rankTitle: { title: 'WORLD CHAMPION', icon: 'icon-max-tac' }
                 };
             } else if (rank <= 15) {
                 result = {
@@ -356,7 +356,7 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'vip-user',
                     badgeClass: 'vip',
-                    rankTitle: { title: 'SOLO', icon: 'icon-fixer' }
+                    rankTitle: { title: 'ELITE RACER', icon: 'icon-fixer' }
                 };
             } else {
                 result = {
@@ -364,7 +364,7 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'ranked-user',
                     badgeClass: 'ranked',
-                    rankTitle: { title: 'MERCENARY', icon: 'icon-tech' }
+                    rankTitle: { title: 'GRID COMPETITOR', icon: 'icon-tech' }
                 };
             }
         }
@@ -383,6 +383,10 @@ export default class RankingSystem {
                     icon: result.rankTitle.icon 
                 };
             }
+        }
+
+        if (userData?.level) {
+            result.level = userData.level;
         }
 
         return result;
