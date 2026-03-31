@@ -126,6 +126,9 @@ class TestPanelController {
             case 'toggle-auto-chat':
                 this.toggleAutoChat();
                 break;
+            case 'toggle-logs':
+                this.toggleLogs();
+                break;
 
             case 'send-message':
                 this.testUser(document.getElementById('custom-user')?.value);
@@ -138,6 +141,9 @@ class TestPanelController {
                 break;
             case 'test-level-up':
                 this.testLevelUp();
+                break;
+            case 'test-driver-card':
+                this.testDriverCard();
                 break;
             case 'test-spam-charflood':
                 this.testSpamCharFlood();
@@ -471,6 +477,15 @@ class TestPanelController {
         });
     }
 
+    testDriverCard() {
+        const win = this.getWidgetWindow();
+        if (!win?.WidgetDebug?.driverCard) {
+            console.error('❌ Widget not ready: WidgetDebug.driverCard not available');
+            return;
+        }
+        win.WidgetDebug.driverCard.test();
+    }
+
 
     // =========================================================================
     // SPAM SHIELD TESTS
@@ -580,6 +595,18 @@ class TestPanelController {
         }
     }
 
+
+    toggleLogs() {
+        const terminal = document.querySelector('.cyber-terminal');
+        const btn = document.querySelector('.btn-toggle-logs');
+        if (!terminal) return;
+
+        const isMinimized = terminal.classList.toggle('minimized');
+        if (btn) {
+            btn.textContent = isMinimized ? '[ + ]' : '[ - ]';
+        }
+        console.log(`Terminal ${isMinimized ? 'minimized' : 'expanded'}`);
+    }
 
 }
 

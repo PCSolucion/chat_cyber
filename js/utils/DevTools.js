@@ -18,6 +18,7 @@ export default class DevTools {
         this.idleManager = null;
         this.firestoreService = null;
         this.notificationManager = null;
+        this.driverCardOverlay = null;
         this.quotaInterval = null;
         this._boundPostMessageListener = null;
     }
@@ -66,6 +67,11 @@ export default class DevTools {
 
             idle: {
                 forceMode: () => this.idleManager?._enterIdleMode()
+            },
+
+            driverCard: {
+                test: () => this.idleManager?.f1DriverCard?.showTestCard(),
+                hide: () => this.idleManager?.f1DriverCard?.hide()
             },
             
             predictions: {
@@ -241,6 +247,7 @@ export default class DevTools {
         window.testEmoteMessage = d.emotes.testMessage;
         window.testAchievement = d.achievements.test;
         window.testIdleMode = d.idle.forceMode;
+        window.testDriverCard = d.driverCard.test;
         window.APP_INSTANCE = this.app;
     }
 

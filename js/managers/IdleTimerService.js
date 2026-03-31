@@ -134,6 +134,8 @@ export default class IdleTimerService {
      * Oculta el sistema por exceso de ciclos
      */
     hide() {
+        if (this.isHiddenAfterCycles && !this.isIdle) return; // Guard
+        
         this.isIdle = false;
         this.isHiddenAfterCycles = true;
         this.clearRotation();

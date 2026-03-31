@@ -465,6 +465,39 @@ select.panel-input option {
   font-family: "Share Tech Mono", monospace;
   z-index: 20;
   pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cyber-terminal.minimized {
+  width: 210px;
+  height: 40px;
+  bottom: auto;
+  overflow: hidden;
+  background: rgba(10, 10, 18, 0.95);
+  border-bottom: 1px solid rgba(0, 246, 255, 0.2);
+}
+
+.cyber-terminal.minimized #panel-logs,
+.cyber-terminal.minimized .log-counters {
+  display: none !important;
+}
+
+.btn-toggle-logs {
+  background: transparent;
+  border: none;
+  color: var(--cyan);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 8px;
+  opacity: 0.6;
+  transition: all 0.2s;
+  padding: 0 4px;
+}
+
+.btn-toggle-logs:hover {
+  opacity: 1;
+  text-shadow: 0 0 5px var(--cyan);
 }
 
 .terminal-header {

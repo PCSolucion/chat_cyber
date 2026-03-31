@@ -22,7 +22,10 @@
         <!-- Cyberpunk Terminal Overlay -->
         <div class="cyber-terminal">
             <div class="terminal-header">
-                <span class="blink">>></span> SYSTEM_LOGS // STREAM
+                <div>
+                   <span class="blink">>></span> SYSTEM_LOGS // STREAM
+                   <button data-action="toggle-logs" class="btn-toggle-logs" title="Toggle Visibility">[ - ]</button>
+                </div>
                 <div class="log-counters">
                     <span id="log-count-success" class="log-count success">0</span>
                     <span id="log-count-error" class="log-count error">0</span>
@@ -108,6 +111,7 @@
                     <button data-action="widget-call" data-value="achievements.test" class="btn btn--top btn--full" style="font-size: 9px;">🏆 ACHV_EMULATOR</button>
                 </div>
                 <button data-action="test-level-up" class="btn btn--full btn--purple" style="text-align: center;">🚀 TEST_LEVEL_UP</button>
+                <button data-action="test-driver-card" class="btn btn--full btn--cyan" style="text-align: center;">🏎️ F1_DRIVER_CARD</button>
             </div>
 
             <!-- Spam Shield Tests -->
