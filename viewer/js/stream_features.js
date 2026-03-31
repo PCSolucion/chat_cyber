@@ -523,7 +523,7 @@ const StreamFeatures = (function () {
         "2024-07-05": { duration: 372, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 | Directo 13" },
         "2024-07-04": { duration: 492, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 | Directo 12" },
         "2024-07-03": { duration: 312, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 | Directo #11" },
-        "2024-07-02": { duration: 384, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 #10 y The Division 2" },
+        "2024-07-02": { duration: 384, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 #10" },
         "2024-07-01": { duration: 264, category: "Red Dead Redemption 2", title: "🔴Red Dead Redemption 2 #9 y NW #550" },
         "2024-06-30": { duration: 258, category: "Night of the Dead", title: "🟣Night of the Dead #Día 41 | Survival Cooperativo" },
         "2024-06-29": { duration: 354, category: "Night of the Dead", title: "🟣Night of the Dead #Día 34/35 | Survival Cooperativo" },
