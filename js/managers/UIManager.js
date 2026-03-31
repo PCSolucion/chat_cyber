@@ -10,6 +10,7 @@ import NotificationManager from './NotificationManager.js';
 import IdentityComponent from './ui/IdentityComponent.js';
 import MessageComponent from './ui/MessageComponent.js';
 import MessageQueueManager from './ui/MessageQueueManager.js';
+import RadioWidgetComponent from './ui/RadioWidgetComponent.js';
 
 /**
  * UIManager - Gestor Principal de la Interfaz de Usuario
@@ -43,6 +44,10 @@ export default class UIManager {
         }, config);
         this.message = new MessageComponent(dom.message, thirdPartyEmoteService, config);
         this.queue = new MessageQueueManager(config);
+        
+        // Nuevo: Radio Widget estilo F1 (!voz, !radio)
+        this.radioWidget = new RadioWidgetComponent(config);
+
         this.isIdle = false;
 
         // 3. Estado local
@@ -248,6 +253,33 @@ export default class UIManager {
                 this.xpDisplay.handleGoldMode(subInfo);
             }
         }, 4000);
+    }
+
+    /**
+     * Muestra el mensaje de radio en el widget especial estilo F1
+     */
+    showRadioMessage(username, message, xpResult = null) {
+        if (!this.radioWidget) return;
+
+        try {
+            // 1. Obtener rol para visuales especiales (Hamilton logo, etc)
+            const role = this.rankingSystem.getUserRole(username, xpResult);
+            
+            // 2. Extender tiempo de visibilidad del widget principal si es necesario
+            // para que no se oculte el widget de chat básico al mismo tiempo
+            this.extendDisplayTime(16000);
+
+            // 3. Mostrar widget de radio (Dura N segundos + 2 extra)
+            this.radioWidget.show(username, message, 14000, role);
+            
+            // 4. Feedback en LED TX de transmisión de radio
+            if (this.status && typeof this.status.flashLED === 'function') {
+                this.status.flashLED('ledTx');
+            }
+
+        } catch (error) {
+            Logger.error('UI', 'Error showing radio message', error);
+        }
     }
 
     clearAllTimers() {
