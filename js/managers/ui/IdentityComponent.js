@@ -109,7 +109,10 @@ export default class IdentityComponent {
             }
         }
 
-        if (icon) {
+        // --- Lógica según el Tema ---
+        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
+
+        if (icon && isF1) {
             iconEl.src = `img/${icon}`;
             iconEl.style.display = 'block';
         } else {
@@ -117,7 +120,6 @@ export default class IdentityComponent {
         }
 
         // --- Lógica Específica para F1 (Número de Rango) ---
-        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
         if (isF1 && rankNumberEl) {
             // Extraer número de "TOP X"
             const rankMatch = (userRole.badge || "").match(/TOP\s*(\d+)/i);

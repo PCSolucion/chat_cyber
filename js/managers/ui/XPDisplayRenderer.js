@@ -329,7 +329,9 @@ export default class XPDisplayRenderer {
         const subValue = subInfo.badgeInfo?.subscriber || '1';
         
         // Efecto Scramble para resaltar estatus
-        UIUtils.scrambleText(this.dom.xpTitle, 'TEAM SPONSOR', 30, false);
+        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
+        const subTitle = isF1 ? 'TEAM SPONSOR' : 'CORPO BACKED';
+        UIUtils.scrambleText(this.dom.xpTitle, subTitle, 30, false);
         
         setTimeout(() => {
             if (this.dom.xpTitle) {

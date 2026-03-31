@@ -22,7 +22,7 @@ export default class LevelCalculator {
             baseXP: 100,
             exponent: 1.5,
 
-            // Títulos por nivel exacto o rango inicial
+            // Títulos por nivel exacto o rango inicial (F1)
             titles: {
                 1: 'PADDOCK GUEST',
                 3: 'KARTING PRODIGY',
@@ -39,6 +39,25 @@ export default class LevelCalculator {
                 130: 'MULTIPLE CHAMPION',
                 170: 'TRACK LEGEND',
                 220: 'F1 ALL-TIME GOAT'
+            },
+
+            // Títulos por nivel exacto o rango inicial (CYBERPUNK)
+            cyberTitles: {
+                1: 'STREET KID',
+                3: 'ROOKIE RUNNER',
+                6: 'NETRUNNER',
+                10: 'SOLO',
+                16: 'FIXER',
+                22: 'TECHIE',
+                28: 'NOMAD',
+                35: 'MERCENARY',
+                45: 'NIGHT CITY LEGEND',
+                60: 'AFTERLIFE REGULAR',
+                80: 'MAJOR LEAGUE',
+                100: 'CHROME MASTER',
+                130: 'CYBERPSYCHO',
+                170: 'FULL BORG',
+                220: 'ADAM SMASHER RIVAL'
             },
 
             // Título por defecto para niveles sin título específico
@@ -210,10 +229,11 @@ export default class LevelCalculator {
     /**
      * Obtiene el título correspondiente a un nivel
      * @param {number} level 
+     * @param {boolean} isF1 - Si el tema activo es F1
      * @returns {string}
      */
-    getLevelTitle(level) {
-        const titles = this.levelConfig.titles;
+    getLevelTitle(level, isF1 = true) {
+        const titles = isF1 ? this.levelConfig.titles : this.levelConfig.cyberTitles;
         const levels = Object.keys(titles).map(Number).sort((a, b) => b - a);
 
         for (const lvl of levels) {
@@ -222,6 +242,7 @@ export default class LevelCalculator {
             }
         }
 
-        return this.levelConfig.defaultTitle.replace('{level}', level);
+        const defaultTitle = isF1 ? 'RACING TALENT LVL {level}' : 'EDGE RUNNER LVL {level}';
+        return defaultTitle.replace('{level}', level);
     }
 }

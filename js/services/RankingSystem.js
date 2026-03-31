@@ -6,29 +6,39 @@ import Logger from '../utils/Logger.js';
 /**
  * Configuración de roles estáticos para evitar re-asignación en cada llamada.
  */
-const ROLES_CONFIG = {
+/**
+ * Configuración de roles según el tema activo.
+ * @param {boolean} isF1
+ */
+const getRolesConfig = (isF1 = true) => ({
     ADMIN: {
         role: 'admin',
-        badge: 'ADMIN',
+        badge: isF1 ? 'ADMIN' : 'DEVELOPER',
         containerClass: 'admin-user',
         badgeClass: 'admin',
-        rankTitle: { title: 'RACE DIRECTOR', icon: 'icon-arasaka' }
+        rankTitle: { 
+            title: isF1 ? 'RACE DIRECTOR' : 'LEGENDARY FIXER', 
+            icon: isF1 ? 'mercedes-logo.png' : 'arasaka.png' 
+        }
     },
     SYSTEM: {
         role: 'admin', 
         badge: 'ROOT',
         containerClass: 'admin-user',
         badgeClass: 'admin',
-        rankTitle: { title: 'FIA CONTROL', icon: 'icon-netwatch' }
+        rankTitle: { 
+            title: isF1 ? 'FIA CONTROL' : 'NETWATCH AGENT', 
+            icon: isF1 ? 'redbull-logo.png' : 'netwatch.png' 
+        }
     },
     CITIZEN: {
         role: 'normal',
         badge: '',
         containerClass: '',
         badgeClass: '',
-        rankTitle: { title: 'SPECTATOR', icon: 'icon-tech' } 
+        rankTitle: { title: isF1 ? 'SPECTATOR' : 'STREET KID', icon: null } 
     }
-};
+});
 
 /**
  * RankingSystem - Sistema de Gestión de Rankings y Roles (Gist Edition)
@@ -334,12 +344,15 @@ export default class RankingSystem {
         const id = safeUsername; 
 
         // 1. Casos Especiales (Admin / System)
-        if (safeUsername === this.adminUser) return ROLES_CONFIG.ADMIN;
-        if (safeUsername === 'system') return ROLES_CONFIG.SYSTEM;
+        const isF1 = !!document.querySelector('link[href*="f1-theme.css"]');
+        const roles = getRolesConfig(isF1);
+
+        if (safeUsername === this.adminUser) return roles.ADMIN;
+        if (safeUsername === 'system') return roles.SYSTEM;
 
         // 2. Lógica de Ranking (Top Users)
         const rank = this.userRankings.get(safeUsername);
-        let result = { ...ROLES_CONFIG.CITIZEN };
+        let result = { ...roles.CITIZEN };
 
         if (rank) {
             if (rank === 1) {
@@ -348,7 +361,10 @@ export default class RankingSystem {
                     badge: 'TOP 1',
                     containerClass: 'top-user',
                     badgeClass: 'top-user',
-                    rankTitle: { title: 'WORLD CHAMPION', icon: 'icon-max-tac' }
+                    rankTitle: { 
+                        title: isF1 ? 'WORLD CHAMPION' : 'NIGHT CITY LEGEND', 
+                        icon: isF1 ? 'mercedes-logo.png' : 'arasaka.png' 
+                    }
                 };
             } else if (rank <= 15) {
                 result = {
@@ -356,7 +372,10 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'vip-user',
                     badgeClass: 'vip',
-                    rankTitle: { title: 'ELITE RACER', icon: 'icon-fixer' }
+                    rankTitle: { 
+                        title: isF1 ? 'ELITE RACER' : 'ELITE SOLO', 
+                        icon: isF1 ? 'ferrari.png' : 'netrunner.png' 
+                    }
                 };
             } else {
                 result = {
@@ -364,7 +383,10 @@ export default class RankingSystem {
                     badge: `TOP ${rank}`,
                     containerClass: 'ranked-user',
                     badgeClass: 'ranked',
-                    rankTitle: { title: 'GRID COMPETITOR', icon: 'icon-tech' }
+                    rankTitle: { 
+                        title: isF1 ? 'GRID COMPETITOR' : 'RANKED RUNNER', 
+                        icon: isF1 ? 'alpine.png' : 'tech.png' 
+                    }
                 };
             }
         }
@@ -376,7 +398,7 @@ export default class RankingSystem {
         const hasCustomTitle = isTop15 || isAdminOrSystem;
         
         if (!hasCustomTitle && userData?.level && finalCalculator) {
-            const levelTitle = finalCalculator.getLevelTitle(userData.level);
+            const levelTitle = finalCalculator.getLevelTitle(userData.level, isF1);
             if (levelTitle) {
                 result.rankTitle = { 
                     title: levelTitle, 
