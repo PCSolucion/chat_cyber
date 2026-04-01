@@ -27,7 +27,7 @@
 /* Top Section: Dark background with Name and Logo + RADIO */
 .radio-widget__top {
   background: #18191e;
-  padding: 40px 40px 10px 40px;
+  padding: 30px 40px 5px 40px;
   display: flex;
   flex-direction: column;
   align-items: flex-end; 
@@ -35,7 +35,7 @@
 
 .radio-widget__username {
   font-family: "Formula1", sans-serif;
-  font-size: 64px;
+  font-size: 54px;
   font-weight: 700;
   color: var(--team-color, #00d2be);
   line-height: 0.9;
@@ -46,16 +46,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-}
-
-.radio-widget__username.small-text {
-  font-size: 48px;
-  letter-spacing: -1px;
-}
-
-.radio-widget__username.extra-small-text {
-  font-size: 34px;
-  letter-spacing: -1px;
 }
 
 .radio-widget__subtitle {
@@ -82,7 +72,7 @@
 
 .radio-widget__label {
   font-family: "Formula1", sans-serif;
-  font-size: 52px;
+  font-size: 44px;
   font-weight: 700;
   color: #ffffff;
   line-height: 0.9;

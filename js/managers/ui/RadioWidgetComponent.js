@@ -76,6 +76,47 @@ export default class RadioWidgetComponent {
     }
 
     /**
+     * Ajusta el tamaño de la fuente del nombre para que no se corte
+     * @param {string} name 
+     */
+    _fitUsername(name) {
+        const el = this.els.username;
+        // Reiniciar estilos base (F1 TV Style - Updated for better balance)
+        el.style.fontSize = '54px';
+        el.style.letterSpacing = '-2px';
+        el.style.transform = 'none';
+        el.style.display = 'block';
+        
+        // El widget tiene 420px de ancho y 40px de padding a cada lado
+        // Dejamos un margen de seguridad extra (330px en vez de 340px)
+        const maxWidth = 330; 
+        
+        let fontSize = 54;
+        let letterSpacing = -2;
+        
+        // 1. Intentar ajustar reduciendo el tamaño de fuente (el scrollWidth detecta desborde)
+        let attempts = 0;
+        while (el.scrollWidth > maxWidth && fontSize > 24 && attempts < 20) {
+            fontSize -= 2;
+            if (fontSize < 46) letterSpacing = -1;
+            if (fontSize < 32) letterSpacing = 0;
+            
+            el.style.fontSize = `${fontSize}px`;
+            el.style.letterSpacing = `${letterSpacing}px`;
+            attempts++;
+        }
+        
+        // 2. Si todavía no cabe (nombres MUY largos), aplicamos un scaleX para comprimir
+        // Esto mantiene la estética de broadcast donde los nombres largos se "aplastan" lateralmente
+        if (el.scrollWidth > maxWidth) {
+            const scale = (maxWidth / el.scrollWidth) * 0.98;
+            el.style.transform = `scaleX(${scale})`;
+            el.style.transformOrigin = 'right';
+            el.style.whiteSpace = 'nowrap';
+        }
+    }
+
+    /**
      * Muestra el widget de radio con los datos del usuario
      * @param {string} username 
      * @param {string} message 
@@ -88,13 +129,8 @@ export default class RadioWidgetComponent {
         const cleanName = UIUtils.cleanUsername(username);
         this.els.username.textContent = cleanName;
         
-        // Ajustar tamaño del nombre según su longitud para evitar desbordes
-        this.els.username.classList.remove('small-text', 'extra-small-text');
-        if (cleanName.length > 15) {
-            this.els.username.classList.add('extra-small-text');
-        } else if (cleanName.length > 10) {
-            this.els.username.classList.add('small-text');
-        }
+        // Ajustar tamaño del nombre dinámicamente para que quepa en el espacio
+        this._fitUsername(cleanName);
         // 1. Logo y Color dinámico según la escudería
         const TEAM_COLORS = {
             'mercedes-logo.png': '#00d2be',

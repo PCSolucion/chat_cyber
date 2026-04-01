@@ -43,6 +43,7 @@ export default class IdleDisplayManager {
         this.lastF1ShowTime = 0;
         this.F1_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
         this.idleContainer = null;
+        this.idleDelayTimer = null; // New: Timer for delayed idle entry
 
         // Inicializar
         this._createIdleContainer();
@@ -67,7 +68,19 @@ export default class IdleDisplayManager {
     _setupEventListeners() {
         this._handlers = {
             activity: () => this.onActivity(),
-            messageHidden: () => this.timerService.enterIdle()
+            messageHidden: () => {
+                if (this.idleDelayTimer) clearTimeout(this.idleDelayTimer);
+                
+                // Pequeño retraso para permitir que la animación de desvanecimiento del widget termine (400-500ms)
+                // antes de que el UIManager reciba el 'idle:start' y limpie los textos (reset)
+                this.idleDelayTimer = setTimeout(() => {
+                    this.idleDelayTimer = null;
+                    // Solo entramos si no hubo actividad nueva en el medio
+                    if (this.timerService && !this.timerService.isIdle) {
+                        this.timerService.enterIdle();
+                    }
+                }, 600);
+            }
         };
 
         EventManager.on(EVENTS.USER.ACTIVITY, this._handlers.activity);
@@ -78,6 +91,10 @@ export default class IdleDisplayManager {
      * Reacción a la actividad del usuario
      */
     onActivity() {
+        if (this.idleDelayTimer) {
+            clearTimeout(this.idleDelayTimer);
+            this.idleDelayTimer = null;
+        }
         this.timerService.exitIdle();
     }
 

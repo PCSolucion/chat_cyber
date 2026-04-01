@@ -20,6 +20,7 @@ import CommandFilterMiddleware from './pipeline/middlewares/CommandFilterMiddlew
 import XPProcessorMiddleware from './pipeline/middlewares/XPProcessorMiddleware.js';
 import AchievementMiddleware from './pipeline/middlewares/AchievementMiddleware.js';
 import UIRendererMiddleware from './pipeline/middlewares/UIRendererMiddleware.js';
+import RadioInterceptorMiddleware from './pipeline/middlewares/RadioInterceptorMiddleware.js';
 import StatsTrackerMiddleware from './pipeline/middlewares/StatsTrackerMiddleware.js';
 import UserLoaderMiddleware from './pipeline/middlewares/UserLoaderMiddleware.js';
 
@@ -188,6 +189,7 @@ export default class MessageProcessor {
         );
         const achievementChecker = new AchievementMiddleware(this.services.achievements, this.services.xp);
         const uiRenderer = new UIRendererMiddleware(this.managers.ui, this.services.xp);
+        const radioInterceptor = new RadioInterceptorMiddleware(this.managers.ui);
         const statsTracker = new StatsTrackerMiddleware(this.services.sessionStats);
 
         // Configurar la Tubería
@@ -200,6 +202,7 @@ export default class MessageProcessor {
             .use('CommandFilter', commandFilter.execute.bind(commandFilter))
             .use('XPProcessor', xpProcessor.execute.bind(xpProcessor))
             .use('AchievementChecker', achievementChecker.execute.bind(achievementChecker))
+            .use('RadioInterceptor', radioInterceptor.execute.bind(radioInterceptor))
             .use('UIRenderer', uiRenderer.execute.bind(uiRenderer))
             .use('StatsTracker', statsTracker.execute.bind(statsTracker));
     }

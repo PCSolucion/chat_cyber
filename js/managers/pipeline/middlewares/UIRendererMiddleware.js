@@ -17,13 +17,14 @@ export default class UIRendererMiddleware {
             badgeInfo: ctx.tags['badge-info'] || {} 
         };
 
-        // Actualizar suscripción en segundo plano si es necesario
-        if (isSub && this.xpService) {
-            const months = parseInt(subInfo.badgeInfo?.subscriber) || 1;
-            this.xpService.updateSubscription(ctx.username, months);
+        // Limpiar comandos de radio para la visualización en el chat normal también
+        let displayMessage = ctx.message;
+        const lower = displayMessage.toLowerCase();
+        if (lower.startsWith('!voz ') || lower.startsWith('!radio ')) {
+            displayMessage = displayMessage.substring(displayMessage.indexOf(' ') + 1);
         }
 
-        this.uiManager.displayMessage(ctx.username, ctx.message, ctx.tags.emotes, subInfo, ctx.xpResult);
+        this.uiManager.displayMessage(ctx.username, displayMessage, ctx.tags.emotes, subInfo, ctx.xpResult);
         next();
     }
 }
