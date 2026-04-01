@@ -136,7 +136,7 @@ export default class RadioWidgetComponent {
             'mercedes-logo.png': '#00d2be',
             'ferrari.png': '#ef1a2d',
             'mclaren-logo.png': '#ff8700',
-            'redbull-logo.png': '#0600ef',
+            'redbull-logo.png': '#3671C6',
             'alpine.png': '#0090ff',
             'williams.png': '#00a0de',
             'aston.png': '#006f62',
