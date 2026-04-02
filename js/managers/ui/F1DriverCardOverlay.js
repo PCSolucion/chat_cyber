@@ -175,7 +175,7 @@ export default class F1DriverCardOverlay {
     _generateTestData() {
         return {
             position: 1,
-            username: 'NETRUNNER_01',
+            username: 'ESTE_ES_UN_NOMBRE_MUY_LARGO_PARA_TESTEAR',
             team: 'P1 — LÍDER DE SESIÓN',
             teamColor: '#e10600',
             teamStripe: '#ff2d22',
@@ -220,8 +220,8 @@ export default class F1DriverCardOverlay {
                     <div class="dc-team-block">
                         <img src="${data.teamIcon}" class="dc-team-logo" onerror="this.style.display='none'" />
                     </div>
-                    <div class="dc-name">
-                        <span class="dc-name-inner" style="display:inline-block; transform-origin:left center; white-space:nowrap;">${safeName}</span>
+                    <div class="dc-name" id="dc-name-wrapper">
+                        <span class="dc-name-inner" id="dc-name-inner" style="display:inline-block; transform-origin:left center; white-space:nowrap;">${safeName}</span>
                     </div>
                 </div>
 
@@ -241,47 +241,53 @@ export default class F1DriverCardOverlay {
     }
 
     _fitUsername() {
-        const wrapper = this.overlayEl.querySelector('.dc-name');
-        const inner = this.overlayEl.querySelector('.dc-name-inner');
+        const wrapper = this.overlayEl.querySelector('#dc-name-wrapper');
+        const inner = this.overlayEl.querySelector('#dc-name-inner');
         if (!wrapper || !inner) return;
 
-        // Reset
+        // Reset to initial state to measure
         inner.style.fontSize = '';
         inner.style.transform = '';
-        wrapper.style.textOverflow = 'clip';
-
-        // Necesitamos esperar a la renderización real si el elemento estaba oculto
-        const availableWidth = wrapper.clientWidth;
         
-        // Si no hay ancho (DOM no renderizado aún), deferimos al próximo frame
-        if (availableWidth === 0) {
-            requestAnimationFrame(() => {
-                // Solo reintentamos si el elemento sigue en el DOM y sigue visible a nivel de estado
-                if (this.isVisible) this._fitUsername();
-            });
-            return;
-        }
+        // Let the browser calculate the layout before measuring
+        requestAnimationFrame(() => {
+            // Temporarily use block display for measurement to avoid flex constraints interfering
+            wrapper.style.display = 'block';
+            const availableWidth = wrapper.clientWidth - 28; // Account for padding (14px L + 14px R)
+            wrapper.style.display = ''; // Restore flex
 
-        const textWidth = inner.scrollWidth;
-        if (textWidth <= availableWidth + 2) return;
+            // If still no width (not attached/rendered), wait
+            if (availableWidth <= 0) {
+                if (this.isVisible) {
+                    setTimeout(() => this._fitUsername(), 50);
+                }
+                return;
+            }
 
-        let attempts = 0;
-        let currentFontSize = parseFloat(window.getComputedStyle(wrapper).fontSize) || 28; // fallback
-        const minFontSize = currentFontSize * 0.65;
+            const textWidth = inner.scrollWidth;
+            if (textWidth <= availableWidth) return;
 
-        // 1. Reducir tipografía
-        while (inner.scrollWidth > availableWidth + 2 && currentFontSize > minFontSize && attempts < 15) {
-            currentFontSize -= 1;
-            inner.style.fontSize = `${currentFontSize}px`;
-            attempts++;
-        }
+            // 1. Reduce font size
+            let currentFontSize = parseFloat(window.getComputedStyle(inner).fontSize) || 22.4; // 1.4rem approx
+            const minFontSize = 10; // Reduced minimum readable font size for very long names
 
-        // 2. Comprimir lateralmente
-        if (inner.scrollWidth > availableWidth + 2) {
-            const ratio = availableWidth / inner.scrollWidth;
-            const boundedScale = Math.max(0.4, ratio * 0.98);
-            inner.style.transform = `scaleX(${boundedScale})`;
-        }
+            while (inner.scrollWidth > availableWidth && currentFontSize > minFontSize) {
+                currentFontSize -= 0.5;
+                inner.style.fontSize = `${currentFontSize}px`;
+                
+                // Safety break
+                if (currentFontSize <= minFontSize) break;
+            }
+
+            // 2. Lateral compression (scaleX) if it still doesn't fit
+            // Use current scrollWidth after font reduction
+            const finalScrollWidth = inner.scrollWidth;
+            if (finalScrollWidth > availableWidth) {
+                const ratio = availableWidth / finalScrollWidth;
+                const boundedScale = Math.max(0.3, ratio * 0.98); // Allow tighter squeeze
+                inner.style.transform = `scaleX(${boundedScale})`;
+            }
+        });
     }
 
     // ─── ANIMATIONS ──────────────────────────────────────

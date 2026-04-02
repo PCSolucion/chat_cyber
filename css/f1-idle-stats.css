@@ -1170,7 +1170,7 @@
   align-items: center;
   padding-left: 14px;
   padding-right: 14px;
-  font-size: 1.45rem; /* Reduced to leave more space for characters */
+  font-size: 1.15rem; /* Substantially reduced to ensure elegant fit */
   color: #000;
   font-weight: 900;
   flex: 1;
@@ -1178,7 +1178,6 @@
   letter-spacing: 0.5px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ─── FOOTER (TELEMETRY) ─────────────────── */
