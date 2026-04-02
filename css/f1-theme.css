@@ -442,6 +442,7 @@ body {
   min-height: 40px;
   background-color: transparent;
   overflow: hidden;
+  transition: opacity 0.4s ease-out;
 }
 
 .user-identity__badges {
@@ -457,6 +458,7 @@ body {
   filter: none;
   object-fit: contain;
   flex: 0 0 auto;
+  transition: opacity 0.4s ease-out;
 }
 
 .user-identity__name,
@@ -483,6 +485,7 @@ body {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: opacity 0.4s ease-out;
 }
 
 /* Size variants */
@@ -619,6 +622,7 @@ body {
   flex: 0 0 auto !important;
   line-height: 1 !important;
   padding-top: 0px !important; /* Visual correction for F1 font center */
+  transition: opacity 0.4s ease-out;
 }
 
 .user-identity__rank-number:empty {

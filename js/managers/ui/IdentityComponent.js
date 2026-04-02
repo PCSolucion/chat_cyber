@@ -49,6 +49,9 @@ export default class IdentityComponent {
         const userThemes = this.config.UI?.USER_THEMES || {};
         const personalTheme = userThemes[username.toLowerCase()];
         if (personalTheme) this.dom.container.classList.add(personalTheme);
+        
+        // Reactivar visibilidad (después del reset() inicial)
+        this.fade(1);
     }
 
     /**
@@ -81,7 +84,14 @@ export default class IdentityComponent {
      * Ajusta la opacidad del componente para transiciones
      */
     fade(opacity) {
-        this.dom.username.style.opacity = opacity.toString();
+        const value = opacity.toString();
+        this.dom.username.style.opacity = value;
+        if (this.dom.userIcon) this.dom.userIcon.style.opacity = value;
+        if (this.dom.userBadge) this.dom.userBadge.style.opacity = value;
+        
+        // Elemento específico de F1
+        const rankNumberEl = document.getElementById('user-rank-number');
+        if (rankNumberEl) rankNumberEl.style.opacity = value;
     }
 
     _updateUserIcon(username, userRole) {
@@ -151,13 +161,10 @@ export default class IdentityComponent {
 
     reset() {
         this.dom.username.classList.remove('decrypting', 'small-text', 'extra-small-text');
-        this.dom.username.textContent = '';
-        this.dom.username.setAttribute('data-text', '');
-        if (this.dom.userBadge) this.dom.userBadge.textContent = '';
-        
-        // Compatibilidad: ocultar tanto userIcon como adminIcon
-        const iconEl = this.dom.userIcon || this.dom.adminIcon;
-        if (iconEl) iconEl.style.display = 'none';
+        // No borramos textContent ni ocultamos con display:none aquí.
+        // Esto permite que el fade out del contenedor principal (.container) sea suave
+        // y no se vea una desaparición instantánea de la identidad antes que el fondo.
+        this.fade(0); // Usamos opacidad para que si hay transiciones CSS, sea suave.
     }
 }
 

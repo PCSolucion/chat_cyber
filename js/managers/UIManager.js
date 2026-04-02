@@ -290,7 +290,18 @@ export default class UIManager {
     reset() {
         this.clearAllTimers();
         this.identity.reset();
-        this.message.setRawHTML('');
+        
+        // No limpiamos el mensaje inmediatamente (0ms) para que no desaparezca 
+        // INSTANTÁNEAMENTE antes de que el contenedor (.container) termine su transición (400ms).
+        this.message.fade(0);
+        
+        // Limpieza diferida: Borrar el contenido una vez que el widget ya está oculto.
+        setTimeout(() => {
+            if (this.display && !this.display.isVisibleState()) {
+                this.message.setRawHTML('');
+            }
+        }, 500); 
+
         this.isProcessingQueue = false;
         if (this.xpDisplay) this.xpDisplay.reset();
     }
