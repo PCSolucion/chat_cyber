@@ -220,7 +220,9 @@ export default class F1DriverCardOverlay {
                     <div class="dc-team-block">
                         <img src="${data.teamIcon}" class="dc-team-logo" onerror="this.style.display='none'" />
                     </div>
-                    <div class="dc-name">${safeName}</div>
+                    <div class="dc-name">
+                        <span class="dc-name-inner" style="display:inline-block; transform-origin:left center; white-space:nowrap;">${safeName}</span>
+                    </div>
                 </div>
 
                 <!-- Footer: Stats -->
@@ -233,6 +235,53 @@ export default class F1DriverCardOverlay {
                 </div>
             </div>
         `;
+
+        // Apply scale logic immediately after rendering into DOM
+        this._fitUsername();
+    }
+
+    _fitUsername() {
+        const wrapper = this.overlayEl.querySelector('.dc-name');
+        const inner = this.overlayEl.querySelector('.dc-name-inner');
+        if (!wrapper || !inner) return;
+
+        // Reset
+        inner.style.fontSize = '';
+        inner.style.transform = '';
+        wrapper.style.textOverflow = 'clip';
+
+        // Necesitamos esperar a la renderización real si el elemento estaba oculto
+        const availableWidth = wrapper.clientWidth;
+        
+        // Si no hay ancho (DOM no renderizado aún), deferimos al próximo frame
+        if (availableWidth === 0) {
+            requestAnimationFrame(() => {
+                // Solo reintentamos si el elemento sigue en el DOM y sigue visible a nivel de estado
+                if (this.isVisible) this._fitUsername();
+            });
+            return;
+        }
+
+        const textWidth = inner.scrollWidth;
+        if (textWidth <= availableWidth + 2) return;
+
+        let attempts = 0;
+        let currentFontSize = parseFloat(window.getComputedStyle(wrapper).fontSize) || 28; // fallback
+        const minFontSize = currentFontSize * 0.65;
+
+        // 1. Reducir tipografía
+        while (inner.scrollWidth > availableWidth + 2 && currentFontSize > minFontSize && attempts < 15) {
+            currentFontSize -= 1;
+            inner.style.fontSize = `${currentFontSize}px`;
+            attempts++;
+        }
+
+        // 2. Comprimir lateralmente
+        if (inner.scrollWidth > availableWidth + 2) {
+            const ratio = availableWidth / inner.scrollWidth;
+            const boundedScale = Math.max(0.4, ratio * 0.98);
+            inner.style.transform = `scaleX(${boundedScale})`;
+        }
     }
 
     // ─── ANIMATIONS ──────────────────────────────────────

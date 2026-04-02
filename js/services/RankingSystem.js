@@ -374,7 +374,7 @@ export default class RankingSystem {
                     badgeClass: 'vip',
                     rankTitle: { 
                         title: isF1 ? 'ELITE RACER' : 'ELITE SOLO', 
-                        icon: isF1 ? 'ferrari.png' : 'netrunner.png' 
+                        icon: isF1 ? 'ferrari.png' : 'arasaka.png' 
                     }
                 };
             } else {

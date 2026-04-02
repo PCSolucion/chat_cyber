@@ -267,10 +267,10 @@ export default class UIManager {
             
             // 2. Extender tiempo de visibilidad del widget principal si es necesario
             // para que no se oculte el widget de chat básico al mismo tiempo
-            this.extendDisplayTime(16000);
+            this.extendDisplayTime(14000);
 
             // 3. Mostrar widget de radio (Dura N segundos + 2 extra)
-            this.radioWidget.show(username, message, 14000, role);
+            this.radioWidget.show(username, message, 12000, role);
             
             // 4. Feedback en LED TX de transmisión de radio
             if (this.status && typeof this.status.flashLED === 'function') {

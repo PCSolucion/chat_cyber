@@ -86,6 +86,7 @@ export default class RadioWidgetComponent {
         el.style.letterSpacing = '-2px';
         el.style.transform = 'none';
         el.style.display = 'block';
+        el.style.whiteSpace = 'nowrap'; // CRÍTICO: Evitar wrap en 2 líneas para medir el scrollWidth real
         
         // El widget tiene 420px de ancho y 40px de padding a cada lado
         // Dejamos un margen de seguridad extra (330px en vez de 340px)
@@ -96,23 +97,30 @@ export default class RadioWidgetComponent {
         
         // 1. Intentar ajustar reduciendo el tamaño de fuente (el scrollWidth detecta desborde)
         let attempts = 0;
-        while (el.scrollWidth > maxWidth && fontSize > 24 && attempts < 20) {
+        let currentWidth = el.scrollWidth;
+        
+        while (currentWidth > maxWidth && fontSize > 24 && attempts < 20) {
             fontSize -= 2;
             if (fontSize < 46) letterSpacing = -1;
             if (fontSize < 32) letterSpacing = 0;
             
             el.style.fontSize = `${fontSize}px`;
             el.style.letterSpacing = `${letterSpacing}px`;
+            currentWidth = el.scrollWidth;
             attempts++;
         }
         
         // 2. Si todavía no cabe (nombres MUY largos), aplicamos un scaleX para comprimir
         // Esto mantiene la estética de broadcast donde los nombres largos se "aplastan" lateralmente
-        if (el.scrollWidth > maxWidth) {
-            const scale = (maxWidth / el.scrollWidth) * 0.98;
+        if (currentWidth > maxWidth) {
+            const scale = (maxWidth / currentWidth) * 0.98;
             el.style.transform = `scaleX(${scale})`;
             el.style.transformOrigin = 'right';
-            el.style.whiteSpace = 'nowrap';
+            
+            // Si el scale es muy agresivo (< 0.7), bajamos fuente un pelín más como último recurso
+            if (scale < 0.7) {
+                el.style.fontSize = `${fontSize * 0.9}px`;
+            }
         }
     }
 

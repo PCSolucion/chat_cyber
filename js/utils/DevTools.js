@@ -122,7 +122,7 @@ export default class DevTools {
         
         // Registrar artificialmente al usuario como presente para pasar filtros
         if (this.app.twitchService && this.app.twitchService.activeChatters) {
-            this.app.twitchService.activeChatters.add(usuario.toLowerCase());
+            this.app.twitchService.activeChatters.set(usuario.toLowerCase(), Date.now());
         }
 
         const tags = { 

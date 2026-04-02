@@ -68,6 +68,8 @@ class TestPanelController {
             if (win) {
                 win.KEEP_WIDGET_VISIBLE = e.target.checked;
                 console.log('Keep Visible:', e.target.checked);
+                // Persistir
+                window.localStorage.setItem('freeze-hud', e.target.checked);
             }
         });
 
@@ -106,6 +108,12 @@ class TestPanelController {
         if (win) {
             const keepVisibleCheckbox = document.getElementById('keep-visible-checkbox');
             if (keepVisibleCheckbox) {
+                // Restaurar de localStorage si existe
+                const savedState = window.localStorage.getItem('freeze-hud');
+                if (savedState !== null) {
+                    keepVisibleCheckbox.checked = savedState === 'true';
+                }
+
                 win.KEEP_WIDGET_VISIBLE = keepVisibleCheckbox.checked;
                 console.log('🔄 Initial synchronization - Keep Visible:', keepVisibleCheckbox.checked);
             }

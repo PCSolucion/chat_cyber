@@ -43,8 +43,7 @@
   text-align: right;
   letter-spacing: -2px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   max-width: 100%;
 }
 

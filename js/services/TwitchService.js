@@ -26,7 +26,7 @@ export default class TwitchService {
         this.isConnected = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
-        this.activeChatters = new Set(); // Fallback para tracking local
+        this.activeChatters = new Map(); // username -> lastSeenTimestamp (TTL 40min)
     }
 
     /**
@@ -67,7 +67,7 @@ export default class TwitchService {
                 // Registrar usuario como activo
                 const username = tags['display-name'] || tags.username;
                 if (username) {
-                    this.activeChatters.add(username.toLowerCase());
+                    this.activeChatters.set(username.toLowerCase(), Date.now());
                 }
 
                 // Procesar todos los mensajes
@@ -78,7 +78,7 @@ export default class TwitchService {
 
             // Event: Usuario se une al chat (JOIN)
             this.client.on('join', (channel, username, self) => {
-                this.activeChatters.add(username.toLowerCase());
+                this.activeChatters.set(username.toLowerCase(), Date.now());
             });
 
             // Event: Usuario sale del chat (PART)
@@ -195,10 +195,20 @@ export default class TwitchService {
         // La API de TMI (http://tmi.twitch.tv/group/user/...) tiene problemas de CORS en navegadores
         // y a menudo devuelve 404 o bloqueos.
         // Por estabilidad, usamos exclusivamente el tracking local de eventos JOIN/PART/MESSAGE.
+        
+        // TTL de 40 minutos para limpiar usuarios inactivos o que se fueron sin evento PART
+        const now = Date.now();
+        const fortyMinutesMs = 40 * 60 * 1000;
+        
+        for (const [user, lastSeen] of this.activeChatters.entries()) {
+            if (now - lastSeen > fortyMinutesMs) {
+                this.activeChatters.delete(user);
+            }
+        }
 
         Logger.debug('Twitch', `Usando tracker local de chatters (${this.activeChatters.size} usuarios) para evitar CORS.`);
 
-        return Array.from(this.activeChatters);
+        return Array.from(this.activeChatters.keys());
     }
 
     /**

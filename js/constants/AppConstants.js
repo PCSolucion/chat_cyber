@@ -21,7 +21,7 @@ export const TIMING = {
     METADATA_CHECK_OFFLINE_MS: 60000,   // 1 min cuando está offline (para detectar inicio rápido)
     
     // Tiempos de UI
-    MESSAGE_DISPLAY_TIME_MS: 18000,      // Tiempo que el mensaje es visible (Cambiado de 14 a 18)
+    MESSAGE_DISPLAY_TIME_MS: 14000,      // Tiempo que el mensaje es visible
 
     // Watch Time Tracker (Sistema de XP por tiempo)
     WATCH_TIME_INTERVAL_MS: 1200000,     // 20 min (Cambiado de 30 a 20)

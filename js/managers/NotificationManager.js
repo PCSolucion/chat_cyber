@@ -206,7 +206,8 @@ export default class NotificationManager {
         case "levelup":
           if (this.uiManager && this.uiManager.xpDisplay) {
             this.uiManager.xpDisplay.showTopLevelUp(notification.data);
-            this.uiManager.xpDisplay.showLevelUp(notification.data);
+            // showLevelUp inline eliminada por petición del usuario
+            // this.uiManager.xpDisplay.showLevelUp(notification.data);
           }
           EventManager.emit(EVENTS.UI.LEVEL_UP_DISPLAYED, notification.data);
           totalWaitTime = 6500;

@@ -256,7 +256,7 @@ export default class XPDisplayRenderer {
         this.dom.cpLevelOverlay.classList.add('show');
 
         const container = document.querySelector('.container');
-        if (container) {
+        if (container && !container.classList.contains('hidden')) {
             container.classList.add('level-up-effect');
             container.classList.add('shake-impact');
             setTimeout(() => container.classList.remove('shake-impact'), 1000);
@@ -270,7 +270,7 @@ export default class XPDisplayRenderer {
     }
 
     hideTopLevelUp() {
-        if (this.dom.cpLevelOverlay) {
+        if (this.dom.cpLevelOverlay && this.dom.cpLevelOverlay.classList.contains('show')) {
             this.dom.cpLevelOverlay.classList.add('hiding');
             this.dom.cpLevelOverlay.classList.remove('show');
 
@@ -283,7 +283,7 @@ export default class XPDisplayRenderer {
     }
 
     hideLevelUpInline() {
-        if (this.dom.levelUpInline) {
+        if (this.dom.levelUpInline && this.dom.levelUpInline.classList.contains('show')) {
             this.dom.levelUpInline.classList.remove('show');
             this.dom.levelUpInline.classList.add('hiding');
             setTimeout(() => {

@@ -2,6 +2,7 @@ import FirestoreService from './FirestoreService.js';
 import Logger from '../utils/Logger.js';
 import EventManager from '../utils/EventEmitter.js';
 import { EVENTS } from '../utils/EventTypes.js';
+import LevelCalculator from './LevelCalculator.js';
 
 /**
  * UserStateManager - Gestión de Estado (Username Key)
@@ -30,6 +31,9 @@ export default class UserStateManager {
         // Control de cambios estructurales y usuarios nuevos para evitar atomic increments fallidos
         this.pendingStructuralChanges = new Set(); 
         this.newUsers = new Set();
+
+        // Calculadora para curación de datos (healing)
+        this.levelCalculator = new LevelCalculator();
     }
 
     async init() {
@@ -319,7 +323,9 @@ export default class UserStateManager {
             // Sobrescribir con valores normalizados
             displayName: displayName,
             xp: Number(data.xp) || 0,
-            level: Number(data.level) || 1,
+            level: (Number(data.level) || 1) > 1 
+                ? Number(data.level) 
+                : this.levelCalculator.calculateLevel(Number(data.xp) || 0),
             stats,
             achievements: Array.isArray(data.achievements) ? data.achievements : [],
             activityHistory: data.activityHistory || {},
