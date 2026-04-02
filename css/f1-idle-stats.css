@@ -1102,7 +1102,7 @@
 .driver-card {
   display: flex;
   flex-direction: column;
-  width: 380px; /* Widened to fit generic longer names */
+  width: 285px; /* Reduced by 25% total (15% then 10%) from 380px */
   background: transparent;
   border-radius: 4px;
   overflow: hidden;
@@ -1115,11 +1115,11 @@
 .dc-header {
   background: #111111;
   color: #c8321a;
-  font-size: 2.2rem;
+  font-size: 1.65rem; /* Reduced by 25% total from 2.2rem */
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60px; /* Fixed height for consistent vertical centering */
+  height: 45px; /* Reduced by 25% total from 60px */
   letter-spacing: 2px;
   font-weight: 500;
   text-transform: uppercase;
@@ -1129,7 +1129,7 @@
 
 .dc-middle {
   display: flex;
-  height: 64px; /* Taller middle */
+  height: 48px; /* Reduced by 25% total from 64px */
   background: repeating-linear-gradient(
     45deg,
     #ffffff,
@@ -1144,14 +1144,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  font-size: 1.6rem;
+  width: 38px; /* Reduced by 25% total from 50px */
+  font-size: 1.2rem; /* Reduced by 25% total from 1.6rem */
   color: #111;
   font-weight: 400; 
 }
 
 .dc-team-block {
-  width: 70px;
+  width: 53px; /* Reduced by 25% total from 70px */
   background: var(--team-color, #e10600);
   display: flex;
   align-items: center;
@@ -1160,17 +1160,17 @@
 }
 
 .dc-team-logo {
-  max-width: 44px;
-  max-height: 36px;
+  max-width: 33px; /* Reduced by 25% total from 44px */
+  max-height: 27px; /* Reduced by 25% total from 36px */
   object-fit: contain;
 }
 
 .dc-name {
   display: flex;
   align-items: center;
-  padding-left: 14px;
-  padding-right: 14px;
-  font-size: 1.15rem; /* Substantially reduced to ensure elegant fit */
+  padding-left: 11px; /* Reduced by 25% total from 14px (approx) */
+  padding-right: 11px; /* Reduced by 25% total from 14px (approx) */
+  font-size: 0.86rem; /* Reduced by 25% total from 1.15rem */
   color: #000;
   font-weight: 900;
   flex: 1;
@@ -1187,8 +1187,8 @@
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(to bottom, #1e2125 0%, #111418 100%);
-  padding: 14px 24px;
-  height: 96px; /* Taller footer */
+  padding: 11px 18px; /* Reduced by 25% total (approx) */
+  height: 72px; /* Reduced by 25% total from 96px */
   border-top: 1px solid #333;
 }
 
@@ -1201,7 +1201,7 @@
 
 .dc-label-line {
   font-family: "Formula1", "Outfit", sans-serif; /* Matched F1 font style */
-  font-size: 1.3rem; /* Increased size */
+  font-size: 0.98rem; /* Reduced by 25% total from 1.3rem */
   color: #fff;
   font-style: italic;
   font-weight: 500;
@@ -1210,7 +1210,7 @@
 }
 
 .dc-stat-value {
-  font-size: 4.6rem;
+  font-size: 3.45rem; /* Reduced by 25% total from 4.6rem */
   color: #35679c;
   font-weight: 400;
   line-height: 0.8;

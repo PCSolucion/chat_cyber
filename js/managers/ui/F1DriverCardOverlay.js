@@ -253,7 +253,7 @@ export default class F1DriverCardOverlay {
         requestAnimationFrame(() => {
             // Temporarily use block display for measurement to avoid flex constraints interfering
             wrapper.style.display = 'block';
-            const availableWidth = wrapper.clientWidth - 28; // Account for padding (14px L + 14px R)
+            const availableWidth = wrapper.clientWidth - 22; // Account for padding (11px L + 11px R)
             wrapper.style.display = ''; // Restore flex
 
             // If still no width (not attached/rendered), wait
