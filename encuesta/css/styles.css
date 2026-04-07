@@ -1,0 +1,219 @@
+/* Styles similar to prediction but with specific colors or classes for poll */
+:root {
+  --cyber-red: #ff3b45;
+  --cyber-cyan: #00f6ff;
+  --cyber-yellow: #fcee09;
+  --cyber-green: #39ff14;
+  --font-title: "Orbitron", sans-serif;
+  --font-ui: "Rajdhani", sans-serif;
+  --font-mono: "Share Tech Mono", monospace;
+  --glow-cyan: 2px 2px 0px rgba(0,0,0,0.8), 0 0 15px rgba(0, 246, 255, 0.6);
+  --glow-red: 2px 2px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255, 59, 69, 0.6);
+  --glow-green: 2px 2px 0px rgba(0,0,0,0.8), 0 0 15px rgba(57, 255, 20, 0.6);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-ui);
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.poll-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.poll-overlay.show {
+  opacity: 1;
+  animation: hudFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hudFadeIn {
+  0% { opacity: 0; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.poll-overlay.hiding {
+  animation: hudFadeOut 0.6s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes hudFadeOut {
+  100% { opacity: 0; transform: translateX(100px); }
+}
+
+.hud-data-core {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 900px;
+  background: #000000;
+  border-right: 5px solid var(--cyber-green);
+  padding: 60px 80px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+}
+
+.hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 20px;
+}
+
+.hud-status {
+  background: var(--cyber-green);
+  color: #000;
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 900;
+  padding: 3px 20px;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  letter-spacing: 2px;
+}
+
+.timer-tag {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--cyber-green);
+  letter-spacing: 2px;
+  display: block;
+  text-align: right;
+}
+
+#timer-text {
+  font-family: var(--font-title);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  text-shadow: var(--glow-green);
+}
+
+.poll-overlay.resolved #timer-text {
+  color: var(--cyber-yellow);
+  text-shadow: 2px 2px 0px #000;
+  font-size: 3rem;
+}
+
+.question {
+  font-family: var(--font-title);
+  font-size: 3.2rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin-bottom: 50px;
+  border-right: 12px solid var(--cyber-green);
+  padding-right: 40px;
+  text-align: right;
+}
+
+.options-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.option-item {
+  background: #121216;
+  border: 1px solid #333;
+  border-right: 5px solid #444;
+  padding: 20px 30px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.option-item:hover {
+  transform: translateX(-10px);
+  background: #1a1a20;
+  border-right-color: var(--cyber-green);
+}
+
+.option-item.winner {
+  background: #0d2c00;
+  border-color: var(--cyber-green);
+  border-right-width: 8px;
+}
+
+.option-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.option-command {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.cmd-badge {
+  background: var(--cyber-green);
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 900;
+  padding: 0 12px;
+  clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%);
+}
+
+.option-text {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.option-percent {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--cyber-green);
+}
+
+.progress-bar-bg {
+  height: 6px;
+  background: #1a1a1a;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1d4d12, var(--cyber-green));
+  box-shadow: 0 0 10px var(--cyber-green);
+  transition: width 0.5s ease-out;
+}
+
+.hud-footer {
+  margin-top: 40px;
+  border-top: 1px solid #333;
+  padding-top: 20px;
+}
+
+.cmd-hint {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: #777;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.cmd-hint::before {
+  content: "» POLL_SYSTEM: ";
+  color: var(--cyber-green);
+  font-weight: 900;
+}
