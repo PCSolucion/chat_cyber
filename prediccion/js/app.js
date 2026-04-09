@@ -106,28 +106,33 @@ class PredictionApp {
         const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
         this.timer = Math.max(0, data.duration - elapsed);
 
+        if (this.resolved) {
+            // Predicción ya resuelta: solo mostrar brevemente si es nueva en esta sesión
+            this.timerEl.textContent = "PREDICCIÓN RESUELTA";
+            this.overlay.classList.add('resolved');
+            if (isNew && !this.resolutionConfirmed) {
+                this.resolutionConfirmed = true;
+                this.renderAll();
+                this.renderOptions(data.winner);
+                this.overlay.classList.add('show');
+                this.overlay.classList.remove('hiding');
+                this.scheduleHide(15000);
+            }
+            // Si ya fue confirmada en esta sesión (update de votos, etc.), no volver a mostrar
+            return;
+        }
+
         if (isNew) {
             this.renderAll();
             this.overlay.classList.add('show');
             this.overlay.classList.remove('hiding');
-            if (this.timer > 0 && !this.resolved) {
+            if (this.timer > 0) {
                 this.startTimer();
-            } else if (!this.resolved) {
+            } else {
                 this.onTimerEnd();
             }
         } else {
             this.renderOptions(data.winner);
-        }
-
-        if (this.resolved) {
-            this.timerEl.textContent = "PREDICCIÓN RESUELTA";
-            this.overlay.classList.add('resolved');
-            this.overlay.classList.add('show');
-            // If it was appena resolved, we might want to trigger the hide timeout
-            if (!this.resolutionConfirmed) {
-                this.resolutionConfirmed = true;
-                this.scheduleHide(15000);
-            }
         }
     }
 
@@ -213,10 +218,17 @@ class PredictionApp {
             return;
         }
 
+        // Comando para limpiar/eliminar la predicción o encuesta actual: !pre clear / !poll clear
+        if ((msgLower === '!pre clear' || msgLower === '!poll clear') && isAdmin) {
+            console.log('🧹 Limpiando predicción/encuesta actual...');
+            this.clearCurrent();
+            return;
+        }
+
         // Comando para iniciar predicción: !pre <minutos> <pregunta> a-N b-N...
         if (msgLower.startsWith('!pre ') && isAdmin) {
             if (this.active) {
-                console.warn('⚠️ Ya hay una predicción activa. Debes esperar a que finalice.');
+                console.warn('⚠️ Ya hay una predicción activa. Usa !pre clear para eliminarla primero.');
                 return;
             }
             console.log('📝 Intentando procesar !pre...');
@@ -443,6 +455,42 @@ class PredictionApp {
             this.overlay.classList.remove('resolved');
             this.prediction = { question: '', options: {}, totalVotes: 0 };
             this.renderAll();
+        }, 700);
+    }
+
+    async clearCurrent() {
+        console.log('🧹 Eliminando predicción/encuesta actual...');
+        // Cancelar todos los timers activos
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        if (this.helpTimeout) clearTimeout(this.helpTimeout);
+        if (this.resultTimeout) clearTimeout(this.resultTimeout);
+        if (this.resolutionHideTimeout) clearTimeout(this.resolutionHideTimeout);
+        if (this.fadeTimeout) clearTimeout(this.fadeTimeout);
+
+        // Resetear estado local completamente
+        this.active = false;
+        this.resolved = false;
+        this.votingOpen = false;
+        this.resolutionConfirmed = false;
+        this.prediction = { question: '', options: {}, totalVotes: 0 };
+        this.lastResolvedPrediction = null;
+        this.lastWinner = null;
+
+        // Ocultar overlay con animación
+        this.overlay.classList.add('hiding');
+        this.overlay.classList.remove('show');
+
+        // Limpiar Firestore para que ninguna otra instancia vuelva a mostrar la predicción antigua
+        if (this.db) {
+            const stateRef = doc(this.db, 'system', 'current_prediction');
+            await setDoc(stateRef, { active: false });
+        }
+
+        setTimeout(() => {
+            this.overlay.classList.remove('hiding');
+            this.overlay.classList.remove('resolved');
+            this.renderAll();
+            console.log('✅ Predicción/encuesta eliminada correctamente.');
         }, 700);
     }
 
