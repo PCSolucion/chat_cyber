@@ -139,10 +139,15 @@ class TestPanelController {
                 break;
 
             case 'send-message':
-                this.testUser(document.getElementById('custom-user')?.value);
+                const user = document.getElementById('custom-user')?.value || 'TestUser';
+                const msg = value || document.getElementById('test-message')?.value;
+                this.testUser(user, msg);
                 break;
             case 'send-broadcaster':
-                this.testUser(this.broadcaster || 'liiukiin');
+                this.testUser(this.broadcaster || 'liiukiin', value || document.getElementById('test-message')?.value);
+                break;
+            case 'test-poll':
+                this.testPoll();
                 break;
             case 'set-streak':
                 this.testStreak(document.getElementById('streak-days')?.value);
@@ -298,11 +303,12 @@ class TestPanelController {
         // Forzar recalculo si el contenedor no está listo
         const containerWidth = container.clientWidth || (window.innerWidth - 380);
         
-        // El widget original es 2560px (2K)
-        const ORIGINAL_WIDTH = 2560; 
+        // El widget original es 2560px (2K), pero las encuestas son 1920px (1080p)
+        const isStandaloneOverlay = iframe.src.includes('encuesta/') || iframe.src.includes('prediccion/');
+        const ORIGINAL_WIDTH = isStandaloneOverlay ? 1920 : 2560; 
         const scale = containerWidth / ORIGINAL_WIDTH;
         
-        iframe.style.transformOrigin = '0 0'; // CRÍTICO: Escalar desde la esquina superior izquierda
+        iframe.style.transformOrigin = '0 0'; 
         iframe.style.transform = `scale(${scale})`;
         
         // REINTENTAR CONEXIÓN SI FALLÓ AL INICIO
@@ -405,10 +411,22 @@ class TestPanelController {
         }
     }
 
-    async testUser(username) {
+    async testUser(username, message = null) {
         if (!username) return;
-        const message = document.getElementById('test-message')?.value || 'ACCESS_GRANTED';
+        const msg = message || document.getElementById('test-message')?.value || 'ACCESS_GRANTED';
         const win = this.getWidgetWindow();
+
+        // Si estamos en la página de encuestas o predicciones, usamos la instancia directamente si existe
+        if (win.PollAppInstance) {
+            console.log(`🗳️ Injecting message to PollApp: ${username}: ${msg}`);
+            win.PollAppInstance.handleMessage({ username: username.toLowerCase(), 'display-name': username }, msg);
+            return;
+        }
+        if (win.PredictionAppInstance) {
+            console.log(`🔮 Injecting message to PredictionApp: ${username}: ${msg}`);
+            win.PredictionAppInstance.handleMessage({ username: username.toLowerCase(), 'display-name': username }, msg);
+            return;
+        }
 
         if (!win?.WidgetDebug?.chat) {
             console.log('Waiting for widget instance...');
@@ -437,7 +455,14 @@ class TestPanelController {
             }
         }
 
-        win.WidgetDebug.chat.simulateMessage(username, message, extraTags);
+        win.WidgetDebug.chat.simulateMessage(username, msg, extraTags);
+    }
+
+    testPoll() {
+        const broadcaster = this.broadcaster || 'liiukiin';
+        const pollCmd = `!poll 2 ¿CUÁL ES TU CROMO FAVORITO? a-SANDIVISTAN b-KEREZNIKOV c-MANTIS_BLADES`;
+        console.log('📊 Simulating Poll Command...');
+        this.testUser(broadcaster, pollCmd);
     }
 
     testStreak(days) {

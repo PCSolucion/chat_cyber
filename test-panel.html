@@ -51,6 +51,8 @@
                     <select id="theme-selector" class="panel-input" style="width: 100%; margin-bottom: 10px;">
                         <option value="index.html">CYBERPUNK_2077 (Original)</option>
                         <option value="index-f1.html">F1_MINIMALIST (New)</option>
+                        <option value="encuesta/index.html">POLL_OVERLAY (Standalone)</option>
+                        <option value="prediccion/index.html">PREDICTION_OVERLAY (Standalone)</option>
 
                     </select>
                 </div>
@@ -122,6 +124,22 @@
                     <button data-action="test-spam-repeat" class="btn btn--red btn--full" style="font-size: 9px;">🔁 REPEAT_MSG</button>
                     <button data-action="test-spam-flood" class="btn btn--red btn--full" style="font-size: 9px;">💥 USER_FLOOD</button>
                     <button data-action="test-spam-copypasta" class="btn btn--red btn--full" style="font-size: 9px;">📋 COPYPASTA</button>
+                </div>
+            </div>
+
+            <!-- Poll Engine Tests -->
+            <div class="panel-section">
+                <label class="section-label">POLL_SYSTEM</label>
+                <div class="button-list">
+                    <button data-action="test-poll" class="btn btn--green btn--full" style="text-align: center;">📊 START_TEST_POLL</button>
+                    <div class="button-row">
+                        <button data-action="send-message" data-value="!pre hide" class="btn btn--red" style="flex: 1;">HIDE</button>
+                        <button data-action="send-message" data-value="!pre show" class="btn btn--cyan" style="flex: 1;">SHOW</button>
+                    </div>
+                    <div class="button-row">
+                        <button data-action="send-message" data-value="!a" class="btn btn--cyan" style="flex: 1;">VOTE !a</button>
+                        <button data-action="send-message" data-value="!b" class="btn btn--cyan" style="flex: 1;">VOTE !b</button>
+                    </div>
                 </div>
             </div>
 

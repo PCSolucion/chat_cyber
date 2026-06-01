@@ -3,9 +3,9 @@ import { getFirestore, doc, updateDoc, increment, setDoc, onSnapshot, getDoc } f
 import CONFIG from '../../js/config.js';
 
 const PREDICTION_CONFIG = {
-    channel: CONFIG.TWITCH_CHANNEL || '#liiukiin',
+    channel: (CONFIG.TWITCH_CHANNEL?.startsWith('#') ? CONFIG.TWITCH_CHANNEL : '#' + (CONFIG.TWITCH_CHANNEL || 'liiukiin')).toLowerCase(),
     broadcaster: CONFIG.BROADCASTER_USERNAME || 'liiukiin',
-    allowedUsers: ['liiukiin', 'takeru_xiii'] // Usuarios con permisos de administración
+    allowedUsers: ['liiukiin', 'takeru_xiii', 'miguela1982'] // Usuarios con permisos de administración
 };
 
 class PredictionApp {
@@ -17,6 +17,7 @@ class PredictionApp {
         this.timer = 0;
         this.timerInterval = null;
         this.connected = false;
+        this.visible = true;
         
         // Initialize Firebase
         this.db = null;
@@ -124,14 +125,29 @@ class PredictionApp {
 
         if (isNew) {
             this.renderAll();
-            this.overlay.classList.add('show');
-            this.overlay.classList.remove('hiding');
+            // Manejar visibilidad inicial
+            if (data.visible !== false) {
+                this.overlay.classList.add('show');
+                this.overlay.classList.remove('hiding');
+            } else {
+                this.overlay.classList.remove('show');
+                this.overlay.classList.add('hiding');
+            }
+
             if (this.timer > 0) {
                 this.startTimer();
             } else {
                 this.onTimerEnd();
             }
         } else {
+            // Manejar cambios de visibilidad en predicción existente
+            if (data.visible === false) {
+                this.overlay.classList.remove('show');
+                this.overlay.classList.add('hiding');
+            } else if (this.active) {
+                this.overlay.classList.add('show');
+                this.overlay.classList.remove('hiding');
+            }
             this.renderOptions(data.winner);
         }
     }
@@ -157,6 +173,7 @@ class PredictionApp {
             options: optionsToSave,
             totalVotes: this.prediction.totalVotes,
             winner: winner,
+            visible: this.visible !== false,
             lastId: this.resolved ? (this.lastResolvedId || Date.now()) : null
         };
 
@@ -222,6 +239,18 @@ class PredictionApp {
         if ((msgLower === '!pre clear' || msgLower === '!poll clear') && isAdmin) {
             console.log('🧹 Limpiando predicción/encuesta actual...');
             this.clearCurrent();
+            return;
+        }
+
+        // Comando para ocultar: !pre hide
+        if (msgLower === '!pre hide' && isAdmin && this.active) {
+            this.toggleVisibility(false);
+            return;
+        }
+
+        // Comando para mostrar: !pre show
+        if (msgLower === '!pre show' && isAdmin && this.active) {
+            this.toggleVisibility(true);
             return;
         }
 
@@ -304,7 +333,23 @@ class PredictionApp {
         this.overlay.classList.add('show');
 
         // Persistir en Firestore
+        this.visible = true;
         this.saveState();
+    }
+
+    async toggleVisibility(visible) {
+        this.visible = visible;
+        if (this.db) {
+            const stateRef = doc(this.db, 'system', 'current_prediction');
+            await updateDoc(stateRef, { visible });
+        }
+        if (visible) {
+            this.overlay.classList.add('show');
+            this.overlay.classList.remove('hiding');
+        } else {
+            this.overlay.classList.remove('show');
+            this.overlay.classList.add('hiding');
+        }
     }
 
     addVote(username, optionLabel) {
@@ -731,5 +776,5 @@ class PredictionApp {
 
 // Iniciar aplicación
 window.addEventListener('DOMContentLoaded', () => {
-    new PredictionApp();
+    window.PredictionAppInstance = new PredictionApp();
 });

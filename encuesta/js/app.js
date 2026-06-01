@@ -3,8 +3,8 @@ import { getFirestore, doc, updateDoc, increment, setDoc, onSnapshot, getDoc } f
 import CONFIG from '../../js/config.js';
 
 const POLL_CONFIG = {
-    channel: CONFIG.TWITCH_CHANNEL || '#liiukiin',
-    allowedUsers: ['liiukiin', 'takeru_xiii'] // Administradores
+    channel: (CONFIG.TWITCH_CHANNEL?.startsWith('#') ? CONFIG.TWITCH_CHANNEL : '#' + (CONFIG.TWITCH_CHANNEL || 'liiukiin')).toLowerCase(),
+    allowedUsers: ['liiukiin', 'takeru_xiii', 'miguela1982'] // Administradores
 };
 
 class PollApp {
@@ -87,14 +87,29 @@ class PollApp {
 
         if (isNew) {
             this.renderAll();
-            this.overlay.classList.add('show');
-            this.overlay.classList.remove('hiding');
+            // Solo mostrar si no se ha ocultado explícitamente
+            if (data.visible !== false) {
+                this.overlay.classList.add('show');
+                this.overlay.classList.remove('hiding');
+            } else {
+                this.overlay.classList.remove('show');
+                this.overlay.classList.add('hiding');
+            }
+
             if (this.timer > 0 && !this.resolved) {
                 this.startTimer();
             } else if (!this.resolved) {
                 this.onTimerEnd();
             }
         } else {
+            // Manejar cambios de visibilidad en encuesta existente
+            if (data.visible === false) {
+                this.overlay.classList.remove('show');
+                this.overlay.classList.add('hiding');
+            } else if (this.active) {
+                this.overlay.classList.add('show');
+                this.overlay.classList.remove('hiding');
+            }
             this.renderOptions();
         }
 
@@ -102,10 +117,15 @@ class PollApp {
             this.stopTimer();
             this.timerEl.textContent = "ENCUESTA FINALIZADA";
             this.overlay.classList.add('resolved');
-            this.overlay.classList.add('show');
-            if (!this.resolutionConfirmed) {
+            
+            // Si es un "show" de historial o una resolución activa
+            if (data.visible !== false) {
+                this.overlay.classList.add('show');
+            }
+
+            if (!this.resolutionConfirmed && this.active && !data.isHistory) {
                 this.resolutionConfirmed = true;
-                this.scheduleHide(120000); // 2 minutos como pidió el usuario
+                this.scheduleHide(120000); 
             }
         }
     }
@@ -128,7 +148,8 @@ class PollApp {
             startTime: this.startTime || Date.now(),
             duration: this.duration || 0,
             options: optionsToSave,
-            totalVotes: this.poll.totalVotes
+            totalVotes: this.poll.totalVotes,
+            visible: this.visible !== false
         };
 
         try {
@@ -173,6 +194,24 @@ class PollApp {
             return;
         }
 
+        // Admin: !poll hide
+        if (msgLower === '!poll hide' && isAdmin && this.active) {
+            this.toggleVisibility(false);
+            return;
+        }
+
+        // Admin: !poll show
+        if (msgLower === '!poll show' && isAdmin && this.active) {
+            this.toggleVisibility(true);
+            return;
+        }
+
+        // Admin: !poll ult
+        if (msgLower === '!poll ult' && isAdmin) {
+            this.showLastResult();
+            return;
+        }
+
         // Admin: !poll reset
         if (msgLower === '!poll reset' && isAdmin) {
             this.resetPoll();
@@ -189,7 +228,7 @@ class PollApp {
     }
 
     startPollFromChat(fullMessage) {
-        // Regex idéntico al de predicción
+        // Regex mejorada: !poll <minutos> <pregunta con espacios y signos> <opciones>
         const mainRegex = /^!poll\s+(\d+)\s+(.+?)\s+([a-z]-.+)$/i;
         const match = fullMessage.match(mainRegex);
 
@@ -225,6 +264,7 @@ class PollApp {
         this.startTime = Date.now();
         this.duration = this.timer;
         this.resolutionConfirmed = false;
+        this.visible = true;
 
         this.renderAll();
         this.startTimer();
@@ -233,13 +273,61 @@ class PollApp {
         this.saveState();
     }
 
+    async toggleVisibility(visible) {
+        this.visible = visible;
+        if (this.db) {
+            const stateRef = doc(this.db, 'system', 'current_poll');
+            await updateDoc(stateRef, { visible });
+        }
+        if (visible) {
+            this.overlay.classList.add('show');
+            this.overlay.classList.remove('hiding');
+        } else {
+            this.overlay.classList.remove('show');
+            this.overlay.classList.add('hiding');
+        }
+    }
+
+    async showLastResult() {
+        if (!this.db) return;
+        console.log('🔍 Cargando última encuesta...');
+        const ref = doc(this.db, 'system', 'last_poll_result');
+        try {
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+                const data = snap.data();
+                // Simular estado de encuesta activa pero ya resuelta e historia
+                this.applySyncedState({
+                    ...data,
+                    active: true,
+                    resolved: true,
+                    visible: true,
+                    isHistory: true,
+                    startTime: Date.now() - (data.duration * 1000), // Evitar timers locos
+                });
+
+                // Autohide tras 30s para el historial
+                if (this.historyTimeout) clearTimeout(this.historyTimeout);
+                this.historyTimeout = setTimeout(() => {
+                    this.overlay.classList.add('hiding');
+                    this.overlay.classList.remove('show');
+                }, 30000);
+            }
+        } catch (e) {
+            console.error('❌ Error al cargar historial:', e);
+        }
+    }
+
     addVote(username, optionLabel) {
+        if (!this.poll.options[optionLabel]) return;
+        
         let changed = false;
         Object.values(this.poll.options).forEach(opt => {
             if (opt.voters.delete(username)) changed = true;
         });
         
         this.poll.options[optionLabel].voters.add(username);
+        console.log(`🗳️ Voto registrado: ${username} -> !${optionLabel}`);
         this.updateVotes();
         this.saveState();
     }
@@ -292,8 +380,29 @@ class PollApp {
         
         this.renderOptions();
         this.saveState();
+        this.saveHistory();
         this.awardXP();
         this.scheduleHide(120000); // Muestra por 2 minutos
+    }
+
+    async saveHistory() {
+        if (!this.db) return;
+        const optionsToSave = {};
+        Object.entries(this.poll.options).forEach(([label, data]) => {
+            optionsToSave[label] = {
+                text: data.text,
+                voters: Array.from(data.voters)
+            };
+        });
+
+        const ref = doc(this.db, 'system', 'last_poll_result');
+        await setDoc(ref, {
+            question: this.poll.question,
+            options: optionsToSave,
+            totalVotes: this.poll.totalVotes,
+            duration: this.duration || 0,
+            timestamp: Date.now()
+        });
     }
 
     awardXP() {
@@ -392,5 +501,5 @@ class PollApp {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    new PollApp();
+    window.PollAppInstance = new PollApp();
 });
