@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creditos del Stream</title>
+  <link rel="stylesheet" href="credits.css" />
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="credits-wrapper" id="creditsContainer">
+    <div class="credits-content" id="creditsContent">
+      <!-- Content will be injected by script -->
+    </div>
+  </div>
+
+  <script>
+    // Utility to format duration nicely
+    function formatDuration(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return `${h}h ${m}m ${s}s`;
+    }
+
+    // ── Normalise helpers ──────────────────────────────────────────────────────
+    // SessionStatsService saves {username, messages} but demo uses {id, count}.
+    // We unify everything to {username, count} before rendering.
+
+    function normaliseUsers(raw) {
+      if (!Array.isArray(raw)) return [];
+      return raw.map(u => ({
+        username: u.username || u.id || '???',
+        count: u.count !== undefined ? u.count : (u.messages !== undefined ? u.messages : 0)
+      }));
+    }
+
+    // Service saves {username, days}, demo uses {id, streakDays}.
+    function normaliseStreaks(raw) {
+      if (!Array.isArray(raw)) return [];
+      return raw.map(s => ({
+        username: s.username || s.id || '???',
+        days: s.days !== undefined ? s.days : (s.streakDays !== undefined ? s.streakDays : 0)
+      }));
+    }
+
+    // Service saves emotesUsedByName as a plain object {emoteName: {count, url}}.
+    // Demo uses topEmotes array [{name, count, url}].
+    function normaliseEmotes(data) {
+      if (Array.isArray(data.topEmotes) && data.topEmotes.length) {
+        return data.topEmotes;
+      }
+      if (data.emotesUsedByName && typeof data.emotesUsedByName === 'object') {
+        return Object.entries(data.emotesUsedByName)
+          .map(([name, info]) => ({
+            name,
+            count: info.count || 0,
+            url: info.url || null
+          }))
+          .sort((a, b) => b.count - a.count);
+      }
+      return [];
+    }
+
+    // ── Data loading ───────────────────────────────────────────────────────────
+
+    async function tryFetch(url) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return resp.json();
+    }
+
+    async function loadStats() {
+      let data = null;
+      try {
+        data = await tryFetch('data/session_stats.json');
+        console.log('[Credits] Loaded live session_stats.json');
+      } catch (e) {
+        console.warn('[Credits] Live stats not found, falling back to demo:', e.message);
+        try {
+          data = await tryFetch('data/demo_session_stats.json');
+          console.log('[Credits] Loaded demo_session_stats.json');
+        } catch (e2) {
+          console.error('[Credits] Could not load any stats file:', e2);
+          document.getElementById('creditsContent').innerHTML =
+            '<p style="color:#f55">No se encontraron estadísticas de sesión.</p>';
+          return;
+        }
+      }
+      renderCredits(data);
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────────
+
+    function renderCredits(data) {
+      const container = document.getElementById('creditsContent');
+      const lines = [];
+
+      // Top chatters
+      const users = normaliseUsers(data.topUsers);
+      if (users.length) {
+        lines.push('<h2>Top Chatters</h2>');
+        lines.push('<ul>');
+        users.slice(0, 5).forEach(u => {
+          lines.push(`<li>${u.username} &ndash; ${u.count} mensajes</li>`);
+        });
+        lines.push('</ul>');
+      }
+
+      // Most used emotes
+      const topEmotes = normaliseEmotes(data);
+      if (data.totalEmotesUsed || topEmotes.length) {
+        lines.push('<h2>Emotes más usados</h2>');
+        lines.push('<ul class="emote-list">');
+        topEmotes.slice(0, 5).forEach(e => {
+          const img = e.url ? `<img src="${e.url}" alt="${e.name}" class="emote"/>` : '';
+          lines.push(`<li>${img} ${e.name} &ndash; ${e.count}</li>`);
+        });
+        lines.push('</ul>');
+      }
+
+      // Streaks
+      const streaks = normaliseStreaks(data.topStreaks || data.currentActiveStreaks);
+      if (streaks.length) {
+        lines.push('<h2>Rachas más largas</h2>');
+        lines.push('<ul>');
+        streaks.forEach(s => {
+          lines.push(`<li>${s.username} &ndash; ${s.days} días</li>`);
+        });
+        lines.push('</ul>');
+      }
+
+      // Level-ups
+      if (data.recentLevelUps && data.recentLevelUps.length) {
+        lines.push('<h2>Level&#8209;Ups recientes</h2>');
+        lines.push('<ul>');
+        data.recentLevelUps.forEach(lu => {
+          lines.push(`<li>${lu.username} subió al nivel ${lu.newLevel}</li>`);
+        });
+        lines.push('</ul>');
+      }
+
+      // Achievements
+      const achievements = data.recentAchievements || data.achievementsUnlocked || [];
+      if (achievements.length) {
+        lines.push('<h2>Logros desbloqueados</h2>');
+        lines.push('<ul>');
+        achievements.forEach(a => {
+          lines.push(`<li>${a.username}: ${a.achievement}</li>`);
+        });
+        lines.push('</ul>');
+      }
+
+      container.innerHTML = lines.join('\n');
+    }
+
+    // Kick off
+    loadStats();
+  </script>
+</body>
+</html>
