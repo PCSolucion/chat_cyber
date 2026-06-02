@@ -1,0 +1,33 @@
+{
+  "sessionDuration": 7200000,
+  "sessionMinutes": 120,
+  "sessionHours": 2,
+  "totalMessages": 3500,
+  "uniqueUsers": 150,
+  "avgMessagesPerMinute": 29.2,
+  "topUsers": [
+    { "id": "user1", "count": 250 },
+    { "id": "user2", "count": 200 },
+    { "id": "user3", "count": 180 },
+    { "id": "user4", "count": 150 },
+    { "id": "user5", "count": 140 }
+  ],
+  "totalEmotesUsed": 420,
+  "topEmotes": [
+    { "name": "Kappa", "count": 120, "url": "https://static-cdn.jtvnw.net/emoticons/v1/25/1.0" },
+    { "name": "PogChamp", "count": 95, "url": "https://static-cdn.jtvnw.net/emoticons/v1/88/1.0" },
+    { "name": "LUL", "count": 80, "url": "https://static-cdn.jtvnw.net/emoticons/v1/425618/1.0" }
+  ],
+  "topStreaks": [
+    { "id": "user6", "streakDays": 15 },
+    { "id": "user7", "streakDays": 12 }
+  ],
+  "recentLevelUps": [
+    { "username": "user8", "oldLevel": 4, "newLevel": 5, "timestamp": 1685600000000 },
+    { "username": "user9", "oldLevel": 2, "newLevel": 3, "timestamp": 1685601000000 }
+  ],
+  "recentAchievements": [
+    { "username": "user10", "achievement": "First Sub", "timestamp": 1685602000000 },
+    { "username": "user11", "achievement": "Chat King", "timestamp": 1685603000000 }
+  ]
+}

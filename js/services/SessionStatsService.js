@@ -61,12 +61,60 @@ export default class SessionStatsService {
         };
         
         this._unsubscribers = [];
+        this.saveTimeout = null;
+    }
 
-        // Iniciar tracking de actividad por minuto
-        this._startMinuteTracker();
+    /**
+     * Debounced save to file
+     * @private
+     */
+    _debouncedSave() {
+        if (this.saveTimeout) clearTimeout(this.saveTimeout);
+        this.saveTimeout = setTimeout(() => {
+            this._saveStatsToFile();
+        }, 5000);
+    }
 
-        // Suscribirse a eventos si los servicios están disponibles
-        this._bindToServices();
+    /**
+     * Persistir stats en archivo
+     * @private
+     */
+    _saveStatsToFile() {
+        try {
+            const dataToSave = {
+                ...this.stats,
+                uniqueUsers: Array.from(this.stats.uniqueUsers),
+                userMessageCounts: Object.fromEntries(this.stats.userMessageCounts),
+                emotesUsedByName: Object.fromEntries(this.stats.emotesUsedByName),
+                currentActiveStreaks: Object.fromEntries(this.stats.currentActiveStreaks),
+                commandsUsed: Object.fromEntries(this.stats.commandsUsed),
+                sessionWatchTime: Object.fromEntries(this.stats.sessionWatchTime)
+            };
+            const jsonStr = JSON.stringify(dataToSave, null, 2);
+            // Use Node's fs for rotation if possible (Electron with nodeIntegration)
+            if (typeof require === 'function') {
+                const fs = require('fs');
+                const path = require('path');
+                const dataDir = path.resolve(process.cwd(), 'data');
+                const filePath = path.join(dataDir, 'session_stats.json');
+                if (!fs.existsSync(dataDir)) {
+                    fs.mkdirSync(dataDir, { recursive: true });
+                }
+                const MAX_SIZE = 100 * 1024; // 100KB
+                if (fs.existsSync(filePath) && fs.statSync(filePath).size > MAX_SIZE) {
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const archivePath = path.join(dataDir, `session_stats_${timestamp}.json`);
+                    fs.renameSync(filePath, archivePath);
+                    Logger.info('SessionStatsService', `Rotated stats file to ${archivePath}`);
+                }
+                fs.writeFileSync(filePath, jsonStr, 'utf-8');
+            } else if (window.electronAPI && typeof window.electronAPI.saveFile === 'function') {
+                // Fallback without rotation guarantee
+                window.electronAPI.saveFile('session_stats.json', jsonStr);
+            }
+        } catch (e) {
+            Logger.error('SessionStatsService', 'Error persisting stats to file:', e);
+        }
     }
 
     /**
@@ -100,6 +148,7 @@ export default class SessionStatsService {
             // Reset contadores del minuto
             this.lastMinuteMessages = 0;
             this.lastMinuteUsers = new Set();
+            this._debouncedSave();
 
         }, TIMING.ACTIVITY_TRACKER_INTERVAL_MS); // Cada minuto
     }
@@ -116,15 +165,11 @@ export default class SessionStatsService {
                     ...eventData,
                     timestamp: Date.now()
                 });
+                this._debouncedSave();
             })
         );
     
-        // Suscribirse a cambios de estado del stream
-        this._unsubscribers.push(
-            EventManager.on(EVENTS.STREAM.STATUS_CHANGED, (isOnline) => {
-                this.setStreamStatus(isOnline);
-            })
-        );
+
     
         // Suscribirse a achievements vía EventManager
         this._unsubscribers.push(
@@ -133,6 +178,7 @@ export default class SessionStatsService {
                     ...eventData,
                     timestamp: Date.now()
                 });
+                this._debouncedSave();
             })
         );
     }
@@ -194,6 +240,7 @@ export default class SessionStatsService {
                 Logger.debug('SessionStats', 'Error al obtener racha para el mensaje:', e);
             }
         }
+        this._debouncedSave();
     }
 
     /**
@@ -213,6 +260,7 @@ export default class SessionStatsService {
 
         const current = this.stats.sessionWatchTime.get(id) || 0;
         this.stats.sessionWatchTime.set(id, current + minutes);
+        this._debouncedSave();
     }
 
     /**
@@ -538,6 +586,7 @@ export default class SessionStatsService {
 
         this.lastMinuteMessages = 0;
         this.lastMinuteUsers = new Set();
+        this._saveStatsToFile();
     }
 
     /**
@@ -571,6 +620,7 @@ export default class SessionStatsService {
         }
         this.isLive = true;
         this.sessionStart = Date.now();
+        this._startMinuteTracker();
     }
 
     /**
@@ -579,8 +629,13 @@ export default class SessionStatsService {
     stopSession() {
         this.isLive = false;
         this.sessionStart = null;
+        if (this.minuteInterval) {
+            clearInterval(this.minuteInterval);
+            this.minuteInterval = null;
+        }
         // NO reseteamos las stats (mensajes, usuarios, etc) para mantener los datos visibles
         // hasta el próximo directo o reinicio manual
+        this._saveStatsToFile();
     }
 
     /**
